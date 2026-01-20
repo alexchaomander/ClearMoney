@@ -103,6 +103,16 @@ export const categories: Category[] = [
     color: "amber",
   },
   {
+    id: "charitable-giving",
+    name: "Charitable Giving",
+    shortName: "Giving",
+    description:
+      "Give more effectively with tools for stock donations, DAFs, and tax-smart generosity.",
+    icon: "🤝",
+    href: "/charitable-giving",
+    color: "emerald",
+  },
+  {
     id: "credit-building",
     name: "Credit Building",
     shortName: "Credit",
@@ -123,7 +133,7 @@ export interface Tool {
   status: "live" | "coming-soon" | "beta";
   // Enhanced fields for app gallery
   primaryColor?: string;
-  designStyle?: "analytical" | "playful" | "minimal" | "serious";
+  designStyle?: "analytical" | "playful" | "minimal" | "serious" | "comparison";
   inspiredBy?: string[];
   featured?: boolean;
   thumbnail?: string;
@@ -376,6 +386,20 @@ export const tools: Tool[] = [
     primaryColor: "#8b5cf6",
     designStyle: "analytical",
     inspiredBy: ["Humphrey Yang"],
+    featured: true,
+  },
+  // Charitable Giving
+  {
+    id: "appreciated-stock-donation",
+    name: "Appreciated Stock Donation Calculator",
+    description:
+      "See how much you save by donating appreciated stock instead of cash",
+    href: "/tools/appreciated-stock-donation",
+    categoryId: "charitable-giving",
+    status: "live",
+    primaryColor: "#22c55e",
+    designStyle: "comparison",
+    inspiredBy: ["Fidelity Charitable", "DAFgiving360"],
     featured: true,
   },
   // Taxes
