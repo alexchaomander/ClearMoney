@@ -267,7 +267,7 @@ export const tools: Tool[] = [
       "Calculate your personalized emergency fund target based on your risk factors.",
     href: "/tools/emergency-fund",
     categoryId: "budgeting",
-    status: "coming-soon",
+    status: "live",
     primaryColor: "#3b82f6",
     designStyle: "minimal",
     inspiredBy: ["Dave Ramsey"],
