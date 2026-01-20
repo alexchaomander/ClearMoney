@@ -338,6 +338,19 @@ export const tools: Tool[] = [
     designStyle: "analytical",
   },
   {
+    id: "backdoor-roth",
+    name: "Backdoor Roth IRA Guide",
+    description:
+      "Step-by-step guide to the backdoor Roth strategy for high earners",
+    href: "/tools/backdoor-roth",
+    categoryId: "taxes",
+    status: "live",
+    primaryColor: "#10b981",
+    designStyle: "analytical",
+    inspiredBy: ["Mad Fientist", "White Coat Investor"],
+    featured: true,
+  },
+  {
     id: "tax-bracket",
     name: "Tax Bracket Calculator",
     description: "Understand your marginal and effective tax rates.",
