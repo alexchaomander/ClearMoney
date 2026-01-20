@@ -531,7 +531,7 @@ export function Calculator() {
               rightItems={[
                 {
                   label: "FICA",
-                  value: formatCurrency(results.actualTax.medicare + results.actualTax.socialSecurity, 0),
+                  value: formatCurrency(results.actualTax.medicare + results.actualTax.socialSecurity + results.actualTax.additionalMedicare, 0),
                 },
                 {
                   label: "Effective rate",

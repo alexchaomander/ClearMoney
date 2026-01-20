@@ -98,6 +98,7 @@ const ADDITIONAL_MEDICARE_RATE = 0.009;
 
 const SUPPLEMENTAL_WITHHOLDING_RATE = 0.22;
 const SUPPLEMENTAL_WITHHOLDING_RATE_OVER_1M = 0.37;
+const SUPPLEMENTAL_WITHHOLDING_THRESHOLD = 1000000;
 
 function calculateFederalTax(
   income: number,
@@ -118,16 +119,6 @@ function calculateFederalTax(
   return { tax, marginalRate };
 }
 
-function calculateMarginalRate(income: number, filingStatus: string): number {
-  const brackets = FEDERAL_BRACKETS[filingStatus as keyof typeof FEDERAL_BRACKETS];
-  for (const bracket of brackets) {
-    if (income >= bracket.min && income < bracket.max) {
-      return bracket.rate;
-    }
-  }
-  return 0.37;
-}
-
 export function calculate(inputs: CalculatorInputs): CalculatorResults {
   const {
     sharesVesting,
@@ -146,7 +137,7 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
   const taxWithRSU = calculateFederalTax(totalIncome, filingStatus);
   const taxWithoutRSU = calculateFederalTax(incomeBeforeRSU, filingStatus);
   const federalTaxOnRSU = taxWithRSU.tax - taxWithoutRSU.tax;
-  const marginalRate = calculateMarginalRate(totalIncome, filingStatus);
+  const marginalRate = taxWithRSU.marginalRate;
 
   const stateRate = STATE_RATES[state] || 0;
   const stateTaxOnRSU = grossValue * stateRate;
@@ -194,13 +185,20 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
       grossValue,
   };
 
-  const federalWithholdingRate =
-    grossValue > 1000000
-      ? SUPPLEMENTAL_WITHHOLDING_RATE_OVER_1M
-      : SUPPLEMENTAL_WITHHOLDING_RATE;
-  const federalWithheld = grossValue * federalWithholdingRate;
+  // Federal supplemental withholding: 22% on first $1M, 37% on amount above $1M
+  let federalWithheld: number;
+  if (grossValue > SUPPLEMENTAL_WITHHOLDING_THRESHOLD) {
+    federalWithheld =
+      SUPPLEMENTAL_WITHHOLDING_THRESHOLD * SUPPLEMENTAL_WITHHOLDING_RATE +
+      (grossValue - SUPPLEMENTAL_WITHHOLDING_THRESHOLD) * SUPPLEMENTAL_WITHHOLDING_RATE_OVER_1M;
+  } else {
+    federalWithheld = grossValue * SUPPLEMENTAL_WITHHOLDING_RATE;
+  }
+
   const stateWithheld = grossValue * stateRate;
-  const ficaWithheld = socialSecurityOnRSU + medicareOnRSU;
+
+  // FICA withholding includes Social Security, Medicare, and Additional Medicare Tax
+  const ficaWithheld = socialSecurityOnRSU + medicareOnRSU + additionalMedicareOnRSU;
   const totalWithheld = federalWithheld + stateWithheld + ficaWithheld;
 
   const sharesWithheld =
