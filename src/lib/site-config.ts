@@ -327,6 +327,17 @@ export const tools: Tool[] = [
   },
   // Taxes
   {
+    id: "rsu-tax-calculator",
+    name: "RSU Tax Calculator",
+    description:
+      "Calculate the tax gap between RSU withholding and actual liability",
+    href: "/tools/rsu-tax-calculator",
+    categoryId: "taxes",
+    status: "live",
+    primaryColor: "#0ea5e9",
+    designStyle: "analytical",
+  },
+  {
     id: "tax-bracket",
     name: "Tax Bracket Calculator",
     description: "Understand your marginal and effective tax rates.",
