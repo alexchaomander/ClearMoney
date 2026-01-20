@@ -218,7 +218,7 @@ export function Calculator() {
                     }))
                   }
                   min={0}
-                  max={8000}
+                  max={results.contributionLimit}
                   step={100}
                   format="currency"
                   description={`${formatCurrency(results.contributionLimit, 0)} max (${contributionLimitLabel})`}
@@ -441,7 +441,7 @@ export function Calculator() {
 
             <MethodologySection title="Methodology & IRS considerations">
               <p>
-                We use 2024 income phase-out limits to determine whether direct
+                We use 2025 income phase-out limits to determine whether direct
                 Roth contributions are allowed. If you’re above the phase-out
                 range, a backdoor contribution is typically required.
               </p>
