@@ -17,8 +17,6 @@ This research serves as the foundation for building ClearMoney's suite of financ
 docs/research/
 ├── README.md                         # This file
 ├── influencer-profiles/              # Deep dives on key finance personalities
-│   │
-│   │ # General Personal Finance
 │   ├── the-points-guy.md            # TPG - our primary counter-position
 │   ├── dave-ramsey.md               # Debt-free philosophy
 │   ├── graham-stephan.md            # Frugality + investing
@@ -28,8 +26,6 @@ docs/research/
 │   ├── humphrey-yang.md             # Credit card education
 │   ├── andrei-jikh.md               # Dividend investing
 │   ├── fire-movement.md             # Early retirement philosophy
-│   │
-│   │ # High-Income & Tech-Focused (NEW)
 │   ├── financial-samurai.md         # Sam Dogen - high income FIRE, real estate
 │   ├── faang-fire.md                # Andre Nader - tech worker FIRE, RSUs
 │   ├── white-coat-investor.md       # James Dahle - high income professionals
@@ -38,15 +34,11 @@ docs/research/
 │   └── secfi.md                     # Equity compensation platform/education
 │
 ├── tool-opportunities/               # Categorized tool ideas
-│   │
-│   │ # Basic/General Tools
 │   ├── credit-cards.md              # Annual fees, comparisons, valuations
 │   ├── debt-payoff.md               # Snowball, avalanche, strategies
 │   ├── investing.md                 # Roth/Traditional, FIRE, dividends
 │   ├── budgeting.md                 # Emergency funds, conscious spending
 │   ├── credit-building.md           # Score simulation, first cards
-│   │
-│   │ # Advanced Tools for High-Income Earners (NEW)
 │   ├── equity-compensation.md       # RSUs, ISOs, NSOs, ESPP, 83(b)
 │   ├── advanced-tax-strategies.md   # Backdoor Roth, mega backdoor, tax-loss harvesting
 │   ├── estate-planning-trusts.md    # Trusts, GRATs, estate tax planning
