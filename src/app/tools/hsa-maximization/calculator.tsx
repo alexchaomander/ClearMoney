@@ -27,6 +27,7 @@ const DEFAULT_INPUTS: CalculatorInputs = {
     coverageType: "individual",
     age: 35,
     enrolledInMedicare: false,
+    monthsOfCoverage: 12, // Full year coverage by default
   },
   contribution: {
     currentContribution: 3000,
@@ -293,6 +294,21 @@ export function Calculator() {
                   step={1}
                   format="number"
                 />
+
+                <SliderInput
+                  label="Months of HDHP Coverage This Year"
+                  value={inputs.eligibility.monthsOfCoverage}
+                  onChange={(value) =>
+                    setInputs((prev) => ({
+                      ...prev,
+                      eligibility: { ...prev.eligibility, monthsOfCoverage: value },
+                    }))
+                  }
+                  min={1}
+                  max={12}
+                  step={1}
+                  format="number"
+                />
               </div>
 
               <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-950/60 p-4">
@@ -322,6 +338,14 @@ export function Calculator() {
                     </p>
                     <p className="mt-1 text-lg font-semibold text-white">
                       {formatCurrency(results.eligibility.maxContribution)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.2em] text-neutral-500">
+                      Prorated Limit
+                    </p>
+                    <p className="mt-1 text-lg font-semibold text-white">
+                      {formatCurrency(results.eligibility.proratedMaxContribution)}
                     </p>
                   </div>
                   <div>

@@ -5,6 +5,8 @@ export interface EligibilityInputs {
   coverageType: CoverageType;
   age: number;
   enrolledInMedicare: boolean;
+  /** Number of months with HDHP coverage in the current year (1-12). Used to prorate contribution limits for partial-year coverage. */
+  monthsOfCoverage: number;
 }
 
 export interface ContributionInputs {
@@ -43,6 +45,8 @@ export interface EligibilityResult {
   contributionLimit: number;
   catchUpAmount: number;
   maxContribution: number;
+  /** Max contribution after applying partial-year proration */
+  proratedMaxContribution: number;
   remainingContributionRoom: number;
   reasons: string[];
 }
