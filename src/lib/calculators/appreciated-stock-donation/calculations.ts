@@ -65,6 +65,14 @@ const AGI_LIMITS = {
   property_daf: 0.3,
 };
 
+// Helper function for consistent currency formatting in recommendation/warning messages
+function formatDollar(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Math.round(value));
+}
+
 function getFederalCapGainsRate(
   income: number,
   filingStatus: FilingStatus,
@@ -104,11 +112,20 @@ function calculateCashScenario(inputs: CalculatorInputs): CashDonationScenario {
   const totalCapGainsTax = federalCapGainsTax + stateCapGainsTax + niitTax;
   const amountAvailableToDonate = Math.max(stockToSell - totalCapGainsTax, 0);
 
-  const charitableDeduction = tax.itemizesDeductions ? amountAvailableToDonate : 0;
+  // Apply AGI limit for cash donations: 60% for public charities/DAFs, 30% for private foundations
+  const cashAgiLimitPercent =
+    donation.donationType === "private_foundation"
+      ? AGI_LIMITS.cash_private_foundation
+      : AGI_LIMITS.cash_public_charity;
+  const maxCashDeductionThisYear = tax.adjustedGrossIncome * cashAgiLimitPercent;
+  const deductibleCashAmount = Math.min(amountAvailableToDonate, maxCashDeductionThisYear);
+
+  const charitableDeduction = tax.itemizesDeductions ? deductibleCashAmount : 0;
   const combinedMarginalRate = tax.marginalTaxRate / 100 + stateRate;
   const taxSavingsFromDeduction = charitableDeduction * combinedMarginalRate;
 
-  const netCostOfDonation = stockToSell - taxSavingsFromDeduction;
+  // Net cost = actual donation amount - tax savings from deduction
+  const netCostOfDonation = amountAvailableToDonate - taxSavingsFromDeduction;
 
   return {
     stockSaleProceeds: stockToSell,
@@ -216,13 +233,13 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
 
   if (stockAdvantage > 0) {
     recommendations.push(
-      `Donating stock saves you $${stockAdvantage.toLocaleString()} compared to selling and donating cash.`,
+      `Donating stock saves you $${formatDollar(stockAdvantage)} compared to selling and donating cash.`,
     );
   }
 
   if (additionalCharitableImpact > 0) {
     recommendations.push(
-      `The charity receives $${additionalCharitableImpact.toLocaleString()} more when you donate stock directly.`,
+      `The charity receives $${formatDollar(additionalCharitableImpact)} more when you donate stock directly.`,
     );
   }
 
@@ -237,7 +254,7 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
 
   if (stockScenario.carryForward > 0) {
     warnings.push(
-      `Your donation exceeds the ${stockScenario.agiLimitPercent}% AGI limit. $${stockScenario.carryForward.toLocaleString()} will carry forward to future years.`,
+      `Your donation exceeds the ${stockScenario.agiLimitPercent}% AGI limit. $${formatDollar(stockScenario.carryForward)} will carry forward to future years.`,
     );
   }
 
