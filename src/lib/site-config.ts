@@ -53,6 +53,16 @@ export const categories: Category[] = [
     color: "violet",
   },
   {
+    id: "equity-compensation",
+    name: "Equity & Compensation",
+    shortName: "Compensation",
+    description:
+      "Compare offers, evaluate equity grants, and understand your total compensation.",
+    icon: "💼",
+    href: "/equity-compensation",
+    color: "sky",
+  },
+  {
     id: "budgeting",
     name: "Budgeting & Saving",
     shortName: "Budgeting",
@@ -261,6 +271,19 @@ export const tools: Tool[] = [
     href: "/tools/401k-calculator",
     categoryId: "investing",
     status: "coming-soon",
+  },
+  // Equity & Compensation
+  {
+    id: "total-compensation",
+    name: "Total Compensation Calculator",
+    description: "Understand your true total comp—base, bonus, RSUs, and benefits",
+    href: "/tools/total-compensation",
+    categoryId: "equity-compensation",
+    status: "live",
+    primaryColor: "#3b82f6",
+    designStyle: "analytical",
+    inspiredBy: ["FAANG FIRE", "levels.fyi"],
+    featured: true,
   },
   // Budgeting
   {
