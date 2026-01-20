@@ -463,6 +463,19 @@ export const tools: Tool[] = [
     designStyle: "serious",
   },
   {
+    id: "hsa-maximization",
+    name: "HSA Maximization Tool",
+    description:
+      "Unlock the triple tax advantage—use your HSA as a stealth retirement account.",
+    href: "/tools/hsa-maximization",
+    categoryId: "taxes",
+    status: "live",
+    primaryColor: "#06b6d4",
+    designStyle: "analytical",
+    inspiredBy: ["Mad Fientist", "Money Guy Show"],
+    featured: true,
+  },
+  {
     id: "tax-bracket",
     name: "Tax Bracket Calculator",
     description: "Understand your marginal and effective tax rates.",
