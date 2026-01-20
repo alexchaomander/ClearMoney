@@ -316,7 +316,7 @@ export const tools: Tool[] = [
       "Simulate how different actions might affect your credit score.",
     href: "/tools/credit-score-simulator",
     categoryId: "credit-building",
-    status: "coming-soon",
+    status: "live",
     primaryColor: "#8b5cf6",
     designStyle: "analytical",
     inspiredBy: ["Humphrey Yang"],
