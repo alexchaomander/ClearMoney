@@ -453,6 +453,16 @@ export const tools: Tool[] = [
     featured: true,
   },
   {
+    id: "estate-tax",
+    name: "Estate Tax Exposure Calculator",
+    description: "Plan for the 2026 estate tax exemption sunset",
+    href: "/tools/estate-tax",
+    categoryId: "taxes",
+    status: "live",
+    primaryColor: "#6366f1",
+    designStyle: "serious",
+  },
+  {
     id: "tax-bracket",
     name: "Tax Bracket Calculator",
     description: "Understand your marginal and effective tax rates.",
