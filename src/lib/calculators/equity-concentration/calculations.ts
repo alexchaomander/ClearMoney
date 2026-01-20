@@ -7,6 +7,24 @@ import type {
   HistoricalExample,
 } from "./types";
 
+// Tax rate constants
+const FEDERAL_LTCG_RATE = 0.2;
+const NIIT_RATE = 0.038;
+
+// Age and income constants
+const RETIREMENT_AGE = 65;
+const WORK_START_AGE = 25;
+const HUMAN_CAPITAL_DISCOUNT_FACTOR = 0.5;
+
+// Default values for calculations
+const DEFAULT_GAIN_RATIO = 0.8;
+const DONATION_TAX_BENEFIT_FACTOR = 0.5;
+const DONATION_PORTION = 0.2;
+
+// Risk calculation constants
+const DIVERSIFIED_PORTFOLIO_RISK = 18;
+const CONCENTRATION_RISK_FACTOR = 0.5;
+
 const STATE_TAX_RATES: Record<string, number> = {
   AL: 0.05,
   AK: 0,
@@ -94,6 +112,11 @@ const HISTORICAL_DROPS = [
   },
 ];
 
+function calculateLtcgRate(stateCode: string): number {
+  const stateRate = STATE_TAX_RATES[stateCode] || 0;
+  return FEDERAL_LTCG_RATE + NIIT_RATE + stateRate;
+}
+
 function calculateConcentrationMetrics(inputs: CalculatorInputs): ConcentrationMetrics {
   const { equity, assets, income } = inputs;
 
@@ -129,11 +152,11 @@ function calculateConcentrationMetrics(inputs: CalculatorInputs): ConcentrationM
     riskScore = 50 + (concentrationPercent - 25) * 1.5;
   } else {
     riskLevel = "extreme";
-    riskScore = Math.min(100, 75 + (concentrationPercent - 50) * 0.5);
+    riskScore = Math.min(100, 75 + (concentrationPercent - 50) * CONCENTRATION_RISK_FACTOR);
   }
 
-  const yearsRemaining = Math.max(0, 65 - (25 + income.yearsAtCompany));
-  const humanCapitalValue = income.annualSalary * yearsRemaining * 0.5;
+  const yearsRemaining = Math.max(0, RETIREMENT_AGE - (WORK_START_AGE + income.yearsAtCompany));
+  const humanCapitalValue = income.annualSalary * yearsRemaining * HUMAN_CAPITAL_DISCOUNT_FACTOR;
 
   const totalExposure = employerEquityTotal + humanCapitalValue;
 
@@ -217,33 +240,47 @@ function generateHistoricalExamples(
 
 function generateStrategies(
   inputs: CalculatorInputs,
-  metrics: ConcentrationMetrics
+  metrics: ConcentrationMetrics,
+  ltcgRate: number
 ): DiversificationStrategy[] {
-  const { equity, tax } = inputs;
+  const { equity } = inputs;
   const strategies: DiversificationStrategy[] = [];
 
-  const ltcgRate = 0.238;
-
+  const vestedEquity = metrics.vestedEquityOnly;
   const otherAssets = metrics.totalNetWorth - metrics.employerEquityTotal;
 
+  // Calculate raw amounts needed to reach target concentrations
   const target25 = otherAssets / 0.75 - otherAssets;
-  const toSell25 = Math.max(0, metrics.employerEquityTotal - target25);
+  const rawToSell25 = Math.max(0, metrics.employerEquityTotal - target25);
 
   const target10 = otherAssets / 0.9 - otherAssets;
-  const toSell10 = Math.max(0, metrics.employerEquityTotal - target10);
+  const rawToSell10 = Math.max(0, metrics.employerEquityTotal - target10);
 
   const target5 = otherAssets / 0.95 - otherAssets;
-  const toSell5 = Math.max(0, metrics.employerEquityTotal - target5);
+  const rawToSell5 = Math.max(0, metrics.employerEquityTotal - target5);
+
+  // Cap sell targets to vested equity only (can't sell unvested shares)
+  const toSell25 = Math.min(rawToSell25, vestedEquity);
+  const canAchieve25 = rawToSell25 <= vestedEquity;
+
+  const toSell10 = Math.min(rawToSell10, vestedEquity);
+  const canAchieve10 = rawToSell10 <= vestedEquity;
+
+  const toSell5 = Math.min(rawToSell5, vestedEquity);
+  const canAchieve5 = rawToSell5 <= vestedEquity;
 
   const gainRatio =
-    equity.costBasis > 0 && metrics.vestedEquityOnly > 0
-      ? (metrics.vestedEquityOnly - equity.costBasis) / metrics.vestedEquityOnly
-      : 0.8;
+    equity.costBasis > 0 && vestedEquity > 0
+      ? (vestedEquity - equity.costBasis) / vestedEquity
+      : DEFAULT_GAIN_RATIO;
 
   if (metrics.concentrationPercent > 25) {
+    const description = canAchieve25
+      ? `Sell $${toSell25.toLocaleString()} to reach 25% concentration. Still high, but significantly reduces risk.`
+      : `Sell all vested equity ($${toSell25.toLocaleString()}) to reduce concentration. Target 25% is unachievable until more shares vest.`;
     strategies.push({
       strategy: "Aggressive Diversification",
-      description: `Sell $${toSell25.toLocaleString()} to reach 25% concentration. Still high, but significantly reduces risk.`,
+      description,
       timeframe: "6-12 months",
       taxImpact: toSell25 * gainRatio * ltcgRate,
       sharesOrValueToSell: toSell25,
@@ -252,9 +289,12 @@ function generateStrategies(
   }
 
   if (metrics.concentrationPercent > 10) {
+    const description = canAchieve10
+      ? `Sell $${toSell10.toLocaleString()} to reach 10% concentration. This is the upper limit recommended by most advisors.`
+      : `Sell all vested equity ($${toSell10.toLocaleString()}) to reduce concentration. Target 10% is unachievable until more shares vest.`;
     strategies.push({
       strategy: "Prudent Diversification",
-      description: `Sell $${toSell10.toLocaleString()} to reach 10% concentration. This is the upper limit recommended by most advisors.`,
+      description,
       timeframe: "1-2 years",
       taxImpact: toSell10 * gainRatio * ltcgRate,
       sharesOrValueToSell: toSell10,
@@ -262,9 +302,12 @@ function generateStrategies(
     });
   }
 
+  const fullDiversificationDescription = canAchieve5
+    ? `Sell $${toSell5.toLocaleString()} to reach 5% concentration. Maximum diversification, typical for a well-balanced portfolio.`
+    : `Sell all vested equity ($${toSell5.toLocaleString()}) to reduce concentration. Target 5% is unachievable until more shares vest.`;
   strategies.push({
     strategy: "Full Diversification",
-    description: `Sell $${toSell5.toLocaleString()} to reach 5% concentration. Maximum diversification, typical for a well-balanced portfolio.`,
+    description: fullDiversificationDescription,
     timeframe: "2-3 years",
     taxImpact: toSell5 * gainRatio * ltcgRate,
     sharesOrValueToSell: toSell5,
@@ -286,8 +329,8 @@ function generateStrategies(
     description:
       "Gift appreciated stock to charity or donor-advised fund. Avoid capital gains AND get full fair market value deduction.",
     timeframe: "Year-end",
-    taxImpact: -(toSell10 * gainRatio * ltcgRate * 0.5),
-    sharesOrValueToSell: toSell10 * 0.2,
+    taxImpact: -(toSell10 * gainRatio * ltcgRate * DONATION_TAX_BENEFIT_FACTOR),
+    sharesOrValueToSell: toSell10 * DONATION_PORTION,
     targetConcentration: 0,
   });
 
@@ -300,23 +343,28 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
   const metrics = calculateConcentrationMetrics(inputs);
   const scenarios = generateScenarios(inputs, metrics);
   const historicalExamples = generateHistoricalExamples(metrics);
-  const strategies = generateStrategies(inputs, metrics);
+
+  // Calculate LTCG rate including state tax
+  const ltcgRate = calculateLtcgRate(tax.stateCode);
+  const strategies = generateStrategies(inputs, metrics, ltcgRate);
 
   const unrealizedGain = metrics.vestedEquityOnly - equity.costBasis;
-  const stateRate = STATE_TAX_RATES[tax.stateCode] || 0;
-  const ltcgRate = 0.2 + 0.038 + stateRate;
   const taxOnFullSale = Math.max(0, unrealizedGain * ltcgRate);
   const afterTaxValue = metrics.vestedEquityOnly - taxOnFullSale;
 
   const otherAssets = metrics.totalNetWorth - metrics.employerEquityTotal;
-  const amountToReach10Percent = Math.max(
+  // Cap amounts to vested equity (can't sell unvested shares)
+  const rawAmountToReach10Percent = Math.max(
     0,
     metrics.employerEquityTotal - (otherAssets / 0.9 - otherAssets)
   );
-  const amountToReach5Percent = Math.max(
+  const amountToReach10Percent = Math.min(rawAmountToReach10Percent, metrics.vestedEquityOnly);
+
+  const rawAmountToReach5Percent = Math.max(
     0,
     metrics.employerEquityTotal - (otherAssets / 0.95 - otherAssets)
   );
+  const amountToReach5Percent = Math.min(rawAmountToReach5Percent, metrics.vestedEquityOnly);
 
   const recommendations: string[] = [];
   const warnings: string[] = [];
@@ -351,13 +399,13 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
     );
   }
 
-  if (metrics.humanCapitalValue > metrics.employerEquityTotal * 0.5) {
+  if (metrics.humanCapitalValue > metrics.employerEquityTotal * HUMAN_CAPITAL_DISCOUNT_FACTOR) {
     warnings.push(
       "Remember: your salary also depends on this company. Your total exposure (stock + job) is even higher than your stock position suggests."
     );
   }
 
-  if (equity.unvestedEquityValue > metrics.vestedEquityOnly * 0.5) {
+  if (equity.unvestedEquityValue > metrics.vestedEquityOnly * HUMAN_CAPITAL_DISCOUNT_FACTOR) {
     recommendations.push(
       `You have $${equity.unvestedEquityValue.toLocaleString()} in unvested equity. Don't count this as "safe"—it's at risk if you leave or are laid off.`
     );
@@ -369,8 +417,8 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
     );
   }
 
-  const diversifiedPortfolioRisk = 18;
-  const concentratedPortfolioRisk = 18 + metrics.concentrationPercent * 0.5;
+  const diversifiedPortfolioRisk = DIVERSIFIED_PORTFOLIO_RISK;
+  const concentratedPortfolioRisk = DIVERSIFIED_PORTFOLIO_RISK + metrics.concentrationPercent * CONCENTRATION_RISK_FACTOR;
   const excessRiskMultiplier = concentratedPortfolioRisk / diversifiedPortfolioRisk;
 
   return {
