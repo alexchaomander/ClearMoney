@@ -240,10 +240,11 @@ export const tools: Tool[] = [
       "Visualize your dividend income and project when it covers your expenses.",
     href: "/tools/dividend-tracker",
     categoryId: "investing",
-    status: "coming-soon",
+    status: "live",
     primaryColor: "#22c55e",
     designStyle: "analytical",
     inspiredBy: ["Andrei Jikh"],
+    featured: false,
   },
   {
     id: "compound-interest",
