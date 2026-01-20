@@ -75,6 +75,19 @@ const NIIT_THRESHOLD = {
   head_of_household: 200000,
 };
 
+// Additional Medicare Tax threshold (0.9% on wages above threshold)
+const ADDITIONAL_MEDICARE_THRESHOLD = {
+  single: 200000,
+  married: 250000,
+  head_of_household: 200000,
+};
+
+// 2024 Social Security wage base
+const SS_WAGE_BASE_2024 = 168600;
+const SS_TAX_RATE = 0.062;
+const MEDICARE_TAX_RATE = 0.0145;
+const ADDITIONAL_MEDICARE_RATE = 0.009;
+
 const STATE_TAX_RATES: Record<string, number> = {
   CA: 0.133,
   NY: 0.109,
@@ -316,13 +329,15 @@ function calculateScenario(
     exerciseCost.nsoFederalTax = bargainElement * marginalRate;
     exerciseCost.nsoStateTax = bargainElement * stateRate;
 
-    const ssCap = 168600;
-    const ssIncome = Math.min(tax.annualIncome, ssCap);
-    const remainingSS = Math.max(0, ssCap - ssIncome);
-    const ssOnSpread = Math.min(bargainElement, remainingSS) * 0.062;
-    const medicareOnSpread = bargainElement * 0.0145;
-    const additionalMedicare =
-      tax.annualIncome + bargainElement > 200000 ? bargainElement * 0.009 : 0;
+    const ssIncome = Math.min(tax.annualIncome, SS_WAGE_BASE_2024);
+    const remainingSS = Math.max(0, SS_WAGE_BASE_2024 - ssIncome);
+    const ssOnSpread = Math.min(bargainElement, remainingSS) * SS_TAX_RATE;
+    const medicareOnSpread = bargainElement * MEDICARE_TAX_RATE;
+    const additionalMedicareThreshold =
+      ADDITIONAL_MEDICARE_THRESHOLD[tax.filingStatus as keyof typeof ADDITIONAL_MEDICARE_THRESHOLD];
+    // Additional Medicare Tax applies to wages over threshold (0.9%)
+    const wagesOverThreshold = Math.max(0, tax.annualIncome + bargainElement - additionalMedicareThreshold);
+    const additionalMedicare = Math.min(bargainElement, wagesOverThreshold) * ADDITIONAL_MEDICARE_RATE;
     exerciseCost.nsoFICATax = ssOnSpread + medicareOnSpread + additionalMedicare;
 
     exerciseCost.cashRequired = strategy === "cashless" ? 0 : cashRequired;
@@ -425,7 +440,12 @@ function calculateScenario(
     saleAnalysis.stateTaxOnSale +
     saleAnalysis.niitTax;
 
-  const netProfit = saleAnalysis.netProceeds - exerciseCost.cashRequired;
+  // For exercise_and_hold, netProceeds doesn't include exercise cost, so subtract it
+  // For exercise_and_sell and cashless, netProceeds already includes the cash cost
+  const netProfit =
+    strategy === "exercise_and_hold"
+      ? saleAnalysis.netProceeds - exerciseCost.cashRequired
+      : saleAnalysis.netProceeds;
 
   const effectiveTaxRate = bargainElement > 0 ? totalTaxPaid / bargainElement : 0;
 
