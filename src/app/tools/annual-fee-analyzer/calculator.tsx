@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
 import {
@@ -245,7 +246,7 @@ export function Calculator() {
         <div className="mx-auto max-w-2xl">
           <MethodologySection>
             <p>
-              We start with your actual annual spending and apply the card's
+              We start with your actual annual spending and apply the card’s
               rewards rate. Then we adjust that value based on how you redeem
               points, because a 2x card is only as good as your redemption.
             </p>
@@ -261,12 +262,12 @@ export function Calculator() {
             <p>
               Want the deeper context? Read our critique of affiliate-driven
               recommendations in{" "}
-              <a
+              <Link
                 href="/blog/why-we-built-this"
                 className="text-green-400 underline hover:text-green-300"
               >
                 why we built ClearMoney
-              </a>
+              </Link>
               .
             </p>
           </MethodologySection>
