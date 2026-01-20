@@ -18,11 +18,32 @@ function getVestingPercentages(
   const base = VESTING_PERCENTAGES[schedule];
   if (years === 4) return base;
 
-  if (years < 4) {
-    const perYear = 100 / years;
-    return Array(years).fill(perYear);
+  // Handle cliff_monthly schedule: 0% in year 1, remainder distributed evenly
+  if (schedule === "cliff_monthly") {
+    if (years === 1) {
+      // Edge case: 1-year cliff means nothing vests
+      return [0];
+    }
+    const perYearAfterCliff = 100 / (years - 1);
+    return [0, ...Array(years - 1).fill(perYearAfterCliff)];
   }
 
+  // Handle amazon schedule: preserve backloaded pattern scaled to period
+  if (schedule === "amazon") {
+    if (years < 4) {
+      // For shorter periods, use heavier backloading
+      const weights = base.slice(0, years);
+      const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+      return weights.map((w) => (w / totalWeight) * 100);
+    }
+    // For longer periods (5+ years), extend with even distribution after year 2
+    const remainingPercent = 80; // 100 - 5 - 15 = 80
+    const remainingYears = years - 2;
+    const perYear = remainingPercent / remainingYears;
+    return [5, 15, ...Array(remainingYears).fill(perYear)];
+  }
+
+  // Standard schedule: even distribution
   return Array(years).fill(100 / years);
 }
 
@@ -71,8 +92,15 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
 
     const matchAmount = Math.min(baseSalary * (match401k / 100), match401kLimit);
 
+    // ESPP benefit calculation: discount / (1 - discount) gives the gain percentage
+    // For 15% discount: 0.15 / 0.85 = 17.6% gain
+    // Handle edge case where discount is 100% (denominator would be 0)
+    const discountFraction = esppDiscount / 100;
+    const denominator = 1 - discountFraction;
     const esppBenefit =
-      esppContribution * (esppDiscount / 100) / (1 - esppDiscount / 100 || 1);
+      denominator > 0
+        ? esppContribution * discountFraction / denominator
+        : 0;
 
     let refresherValue = 0;
     if (year >= 2 && annualRefresher > 0) {

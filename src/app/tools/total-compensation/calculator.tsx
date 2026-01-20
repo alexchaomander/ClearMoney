@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { AppShell, MethodologySection } from "@/components/shared/AppShell";
 import { ResultCard } from "@/components/shared/ResultCard";
@@ -205,6 +205,131 @@ export function Calculator() {
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
+
+  // Memoize vesting option lookup to avoid recalculating on every render
+  const selectedVestingDescription = useMemo(
+    () =>
+      vestingOptions.find(
+        (option) => option.value === inputs.rsuGrant.vestingSchedule
+      )?.description,
+    [inputs.rsuGrant.vestingSchedule]
+  );
+
+  // Memoized handlers to prevent unnecessary re-renders
+  const handleBaseSalaryChange = useCallback(
+    (value: number) => setInputs((prev) => ({ ...prev, baseSalary: value })),
+    []
+  );
+
+  const handleTargetBonusChange = useCallback(
+    (value: number) => setInputs((prev) => ({ ...prev, targetBonus: value })),
+    []
+  );
+
+  const handleBonusMultiplierChange = useCallback(
+    (value: number) =>
+      setInputs((prev) => ({ ...prev, expectedBonusMultiplier: value })),
+    []
+  );
+
+  const handleRsuTotalValueChange = useCallback(
+    (value: number) =>
+      setInputs((prev) => ({
+        ...prev,
+        rsuGrant: { ...prev.rsuGrant, totalValue: value },
+      })),
+    []
+  );
+
+  const handleVestingScheduleChange = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) =>
+      setInputs((prev) => ({
+        ...prev,
+        rsuGrant: {
+          ...prev.rsuGrant,
+          vestingSchedule: event.target.value as VestingSchedule,
+        },
+      })),
+    []
+  );
+
+  const handleVestingYearsChange = useCallback(
+    (value: number) =>
+      setInputs((prev) => ({
+        ...prev,
+        rsuGrant: { ...prev.rsuGrant, vestingYears: value },
+      })),
+    []
+  );
+
+  const handleCurrentPriceChange = useCallback(
+    (value: number) =>
+      setInputs((prev) => ({
+        ...prev,
+        rsuGrant: { ...prev.rsuGrant, currentPrice: value },
+      })),
+    []
+  );
+
+  const handleGrantPriceChange = useCallback(
+    (value: number) =>
+      setInputs((prev) => ({
+        ...prev,
+        rsuGrant: { ...prev.rsuGrant, grantPrice: value },
+      })),
+    []
+  );
+
+  const handleSignOnBonusChange = useCallback(
+    (value: number) => setInputs((prev) => ({ ...prev, signOnBonus: value })),
+    []
+  );
+
+  const handleSignOnVestingYearsChange = useCallback(
+    (value: number) =>
+      setInputs((prev) => ({ ...prev, signOnVestingYears: value })),
+    []
+  );
+
+  const handleMatch401kChange = useCallback(
+    (value: number) => setInputs((prev) => ({ ...prev, match401k: value })),
+    []
+  );
+
+  const handleMatch401kLimitChange = useCallback(
+    (value: number) =>
+      setInputs((prev) => ({ ...prev, match401kLimit: value })),
+    []
+  );
+
+  const handleEsppDiscountChange = useCallback(
+    (value: number) => setInputs((prev) => ({ ...prev, esppDiscount: value })),
+    []
+  );
+
+  const handleEsppContributionChange = useCallback(
+    (value: number) =>
+      setInputs((prev) => ({ ...prev, esppContribution: value })),
+    []
+  );
+
+  const handleHsaContributionChange = useCallback(
+    (value: number) =>
+      setInputs((prev) => ({ ...prev, hsaContribution: value })),
+    []
+  );
+
+  const handleAnnualRefresherChange = useCallback(
+    (value: number) =>
+      setInputs((prev) => ({ ...prev, annualRefresher: value })),
+    []
+  );
+
+  const handleRefresherVestingYearsChange = useCallback(
+    (value: number) =>
+      setInputs((prev) => ({ ...prev, refresherVestingYears: value })),
+    []
+  );
   const yearlyRows = results.yearlyBreakdowns.slice(0, 4);
   const fourYearTotal = yearlyRows.reduce(
     (sum, row) => sum + row.totalCompensation,
@@ -240,9 +365,7 @@ export function Calculator() {
                 <SliderInput
                   label="Base Salary"
                   value={inputs.baseSalary}
-                  onChange={(value) =>
-                    setInputs((prev) => ({ ...prev, baseSalary: value }))
-                  }
+                  onChange={handleBaseSalaryChange}
                   min={0}
                   max={1_000_000}
                   step={5000}
@@ -251,9 +374,7 @@ export function Calculator() {
                 <SliderInput
                   label="Target Bonus %"
                   value={inputs.targetBonus}
-                  onChange={(value) =>
-                    setInputs((prev) => ({ ...prev, targetBonus: value }))
-                  }
+                  onChange={handleTargetBonusChange}
                   min={0}
                   max={100}
                   step={5}
@@ -262,9 +383,7 @@ export function Calculator() {
                 <SliderInput
                   label="Expected Bonus Multiplier"
                   value={inputs.expectedBonusMultiplier}
-                  onChange={(value) =>
-                    setInputs((prev) => ({ ...prev, expectedBonusMultiplier: value }))
-                  }
+                  onChange={handleBonusMultiplierChange}
                   min={0}
                   max={200}
                   step={10}
@@ -283,12 +402,7 @@ export function Calculator() {
                 <SliderInput
                   label="Total RSU Grant Value"
                   value={inputs.rsuGrant.totalValue}
-                  onChange={(value) =>
-                    setInputs((prev) => ({
-                      ...prev,
-                      rsuGrant: { ...prev.rsuGrant, totalValue: value },
-                    }))
-                  }
+                  onChange={handleRsuTotalValueChange}
                   min={0}
                   max={2_000_000}
                   step={10_000}
@@ -300,15 +414,7 @@ export function Calculator() {
                   </label>
                   <select
                     value={inputs.rsuGrant.vestingSchedule}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        rsuGrant: {
-                          ...prev.rsuGrant,
-                          vestingSchedule: event.target.value as VestingSchedule,
-                        },
-                      }))
-                    }
+                    onChange={handleVestingScheduleChange}
                     className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                   >
                     {vestingOptions.map((option) => (
@@ -318,22 +424,13 @@ export function Calculator() {
                     ))}
                   </select>
                   <p className="text-xs text-neutral-500">
-                    {
-                      vestingOptions.find(
-                        (option) => option.value === inputs.rsuGrant.vestingSchedule
-                      )?.description
-                    }
+                    {selectedVestingDescription}
                   </p>
                 </div>
                 <SliderInput
                   label="Vesting Period (years)"
                   value={inputs.rsuGrant.vestingYears}
-                  onChange={(value) =>
-                    setInputs((prev) => ({
-                      ...prev,
-                      rsuGrant: { ...prev.rsuGrant, vestingYears: value },
-                    }))
-                  }
+                  onChange={handleVestingYearsChange}
                   min={1}
                   max={5}
                   step={1}
@@ -343,12 +440,7 @@ export function Calculator() {
                   <SliderInput
                     label="Current Stock Price"
                     value={inputs.rsuGrant.currentPrice}
-                    onChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        rsuGrant: { ...prev.rsuGrant, currentPrice: value },
-                      }))
-                    }
+                    onChange={handleCurrentPriceChange}
                     min={1}
                     max={5000}
                     step={1}
@@ -357,12 +449,7 @@ export function Calculator() {
                   <SliderInput
                     label="Grant Stock Price"
                     value={inputs.rsuGrant.grantPrice}
-                    onChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        rsuGrant: { ...prev.rsuGrant, grantPrice: value },
-                      }))
-                    }
+                    onChange={handleGrantPriceChange}
                     min={1}
                     max={5000}
                     step={1}
@@ -381,9 +468,7 @@ export function Calculator() {
                 <SliderInput
                   label="Sign-On Bonus"
                   value={inputs.signOnBonus}
-                  onChange={(value) =>
-                    setInputs((prev) => ({ ...prev, signOnBonus: value }))
-                  }
+                  onChange={handleSignOnBonusChange}
                   min={0}
                   max={500_000}
                   step={5000}
@@ -392,9 +477,7 @@ export function Calculator() {
                 <SliderInput
                   label="Sign-On Amortization Years"
                   value={inputs.signOnVestingYears}
-                  onChange={(value) =>
-                    setInputs((prev) => ({ ...prev, signOnVestingYears: value }))
-                  }
+                  onChange={handleSignOnVestingYearsChange}
                   min={1}
                   max={4}
                   step={1}
@@ -412,9 +495,7 @@ export function Calculator() {
                 <SliderInput
                   label="401(k) Match %"
                   value={inputs.match401k}
-                  onChange={(value) =>
-                    setInputs((prev) => ({ ...prev, match401k: value }))
-                  }
+                  onChange={handleMatch401kChange}
                   min={0}
                   max={10}
                   step={1}
@@ -423,9 +504,7 @@ export function Calculator() {
                 <SliderInput
                   label="401(k) Match Limit"
                   value={inputs.match401kLimit}
-                  onChange={(value) =>
-                    setInputs((prev) => ({ ...prev, match401kLimit: value }))
-                  }
+                  onChange={handleMatch401kLimitChange}
                   min={0}
                   max={50_000}
                   step={500}
@@ -434,9 +513,7 @@ export function Calculator() {
                 <SliderInput
                   label="ESPP Discount %"
                   value={inputs.esppDiscount}
-                  onChange={(value) =>
-                    setInputs((prev) => ({ ...prev, esppDiscount: value }))
-                  }
+                  onChange={handleEsppDiscountChange}
                   min={0}
                   max={15}
                   step={1}
@@ -445,9 +522,7 @@ export function Calculator() {
                 <SliderInput
                   label="Annual ESPP Contribution"
                   value={inputs.esppContribution}
-                  onChange={(value) =>
-                    setInputs((prev) => ({ ...prev, esppContribution: value }))
-                  }
+                  onChange={handleEsppContributionChange}
                   min={0}
                   max={25_000}
                   step={500}
@@ -456,9 +531,7 @@ export function Calculator() {
                 <SliderInput
                   label="Employer HSA Contribution"
                   value={inputs.hsaContribution}
-                  onChange={(value) =>
-                    setInputs((prev) => ({ ...prev, hsaContribution: value }))
-                  }
+                  onChange={handleHsaContributionChange}
                   min={0}
                   max={5000}
                   step={100}
@@ -477,9 +550,7 @@ export function Calculator() {
                 <SliderInput
                   label="Expected Annual Refresher"
                   value={inputs.annualRefresher}
-                  onChange={(value) =>
-                    setInputs((prev) => ({ ...prev, annualRefresher: value }))
-                  }
+                  onChange={handleAnnualRefresherChange}
                   min={0}
                   max={250_000}
                   step={5000}
@@ -488,9 +559,7 @@ export function Calculator() {
                 <SliderInput
                   label="Refresher Vesting Years"
                   value={inputs.refresherVestingYears}
-                  onChange={(value) =>
-                    setInputs((prev) => ({ ...prev, refresherVestingYears: value }))
-                  }
+                  onChange={handleRefresherVestingYearsChange}
                   min={1}
                   max={4}
                   step={1}
