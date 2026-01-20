@@ -78,7 +78,7 @@ const IRMAA_MONTHLY_SURCHARGE = [0, 69.9, 174.7, 279.5, 384.3, 419.3];
 
 function calculateBracketVisualization(
   income: number,
-  brackets: { min: number; max: number; rate: number }[]
+  brackets: readonly { readonly min: number; readonly max: number; readonly rate: number }[]
 ): BracketVisualization {
   const result: TaxBracket[] = [];
   let cumulativeTax = 0;
