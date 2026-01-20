@@ -1,18 +1,20 @@
-import nextConfig from "eslint-config-next/core-web-vitals";
+import tsParser from "@typescript-eslint/parser";
 
-const config = [
+export default [
   {
-    ignores: ["dist/**", "legacy/**", ".next/**", "node_modules/**"],
+    ignores: ["**/node_modules/**", "**/.next/**", "**/dist/**"],
   },
-  ...nextConfig,
   {
-    rules: {
-      "react/no-unescaped-entities": "off",
-      "@next/next/no-page-custom-font": "off",
-      "import/no-anonymous-default-export": "off",
-      "react-hooks/set-state-in-effect": "off",
+    files: ["**/*.{js,jsx,ts,tsx}"],
+    languageOptions: {
+      parser: tsParser,
+      ecmaVersion: "latest",
+      sourceType: "module",
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
     },
   },
 ];
-
-export default config;
