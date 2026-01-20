@@ -140,13 +140,14 @@ export const tools: Tool[] = [
     id: "chase-trifecta",
     name: "Chase Trifecta Calculator",
     description:
-      "Optimize your Chase Sapphire + Freedom combo for maximum rewards.",
+      "Optimize your Chase card combination for maximum rewards",
     href: "/tools/chase-trifecta",
     categoryId: "credit-cards",
-    status: "coming-soon",
+    status: "live",
     primaryColor: "#005EB8",
     designStyle: "analytical",
     inspiredBy: ["Humphrey Yang"],
+    featured: true,
   },
   {
     id: "amex-comparison",
