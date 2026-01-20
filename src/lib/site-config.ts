@@ -153,10 +153,10 @@ export const tools: Tool[] = [
     id: "amex-comparison",
     name: "Amex Gold vs Platinum",
     description:
-      "Compare Amex Gold vs Platinum to see which premium card is right for you.",
+      "Compare Amex Gold vs Platinum to see which is right for you",
     href: "/tools/amex-comparison",
     categoryId: "credit-cards",
-    status: "coming-soon",
+    status: "live",
     primaryColor: "#d4a017",
     designStyle: "analytical",
     inspiredBy: ["The Points Guy (counter)"],
