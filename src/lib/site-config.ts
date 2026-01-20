@@ -127,10 +127,10 @@ export const tools: Tool[] = [
     id: "annual-fee-analyzer",
     name: "Annual Fee Analyzer",
     description:
-      "Calculate if any annual fee card is worth it for your actual spending patterns.",
+      "Calculate if any annual fee card is worth it for your spending.",
     href: "/tools/annual-fee-analyzer",
     categoryId: "credit-cards",
-    status: "coming-soon",
+    status: "live",
     primaryColor: "#22c55e",
     designStyle: "analytical",
     inspiredBy: ["The Points Guy (counter)"],
