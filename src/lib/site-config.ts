@@ -93,6 +93,16 @@ export const categories: Category[] = [
     color: "sky",
   },
   {
+    id: "equity-compensation",
+    name: "Equity & Compensation",
+    shortName: "Equity",
+    description:
+      "Tools for stock options, equity compensation, and tax-aware decision making.",
+    icon: "💼",
+    href: "/equity-compensation",
+    color: "amber",
+  },
+  {
     id: "credit-building",
     name: "Credit Building",
     shortName: "Credit",
@@ -381,6 +391,19 @@ export const tools: Tool[] = [
     primaryColor: "#10b981",
     designStyle: "analytical",
     inspiredBy: ["Mad Fientist", "White Coat Investor"],
+    featured: true,
+  },
+  {
+    id: "stock-option-exercise",
+    name: "Stock Option Exercise Decision Tool",
+    description:
+      "Model ISO/NSO exercise scenarios—AMT impact, taxes, and optimal timing",
+    href: "/tools/stock-option-exercise",
+    categoryId: "taxes",
+    status: "live",
+    primaryColor: "#f59e0b",
+    designStyle: "analytical",
+    inspiredBy: ["Secfi", "Compound Planning"],
     featured: true,
   },
   {
