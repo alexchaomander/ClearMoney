@@ -209,10 +209,10 @@ export const tools: Tool[] = [
     id: "roth-vs-traditional",
     name: "Roth vs Traditional Calculator",
     description:
-      "Compare Roth vs Traditional IRA to see which saves you more in taxes.",
+      "Compare Roth vs Traditional IRA to see which saves you more in taxes",
     href: "/tools/roth-vs-traditional",
     categoryId: "investing",
-    status: "coming-soon",
+    status: "live",
     primaryColor: "#a855f7",
     designStyle: "analytical",
     inspiredBy: ["FIRE Movement"],
