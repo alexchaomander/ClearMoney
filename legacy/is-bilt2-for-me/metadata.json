@@ -1,0 +1,5 @@
+{
+  "name": "Is Bilt 2.0 For Me?",
+  "description": "An interactive calculator to determine the best Bilt Card for your spending and rent profile, accounting for the new Bilt Cash unlock mechanics.",
+  "requestFramePermissions": []
+}
