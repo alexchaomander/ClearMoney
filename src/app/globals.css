@@ -43,8 +43,21 @@ html {
   scroll-behavior: smooth;
 }
 
-body {
+/* Dark mode (default) */
+html.dark body {
   @apply bg-neutral-950 text-neutral-100 antialiased;
+  font-family: var(--font-sans);
+}
+
+/* Light mode */
+html.light body {
+  @apply bg-white text-neutral-900 antialiased;
+  font-family: var(--font-sans);
+}
+
+/* Fallback for initial load */
+body {
+  @apply antialiased;
   font-family: var(--font-sans);
 }
 
@@ -58,20 +71,38 @@ body {
   @apply bg-brand-500/30;
 }
 
-/* Scrollbar styling (webkit) */
-::-webkit-scrollbar {
+/* Scrollbar styling (webkit) - dark mode */
+html.dark ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-::-webkit-scrollbar-track {
+html.dark ::-webkit-scrollbar-track {
   @apply bg-neutral-900;
 }
 
-::-webkit-scrollbar-thumb {
+html.dark ::-webkit-scrollbar-thumb {
   @apply bg-neutral-700 rounded-full;
 }
 
-::-webkit-scrollbar-thumb:hover {
+html.dark ::-webkit-scrollbar-thumb:hover {
   @apply bg-neutral-600;
+}
+
+/* Scrollbar styling (webkit) - light mode */
+html.light ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html.light ::-webkit-scrollbar-track {
+  @apply bg-neutral-100;
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  @apply bg-neutral-300 rounded-full;
+}
+
+html.light ::-webkit-scrollbar-thumb:hover {
+  @apply bg-neutral-400;
 }
