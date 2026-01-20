@@ -198,7 +198,10 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
   const groceryCard = sapphireCard === 'preferred' ? 'Sapphire Preferred' : 'Freedom Unlimited';
   categories.push(calculateCategory('Groceries', spending.groceries, groceryRate, groceryCard, cpp));
 
-  // Gas: Rotating 5x or FU 1.5x
+  // Gas: Uses conservative 1.5x baseline. Freedom Flex has rotating 5x categories
+  // that sometimes include gas, but since these rotate quarterly and aren't guaranteed,
+  // we use the reliable FU rate. Asterisk (*) indicates potential for higher returns
+  // when gas is a quarterly bonus category on Freedom Flex.
   categories.push(calculateCategory('Gas', spending.gas, 1.5, 'Freedom Unlimited*', cpp));
 
   // Travel: CSR=3x, CSP=2x, FU=1.5x

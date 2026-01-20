@@ -89,8 +89,8 @@ Roth Final Value:
 rothFinal = contribution × (1 - currentTaxRate) × (1 + return)^years
 
 Break-Even Tax Rate:
-If current rate < retirement rate → Traditional wins
-If current rate > retirement rate → Roth wins
+If current rate < retirement rate → Roth wins (pay taxes now at lower rate)
+If current rate > retirement rate → Traditional wins (defer taxes to lower rate)
 If rates equal → Same result
 ```
 

@@ -168,7 +168,7 @@ export const categories = [
   {
     id: "credit-cards",
     name: "Credit Cards",
-    tools: ["annual-fee-analyzer", "chase-trifecta", "amex-comparison", "points-valuation", "tpg-transparency"],
+    tools: ["bilt-calculator", "annual-fee-analyzer", "chase-trifecta", "amex-comparison", "points-valuation", "tpg-transparency"],
   },
   {
     id: "debt",

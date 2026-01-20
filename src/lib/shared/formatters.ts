@@ -24,10 +24,17 @@ export function formatCurrency(value: number, decimals: number = 0): string {
 /**
  * Format a number as a percentage
  *
- * @param value - The number to format (0.12 = 12%, 12 = 12% based on isRaw)
+ * @param value - The number to format.
+ *   - If `isRaw` is false (default), this should be a decimal (e.g., 0.12 for 12%).
+ *   - If `isRaw` is true, this should be a percentage number (e.g., 12 for 12%).
  * @param decimals - Number of decimal places (default: 1)
- * @param isRaw - If true, value is already in percentage form (12 = 12%)
+ * @param isRaw - If true, the input `value` is treated as a percentage number (e.g., 12)
+ *   instead of a decimal (e.g., 0.12). Default: false.
  * @returns Formatted percentage string (e.g., "12.5%")
+ *
+ * @example
+ * formatPercent(0.125)        // "12.5%"
+ * formatPercent(12.5, 1, true) // "12.5%"
  */
 export function formatPercent(
   value: number,

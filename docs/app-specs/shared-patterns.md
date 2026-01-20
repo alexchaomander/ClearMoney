@@ -62,14 +62,14 @@ import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { formatCurrency, formatPercent } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/[slug]/calculations";
-import type { InputType, ResultType } from "@/lib/calculators/[slug]/types";
+import type { CalculatorInputs, CalculatorResults } from "@/lib/calculators/[slug]/types";
 
-const DEFAULT_INPUTS: InputType = {
+const DEFAULT_INPUTS: CalculatorInputs = {
   // sensible defaults
 };
 
 export function Calculator() {
-  const [inputs, setInputs] = useState<InputType>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
 
   // Calculate results whenever inputs change
   const results = calculate(inputs);
@@ -114,12 +114,12 @@ export function Calculator() {
           {/* Results Card */}
           <ResultCard
             title="Your Results"
-            primaryValue={formatCurrency(results.mainResult)}
+            primaryValue={formatCurrency(results.primaryResult)}
             primaryLabel="[What this number means]"
-            items={[
-              { label: "[Detail 1]", value: formatCurrency(results.detail1) },
-              { label: "[Detail 2]", value: formatPercent(results.detail2) },
-            ]}
+            items={results.breakdown.map(item => ({
+              label: item.label,
+              value: formatCurrency(item.value)
+            }))}
             variant="[your-color]"
           />
         </div>

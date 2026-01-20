@@ -157,7 +157,10 @@ export interface SimulationResult {
 import type { CreditProfile, SimulationAction, SimulationResult, FactorAnalysis } from "./types";
 
 export function analyzeProfile(profile: CreditProfile): FactorAnalysis[] {
-  const utilization = profile.currentBalance / profile.totalCreditLimit;
+  // Guard against division by zero when totalCreditLimit is 0
+  const utilization = profile.totalCreditLimit > 0
+    ? profile.currentBalance / profile.totalCreditLimit
+    : 0;
 
   return [
     {

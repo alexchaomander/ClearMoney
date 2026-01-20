@@ -71,7 +71,7 @@ Effective Credits = Total Credits × (Credit Utilization / 100)
 
 Comparison Value = Annual Spending × 0.02 (2% cash back baseline)
 
-Break-Even Spending = (Annual Fee - Effective Credits) / ((Rewards Rate - 2) / 100 × Points Value)
+Break-Even Spending = (Annual Fee - Effective Credits) / ((Rewards Rate × Points Value / 100) - 0.02)
 ```
 
 ### TypeScript Implementation
@@ -84,7 +84,7 @@ export interface CalculatorInputs {
   rewardsRate: number;           // as percentage (e.g., 2.0 for 2%)
   totalCredits: number;
   creditUtilization: number;     // as percentage (e.g., 50 for 50%)
-  pointsValueCpp: number;        // cents per point (e.g., 1.0)
+  pointsValueCpp: number;        // value multiplier (1.0 = 1cpp baseline, 1.5 = 1.5cpp)
 }
 
 export interface CalculatorResults {
@@ -114,11 +114,11 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
     pointsValueCpp,
   } = inputs;
 
-  // Calculate rewards earned (in points)
-  const pointsEarned = annualSpending * (rewardsRate / 100);
+  // Calculate base rewards value (at 1cpp baseline)
+  const baseRewards = annualSpending * (rewardsRate / 100);
 
-  // Convert points to dollar value
-  const rewardsEarned = pointsEarned * (pointsValueCpp / 100);
+  // Adjust for actual point value (pointsValueCpp is a multiplier: 1.0 = 1cpp, 1.5 = 1.5cpp)
+  const rewardsEarned = baseRewards * pointsValueCpp;
 
   // Calculate effective credits (what you'll actually use)
   const effectiveCredits = totalCredits * (creditUtilization / 100);
@@ -300,8 +300,8 @@ The key insight: Be honest about credit utilization (most people don't use all t
 ## Calculation Logic
 
 ```typescript
-// Net value calculation
-rewardsEarned = annualSpending × (rewardsRate / 100) × (pointsValueCpp / 100)
+// Net value calculation (pointsValueCpp is a multiplier: 1.0 = 1cpp, 1.5 = 1.5cpp)
+rewardsEarned = annualSpending × (rewardsRate / 100) × pointsValueCpp
 effectiveCredits = totalCredits × (creditUtilization / 100)
 netAnnualValue = rewardsEarned + effectiveCredits - annualFee
 
