@@ -234,6 +234,16 @@ export const tools: Tool[] = [
     featured: true,
   },
   {
+    id: "equity-concentration",
+    name: "Equity Concentration Risk",
+    description: "Assess the risk of holding too much company stock",
+    href: "/tools/equity-concentration",
+    categoryId: "investing",
+    status: "live",
+    primaryColor: "#ef4444",
+    designStyle: "serious",
+  },
+  {
     id: "dividend-tracker",
     name: "Dividend Income Tracker",
     description:
