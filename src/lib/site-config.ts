@@ -166,13 +166,14 @@ export const tools: Tool[] = [
     id: "points-valuation",
     name: "Points Valuation Dashboard",
     description:
-      "Our transparent, methodology-backed valuations for major points currencies.",
+      "Our transparent, methodology-backed valuations for major points currencies",
     href: "/tools/points-valuation",
     categoryId: "credit-cards",
-    status: "coming-soon",
+    status: "live",
     primaryColor: "#3b82f6",
     designStyle: "analytical",
     inspiredBy: ["The Points Guy (counter)"],
+    featured: false,
   },
   {
     id: "tpg-transparency",
