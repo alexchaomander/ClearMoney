@@ -407,6 +407,18 @@ export const tools: Tool[] = [
     featured: true,
   },
   {
+    id: "tax-bracket-optimizer",
+    name: "Tax Bracket Optimizer",
+    description: "Visualize your tax brackets and find opportunities to optimize",
+    href: "/tools/tax-bracket-optimizer",
+    categoryId: "taxes",
+    status: "live",
+    primaryColor: "#14b8a6",
+    designStyle: "analytical",
+    inspiredBy: ["Mad Fientist", "Money Guy Show"],
+    featured: true,
+  },
+  {
     id: "tax-bracket",
     name: "Tax Bracket Calculator",
     description: "Understand your marginal and effective tax rates.",
