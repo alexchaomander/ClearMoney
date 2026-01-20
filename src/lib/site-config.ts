@@ -223,7 +223,7 @@ export const tools: Tool[] = [
   {
     id: "mega-backdoor-roth",
     name: "Mega Backdoor Roth Calculator",
-    description: "Calculate your after-tax 401(k) contribution capacity",
+    description: "Discover if you can contribute $46,000+ extra to Roth accounts annually",
     href: "/tools/mega-backdoor-roth",
     categoryId: "investing",
     status: "live",

@@ -83,7 +83,9 @@ function calculateContributionSpace(
     : EMPLOYEE_LIMIT;
   const catchUpLimit = isCatchUpEligible ? CATCH_UP_LIMIT : 0;
 
-  const usedSpace = plan.employeeContribution + plan.employerMatch;
+  // Clamp employee contribution to the IRS deferral limit based on age
+  const clampedEmployeeContribution = Math.min(plan.employeeContribution, employeeLimit);
+  const usedSpace = clampedEmployeeContribution + plan.employerMatch;
   const irsMaxAvailable = Math.max(0, totalLimit - usedSpace);
 
   // Plan may have its own after-tax limit
@@ -116,6 +118,7 @@ function calculateProjectedGrowth(
   const projections: ProjectedGrowth[] = [];
   let balance = currentBalance;
   let cumulativeContributions = 0;
+  let cumulativeDividendTax = 0;
 
   for (let year = 1; year <= years; year++) {
     cumulativeContributions += annualContribution;
@@ -124,14 +127,16 @@ function calculateProjectedGrowth(
     // Tax-free savings = what you'd pay in a taxable account
     const growthThisYear = balance - cumulativeContributions - currentBalance;
     const taxOnGrowth = growthThisYear * CAPITAL_GAINS_RATE;
-    const dividendTax = balance * DIVIDEND_YIELD * DIVIDEND_RATE * year;
+    // Add this years dividend tax to the running total (not multiplied by year)
+    const dividendTaxThisYear = balance * DIVIDEND_YIELD * DIVIDEND_RATE;
+    cumulativeDividendTax += dividendTaxThisYear;
 
     projections.push({
       year,
       contribution: annualContribution,
       cumulativeContributions,
       balance: Math.round(balance),
-      taxFreeSavings: Math.round(taxOnGrowth + dividendTax),
+      taxFreeSavings: Math.round(taxOnGrowth + cumulativeDividendTax),
     });
   }
 
@@ -159,7 +164,7 @@ function calculateComparison(
     // Pay dividend taxes annually
     const dividendTax = taxableBalance * DIVIDEND_YIELD * DIVIDEND_RATE;
     taxesPaid += dividendTax;
-    taxableBalance -= dividendTax;
+    // taxableBalance -= dividendTax; // Removed: tax is paid from external funds
   }
 
   // Pay capital gains at the end
