@@ -224,10 +224,10 @@ export const tools: Tool[] = [
     id: "fire-calculator",
     name: "FIRE Calculator",
     description:
-      "Calculate when you can reach financial independence based on your savings rate.",
+      "Calculate when you can reach financial independence based on your savings rate",
     href: "/tools/fire-calculator",
     categoryId: "investing",
-    status: "coming-soon",
+    status: "live",
     primaryColor: "#f59e0b",
     designStyle: "analytical",
     inspiredBy: ["Mr. Money Mustache", "FIRE Movement"],
