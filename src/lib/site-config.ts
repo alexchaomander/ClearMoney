@@ -298,10 +298,10 @@ export const tools: Tool[] = [
     id: "debt-destroyer",
     name: "Debt Destroyer",
     description:
-      "Compare snowball vs avalanche debt payoff strategies side-by-side.",
+      "Compare snowball vs avalanche debt payoff strategies side-by-side",
     href: "/tools/debt-destroyer",
     categoryId: "debt",
-    status: "coming-soon",
+    status: "live",
     primaryColor: "#ef4444",
     designStyle: "serious",
     inspiredBy: ["Dave Ramsey"],
