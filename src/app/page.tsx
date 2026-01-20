@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { categories, tools, getLiveTools } from "@/lib/site-config";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const principles = [
   {
@@ -44,6 +45,11 @@ export default function HomePage() {
 
   return (
     <div className="relative">
+      {/* Theme Toggle - Fixed Position */}
+      <div className="fixed right-4 top-4 z-50">
+        <ThemeToggle />
+      </div>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-brand-600/10 via-transparent to-transparent" />
@@ -57,14 +63,14 @@ export default function HomePage() {
               The honest alternative to corporate finance media
             </div>
 
-            <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl">
+            <h1 className="text-4xl font-black tracking-tight text-neutral-900 dark:text-white sm:text-6xl lg:text-7xl">
               Financial literacy{" "}
               <span className="bg-gradient-to-r from-brand-400 to-brand-600 bg-clip-text text-transparent">
                 for everyone
               </span>
             </h1>
 
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-400 sm:text-xl">
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-600 dark:text-neutral-400 sm:text-xl">
               Interactive tools and unbiased advice to help you make smarter
               money decisions. No affiliate bias. No corporate influence. Just
               math and honest opinions.
@@ -86,13 +92,13 @@ export default function HomePage() {
       </section>
 
       {/* Categories Section */}
-      <section className="border-y border-neutral-800 bg-neutral-900/30">
+      <section className="border-y border-neutral-200 bg-neutral-100/50 dark:border-neutral-800 dark:bg-neutral-900/30">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
-            <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+            <h2 className="text-3xl font-black tracking-tight text-neutral-900 dark:text-white sm:text-4xl">
               Your Money, Demystified
             </h2>
-            <p className="mt-4 text-lg text-neutral-400">
+            <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">
               Honest guidance across every area of personal finance.
             </p>
           </div>
@@ -100,13 +106,13 @@ export default function HomePage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {categories.map((category) => (
               <Link key={category.id} href={category.href}>
-                <Card className="group h-full transition-all hover:border-neutral-700 hover:bg-neutral-900/80">
+                <Card className="group h-full transition-all hover:border-neutral-300 hover:bg-neutral-100 dark:hover:border-neutral-700 dark:hover:bg-neutral-900/80">
                   <CardContent className="p-6">
                     <div className="mb-3 text-3xl">{category.icon}</div>
-                    <h3 className="text-lg font-bold text-white group-hover:text-brand-400">
+                    <h3 className="text-lg font-bold text-neutral-900 group-hover:text-brand-500 dark:text-white dark:group-hover:text-brand-400">
                       {category.name}
                     </h3>
-                    <p className="mt-2 text-sm text-neutral-400">
+                    <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
                       {category.description}
                     </p>
                   </CardContent>
@@ -120,10 +126,10 @@ export default function HomePage() {
       {/* Tools Section */}
       <section id="tools" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="mb-12 text-center">
-          <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+          <h2 className="text-3xl font-black tracking-tight text-neutral-900 dark:text-white sm:text-4xl">
             Decision Tools
           </h2>
-          <p className="mt-4 text-lg text-neutral-400">
+          <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">
             Plug in your numbers. Get an answer. No fluff.
           </p>
         </div>
@@ -131,20 +137,20 @@ export default function HomePage() {
         {/* Live Tools */}
         {liveTools.length > 0 && (
           <div className="mb-8">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-brand-400">
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-brand-500 dark:text-brand-400">
               <Zap className="mr-2 inline h-4 w-4" />
               Live Now
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               {liveTools.map((tool) => (
                 <Link key={tool.id} href={tool.href}>
-                  <Card className="group h-full transition-all hover:border-brand-500/50 hover:bg-neutral-900/80">
+                  <Card className="group h-full transition-all hover:border-brand-500/50 hover:bg-neutral-100 dark:hover:bg-neutral-900/80">
                     <CardContent className="flex items-start justify-between p-6">
                       <div className="flex-1">
-                        <h4 className="text-lg font-bold text-white group-hover:text-brand-400">
+                        <h4 className="text-lg font-bold text-neutral-900 group-hover:text-brand-500 dark:text-white dark:group-hover:text-brand-400">
                           {tool.name}
                         </h4>
-                        <p className="mt-2 text-sm text-neutral-400">
+                        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
                           {tool.description}
                         </p>
                       </div>
@@ -171,14 +177,14 @@ export default function HomePage() {
               .map((tool) => (
                 <Card
                   key={tool.id}
-                  className="border-neutral-800/50 bg-neutral-900/30"
+                  className="border-neutral-200/50 bg-neutral-100/50 dark:border-neutral-800/50 dark:bg-neutral-900/30"
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <h4 className="text-sm font-medium text-neutral-300">
+                      <h4 className="text-sm font-medium text-neutral-600 dark:text-neutral-300">
                         {tool.name}
                       </h4>
-                      <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-xs text-neutral-500">
+                      <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-xs text-neutral-500 dark:bg-neutral-800">
                         Soon
                       </span>
                     </div>
@@ -194,13 +200,13 @@ export default function HomePage() {
       </section>
 
       {/* Principles Section */}
-      <section className="border-y border-neutral-800 bg-neutral-900/30">
+      <section className="border-y border-neutral-200 bg-neutral-100/50 dark:border-neutral-800 dark:bg-neutral-900/30">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
-            <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+            <h2 className="text-3xl font-black tracking-tight text-neutral-900 dark:text-white sm:text-4xl">
               Why We're Different
             </h2>
-            <p className="mt-4 text-lg text-neutral-400">
+            <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">
               We're not here to sell you products. We're here to help you
               decide.
             </p>
@@ -209,13 +215,13 @@ export default function HomePage() {
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {principles.map((principle) => (
               <div key={principle.title} className="text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600/20 text-brand-400">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600/20 text-brand-500 dark:text-brand-400">
                   <principle.icon className="h-6 w-6" />
                 </div>
-                <h3 className="text-lg font-bold text-white">
+                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
                   {principle.title}
                 </h3>
-                <p className="mt-2 text-sm text-neutral-400">
+                <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
                   {principle.description}
                 </p>
               </div>
@@ -227,18 +233,18 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
         <Card className="overflow-hidden">
-          <div className="relative bg-gradient-to-br from-brand-600/20 via-neutral-900 to-neutral-900 p-8 sm:p-12">
+          <div className="relative bg-gradient-to-br from-brand-600/20 via-neutral-100 to-neutral-100 dark:via-neutral-900 dark:to-neutral-900 p-8 sm:p-12">
             <div className="absolute right-0 top-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-brand-600/10 blur-3xl" />
             <div className="relative">
-              <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+              <h2 className="text-2xl font-black tracking-tight text-neutral-900 dark:text-white sm:text-3xl">
                 The financial advice industry is broken.
               </h2>
-              <p className="mt-4 max-w-2xl text-neutral-400">
+              <p className="mt-4 max-w-2xl text-neutral-600 dark:text-neutral-400">
                 Most "advice" sites exist to serve banks and advertisers, not
                 you. They're paid to push products, inflate valuations, and bury
                 the real math under walls of SEO content.
               </p>
-              <p className="mt-4 max-w-2xl font-medium text-white">
+              <p className="mt-4 max-w-2xl font-medium text-neutral-900 dark:text-white">
                 We're building something different. A platform that serves
                 people, not corporations.
               </p>
@@ -262,17 +268,17 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-800">
+      <footer className="border-t border-neutral-200 dark:border-neutral-800">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <span className="text-xl font-black text-white">ClearMoney</span>
+              <span className="text-xl font-black text-neutral-900 dark:text-white">ClearMoney</span>
               <p className="mt-2 text-sm text-neutral-500">
                 Financial literacy for everyone. No corporate influence.
               </p>
             </div>
             <div>
-              <h4 className="mb-3 text-sm font-bold uppercase tracking-widest text-neutral-400">
+              <h4 className="mb-3 text-sm font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                 Categories
               </h4>
               <div className="flex flex-col gap-2 text-sm text-neutral-500">
@@ -280,7 +286,7 @@ export default function HomePage() {
                   <Link
                     key={cat.id}
                     href={cat.href}
-                    className="hover:text-white"
+                    className="hover:text-neutral-900 dark:hover:text-white"
                   >
                     {cat.shortName}
                   </Link>
@@ -288,47 +294,47 @@ export default function HomePage() {
               </div>
             </div>
             <div>
-              <h4 className="mb-3 text-sm font-bold uppercase tracking-widest text-neutral-400">
+              <h4 className="mb-3 text-sm font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                 Company
               </h4>
               <div className="flex flex-col gap-2 text-sm text-neutral-500">
-                <Link href="/about" className="hover:text-white">
+                <Link href="/about" className="hover:text-neutral-900 dark:hover:text-white">
                   About
                 </Link>
-                <Link href="/methodology" className="hover:text-white">
+                <Link href="/methodology" className="hover:text-neutral-900 dark:hover:text-white">
                   Methodology
                 </Link>
-                <Link href="/transparency" className="hover:text-white">
+                <Link href="/transparency" className="hover:text-neutral-900 dark:hover:text-white">
                   Transparency
                 </Link>
-                <Link href="/blog" className="hover:text-white">
+                <Link href="/blog" className="hover:text-neutral-900 dark:hover:text-white">
                   Blog
                 </Link>
               </div>
             </div>
             <div>
-              <h4 className="mb-3 text-sm font-bold uppercase tracking-widest text-neutral-400">
+              <h4 className="mb-3 text-sm font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                 Legal
               </h4>
               <div className="flex flex-col gap-2 text-sm text-neutral-500">
-                <Link href="/privacy" className="hover:text-white">
+                <Link href="/privacy" className="hover:text-neutral-900 dark:hover:text-white">
                   Privacy Policy
                 </Link>
-                <Link href="/terms" className="hover:text-white">
+                <Link href="/terms" className="hover:text-neutral-900 dark:hover:text-white">
                   Terms of Service
                 </Link>
-                <Link href="/disclosures" className="hover:text-white">
+                <Link href="/disclosures" className="hover:text-neutral-900 dark:hover:text-white">
                   Disclosures
                 </Link>
               </div>
             </div>
           </div>
-          <div className="mt-8 border-t border-neutral-800 pt-8 text-center text-xs text-neutral-500">
+          <div className="mt-8 border-t border-neutral-200 dark:border-neutral-800 pt-8 text-center text-xs text-neutral-500">
             <p>
               We may earn affiliate commissions from some links. See our{" "}
               <Link
                 href="/transparency"
-                className="underline hover:text-neutral-300"
+                className="underline hover:text-neutral-700 dark:hover:text-neutral-300"
               >
                 transparency page
               </Link>{" "}
