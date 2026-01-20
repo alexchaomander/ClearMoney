@@ -125,6 +125,17 @@ const riskStyles = {
   },
 } as const;
 
+// Net worth breakdown chart colors
+const BREAKDOWN_COLORS = {
+  employerStockVested: "#f43f5e",
+  employerStockUnvested: "#fb7185",
+  cashSavings: "#38bdf8",
+  retirementAccounts: "#a78bfa",
+  otherInvestments: "#34d399",
+  realEstate: "#fbbf24",
+  otherAssets: "#9ca3af",
+} as const;
+
 function buildDonutGradient(data: { percent: number; color: string }[]) {
   let start = 0;
   const segments = data.map((segment) => {
@@ -251,37 +262,37 @@ function NetWorthBreakdown({
     {
       label: "Employer Stock (Vested)",
       value: inputs.equity.currentSharesValue + inputs.equity.vestedOptionsValue,
-      color: "#f43f5e",
+      color: BREAKDOWN_COLORS.employerStockVested,
     },
     {
       label: "Employer Stock (Unvested)",
       value: inputs.equity.unvestedEquityValue,
-      color: "#fb7185",
+      color: BREAKDOWN_COLORS.employerStockUnvested,
     },
     {
       label: "Cash & Savings",
       value: inputs.assets.cashSavings,
-      color: "#38bdf8",
+      color: BREAKDOWN_COLORS.cashSavings,
     },
     {
       label: "Retirement Accounts",
       value: inputs.assets.retirementAccounts,
-      color: "#a78bfa",
+      color: BREAKDOWN_COLORS.retirementAccounts,
     },
     {
       label: "Other Investments",
       value: inputs.assets.otherInvestments,
-      color: "#34d399",
+      color: BREAKDOWN_COLORS.otherInvestments,
     },
     {
       label: "Real Estate",
       value: inputs.assets.realEstate,
-      color: "#fbbf24",
+      color: BREAKDOWN_COLORS.realEstate,
     },
     {
       label: "Other Assets",
       value: inputs.assets.otherAssets,
-      color: "#9ca3af",
+      color: BREAKDOWN_COLORS.otherAssets,
     },
   ];
 
