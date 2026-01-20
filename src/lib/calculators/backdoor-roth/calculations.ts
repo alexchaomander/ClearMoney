@@ -5,14 +5,16 @@ import type {
   ProRataResult,
 } from "./types";
 
+// 2025 IRS Roth IRA MAGI phase-out limits
 const ROTH_LIMITS = {
-  single: { phaseOutStart: 146000, phaseOutEnd: 161000 },
-  married: { phaseOutStart: 230000, phaseOutEnd: 240000 },
+  single: { phaseOutStart: 150000, phaseOutEnd: 165000 },
+  married: { phaseOutStart: 236000, phaseOutEnd: 246000 },
 };
 
+// 2025 IRS Traditional IRA deduction phase-out limits (with workplace retirement plan)
 const TRADITIONAL_DEDUCTION_LIMITS = {
-  single: { phaseOutStart: 77000, phaseOutEnd: 87000 },
-  married: { phaseOutStart: 123000, phaseOutEnd: 143000 },
+  single: { phaseOutStart: 79000, phaseOutEnd: 89000 },
+  married: { phaseOutStart: 126000, phaseOutEnd: 146000 },
 };
 
 const CONTRIBUTION_LIMIT = 7000;
