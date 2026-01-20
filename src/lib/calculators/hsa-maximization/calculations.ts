@@ -7,13 +7,44 @@ import type {
   ComparisonAnalysis,
 } from "./types";
 
+// 2024 HSA Limits (for reference)
+const HSA_LIMITS_2024 = {
+  individual: 4150,
+  family: 8300,
+  catchUp: 1000,
+  catchUpAge: 55,
+  hdhdMinDeductibleIndividual: 1600,
+  hdhdMinDeductibleFamily: 3200,
+};
+
 // 2025 HSA Limits
 const HSA_LIMITS_2025 = {
   individual: 4300,
   family: 8550,
   catchUp: 1000,
   catchUpAge: 55,
+  hdhdMinDeductibleIndividual: 1650,
+  hdhdMinDeductibleFamily: 3300,
 };
+
+/**
+ * Get the appropriate long-term capital gains rate based on marginal tax bracket.
+ * 0% for 10-12% brackets, 15% for 22-35% brackets, 20% for 37%+ bracket.
+ */
+function getCapitalGainsRate(marginalTaxRate: number): number {
+  if (marginalTaxRate <= 12) return 0;
+  if (marginalTaxRate <= 35) return 0.15;
+  return 0.20;
+}
+
+/**
+ * Prorate contribution limit for partial-year HDHP coverage.
+ * IRS requires prorating by month (1/12 of annual limit per month).
+ */
+function prorateContributionLimit(annualLimit: number, monthsOfCoverage: number): number {
+  if (monthsOfCoverage >= 12) return annualLimit;
+  return Math.round((annualLimit * monthsOfCoverage) / 12);
+}
 
 // State income tax rates (simplified)
 const STATE_TAX_RATES: Record<string, number> = {
@@ -93,12 +124,22 @@ function checkEligibility(inputs: CalculatorInputs): EligibilityResult {
     eligibility.age >= HSA_LIMITS_2025.catchUpAge ? HSA_LIMITS_2025.catchUp : 0;
   const maxContribution = baseLimit + catchUpAmount;
 
+  // Apply partial-year proration if less than 12 months of coverage
+  const monthsOfCoverage = eligibility.monthsOfCoverage ?? 12;
+  const proratedMaxContribution = prorateContributionLimit(maxContribution, monthsOfCoverage);
+
   const totalPlannedContribution =
     contribution.currentContribution + contribution.employerContribution;
   const remainingContributionRoom = Math.max(
     0,
-    maxContribution - totalPlannedContribution
+    proratedMaxContribution - totalPlannedContribution
   );
+
+  if (isEligible && monthsOfCoverage < 12) {
+    reasons.push(
+      `With ${monthsOfCoverage} months of HDHP coverage, your limit is prorated to $${proratedMaxContribution.toLocaleString()}.`
+    );
+  }
 
   if (isEligible && remainingContributionRoom > 0) {
     reasons.push(
@@ -111,6 +152,7 @@ function checkEligibility(inputs: CalculatorInputs): EligibilityResult {
     contributionLimit: baseLimit,
     catchUpAmount,
     maxContribution,
+    proratedMaxContribution,
     remainingContributionRoom,
     reasons,
   };
@@ -211,8 +253,10 @@ function calculateTaxSavings(
   const taxFreeWithdrawals = Math.min(futureValue, retirementMedical);
   const withdrawalTaxSavings = taxFreeWithdrawals * (tax.retirementTaxRate / 100);
 
+  // Use proper capital gains rate based on marginal bracket
+  const capitalGainsRate = getCapitalGainsRate(tax.marginalTaxRate);
   const totalLifetimeTaxAdvantage =
-    lifetimeTaxSavingsOnContributions + taxFreeGrowth * 0.15 + withdrawalTaxSavings;
+    lifetimeTaxSavingsOnContributions + taxFreeGrowth * capitalGainsRate + withdrawalTaxSavings;
 
   return {
     annualContributionDeduction: annualContribution,
@@ -234,7 +278,7 @@ function calculateComparison(
 ): ComparisonAnalysis {
   const { contribution, investment, tax, medical, eligibility } = inputs;
 
-  const annualContribution = eligibility.isEligible
+  const annualContribution = eligibility.hasHDHP
     ? contribution.currentContribution + contribution.employerContribution
     : 0;
   const rate = investment.expectedReturn / 100;
@@ -251,11 +295,16 @@ function calculateComparison(
     annualContribution * ((tax.marginalTaxRate / 100) + 0.0765) * years;
 
   // Taxable Account Strategy (same contributions, but taxed)
+  // Note: FICA (7.65%) only applies to earned income contributions, not existing balance
   const afterTaxContribution =
     annualContribution * (1 - tax.marginalTaxRate / 100 - 0.0765);
 
-  let taxableBalance = contribution.currentHSABalance * (1 - tax.marginalTaxRate / 100);
+  // Existing balance is already after-tax (no additional deduction)
+  let taxableBalance = contribution.currentHSABalance;
   let taxesPaid = 0;
+
+  // Use proper capital gains rate based on marginal bracket
+  const capitalGainsRate = getCapitalGainsRate(tax.marginalTaxRate);
 
   for (let year = 1; year <= years; year += 1) {
     // Contribute after-tax
@@ -263,7 +312,8 @@ function calculateComparison(
     // Grow
     const growth = taxableBalance * rate;
     // Pay tax on dividends/gains annually (simplified)
-    const annualTax = growth * 0.2; // Assume 20% blend of LTCG/dividends
+    // Use actual capital gains rate instead of hardcoded 20%
+    const annualTax = growth * capitalGainsRate;
     taxesPaid += annualTax;
     taxableBalance = taxableBalance + growth - annualTax;
   }
@@ -328,13 +378,28 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
 
   let maxContributionBenefit = 0;
   if (additionalIfMaxed > 0) {
-    const additionalTaxSaved =
+    // Tax savings on each year's additional contribution
+    const additionalTaxSavedPerYear =
       additionalIfMaxed * (inputs.tax.marginalTaxRate / 100 + 0.0765);
-    const additionalGrowth =
-      additionalIfMaxed *
-      Math.pow(1 + inputs.investment.expectedReturn / 100, inputs.investment.yearsToRetirement);
+
+    // Calculate future value of additional contributions with proper compounding
+    // Each year's contribution compounds for different periods
+    const returnRate = inputs.investment.expectedReturn / 100;
+    const yearsContributing = Math.max(
+      0,
+      Math.min(inputs.investment.yearsToRetirement, 65 - inputs.eligibility.age)
+    );
+
+    let futureValueOfContributions = 0;
+    for (let year = 1; year <= yearsContributing; year += 1) {
+      // Each contribution compounds for (yearsToRetirement - year + 1) years
+      const yearsToCompound = inputs.investment.yearsToRetirement - year + 1;
+      futureValueOfContributions += additionalIfMaxed * Math.pow(1 + returnRate, yearsToCompound);
+    }
+
+    // Total benefit = lifetime tax savings + future value of compounded contributions
     maxContributionBenefit =
-      additionalTaxSaved * inputs.investment.yearsToRetirement + additionalGrowth;
+      additionalTaxSavedPerYear * yearsContributing + futureValueOfContributions;
   }
 
   // Recommendations and warnings
