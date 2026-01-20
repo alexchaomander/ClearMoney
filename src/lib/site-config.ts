@@ -82,6 +82,16 @@ export const categories: Category[] = [
     href: "/taxes",
     color: "sky",
   },
+  {
+    id: "credit-building",
+    name: "Credit Building",
+    shortName: "Credit",
+    description:
+      "Understand and improve your credit score. Simulators and education without the sales pitch.",
+    icon: "📊",
+    href: "/credit-building",
+    color: "purple",
+  },
 ];
 
 export interface Tool {
@@ -91,6 +101,12 @@ export interface Tool {
   href: string;
   categoryId: string;
   status: "live" | "coming-soon" | "beta";
+  // Enhanced fields for app gallery
+  primaryColor?: string;
+  designStyle?: "analytical" | "playful" | "minimal" | "serious";
+  inspiredBy?: string[];
+  featured?: boolean;
+  thumbnail?: string;
 }
 
 export const tools: Tool[] = [
@@ -103,15 +119,22 @@ export const tools: Tool[] = [
     href: "/tools/bilt-calculator",
     categoryId: "credit-cards",
     status: "live",
+    primaryColor: "#000000",
+    designStyle: "analytical",
+    featured: true,
   },
   {
-    id: "annual-fee-calculator",
-    name: "Annual Fee Worth It?",
+    id: "annual-fee-analyzer",
+    name: "Annual Fee Analyzer",
     description:
-      "Calculate if your premium card's annual fee is justified by your usage.",
-    href: "/tools/annual-fee-calculator",
+      "Calculate if any annual fee card is worth it for your actual spending patterns.",
+    href: "/tools/annual-fee-analyzer",
     categoryId: "credit-cards",
     status: "coming-soon",
+    primaryColor: "#22c55e",
+    designStyle: "analytical",
+    inspiredBy: ["The Points Guy (counter)"],
+    featured: true,
   },
   {
     id: "chase-trifecta",
@@ -121,15 +144,47 @@ export const tools: Tool[] = [
     href: "/tools/chase-trifecta",
     categoryId: "credit-cards",
     status: "coming-soon",
+    primaryColor: "#005EB8",
+    designStyle: "analytical",
+    inspiredBy: ["Humphrey Yang"],
   },
   {
-    id: "points-valuations",
-    name: "Points Valuation Dashboard",
+    id: "amex-comparison",
+    name: "Amex Gold vs Platinum",
     description:
-      "Our honest, conservative valuations for all major points programs.",
-    href: "/valuations",
+      "Compare Amex Gold vs Platinum to see which premium card is right for you.",
+    href: "/tools/amex-comparison",
     categoryId: "credit-cards",
     status: "coming-soon",
+    primaryColor: "#d4a017",
+    designStyle: "analytical",
+    inspiredBy: ["The Points Guy (counter)"],
+    featured: true,
+  },
+  {
+    id: "points-valuation",
+    name: "Points Valuation Dashboard",
+    description:
+      "Our transparent, methodology-backed valuations for major points currencies.",
+    href: "/tools/points-valuation",
+    categoryId: "credit-cards",
+    status: "coming-soon",
+    primaryColor: "#3b82f6",
+    designStyle: "analytical",
+    inspiredBy: ["The Points Guy (counter)"],
+  },
+  {
+    id: "tpg-transparency",
+    name: "TPG Transparency Tool",
+    description:
+      "See what The Points Guy says vs what the math actually says—side by side.",
+    href: "/tools/tpg-transparency",
+    categoryId: "credit-cards",
+    status: "coming-soon",
+    primaryColor: "#10b981",
+    designStyle: "analytical",
+    inspiredBy: ["The Points Guy (counter)"],
+    featured: true,
   },
   // Banking
   {
@@ -151,6 +206,44 @@ export const tools: Tool[] = [
   },
   // Investing
   {
+    id: "roth-vs-traditional",
+    name: "Roth vs Traditional Calculator",
+    description:
+      "Compare Roth vs Traditional IRA to see which saves you more in taxes.",
+    href: "/tools/roth-vs-traditional",
+    categoryId: "investing",
+    status: "coming-soon",
+    primaryColor: "#a855f7",
+    designStyle: "analytical",
+    inspiredBy: ["FIRE Movement"],
+    featured: true,
+  },
+  {
+    id: "fire-calculator",
+    name: "FIRE Calculator",
+    description:
+      "Calculate when you can reach financial independence based on your savings rate.",
+    href: "/tools/fire-calculator",
+    categoryId: "investing",
+    status: "coming-soon",
+    primaryColor: "#f59e0b",
+    designStyle: "analytical",
+    inspiredBy: ["Mr. Money Mustache", "FIRE Movement"],
+    featured: true,
+  },
+  {
+    id: "dividend-tracker",
+    name: "Dividend Income Tracker",
+    description:
+      "Visualize your dividend income and project when it covers your expenses.",
+    href: "/tools/dividend-tracker",
+    categoryId: "investing",
+    status: "coming-soon",
+    primaryColor: "#22c55e",
+    designStyle: "analytical",
+    inspiredBy: ["Andrei Jikh"],
+  },
+  {
     id: "compound-interest",
     name: "Compound Interest Calculator",
     description: "See how your money grows over time with compound interest.",
@@ -166,22 +259,31 @@ export const tools: Tool[] = [
     categoryId: "investing",
     status: "coming-soon",
   },
-  {
-    id: "roth-vs-traditional",
-    name: "Roth vs Traditional IRA",
-    description: "Determine which IRA type is better for your situation.",
-    href: "/tools/roth-vs-traditional",
-    categoryId: "investing",
-    status: "coming-soon",
-  },
   // Budgeting
   {
     id: "emergency-fund",
-    name: "Emergency Fund Calculator",
-    description: "How much should you have saved? Calculate your target.",
+    name: "Emergency Fund Planner",
+    description:
+      "Calculate your personalized emergency fund target based on your risk factors.",
     href: "/tools/emergency-fund",
     categoryId: "budgeting",
     status: "coming-soon",
+    primaryColor: "#3b82f6",
+    designStyle: "minimal",
+    inspiredBy: ["Dave Ramsey"],
+    featured: true,
+  },
+  {
+    id: "conscious-spending",
+    name: "Conscious Spending Planner",
+    description:
+      "Build a guilt-free spending plan using Ramit Sethi's framework.",
+    href: "/tools/conscious-spending",
+    categoryId: "budgeting",
+    status: "coming-soon",
+    primaryColor: "#10b981",
+    designStyle: "playful",
+    inspiredBy: ["Ramit Sethi"],
   },
   {
     id: "savings-goal",
@@ -193,21 +295,31 @@ export const tools: Tool[] = [
   },
   // Debt
   {
-    id: "debt-payoff",
-    name: "Debt Payoff Calculator",
+    id: "debt-destroyer",
+    name: "Debt Destroyer",
     description:
-      "Snowball vs avalanche: find the fastest way to pay off debt.",
-    href: "/tools/debt-payoff",
+      "Compare snowball vs avalanche debt payoff strategies side-by-side.",
+    href: "/tools/debt-destroyer",
     categoryId: "debt",
     status: "coming-soon",
+    primaryColor: "#ef4444",
+    designStyle: "serious",
+    inspiredBy: ["Dave Ramsey"],
+    featured: true,
   },
+  // Credit Building
   {
     id: "credit-score-simulator",
     name: "Credit Score Simulator",
-    description: "Understand what actions will help or hurt your credit score.",
+    description:
+      "Simulate how different actions might affect your credit score.",
     href: "/tools/credit-score-simulator",
-    categoryId: "debt",
+    categoryId: "credit-building",
     status: "coming-soon",
+    primaryColor: "#8b5cf6",
+    designStyle: "analytical",
+    inspiredBy: ["Humphrey Yang"],
+    featured: true,
   },
   // Taxes
   {
@@ -242,4 +354,12 @@ export function getLiveTools(): Tool[] {
 
 export function getComingSoonTools(): Tool[] {
   return tools.filter((tool) => tool.status === "coming-soon");
+}
+
+export function getFeaturedTools(): Tool[] {
+  return tools.filter((tool) => tool.featured && tool.status === "live");
+}
+
+export function getToolById(toolId: string): Tool | undefined {
+  return tools.find((tool) => tool.id === toolId);
 }
