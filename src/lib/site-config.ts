@@ -179,13 +179,13 @@ export const tools: Tool[] = [
     id: "tpg-transparency",
     name: "TPG Transparency Tool",
     description:
-      "See what The Points Guy says vs what the math actually says—side by side.",
+      "See how affiliate incentives might influence credit card recommendations.",
     href: "/tools/tpg-transparency",
     categoryId: "credit-cards",
-    status: "coming-soon",
-    primaryColor: "#10b981",
+    status: "live",
+    primaryColor: "#22c55e",
     designStyle: "analytical",
-    inspiredBy: ["The Points Guy (counter)"],
+    inspiredBy: ["US Credit Card Guide", "Accountable US"],
     featured: true,
   },
   // Banking
