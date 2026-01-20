@@ -278,13 +278,14 @@ export const tools: Tool[] = [
     id: "conscious-spending",
     name: "Conscious Spending Planner",
     description:
-      "Build a guilt-free spending plan using Ramit Sethi's framework.",
+      "Build a guilt-free spending plan using Ramit Sethi's framework",
     href: "/tools/conscious-spending",
     categoryId: "budgeting",
-    status: "coming-soon",
+    status: "live",
     primaryColor: "#10b981",
     designStyle: "playful",
     inspiredBy: ["Ramit Sethi"],
+    featured: false,
   },
   {
     id: "savings-goal",
