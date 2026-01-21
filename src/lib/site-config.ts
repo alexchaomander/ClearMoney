@@ -251,6 +251,18 @@ export const tools: Tool[] = [
     featured: true,
   },
   {
+    id: "2026-limits",
+    name: "2026 Contribution Limits",
+    description: "All retirement, HSA, and FSA limits for 2026 in one place",
+    href: "/tools/2026-limits",
+    categoryId: "investing",
+    status: "live",
+    primaryColor: "#6366f1",
+    designStyle: "analytical",
+    inspiredBy: ["IRS Publications"],
+    featured: true,
+  },
+  {
     id: "mega-backdoor-roth",
     name: "Mega Backdoor Roth Calculator",
     description: "Discover if you can contribute $46,000+ extra to Roth accounts annually",
