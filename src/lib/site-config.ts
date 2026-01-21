@@ -529,6 +529,19 @@ export const tools: Tool[] = [
     featured: true,
   },
   {
+    id: "obbb-tax-optimizer",
+    name: "OBBB Tax Savings Calculator",
+    description:
+      "Calculate your tax savings from the new 2025 deductions (senior, tips, overtime, car loan, SALT)",
+    href: "/tools/obbb-tax-optimizer",
+    categoryId: "taxes",
+    status: "live",
+    primaryColor: "#10b981",
+    designStyle: "analytical",
+    inspiredBy: ["One Big Beautiful Bill Act 2025"],
+    featured: true,
+  },
+  {
     id: "stock-option-exercise",
     name: "Stock Option Exercise Decision Tool",
     description:
