@@ -261,6 +261,18 @@ export const tools: Tool[] = [
     designStyle: "analytical",
   },
   {
+    id: "super-catch-up",
+    name: "Super Catch-Up Optimizer (Ages 60-63)",
+    description: "Maximize your 4-year window for enhanced 401(k) contributions",
+    href: "/tools/super-catch-up",
+    categoryId: "investing",
+    status: "live",
+    primaryColor: "#f59e0b",
+    designStyle: "analytical",
+    inspiredBy: ["SECURE 2.0 Act"],
+    featured: true,
+  },
+  {
     id: "fire-calculator",
     name: "FIRE Calculator",
     description:
