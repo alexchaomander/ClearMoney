@@ -4,7 +4,7 @@ export const LIMITS_2026 = {
   deferral401k: 24500,
   catchUp50Plus: 8000,
   catchUp60to63: 11250,
-  total415Limit: 73500,
+  total415Limit: 72000,
   iraLimit: 7500,
   iraCatchUp50Plus: 1100,
   hsaSelf: 4400,
@@ -13,12 +13,12 @@ export const LIMITS_2026 = {
   healthFSA: 3350,
   dependentCareFSA: 5000,
   limitedPurposeFSA: 3350,
-  simpleIRA: 17600,
-  simpleCatchUp50Plus: 3850,
-  simpleCatchUp60to63: 5350,
-  sepIRA: 73500,
+  simpleIRA: 17000,
+  simpleCatchUp50Plus: 4000,
+  simpleCatchUp60to63: 5250,
+  sepIRA: 72000,
   solo401kEmployee: 24500,
-  solo401kTotal: 73500,
+  solo401kTotal: 72000,
   coverdell: 2000,
   afterTax401kLimit: 3300,
 } as const;
@@ -32,12 +32,12 @@ export const LIMITS_2025 = {
 
 export const IRA_PHASEOUTS_2026 = {
   traditional: {
-    single: { start: 83000, end: 93000 },
-    married: { start: 136000, end: 156000 },
+    single: { start: 81000, end: 91000 },
+    married: { start: 129000, end: 149000 },
   },
   roth: {
-    single: { start: 161000, end: 176000 },
-    married: { start: 240000, end: 255000 },
+    single: { start: 153000, end: 168000 },
+    married: { start: 242000, end: 252000 },
   },
 } as const;
 
