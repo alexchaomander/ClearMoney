@@ -365,6 +365,19 @@ export const tools: Tool[] = [
     featured: true,
   },
   {
+    id: "home-affordability",
+    name: "Home Affordability Reality Check",
+    description:
+      "See what you can ACTUALLY afford, not just what a bank will approve",
+    href: "/tools/home-affordability",
+    categoryId: "budgeting",
+    status: "live",
+    primaryColor: "#14b8a6",
+    designStyle: "analytical",
+    inspiredBy: ["28/36 Rule", "Anti-Predatory Lending"],
+    featured: true,
+  },
+  {
     id: "conscious-spending",
     name: "Conscious Spending Planner",
     description:
