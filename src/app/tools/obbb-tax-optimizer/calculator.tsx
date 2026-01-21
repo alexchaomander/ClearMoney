@@ -14,6 +14,7 @@ import {
   NEW_SALT_CAP,
   OLD_SALT_CAP,
   OVERTIME_DEDUCTION_MAX,
+  SALT_PHASEOUT_START,
   SENIOR_DEDUCTION_AMOUNT,
   SENIOR_DEDUCTION_PHASEOUT_RANGE,
   SENIOR_DEDUCTION_PHASEOUT_START,
@@ -22,6 +23,7 @@ import {
   CAR_LOAN_PHASEOUT_START,
   TIMELINE_YEARS,
   TIPS_DEDUCTION_MAX,
+  TIPS_PHASEOUT_START,
   STANDARD_DEDUCTION_2025,
   OVERTIME_PHASEOUT_START,
   OVERTIME_PHASEOUT_RANGE,
@@ -173,10 +175,10 @@ export function Calculator() {
                   setInputs((prev) => ({ ...prev, modifiedAGI: value }))
                 }
                 min={0}
-                max={500000}
+                max={700000}
                 step={1000}
                 format="currency"
-                description="Used to calculate phase-outs for senior, overtime, and car loan deductions."
+                description="Used to calculate phase-outs for senior, tips, overtime, car loan, and SALT deductions."
               />
             </div>
           </div>
@@ -196,7 +198,7 @@ export function Calculator() {
                 max={100000}
                 step={500}
                 format="currency"
-                description={`Deduct up to ${formatCurrency(TIPS_DEDUCTION_MAX, 0)} in qualified tips.`}
+                description={`Deduct up to ${formatCurrency(TIPS_DEDUCTION_MAX, 0)} in qualified tips. Phase-out starts at ${formatCurrency(TIPS_PHASEOUT_START[inputs.filingStatus], 0)} MAGI.`}
               />
               <SliderInput
                 label="Annual overtime pay"
@@ -252,10 +254,7 @@ export function Calculator() {
                 max={100000}
                 step={500}
                 format="currency"
-                description={`Old cap ${formatCurrency(OLD_SALT_CAP, 0)} → new cap ${formatCurrency(
-                  NEW_SALT_CAP,
-                  0
-                )}.`}
+                description={`Old cap ${formatCurrency(OLD_SALT_CAP, 0)} → new cap ${formatCurrency(NEW_SALT_CAP, 0)}. Cap phases down for MAGI above ${formatCurrency(SALT_PHASEOUT_START, 0)}.`}
               />
               <SliderInput
                 label="Other itemized deductions"
@@ -390,9 +389,19 @@ export function Calculator() {
                 <p className="text-2xl font-semibold text-white mt-2">
                   {formatCurrency(results.tipsDeduction.amount)}
                 </p>
-                <p className="text-xs text-neutral-500 mt-2">
-                  Eligible for workers in occupations that customarily receive tips.
-                </p>
+                {results.tipsDeduction.phaseOutApplied ? (
+                  <p className="text-xs text-neutral-500 mt-2">
+                    Phase-out applied: {formatCurrency(
+                      results.tipsDeduction.phaseOutApplied
+                    )} (starts at {formatCurrency(
+                      TIPS_PHASEOUT_START[inputs.filingStatus]
+                    )}).
+                  </p>
+                ) : (
+                  <p className="text-xs text-neutral-500 mt-2">
+                    Eligible for workers in occupations that customarily receive tips.
+                  </p>
+                )}
                 <p className="text-sm text-emerald-300 mt-3">
                   Tax savings: {formatCurrency(results.tipsDeduction.taxSavings)}
                 </p>
@@ -467,13 +476,29 @@ export function Calculator() {
                 <p className="text-2xl font-semibold text-white mt-2">
                   {formatCurrency(results.saltBenefit.additionalDeduction)}
                 </p>
-                <p className="text-xs text-neutral-500 mt-2">
-                  Additional deduction if you itemize: {formatCurrency(
-                    results.saltBenefit.additionalDeduction
-                  )}.
-                </p>
+                {inputs.modifiedAGI > SALT_PHASEOUT_START ? (
+                  <p className="text-xs text-neutral-500 mt-2">
+                    Income phase-out applied. Your effective SALT cap is{" "}
+                    {formatCurrency(results.saltBenefit.newCap)} (cap reduces for
+                    MAGI above {formatCurrency(SALT_PHASEOUT_START)}).
+                  </p>
+                ) : results.standardVsItemized.recommendation === "Itemize" ? (
+                  <p className="text-xs text-neutral-500 mt-2">
+                    Additional deduction from higher SALT cap: {formatCurrency(
+                      results.saltBenefit.additionalDeduction
+                    )}.
+                  </p>
+                ) : (
+                  <p className="text-xs text-neutral-500 mt-2">
+                    SALT benefit only applies if you itemize deductions.
+                  </p>
+                )}
                 <p className="text-sm text-emerald-300 mt-3">
-                  Tax savings: {formatCurrency(results.saltBenefit.taxSavings)}
+                  Tax savings: {formatCurrency(
+                    results.standardVsItemized.recommendation === "Itemize"
+                      ? results.saltBenefit.taxSavings
+                      : 0
+                  )}
                 </p>
               </div>
             </div>

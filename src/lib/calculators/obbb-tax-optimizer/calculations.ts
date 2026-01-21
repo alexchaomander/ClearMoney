@@ -8,11 +8,15 @@ import {
   OVERTIME_DEDUCTION_MAX,
   OVERTIME_PHASEOUT_RANGE,
   OVERTIME_PHASEOUT_START,
+  SALT_PHASEOUT_RATE,
+  SALT_PHASEOUT_START,
   SENIOR_DEDUCTION_AMOUNT,
   SENIOR_DEDUCTION_PHASEOUT_RANGE,
   SENIOR_DEDUCTION_PHASEOUT_START,
   STANDARD_DEDUCTION_2025,
   TIPS_DEDUCTION_MAX,
+  TIPS_PHASEOUT_RANGE,
+  TIPS_PHASEOUT_START,
 } from "./constants";
 
 function calculatePhaseOut(
@@ -52,7 +56,14 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
     SENIOR_DEDUCTION_PHASEOUT_RANGE
   );
 
-  const tipsDeduction = Math.min(annualTips, TIPS_DEDUCTION_MAX);
+  // Tips deduction with phase-out
+  const tipsBase = Math.min(annualTips, TIPS_DEDUCTION_MAX);
+  const tipsDeduction = calculatePhaseOut(
+    tipsBase,
+    modifiedAGI,
+    TIPS_PHASEOUT_START[filingStatus],
+    TIPS_PHASEOUT_RANGE
+  );
 
   const overtimeBase = Math.min(
     annualOvertime,
@@ -73,8 +84,17 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
     CAR_LOAN_PHASEOUT_RANGE
   );
 
+  // SALT cap with income-based phase-out
+  // The $40k cap phases down by 30% of income over $500k, reverting to $10k at $600k+
+  let effectiveSaltCap = NEW_SALT_CAP;
+  if (modifiedAGI > SALT_PHASEOUT_START) {
+    const excessIncome = modifiedAGI - SALT_PHASEOUT_START;
+    const capReduction = excessIncome * SALT_PHASEOUT_RATE;
+    effectiveSaltCap = Math.max(OLD_SALT_CAP, NEW_SALT_CAP - capReduction);
+  }
+
   const saltUnderOldCap = Math.min(saltPaid, OLD_SALT_CAP);
-  const saltUnderNewCap = Math.min(saltPaid, NEW_SALT_CAP);
+  const saltUnderNewCap = Math.min(saltPaid, effectiveSaltCap);
   const additionalSALT = Math.max(0, saltUnderNewCap - saltUnderOldCap);
 
   const standardDeduction = STANDARD_DEDUCTION_2025[filingStatus];
@@ -96,6 +116,7 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
     tipsDeduction: {
       eligible: annualTips > 0,
       amount: tipsDeduction,
+      phaseOutApplied: tipsBase - tipsDeduction,
       taxSavings: tipsDeduction * marginalRate,
     },
     overtimeDeduction: {
