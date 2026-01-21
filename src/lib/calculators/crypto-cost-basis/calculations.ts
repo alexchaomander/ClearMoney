@@ -65,6 +65,29 @@ function getLtcgRate(income: number, filingStatus: FilingStatus): number {
   return rate;
 }
 
+function calculateProgressiveTax(
+  income: number,
+  additionalIncome: number,
+  brackets: Array<{ min: number; max: number; rate: number }>
+): number {
+  // Calculate tax on the portion of income that falls within additional income range
+  // This represents the incremental tax from adding additionalIncome to existing income
+  const totalIncome = income + additionalIncome;
+  let tax = 0;
+
+  for (const bracket of brackets) {
+    if (totalIncome <= bracket.min) break;
+    if (income >= bracket.max) continue;
+
+    const taxableInBracket = Math.min(totalIncome, bracket.max) - Math.max(income, bracket.min);
+    if (taxableInBracket > 0) {
+      tax += taxableInBracket * bracket.rate;
+    }
+  }
+
+  return tax;
+}
+
 function calculateTax(
   shortTermGain: number,
   longTermGain: number,
@@ -72,13 +95,18 @@ function calculateTax(
   filingStatus: FilingStatus,
   state: string
 ): number {
-  const marginalRate = getMarginalRate(ordinaryIncome, filingStatus);
-  const ltcgRate = getLtcgRate(ordinaryIncome + longTermGain, filingStatus);
   const stateRate = STATE_RATES[state] ?? 0.05;
+  const federalBrackets = FEDERAL_BRACKETS[filingStatus];
 
-  const shortTermTax = shortTermGain * marginalRate;
-  const longTermTax = longTermGain * ltcgRate;
+  // Short-term gains are taxed as ordinary income (progressive, stacked on top of ordinary income)
+  const shortTermTax = calculateProgressiveTax(ordinaryIncome, shortTermGain, federalBrackets);
 
+  // Long-term gains use preferential rates, stacked on top of ordinary income + short-term gains
+  const baseForLtcg = ordinaryIncome + shortTermGain;
+  const ltcgBrackets = LTCG_BRACKETS[filingStatus];
+  const longTermTax = calculateProgressiveTax(baseForLtcg, longTermGain, ltcgBrackets);
+
+  // NIIT applies to the lesser of: net investment income OR (MAGI - threshold)
   const totalIncome = ordinaryIncome + shortTermGain + longTermGain;
   const threshold = NIIT_THRESHOLD[filingStatus];
   let niitTax = 0;
@@ -90,6 +118,7 @@ function calculateTax(
     niitTax = niitableGain * NIIT_RATE;
   }
 
+  // State tax (simplified - most states tax capital gains as ordinary income)
   const stateTax = (shortTermGain + longTermGain) * stateRate;
 
   return shortTermTax + longTermTax + niitTax + stateTax;
