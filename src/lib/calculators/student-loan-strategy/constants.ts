@@ -12,6 +12,7 @@ export const IDR_PLANS = {
     paymentPercentNew: 0.1,
     forgivenessYears: 25,
     forgivenessYearsNew: 20,
+    povertyMultiplier: 1.5, // 150% of poverty line
     available: true,
     closingDate: null,
   },
@@ -19,6 +20,7 @@ export const IDR_PLANS = {
     name: "Income-Contingent Repayment (ICR)",
     paymentPercent: 0.2,
     forgivenessYears: 25,
+    povertyMultiplier: 1.0, // 100% of poverty line for ICR
     available: true,
     closingDate: "2028-07-01",
   },
@@ -26,24 +28,50 @@ export const IDR_PLANS = {
     name: "Pay As You Earn (PAYE)",
     paymentPercent: 0.1,
     forgivenessYears: 20,
+    povertyMultiplier: 1.5, // 150% of poverty line
     available: true,
     closingDate: "2027-07-01",
   },
   save: {
     name: "Saving on a Valuable Education (SAVE)",
-    paymentPercent: 0.1,
+    paymentPercent: 0.1, // 5% for undergrad, 10% for grad (simplified to 10%)
     forgivenessYears: 20,
+    povertyMultiplier: 2.25, // 225% of poverty line for SAVE
     available: false,
     closingDate: "2025-12-31",
   },
   rap: {
     name: "Repayment Assistance Plan (RAP)",
-    paymentPercent: 0.15,
+    // RAP uses AGI-based sliding scale (1%-10%), not discretionary income
+    // This is handled specially in calculations.ts
+    paymentPercent: 0.1, // Max rate (not used directly - see RAP_AGI_BRACKETS)
     forgivenessYears: 30,
+    minimumMonthlyPayment: 10, // $10 minimum
+    dependentDeduction: 50, // $50 per dependent reduction
+    povertyMultiplier: 1.0, // Not used for RAP but included for type consistency
     available: true,
     availableDate: "2026-07-01",
   },
 } as const;
+
+// RAP payment percentage brackets based on AGI
+// Payment = (AGI * percentage) / 12 - ($50 * dependents), minimum $10
+export const RAP_AGI_BRACKETS = [
+  { maxAGI: 10000, percent: 0 }, // $10 minimum applies
+  { maxAGI: 20000, percent: 0.01 },
+  { maxAGI: 30000, percent: 0.02 },
+  { maxAGI: 40000, percent: 0.03 },
+  { maxAGI: 50000, percent: 0.04 },
+  { maxAGI: 60000, percent: 0.05 },
+  { maxAGI: 70000, percent: 0.06 },
+  { maxAGI: 80000, percent: 0.07 },
+  { maxAGI: 90000, percent: 0.08 },
+  { maxAGI: 100000, percent: 0.09 },
+  { maxAGI: Infinity, percent: 0.1 },
+] as const;
+
+// Reference year for calculations to avoid SSR hydration issues
+export const REFERENCE_YEAR = 2026;
 
 export const STANDARD_PLAN = {
   name: "Standard (10-year)",
