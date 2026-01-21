@@ -51,7 +51,12 @@ const calculateIBondReturn = (
   inflationRate: number,
   federalBracket: number,
 ): InvestmentOption => {
-  const compositeRate = fixedRate + 2 * inflationRate + fixedRate * inflationRate;
+  // The inflationRate input is the annualized rate (e.g., 3.12%).
+  // The Treasury formula uses the semiannual rate: composite = fixed + (2 × semiannual) + (fixed × semiannual)
+  // Since annualized = 2 × semiannual, we have semiannual = annualized / 2
+  // This simplifies to: composite = fixed + annualized + (fixed × annualized / 2)
+  const semiannualInflation = inflationRate / 2;
+  const compositeRate = fixedRate + 2 * semiannualInflation + fixedRate * semiannualInflation;
   const periods = years * 2;
   const periodRate = compositeRate / 2;
   let value = amount * Math.pow(1 + periodRate, periods);

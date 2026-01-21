@@ -177,7 +177,7 @@ export function Calculator() {
                 description="Current fixed rate is 0.90%"
               />
               <SliderInput
-                label="I Bond inflation rate"
+                label="I Bond inflation rate (annualized)"
                 value={inputs.iBondInflationRate}
                 onChange={(value) =>
                   setInputs((prev) => ({ ...prev, iBondInflationRate: value }))
@@ -186,7 +186,7 @@ export function Calculator() {
                 max={6}
                 step={0.1}
                 format="percent"
-                description="Current variable rate is 3.12%"
+                description="Current annualized inflation rate is 3.12% (1.56% semiannual)"
               />
               <label className="flex items-center justify-between text-sm font-semibold text-neutral-300 bg-neutral-800 rounded-lg px-3 py-3">
                 <span>Need full liquidity within 12 months?</span>
