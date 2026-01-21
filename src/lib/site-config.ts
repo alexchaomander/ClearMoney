@@ -449,6 +449,19 @@ export const tools: Tool[] = [
     inspiredBy: ["Dave Ramsey"],
     featured: true,
   },
+  {
+    id: "student-loan-strategy",
+    name: "Student Loan Strategy Planner",
+    description:
+      "Compare IDR plans and find the best strategy for the 2026 changes",
+    href: "/tools/student-loan-strategy",
+    categoryId: "debt",
+    status: "live",
+    primaryColor: "#3b82f6",
+    designStyle: "analytical",
+    inspiredBy: ["Student Loan Planner", "SAVE/RAP Changes 2026"],
+    featured: true,
+  },
   // Credit Building
   {
     id: "credit-score-simulator",
