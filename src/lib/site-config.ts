@@ -415,6 +415,19 @@ export const tools: Tool[] = [
     designStyle: "analytical",
   },
   {
+    id: "crypto-cost-basis",
+    name: "Crypto Cost Basis Calculator",
+    description:
+      "Compare tax methods and navigate the new IRS wallet-by-wallet rules",
+    href: "/tools/crypto-cost-basis",
+    categoryId: "taxes",
+    status: "live",
+    primaryColor: "#f97316",
+    designStyle: "analytical",
+    inspiredBy: ["IRS Form 1099-DA", "CoinTracker"],
+    featured: true,
+  },
+  {
     id: "backdoor-roth",
     name: "Backdoor Roth IRA Guide",
     description:
