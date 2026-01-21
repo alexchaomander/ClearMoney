@@ -30,57 +30,59 @@ export const METHOD_DETAILS: Record<
   },
 };
 
+// 2026 Federal Income Tax Brackets (per IRS inflation adjustments with OBBBA)
 export const FEDERAL_BRACKETS: Record<
   FilingStatus,
   Array<{ min: number; max: number; rate: number }>
 > = {
   single: [
-    { min: 0, max: 11600, rate: 0.1 },
-    { min: 11600, max: 47150, rate: 0.12 },
-    { min: 47150, max: 100525, rate: 0.22 },
-    { min: 100525, max: 191950, rate: 0.24 },
-    { min: 191950, max: 243725, rate: 0.32 },
-    { min: 243725, max: 609350, rate: 0.35 },
-    { min: 609350, max: Infinity, rate: 0.37 },
+    { min: 0, max: 12400, rate: 0.1 },
+    { min: 12400, max: 50400, rate: 0.12 },
+    { min: 50400, max: 105700, rate: 0.22 },
+    { min: 105700, max: 201775, rate: 0.24 },
+    { min: 201775, max: 256225, rate: 0.32 },
+    { min: 256225, max: 640600, rate: 0.35 },
+    { min: 640600, max: Infinity, rate: 0.37 },
   ],
   married: [
-    { min: 0, max: 23200, rate: 0.1 },
-    { min: 23200, max: 94300, rate: 0.12 },
-    { min: 94300, max: 201050, rate: 0.22 },
-    { min: 201050, max: 383900, rate: 0.24 },
-    { min: 383900, max: 487450, rate: 0.32 },
-    { min: 487450, max: 731200, rate: 0.35 },
-    { min: 731200, max: Infinity, rate: 0.37 },
+    { min: 0, max: 24800, rate: 0.1 },
+    { min: 24800, max: 100800, rate: 0.12 },
+    { min: 100800, max: 211400, rate: 0.22 },
+    { min: 211400, max: 403550, rate: 0.24 },
+    { min: 403550, max: 512450, rate: 0.32 },
+    { min: 512450, max: 768700, rate: 0.35 },
+    { min: 768700, max: Infinity, rate: 0.37 },
   ],
   head_of_household: [
-    { min: 0, max: 16550, rate: 0.1 },
-    { min: 16550, max: 63100, rate: 0.12 },
-    { min: 63100, max: 100500, rate: 0.22 },
-    { min: 100500, max: 191950, rate: 0.24 },
-    { min: 191950, max: 243700, rate: 0.32 },
-    { min: 243700, max: 609350, rate: 0.35 },
-    { min: 609350, max: Infinity, rate: 0.37 },
+    { min: 0, max: 17750, rate: 0.1 },
+    { min: 17750, max: 67400, rate: 0.12 },
+    { min: 67400, max: 105700, rate: 0.22 },
+    { min: 105700, max: 201775, rate: 0.24 },
+    { min: 201775, max: 256225, rate: 0.32 },
+    { min: 256225, max: 640600, rate: 0.35 },
+    { min: 640600, max: Infinity, rate: 0.37 },
   ],
 };
 
+// 2026 Long-Term Capital Gains Tax Brackets (per IRS inflation adjustments)
 export const LTCG_BRACKETS: Record<
   FilingStatus,
   Array<{ min: number; max: number; rate: number }>
 > = {
   single: [
-    { min: 0, max: 47025, rate: 0 },
-    { min: 47025, max: 518900, rate: 0.15 },
-    { min: 518900, max: Infinity, rate: 0.2 },
+    { min: 0, max: 49450, rate: 0 },
+    { min: 49450, max: 545500, rate: 0.15 },
+    { min: 545500, max: Infinity, rate: 0.2 },
   ],
   married: [
-    { min: 0, max: 94050, rate: 0 },
-    { min: 94050, max: 583750, rate: 0.15 },
-    { min: 583750, max: Infinity, rate: 0.2 },
+    { min: 0, max: 98900, rate: 0 },
+    { min: 98900, max: 613700, rate: 0.15 },
+    { min: 613700, max: Infinity, rate: 0.2 },
   ],
   head_of_household: [
-    { min: 0, max: 63100, rate: 0 },
-    { min: 63100, max: 551350, rate: 0.15 },
-    { min: 551350, max: Infinity, rate: 0.2 },
+    { min: 0, max: 66300, rate: 0 },
+    { min: 66300, max: 579700, rate: 0.15 },
+    { min: 579700, max: Infinity, rate: 0.2 },
   ],
 };
 
