@@ -1,5 +1,6 @@
 import type { CalculatorInputs, SuperCatchUpResults, YearProjection } from "./types";
 import {
+  ESTIMATED_MARGINAL_TAX_RATE,
   LIMITS_2026,
   MAX_PROJECTION_YEARS,
   REGULAR_CATCH_UP_AGE,
@@ -156,6 +157,7 @@ export function calculate(inputs: CalculatorInputs): SuperCatchUpResults {
     inputs.currentBalance;
 
   const rothRequired = mustUseRothForCatchUp(inputs.priorYearWages);
+  const currentCatchUpLimit = getCatchUpLimit(effectiveAge, "super");
 
   const rothReason = rothRequired
     ? "Prior-year W-2 wages exceed $150,000, so catch-up contributions must be Roth starting in 2026."
@@ -232,7 +234,8 @@ export function calculate(inputs: CalculatorInputs): SuperCatchUpResults {
     rothRequirement: {
       required: rothRequired,
       reason: rothReason,
-      taxImpact: rothRequired ? inputs.priorYearWages * 0.01 : 0,
+      // Tax impact is the lost deduction: catch-up limit * marginal tax rate
+      taxImpact: rothRequired ? currentCatchUpLimit * ESTIMATED_MARGINAL_TAX_RATE : 0,
     },
     cashFlow: {
       monthlyEmployeeMax,
