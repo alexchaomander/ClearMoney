@@ -453,6 +453,19 @@ export const tools: Tool[] = [
     featured: true,
   },
   {
+    id: "medicare-irmaa",
+    name: "Medicare IRMAA Planner",
+    description:
+      "Plan your retirement income to minimize Medicare premium surcharges",
+    href: "/tools/medicare-irmaa",
+    categoryId: "taxes",
+    status: "live",
+    primaryColor: "#0891b2",
+    designStyle: "analytical",
+    inspiredBy: ["Medicare.gov", "Kitces"],
+    featured: true,
+  },
+  {
     id: "estate-tax",
     name: "Estate Tax Exposure Calculator",
     description: "Plan for the 2026 estate tax exemption sunset",
