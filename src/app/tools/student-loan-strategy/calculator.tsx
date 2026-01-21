@@ -1,0 +1,559 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { SliderInput } from "@/components/shared/SliderInput";
+import { ResultCard } from "@/components/shared/ResultCard";
+import {
+  formatCurrency,
+  formatNumber,
+} from "@/lib/shared/formatters";
+import { calculate } from "@/lib/calculators/student-loan-strategy/calculations";
+import {
+  FILING_STATUS_OPTIONS,
+  KEY_DEADLINES,
+  LOAN_TYPE_OPTIONS,
+  STANDARD_PLAN,
+  STATE_OPTIONS,
+} from "@/lib/calculators/student-loan-strategy/constants";
+import type { CalculatorInputs } from "@/lib/calculators/student-loan-strategy/types";
+
+const DEFAULT_INPUTS: CalculatorInputs = {
+  loanBalance: 50000,
+  interestRate: 6.5,
+  loanType: "direct",
+  annualIncome: 60000,
+  incomeGrowthRate: 3,
+  filingStatus: "single",
+  familySize: 1,
+  state: "CA",
+  yearsInRepayment: 0,
+  pslfEligible: false,
+  pslfPaymentsMade: 0,
+  hasParentPlus: false,
+};
+
+export function Calculator() {
+  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const results = useMemo(() => calculate(inputs), [inputs]);
+
+  const planEntries = Object.entries(results.plans);
+  const bestPlan = results.recommendation.bestPlan;
+
+  return (
+    <div className="min-h-screen bg-neutral-950">
+      <section className="px-4 py-12 sm:py-16">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-sm uppercase tracking-[0.3em] text-blue-300">
+            2026 Loan Strategy Update
+          </p>
+          <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">
+            Student Loan Strategy Planner
+          </h1>
+          <p className="mt-4 text-lg text-neutral-400">
+            Compare IDR plans, forgiveness timelines, and tax impacts as SAVE
+            sunsets and RAP launches.
+          </p>
+        </div>
+      </section>
+
+      <section className="px-4 pb-16">
+        <div className="mx-auto flex max-w-6xl flex-col gap-8 lg:flex-row">
+          <div className="flex-1 space-y-6">
+            <div className="rounded-2xl bg-neutral-900 p-6">
+              <h2 className="text-xl font-semibold text-white">Loan Details</h2>
+              <p className="mt-1 text-sm text-neutral-400">
+                Update your current loan profile to see plan-specific payment
+                projections.
+              </p>
+
+              <div className="mt-6 space-y-6">
+                <SliderInput
+                  label="Total Federal Loan Balance"
+                  value={inputs.loanBalance}
+                  onChange={(value) =>
+                    setInputs((prev) => ({ ...prev, loanBalance: value }))
+                  }
+                  min={0}
+                  max={500000}
+                  step={1000}
+                  format="currency"
+                />
+                <SliderInput
+                  label="Weighted Average Interest Rate"
+                  value={inputs.interestRate}
+                  onChange={(value) =>
+                    setInputs((prev) => ({ ...prev, interestRate: value }))
+                  }
+                  min={0}
+                  max={12}
+                  step={0.1}
+                  format="percent"
+                />
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-neutral-300">
+                    Loan Type
+                  </label>
+                  <select
+                    value={inputs.loanType}
+                    onChange={(event) =>
+                      setInputs((prev) => ({
+                        ...prev,
+                        loanType: event.target
+                          .value as CalculatorInputs["loanType"],
+                      }))
+                    }
+                    className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-white"
+                  >
+                    {LOAN_TYPE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <SliderInput
+                  label="Years in Repayment Already"
+                  value={inputs.yearsInRepayment}
+                  onChange={(value) =>
+                    setInputs((prev) => ({
+                      ...prev,
+                      yearsInRepayment: value,
+                    }))
+                  }
+                  min={0}
+                  max={25}
+                  step={1}
+                  format="number"
+                />
+                <label className="flex items-center gap-3 text-sm text-neutral-300">
+                  <input
+                    type="checkbox"
+                    checked={inputs.hasParentPlus}
+                    onChange={(event) =>
+                      setInputs((prev) => ({
+                        ...prev,
+                        hasParentPlus: event.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 rounded border-neutral-700 bg-neutral-800 text-blue-500"
+                  />
+                  I have Parent PLUS loans in my portfolio
+                </label>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-neutral-900 p-6">
+              <h2 className="text-xl font-semibold text-white">
+                Income & Household
+              </h2>
+              <p className="mt-1 text-sm text-neutral-400">
+                IDR plans use discretionary income after 150% of the poverty
+                guideline.
+              </p>
+
+              <div className="mt-6 space-y-6">
+                <SliderInput
+                  label="Annual Gross Income"
+                  value={inputs.annualIncome}
+                  onChange={(value) =>
+                    setInputs((prev) => ({ ...prev, annualIncome: value }))
+                  }
+                  min={0}
+                  max={500000}
+                  step={1000}
+                  format="currency"
+                />
+                <SliderInput
+                  label="Expected Income Growth"
+                  value={inputs.incomeGrowthRate}
+                  onChange={(value) =>
+                    setInputs((prev) => ({
+                      ...prev,
+                      incomeGrowthRate: value,
+                    }))
+                  }
+                  min={0}
+                  max={10}
+                  step={0.5}
+                  format="percent"
+                />
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-neutral-300">
+                    Filing Status
+                  </label>
+                  <select
+                    value={inputs.filingStatus}
+                    onChange={(event) =>
+                      setInputs((prev) => ({
+                        ...prev,
+                        filingStatus: event.target
+                          .value as CalculatorInputs["filingStatus"],
+                      }))
+                    }
+                    className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-white"
+                  >
+                    {FILING_STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-neutral-300">
+                      Family Size
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={inputs.familySize}
+                      onChange={(event) =>
+                        setInputs((prev) => ({
+                          ...prev,
+                          familySize: Number(event.target.value),
+                        }))
+                      }
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-neutral-300">
+                      State of Residence
+                    </label>
+                    <select
+                      value={inputs.state}
+                      onChange={(event) =>
+                        setInputs((prev) => ({
+                          ...prev,
+                          state: event.target.value,
+                        }))
+                      }
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-white"
+                    >
+                      {STATE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-neutral-900 p-6">
+              <h2 className="text-xl font-semibold text-white">
+                PSLF & Employment
+              </h2>
+              <p className="mt-1 text-sm text-neutral-400">
+                PSLF requires 120 qualifying payments with eligible public
+                service employers.
+              </p>
+
+              <div className="mt-6 space-y-4">
+                <label className="flex items-center gap-3 text-sm text-neutral-300">
+                  <input
+                    type="checkbox"
+                    checked={inputs.pslfEligible}
+                    onChange={(event) =>
+                      setInputs((prev) => ({
+                        ...prev,
+                        pslfEligible: event.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 rounded border-neutral-700 bg-neutral-800 text-blue-500"
+                  />
+                  I work for a PSLF-eligible employer
+                </label>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-neutral-300">
+                    Qualifying PSLF Payments Made
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={120}
+                    value={inputs.pslfPaymentsMade}
+                    onChange={(event) =>
+                      setInputs((prev) => ({
+                        ...prev,
+                        pslfPaymentsMade: Number(event.target.value),
+                      }))
+                    }
+                    className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-white"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full space-y-6 lg:max-w-sm">
+            <ResultCard
+              title="Best Strategy"
+              primaryValue={bestPlan}
+              primaryLabel={results.recommendation.reasoning}
+              items={[
+                {
+                  label: "Total projected cost",
+                  value: formatCurrency(
+                    Math.min(
+                      ...planEntries
+                        .filter(([, plan]) => plan.available)
+                        .map(([, plan]) => plan.netCost)
+                    )
+                  ),
+                },
+                {
+                  label: "Forgiveness tax exposure",
+                  value: formatCurrency(
+                    Math.max(
+                      ...planEntries.map(([, plan]) => plan.taxOnForgiveness)
+                    )
+                  ),
+                },
+                {
+                  label: "Debt timeline",
+                  value: `${Math.max(
+                    ...planEntries.map(([, plan]) =>
+                      plan.forgivenessYear
+                        ? plan.forgivenessYear - new Date().getFullYear()
+                        : 0
+                    )
+                  )} yrs max`,
+                },
+              ]}
+              variant="blue"
+            />
+
+            <div className="rounded-2xl bg-neutral-900 p-6">
+              <h3 className="text-lg font-semibold text-white">Key Deadlines</h3>
+              <ul className="mt-4 space-y-3 text-sm text-neutral-300">
+                {KEY_DEADLINES.map((deadline) => (
+                  <li key={deadline.date} className="flex gap-3">
+                    <span className="rounded-full bg-blue-500/10 px-2 py-1 text-xs font-semibold text-blue-200">
+                      {deadline.date}
+                    </span>
+                    <span>{deadline.action}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {results.pslfAnalysis && (
+              <div className="rounded-2xl bg-neutral-900 p-6">
+                <h3 className="text-lg font-semibold text-white">
+                  PSLF Snapshot
+                </h3>
+                <div className="mt-4 space-y-2 text-sm text-neutral-300">
+                  <p>
+                    Payments remaining: {results.pslfAnalysis.paymentsRemaining}
+                  </p>
+                  <p>
+                    Estimated forgiveness: {formatCurrency(
+                      results.pslfAnalysis.estimatedForgivenessAmount
+                    )}
+                  </p>
+                  <p className="text-emerald-300">
+                    PSLF forgiveness remains tax-free.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 pb-16">
+        <div className="mx-auto max-w-6xl space-y-8">
+          <div className="rounded-2xl bg-neutral-900 p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold text-white">
+                  Plan Comparison
+                </h2>
+                <p className="mt-1 text-sm text-neutral-400">
+                  All payments assume income-driven calculations with a 150%
+                  poverty guideline threshold.
+                </p>
+              </div>
+              <div className="text-sm text-neutral-400">
+                {formatNumber(inputs.loanBalance)} balance · {inputs.interestRate}%
+                rate
+              </div>
+            </div>
+
+            <div className="mt-6 overflow-x-auto">
+              <table className="min-w-full text-left text-sm text-neutral-300">
+                <thead className="text-xs uppercase tracking-wider text-neutral-500">
+                  <tr>
+                    <th className="pb-3">Plan</th>
+                    <th className="pb-3">Year 1 Payment</th>
+                    <th className="pb-3">Final Payment</th>
+                    <th className="pb-3">Total Paid</th>
+                    <th className="pb-3">Forgiveness</th>
+                    <th className="pb-3">Tax Bomb</th>
+                    <th className="pb-3">Net Cost</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-800">
+                  {planEntries.map(([key, plan]) => (
+                    <tr key={key} className={!plan.available ? "opacity-50" : ""}>
+                      <td className="py-3">
+                        <div className="font-semibold text-white">
+                          {plan.name}
+                        </div>
+                        {!plan.available && (
+                          <div className="text-xs text-amber-300">Not open</div>
+                        )}
+                        {plan.availableUntil && (
+                          <div className="text-xs text-neutral-500">
+                            Closes {plan.availableUntil}
+                          </div>
+                        )}
+                        {plan.availableFrom && (
+                          <div className="text-xs text-neutral-500">
+                            Starts {plan.availableFrom}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3">
+                        {formatCurrency(plan.monthlyPaymentYear1)}
+                      </td>
+                      <td className="py-3">
+                        {formatCurrency(plan.monthlyPaymentFinal)}
+                      </td>
+                      <td className="py-3">
+                        {formatCurrency(plan.totalPaid)}
+                      </td>
+                      <td className="py-3">
+                        {plan.forgivenessAmount > 0
+                          ? `${formatCurrency(plan.forgivenessAmount)}${
+                              plan.forgivenessYear
+                                ? ` (${plan.forgivenessYear})`
+                                : ""
+                            }`
+                          : "—"}
+                      </td>
+                      <td className="py-3">
+                        {plan.taxOnForgiveness > 0
+                          ? formatCurrency(plan.taxOnForgiveness)
+                          : "—"}
+                      </td>
+                      <td className="py-3 font-semibold text-white">
+                        {formatCurrency(plan.netCost)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-neutral-900 p-6">
+            <h2 className="text-xl font-semibold text-white">
+              Forgiveness & Tax Bomb Outlook
+            </h2>
+            <p className="mt-1 text-sm text-neutral-400">
+              Forgiveness after 2026 is treated as taxable income (PSLF remains
+              tax-free). Use this view to plan for a tax reserve.
+            </p>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              {planEntries.map(([key, plan]) => (
+                <div
+                  key={key}
+                  className="rounded-xl border border-neutral-800 bg-neutral-950/40 p-4"
+                >
+                  <div className="text-sm font-semibold text-white">
+                    {plan.name}
+                  </div>
+                  <div className="mt-2 text-xs text-neutral-400">
+                    Forgiveness: {formatCurrency(plan.forgivenessAmount)}
+                  </div>
+                  <div className="text-xs text-neutral-400">
+                    Tax impact: {formatCurrency(plan.taxOnForgiveness)}
+                  </div>
+                  <div className="mt-2 text-xs text-neutral-500">
+                    Net cost: {formatCurrency(plan.netCost)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-neutral-900 p-6">
+            <h2 className="text-xl font-semibold text-white">
+              Timeline at a Glance
+            </h2>
+            <p className="mt-1 text-sm text-neutral-400">
+              Longer timelines can lower payments but increase total interest and
+              tax exposure.
+            </p>
+
+            <div className="mt-6 space-y-4">
+              {planEntries.map(([key, plan]) => {
+                const years = plan.forgivenessYear
+                  ? plan.forgivenessYear - new Date().getFullYear()
+                  : STANDARD_PLAN.termYears - inputs.yearsInRepayment;
+                const barWidth = Math.min(100, Math.max(10, years * 4));
+                return (
+                  <div key={key} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm text-neutral-300">
+                      <span>{plan.name}</span>
+                      <span>{years > 0 ? `${years} yrs` : "0 yrs"}</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-neutral-800">
+                      <div
+                        className="h-2 rounded-full bg-blue-500"
+                        style={{ width: `${barWidth}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 pb-16">
+        <div className="mx-auto max-w-4xl">
+          <details className="rounded-2xl bg-neutral-900/50 p-6">
+            <summary className="cursor-pointer text-lg font-semibold text-white">
+              How we calculate this
+            </summary>
+            <div className="mt-4 space-y-3 text-sm text-neutral-400">
+              <p>
+                Discretionary income is calculated as your income minus 150% of
+                the 2026 federal poverty guideline for your household size. IDR
+                payments are a percentage of that amount, capped at the 10-year
+                standard payment.
+              </p>
+              <p>
+                We project income growth annually, apply plan-specific payment
+                percentages, and simulate month-by-month balances to estimate
+                total paid, interest, and remaining forgiveness.
+              </p>
+              <p>
+                Forgiveness after 2026 is treated as taxable income. We estimate
+                a combined federal + state rate based on your income band and
+                state.
+              </p>
+              <p>
+                PSLF results assume you continue qualifying payments and stay in
+                eligible employment. Payments made during SAVE forbearance do
+                not count.
+              </p>
+              <p className="text-neutral-500">
+                This planner provides directional guidance only. Confirm final
+                eligibility and plan rules with Federal Student Aid.
+              </p>
+            </div>
+          </details>
+        </div>
+      </section>
+    </div>
+  );
+}
