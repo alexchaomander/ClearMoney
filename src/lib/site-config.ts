@@ -261,6 +261,18 @@ export const tools: Tool[] = [
     designStyle: "analytical",
   },
   {
+    id: "529-roth-rollover",
+    name: "529-to-Roth Rollover Planner",
+    description: "Plan your tax-free 529 to Roth IRA rollover strategy",
+    href: "/tools/529-roth-rollover",
+    categoryId: "investing",
+    status: "live",
+    primaryColor: "#8b5cf6",
+    designStyle: "analytical",
+    inspiredBy: ["SECURE 2.0 Act", "Kitces"],
+    featured: true,
+  },
+  {
     id: "fire-calculator",
     name: "FIRE Calculator",
     description:
