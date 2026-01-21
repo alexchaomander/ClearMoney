@@ -220,6 +220,19 @@ export const tools: Tool[] = [
   },
   // Banking
   {
+    id: "i-bond-comparison",
+    name: "I Bond vs HYSA Comparison",
+    description:
+      "Compare I Bonds, high-yield savings, TIPS, and CDs for your safe money",
+    href: "/tools/i-bond-comparison",
+    categoryId: "banking",
+    status: "live",
+    primaryColor: "#0ea5e9",
+    designStyle: "analytical",
+    inspiredBy: ["TIPSWatch", "My Money Blog"],
+    featured: true,
+  },
+  {
     id: "hysa-comparison",
     name: "High-Yield Savings Finder",
     description: "Compare the best high-yield savings account rates.",
