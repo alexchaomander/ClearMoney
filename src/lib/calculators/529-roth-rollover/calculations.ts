@@ -156,10 +156,18 @@ function calculateAlternativeComparison(
   inputs: CalculatorInputs,
   projectedValue: number
 ): AlternativeComparison {
-  const basis = Math.min(inputs.contributionsMade5YearsAgo, inputs.accountBalance);
-  const earnings = Math.max(0, inputs.accountBalance - basis);
-  const taxPaid = earnings * DEFAULT_TAX_RATE;
-  const penalty = earnings * NON_QUALIFIED_PENALTY_RATE;
+  // For non-qualified withdrawals, only EARNINGS are taxed and penalized.
+  // We estimate basis as accountBalance minus estimated earnings.
+  // Since we don't have exact total contributions, we use seasoned contributions
+  // as a proxy. In practice, total contributions >= seasoned contributions,
+  // so this may slightly overestimate taxes/penalties.
+  const estimatedBasis = Math.min(
+    inputs.contributionsMade5YearsAgo,
+    inputs.accountBalance
+  );
+  const estimatedEarnings = Math.max(0, inputs.accountBalance - estimatedBasis);
+  const taxPaid = estimatedEarnings * DEFAULT_TAX_RATE;
+  const penalty = estimatedEarnings * NON_QUALIFIED_PENALTY_RATE;
   const nonQualifiedNet = inputs.accountBalance - taxPaid - penalty;
   const keepValue =
     inputs.accountBalance *

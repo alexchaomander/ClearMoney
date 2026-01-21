@@ -197,7 +197,7 @@ export function Calculator() {
                     }))
                   }
                   min={0}
-                  max={7500}
+                  max={projectedAnnualLimit}
                   step={100}
                   format="currency"
                   description="Counts toward the annual IRA limit."
@@ -530,22 +530,24 @@ export function Calculator() {
 
             <MethodologySection>
               <p>
-                We calculate eligibility based on SECURE 2.0 rules: the 529 must
+                We calculate eligibility based on SECURE 2.0 Section 126 rules: the 529 must
                 be open at least {ACCOUNT_AGE_REQUIREMENT_YEARS} years, only
                 contributions older than {CONTRIBUTION_SEASONING_YEARS} years
-                qualify, and the beneficiary must have earned income.
+                qualify, and the beneficiary must have earned income. Rollovers
+                count toward the annual IRA contribution limit.
               </p>
               <p>
                 Annual rollovers are limited to the IRA contribution limit
                 ({formatCurrency(IRA_CONTRIBUTION_LIMIT_2026, 0)} in 2026, plus
                 a {formatCurrency(IRA_CATCHUP_CONTRIBUTION_2026, 0)} catch-up
-                for age 50+). We also enforce the {formatCurrency(LIFETIME_529_TO_ROTH_LIMIT, 0)}
-                lifetime cap.
+                for age 50+), reduced by any other IRA contributions made that year.
+                We also enforce the {formatCurrency(LIFETIME_529_TO_ROTH_LIMIT, 0)} lifetime cap per beneficiary.
               </p>
               <p>
-                Growth projections assume a constant return of {formatPercent(inputs.expectedReturn / 100)}
-                compounded annually until retirement. The non-qualified withdrawal comparison estimates taxes
-                at 22% plus a 10% penalty on earnings only.
+                Growth projections assume a constant return of {formatPercent(inputs.expectedReturn / 100)} compounded
+                annually until retirement. The non-qualified withdrawal comparison estimates taxes
+                at 22% plus a 10% penalty on earnings only. We estimate earnings as the difference
+                between account balance and seasoned contributions.
               </p>
             </MethodologySection>
           </div>
