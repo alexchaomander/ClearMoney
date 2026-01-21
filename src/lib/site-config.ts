@@ -263,6 +263,19 @@ export const tools: Tool[] = [
     featured: true,
   },
   {
+    id: "roth-catch-up",
+    name: "Roth Catch-Up Planner",
+    description:
+      "Navigate the mandatory Roth catch-up rule for high earners ($150k+)",
+    href: "/tools/roth-catch-up",
+    categoryId: "investing",
+    status: "live",
+    primaryColor: "#ec4899",
+    designStyle: "analytical",
+    inspiredBy: ["SECURE 2.0 Act"],
+    featured: true,
+  },
+  {
     id: "mega-backdoor-roth",
     name: "Mega Backdoor Roth Calculator",
     description: "Discover if you can contribute $46,000+ extra to Roth accounts annually",
