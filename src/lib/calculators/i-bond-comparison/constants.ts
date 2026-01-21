@@ -1,8 +1,10 @@
+// Current I Bond rates (Nov 2025 - Apr 2026)
+// Source: https://www.treasurydirect.gov/savings-bonds/i-bonds/i-bonds-interest-rates/
 export const CURRENT_RATES = {
   iBond: {
-    fixedRate: 0.009,
-    inflationRate: 0.0312,
-    compositeRate: 0.0403,
+    fixedRate: 0.009, // 0.90% fixed rate
+    inflationRate: 0.0312, // 3.12% annualized inflation rate (semiannual is 1.56%)
+    compositeRate: 0.0403, // 4.03% composite rate
   },
   tips: {
     realYield: 0.013,
