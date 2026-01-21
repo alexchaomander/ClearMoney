@@ -12,6 +12,7 @@ import {
   FILING_STATUS_OPTIONS,
   KEY_DEADLINES,
   LOAN_TYPE_OPTIONS,
+  REFERENCE_YEAR,
   STANDARD_PLAN,
   STATE_OPTIONS,
 } from "@/lib/calculators/student-loan-strategy/constants";
@@ -147,8 +148,8 @@ export function Calculator() {
                 Income & Household
               </h2>
               <p className="mt-1 text-sm text-neutral-400">
-                IDR plans use discretionary income after 150% of the poverty
-                guideline.
+                IDR plans use discretionary income. IBR/PAYE use 150% of poverty line,
+                ICR uses 100%, and RAP uses AGI-based sliding scale.
               </p>
 
               <div className="mt-6 space-y-6">
@@ -318,7 +319,7 @@ export function Calculator() {
                   value: `${Math.max(
                     ...planEntries.map(([, plan]) =>
                       plan.forgivenessYear
-                        ? plan.forgivenessYear - new Date().getFullYear()
+                        ? plan.forgivenessYear - REFERENCE_YEAR
                         : 0
                     )
                   )} yrs max`,
@@ -374,8 +375,8 @@ export function Calculator() {
                   Plan Comparison
                 </h2>
                 <p className="mt-1 text-sm text-neutral-400">
-                  All payments assume income-driven calculations with a 150%
-                  poverty guideline threshold.
+                  Payment calculations vary by plan: IBR/PAYE use 150% poverty line,
+                  ICR uses 100%, RAP uses AGI sliding scale (1-10%).
                 </p>
               </div>
               <div className="text-sm text-neutral-400">
@@ -434,12 +435,12 @@ export function Calculator() {
                                 ? ` (${plan.forgivenessYear})`
                                 : ""
                             }`
-                          : "—"}
+                          : "-"}
                       </td>
                       <td className="py-3">
                         {plan.taxOnForgiveness > 0
                           ? formatCurrency(plan.taxOnForgiveness)
-                          : "—"}
+                          : "-"}
                       </td>
                       <td className="py-3 font-semibold text-white">
                         {formatCurrency(plan.netCost)}
@@ -495,7 +496,7 @@ export function Calculator() {
             <div className="mt-6 space-y-4">
               {planEntries.map(([key, plan]) => {
                 const years = plan.forgivenessYear
-                  ? plan.forgivenessYear - new Date().getFullYear()
+                  ? plan.forgivenessYear - REFERENCE_YEAR
                   : STANDARD_PLAN.termYears - inputs.yearsInRepayment;
                 const barWidth = Math.min(100, Math.max(10, years * 4));
                 return (
@@ -526,11 +527,23 @@ export function Calculator() {
             </summary>
             <div className="mt-4 space-y-3 text-sm text-neutral-400">
               <p>
-                Discretionary income is calculated as your income minus 150% of
-                the 2026 federal poverty guideline for your household size. IDR
-                payments are a percentage of that amount, capped at the 10-year
-                standard payment.
+                <strong>Discretionary income</strong> varies by plan:
               </p>
+              <ul className="ml-4 list-disc space-y-1">
+                <li>IBR and PAYE: AGI minus 150% of federal poverty guideline</li>
+                <li>ICR: AGI minus 100% of federal poverty guideline</li>
+                <li>SAVE (closed): AGI minus 225% of federal poverty guideline</li>
+                <li>RAP: Uses AGI directly with a 1-10% sliding scale based on income bracket, plus $50 deduction per dependent (minimum $10/month payment)</li>
+              </ul>
+              <p>
+                <strong>Payment percentages:</strong>
+              </p>
+              <ul className="ml-4 list-disc space-y-1">
+                <li>IBR: 15% (pre-2014 borrowers) or 10% (post-2014 borrowers)</li>
+                <li>PAYE: 10% of discretionary income</li>
+                <li>ICR: 20% of discretionary income or 12-year fixed adjusted</li>
+                <li>RAP: 1-10% of AGI based on income bracket</li>
+              </ul>
               <p>
                 We project income growth annually, apply plan-specific payment
                 percentages, and simulate month-by-month balances to estimate

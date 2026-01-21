@@ -4,6 +4,8 @@ import {
   IDR_PLANS,
   KEY_DEADLINES,
   POVERTY_GUIDELINE_2026,
+  RAP_AGI_BRACKETS,
+  REFERENCE_YEAR,
   STANDARD_PLAN,
   STATE_TAX_RATES,
 } from "./constants";
@@ -28,12 +30,22 @@ const calculateStandardPayment = (balance: number, annualRate: number, termYears
   return (balance * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months));
 };
 
-const calculateDiscretionaryIncome = (income: number, familySize: number) => {
+/**
+ * Calculate discretionary income based on plan-specific poverty line multiplier
+ * - IBR/PAYE: 150% of poverty line
+ * - ICR: 100% of poverty line
+ * - SAVE: 225% of poverty line (historical, plan is closed)
+ */
+const calculateDiscretionaryIncome = (
+  income: number,
+  familySize: number,
+  povertyMultiplier: number = 1.5
+) => {
   const adjustedFamilySize = Math.max(1, familySize);
   const povertyLine =
     POVERTY_GUIDELINE_2026.baseAmount +
     (adjustedFamilySize - 1) * POVERTY_GUIDELINE_2026.perPerson;
-  const threshold = povertyLine * 1.5;
+  const threshold = povertyLine * povertyMultiplier;
   return Math.max(0, income - threshold);
 };
 
@@ -44,6 +56,32 @@ const calculateIDRPayment = (
 ) => {
   const idrPayment = (discretionaryIncome * paymentPercent) / MONTHS_IN_YEAR;
   return Math.min(idrPayment, standardPayment);
+};
+
+/**
+ * Calculate RAP payment based on AGI sliding scale (not discretionary income)
+ * Payment = (AGI * applicable_percent) / 12 - ($50 * dependents)
+ * Minimum payment is $10
+ */
+const calculateRAPPayment = (agi: number, dependents: number): number => {
+  // Find the applicable percentage based on AGI bracket
+  let applicablePercent = 0;
+  for (const bracket of RAP_AGI_BRACKETS) {
+    if (agi <= bracket.maxAGI) {
+      applicablePercent = bracket.percent;
+      break;
+    }
+  }
+
+  // Calculate base payment from AGI
+  const basePayment = (agi * applicablePercent) / MONTHS_IN_YEAR;
+
+  // Subtract $50 per dependent (dependents = familySize - 1 for borrower)
+  const dependentDeduction = dependents * IDR_PLANS.rap.dependentDeduction;
+  const adjustedPayment = basePayment - dependentDeduction;
+
+  // Minimum payment is $10
+  return Math.max(IDR_PLANS.rap.minimumMonthlyPayment, adjustedPayment);
 };
 
 const projectLoanBalance = (
@@ -131,11 +169,97 @@ const buildGraduatedPayments = (standardPayment: number, months: number) => {
   return payments;
 };
 
+/**
+ * Build RAP plan with proper AGI-based sliding scale calculation
+ */
+const buildRAPPlan = (
+  inputs: CalculatorInputs,
+  standardPayment: number
+): RepaymentPlan => {
+  const plan = IDR_PLANS.rap;
+  const forgivenessYears = plan.forgivenessYears;
+  const monthsRemaining = Math.max(
+    0,
+    Math.round((forgivenessYears - inputs.yearsInRepayment) * MONTHS_IN_YEAR)
+  );
+
+  const monthlyPayments: number[] = [];
+  let monthlyPaymentYear1 = 0;
+  let monthlyPaymentFinal = 0;
+
+  const totalYears = Math.ceil(monthsRemaining / MONTHS_IN_YEAR);
+  // Dependents for RAP = familySize - 1 (the borrower is not counted as a dependent)
+  const dependents = Math.max(0, inputs.familySize - 1);
+
+  for (let year = 0; year < totalYears; year += 1) {
+    const projectedIncome =
+      inputs.annualIncome * Math.pow(1 + inputs.incomeGrowthRate / 100, year);
+
+    // RAP uses AGI directly, not discretionary income
+    const monthlyPayment = calculateRAPPayment(projectedIncome, dependents);
+
+    if (year === 0) {
+      monthlyPaymentYear1 = monthlyPayment;
+    }
+    monthlyPaymentFinal = monthlyPayment;
+
+    const monthsThisYear = Math.min(
+      MONTHS_IN_YEAR,
+      monthsRemaining - year * MONTHS_IN_YEAR
+    );
+
+    for (let month = 0; month < monthsThisYear; month += 1) {
+      monthlyPayments.push(monthlyPayment);
+    }
+  }
+
+  const projection = projectVariablePayments(
+    inputs.loanBalance,
+    inputs.interestRate,
+    monthlyPayments
+  );
+
+  const forgivenessAmount = projection.finalBalance;
+  const forgivenessYear =
+    monthsRemaining > 0
+      ? REFERENCE_YEAR + Math.ceil(monthsRemaining / MONTHS_IN_YEAR)
+      : REFERENCE_YEAR;
+  const taxOnForgiveness = calculateTaxOnForgiveness(
+    forgivenessAmount,
+    inputs.annualIncome,
+    inputs.state
+  );
+
+  return {
+    name: plan.name,
+    available: plan.available,
+    availableUntil: undefined,
+    availableFrom: plan.availableDate,
+    monthlyPaymentYear1,
+    monthlyPaymentFinal,
+    totalPaid: projection.totalPaid,
+    totalInterestPaid: projection.totalInterest,
+    forgivenessAmount,
+    forgivenessYear,
+    taxOnForgiveness,
+    netCost: projection.totalPaid + taxOnForgiveness,
+    notes: [
+      "RAP uses AGI-based sliding scale (1-10% of AGI), not discretionary income.",
+      "$10 minimum monthly payment; $50 deduction per dependent.",
+    ],
+  };
+};
+
 const buildIdrPlan = (
   inputs: CalculatorInputs,
   planKey: keyof typeof IDR_PLANS,
   standardPayment: number
 ): RepaymentPlan => {
+  // RAP is handled separately due to different calculation method
+  if (planKey === "rap") {
+    return buildRAPPlan(inputs, standardPayment);
+  }
+
   const plan = IDR_PLANS[planKey];
   const forgivenessYears =
     planKey === "ibr" && inputs.yearsInRepayment === 0
@@ -152,6 +276,9 @@ const buildIdrPlan = (
       ? IDR_PLANS.ibr.paymentPercentNew
       : plan.paymentPercent;
 
+  // Use plan-specific poverty multiplier
+  const povertyMultiplier = plan.povertyMultiplier;
+
   let monthlyPaymentYear1 = 0;
   let monthlyPaymentFinal = 0;
 
@@ -162,7 +289,8 @@ const buildIdrPlan = (
       inputs.annualIncome * Math.pow(1 + inputs.incomeGrowthRate / 100, year);
     const discretionaryIncome = calculateDiscretionaryIncome(
       projectedIncome,
-      inputs.familySize
+      inputs.familySize,
+      povertyMultiplier
     );
     const monthlyPayment = calculateIDRPayment(
       discretionaryIncome,
@@ -194,8 +322,8 @@ const buildIdrPlan = (
   const forgivenessAmount = projection.finalBalance;
   const forgivenessYear =
     monthsRemaining > 0
-      ? new Date().getFullYear() + Math.ceil(monthsRemaining / MONTHS_IN_YEAR)
-      : new Date().getFullYear();
+      ? REFERENCE_YEAR + Math.ceil(monthsRemaining / MONTHS_IN_YEAR)
+      : REFERENCE_YEAR;
   const taxOnForgiveness = calculateTaxOnForgiveness(
     forgivenessAmount,
     inputs.annualIncome,
@@ -204,9 +332,19 @@ const buildIdrPlan = (
 
   const available = plan.available;
 
-  const availableUntil =
-    "closingDate" in plan && plan.closingDate ? plan.closingDate : undefined;
-  const availableFrom = "availableDate" in plan ? plan.availableDate : undefined;
+  const availableUntil: string | undefined =
+    "closingDate" in plan && plan.closingDate ? (plan.closingDate as string) : undefined;
+  const availableFrom: string | undefined =
+    "availableDate" in plan ? (plan.availableDate as string | undefined) : undefined;
+
+  // Add notes for plan-specific details
+  const notes: string[] = [];
+  if (planKey === "icr") {
+    notes.push("ICR uses 100% of poverty line (not 150%) for discretionary income calculation.");
+  }
+  if (planKey === "save") {
+    notes.push("SAVE used 225% of poverty line. Plan is now closed.");
+  }
 
   return {
     name: plan.name,
@@ -221,6 +359,7 @@ const buildIdrPlan = (
     forgivenessYear,
     taxOnForgiveness,
     netCost: projection.totalPaid + taxOnForgiveness,
+    notes: notes.length > 0 ? notes : undefined,
   };
 };
 
@@ -333,7 +472,7 @@ const buildRecommendation = (
   const warnings: string[] = [];
   if (inputs.hasParentPlus || inputs.loanType === "parent_plus") {
     warnings.push(
-      "Parent PLUS loans typically require consolidation to access IDR plans beyond ICR."
+      "Parent PLUS loans are NOT eligible for RAP. Only ICR is available (via consolidation), and ICR closes July 2028."
     );
   }
   if (inputs.pslfEligible) {
@@ -402,7 +541,8 @@ export const calculate = (inputs: CalculatorInputs): CalculatorResults => {
           baselinePayment,
           monthsRemaining
         );
-        const forgivenessDate = new Date();
+        // Use REFERENCE_YEAR instead of new Date() for consistent results
+        const forgivenessDate = new Date(REFERENCE_YEAR, 0, 1);
         forgivenessDate.setMonth(forgivenessDate.getMonth() + monthsRemaining);
         return {
           eligible: true,
