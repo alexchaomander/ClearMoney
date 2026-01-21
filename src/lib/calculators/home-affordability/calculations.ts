@@ -168,19 +168,44 @@ const calculateRentVsBuy = (
   const futureValue = homePrice * Math.pow(1 + ASSUMPTIONS.appreciationRate, yearsToCompare);
   const equity = futureValue - loanAmount * (1 - ASSUMPTIONS.principalPaydownFiveYears);
 
-  const monthlyDifference = monthlyOwnership - monthlyRent;
-  const breakEvenYears =
-    monthlyDifference > 0
-      ? (closingCosts + downPayment * 0.05) / (monthlyDifference * 12)
-      : closingCosts /
-        (Math.abs(monthlyDifference) * 12 + homePrice * ASSUMPTIONS.appreciationRate);
+  // Calculate break-even by finding when equity buildup offsets the net cost of buying
+  // Break-even occurs when: cumulative rent >= (cumulative ownership + closing costs - equity)
+  // We iterate year by year to find the crossover point
+  let breakEvenYears = 0;
+  let cumulativeOwnership = closingCosts;
+  let cumulativeRent = 0;
+  let currentRent = monthlyRent;
+
+  for (let year = 1; year <= 30; year += 1) {
+    cumulativeOwnership += monthlyOwnership * 12;
+    cumulativeRent += currentRent * 12;
+    currentRent *= 1 + ASSUMPTIONS.rentGrowthRate;
+
+    // Calculate equity at this point
+    const yearFutureValue = homePrice * Math.pow(1 + ASSUMPTIONS.appreciationRate, year);
+    // Principal paydown is roughly 1% of loan per year in early years
+    const principalPaydown = Math.min(year * 0.01, 0.15);
+    const yearEquity = yearFutureValue - loanAmount * (1 - principalPaydown);
+
+    // Net cost of buying = total ownership costs - equity gained
+    const netBuyingCost = cumulativeOwnership - yearEquity;
+
+    // Break-even when renting costs more than net buying costs
+    if (cumulativeRent >= netBuyingCost) {
+      breakEvenYears = year;
+      break;
+    }
+  }
+
+  // If no break-even found in 30 years, cap at 30
+  if (breakEvenYears === 0) {
+    breakEvenYears = 30;
+  }
 
   return {
     monthlyOwnership,
     monthlyRent,
-    breakEvenYears: Number.isFinite(breakEvenYears)
-      ? Math.round(breakEvenYears * 10) / 10
-      : 0,
+    breakEvenYears,
     fiveYearComparison: {
       buyingCost: totalOwnership + closingCosts,
       rentingCost: totalRent,
