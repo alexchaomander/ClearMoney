@@ -163,6 +163,36 @@ const achievements = [
   },
 ];
 
+const milestoneContainer = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.5,
+    },
+  },
+};
+
+const milestoneItem = {
+  hidden: { opacity: 0, x: -20 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.4 } },
+};
+
+const achievementContainer = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.6,
+    },
+  },
+};
+
+const achievementItem = {
+  hidden: { opacity: 0, scale: 0.9 },
+  show: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+};
+
 // Custom tooltip for charts
 function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number; dataKey: string }[]; label?: string }) {
   if (active && payload && payload.length) {
@@ -399,7 +429,12 @@ function MilestoneTimeline() {
         </h2>
       </div>
 
-      <div className="space-y-0">
+      <motion.div
+        className="space-y-0"
+        variants={milestoneContainer}
+        initial="hidden"
+        animate="show"
+      >
         {milestones.map((milestone, index) => {
           const Icon = milestone.icon;
           const isLast = index === milestones.length - 1;
@@ -407,9 +442,7 @@ function MilestoneTimeline() {
           return (
             <motion.div
               key={milestone.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
+              variants={milestoneItem}
               className="relative flex gap-4"
             >
               {/* Timeline line */}
@@ -467,7 +500,7 @@ function MilestoneTimeline() {
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ duration: 0.3, delay: 0.8 + index * 0.1 }}
+                    transition={{ duration: 0.3, delay: 0.1 }}
                     className="mt-2"
                   >
                     <span
@@ -483,7 +516,7 @@ function MilestoneTimeline() {
             </motion.div>
           );
         })}
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
@@ -508,15 +541,18 @@ function AchievementsSection() {
         </h2>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4">
-        {achievements.map((achievement, index) => {
+      <motion.div
+        className="grid sm:grid-cols-2 gap-4"
+        variants={achievementContainer}
+        initial="hidden"
+        animate="show"
+      >
+        {achievements.map((achievement) => {
           const Icon = achievement.icon;
           return (
             <motion.div
               key={achievement.title}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
+              variants={achievementItem}
               className="p-4 rounded-lg flex items-start gap-3"
               style={{
                 backgroundColor: achievement.earned ? emerald[800] + "30" : emerald[900] + "40",
@@ -546,7 +582,7 @@ function AchievementsSection() {
             </motion.div>
           );
         })}
-      </div>
+      </motion.div>
     </motion.div>
   );
 }

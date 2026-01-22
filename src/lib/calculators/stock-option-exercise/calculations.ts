@@ -551,8 +551,6 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
     );
   }
 
-  const recommendedStrategy: "exercise_and_hold" | "exercise_and_sell" | "cashless" =
-    bestStrategy.strategy;
   const recommendations: string[] = [];
   const warnings: string[] = [];
 
@@ -577,6 +575,9 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
   const bestStrategy = strategies.reduce((best, current) =>
     current.profit > best.profit ? current : best
   );
+
+  const recommendedStrategy: "exercise_and_hold" | "exercise_and_sell" | "cashless" =
+    bestStrategy.strategy;
 
   if (option.optionType === "iso") {
     if (amtAnalysis && amtAnalysis.isInAMT) {

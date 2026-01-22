@@ -53,21 +53,22 @@ interface FinancialNode {
   icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   ring: number; // 1 = inner, 2 = middle, 3 = outer
   angle: number; // Position angle in degrees
+  sequence: number;
 }
 
 const financialNodes: FinancialNode[] = [
   // Inner ring - Income
-  { id: "income", name: "Primary Income", value: 150000, type: "income", icon: Briefcase, ring: 1, angle: 90 },
+  { id: "income", name: "Primary Income", value: 150000, type: "income", icon: Briefcase, ring: 1, angle: 90, sequence: 0 },
 
   // Middle ring - Assets
-  { id: "checking", name: "Checking", value: 11600, type: "asset", icon: Wallet, ring: 2, angle: 45 },
-  { id: "savings", name: "Emergency Fund", value: 5000, type: "asset", icon: PiggyBank, ring: 2, angle: 135 },
-  { id: "401k", name: "401(k)", value: 45000, type: "asset", icon: TrendingUp, ring: 2, angle: 225 },
-  { id: "investments", name: "Investments", value: 17000, type: "asset", icon: DollarSign, ring: 2, angle: 315 },
+  { id: "checking", name: "Checking", value: 11600, type: "asset", icon: Wallet, ring: 2, angle: 45, sequence: 1 },
+  { id: "savings", name: "Emergency Fund", value: 5000, type: "asset", icon: PiggyBank, ring: 2, angle: 135, sequence: 2 },
+  { id: "401k", name: "401(k)", value: 45000, type: "asset", icon: TrendingUp, ring: 2, angle: 225, sequence: 3 },
+  { id: "investments", name: "Investments", value: 17000, type: "asset", icon: DollarSign, ring: 2, angle: 315, sequence: 4 },
 
   // Outer ring - Liabilities
-  { id: "credit-card", name: "Credit Card", value: -2100, type: "liability", icon: CreditCard, ring: 3, angle: 0 },
-  { id: "student-loans", name: "Student Loans", value: -28000, type: "liability", icon: GraduationCap, ring: 3, angle: 180 },
+  { id: "credit-card", name: "Credit Card", value: -2100, type: "liability", icon: CreditCard, ring: 3, angle: 0, sequence: 5 },
+  { id: "student-loans", name: "Student Loans", value: -28000, type: "liability", icon: GraduationCap, ring: 3, angle: 180, sequence: 6 },
 ];
 
 // Money flows
@@ -76,14 +77,15 @@ interface MoneyFlow {
   to: string;
   amount: number;
   frequency: string;
+  sequence: number;
 }
 
 const moneyFlows: MoneyFlow[] = [
-  { from: "income", to: "checking", amount: 12500, frequency: "/mo" },
-  { from: "checking", to: "investments", amount: 1625, frequency: "/mo" },
-  { from: "checking", to: "savings", amount: 500, frequency: "/mo" },
-  { from: "checking", to: "credit-card", amount: 500, frequency: "/mo" },
-  { from: "checking", to: "student-loans", amount: 450, frequency: "/mo" },
+  { from: "income", to: "checking", amount: 12500, frequency: "/mo", sequence: 0 },
+  { from: "checking", to: "investments", amount: 1625, frequency: "/mo", sequence: 1 },
+  { from: "checking", to: "savings", amount: 500, frequency: "/mo", sequence: 2 },
+  { from: "checking", to: "credit-card", amount: 500, frequency: "/mo", sequence: 3 },
+  { from: "checking", to: "student-loans", amount: 450, frequency: "/mo", sequence: 4 },
 ];
 
 // AI insights
@@ -253,6 +255,8 @@ function ConstellationGraph() {
         {moneyFlows.map((flow) => {
           const fromNode = flow.from === "center" ? { x: 0, y: 0 } : getNodePosition(financialNodes.find((n) => n.id === flow.from)!);
           const toNode = getNodePosition(financialNodes.find((n) => n.id === flow.to)!);
+          const lineDelay = 0.5 + flow.sequence * 0.1;
+          const dotDelay = flow.sequence * 0.3;
 
           return (
             <g key={`${flow.from}-${flow.to}`}>
@@ -269,7 +273,7 @@ function ConstellationGraph() {
                 filter="blur(4px)"
                 initial={{ pathLength: 0, opacity: 0 }}
                 animate={{ pathLength: 1, opacity: 0.2 }}
-                transition={{ duration: 1.5, delay: 0.5 + index * 0.1 }}
+                transition={{ duration: 1.5, delay: lineDelay }}
               />
               {/* Main line */}
               <motion.line
@@ -282,7 +286,7 @@ function ConstellationGraph() {
                 strokeLinecap="round"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
-                transition={{ duration: 1.5, delay: 0.5 + index * 0.1 }}
+                transition={{ duration: 1.5, delay: lineDelay }}
               />
               {/* Animated flow dots */}
               <motion.circle
@@ -297,7 +301,7 @@ function ConstellationGraph() {
                 transition={{
                   duration: 2,
                   repeat: Infinity,
-                  delay: index * 0.3,
+                  delay: dotDelay,
                   ease: "easeInOut",
                 }}
               />
@@ -349,7 +353,7 @@ function ConstellationGraph() {
             key={node.id}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
+            transition={{ duration: 0.5, delay: 0.5 + node.sequence * 0.1 }}
             className="absolute z-10"
             style={{
               left: `calc(50% + ${position.x}px)`,

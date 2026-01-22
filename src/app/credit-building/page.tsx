@@ -1,18 +1,24 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { CategoryPage } from "@/components/shared/CategoryPage";
 import { getCategoryById } from "@/lib/site-config";
 
-const category = getCategoryById("credit-building")!;
+const category = getCategoryById("credit-building");
+const fallbackTitle = "Credit Building";
+const fallbackDescription = "Credit building tools and insights from ClearMoney.";
 
 export const metadata: Metadata = {
-  title: category.name,
-  description: category.description,
+  title: category?.name ?? fallbackTitle,
+  description: category?.description ?? fallbackDescription,
   openGraph: {
-    title: `${category.name} | ClearMoney`,
-    description: category.description,
+    title: `${category?.name ?? fallbackTitle} | ClearMoney`,
+    description: category?.description ?? fallbackDescription,
   },
 };
 
 export default function CreditBuildingPage() {
+  if (!category) {
+    notFound();
+  }
   return <CategoryPage category={category} />;
 }
