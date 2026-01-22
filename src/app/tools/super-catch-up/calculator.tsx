@@ -706,7 +706,7 @@ export function Calculator() {
                 cap. Balances grow annually using your expected return assumption.
               </p>
               <p>
-                The "value of super catch-up" uses the $3,250 annual difference
+                The &quot;value of super catch-up&quot; uses the $3,250 annual difference
                 between regular and super catch-up limits and compounds that extra
                 amount to retirement using the midpoint of ages 60-63.
               </p>

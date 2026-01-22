@@ -7,16 +7,6 @@ import type {
   ComparisonAnalysis,
 } from "./types";
 
-// 2024 HSA Limits (for reference)
-const HSA_LIMITS_2024 = {
-  individual: 4150,
-  family: 8300,
-  catchUp: 1000,
-  catchUpAge: 55,
-  hdhdMinDeductibleIndividual: 1600,
-  hdhdMinDeductibleFamily: 3200,
-};
-
 // 2025 HSA Limits
 const HSA_LIMITS_2025 = {
   individual: 4300,

@@ -172,10 +172,7 @@ const buildGraduatedPayments = (standardPayment: number, months: number) => {
 /**
  * Build RAP plan with proper AGI-based sliding scale calculation
  */
-const buildRAPPlan = (
-  inputs: CalculatorInputs,
-  standardPayment: number
-): RepaymentPlan => {
+const buildRAPPlan = (inputs: CalculatorInputs): RepaymentPlan => {
   const plan = IDR_PLANS.rap;
   const forgivenessYears = plan.forgivenessYears;
   const monthsRemaining = Math.max(
@@ -257,7 +254,7 @@ const buildIdrPlan = (
 ): RepaymentPlan => {
   // RAP is handled separately due to different calculation method
   if (planKey === "rap") {
-    return buildRAPPlan(inputs, standardPayment);
+    return buildRAPPlan(inputs);
   }
 
   const plan = IDR_PLANS[planKey];

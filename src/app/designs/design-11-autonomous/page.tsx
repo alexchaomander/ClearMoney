@@ -20,7 +20,6 @@ import {
   Heart,
   Building2,
   Percent,
-  Zap,
   Brain,
   LineChart,
   Sparkles,
@@ -225,7 +224,7 @@ function Navigation() {
               </Link>
             ))}
             <Link
-              href="#tools"
+              href="/designs/design-11-autonomous/onboarding"
               className="px-5 py-2.5 text-base font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
               style={{
                 background: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.accentLight} 100%)`,
@@ -233,7 +232,7 @@ function Navigation() {
                 boxShadow: `0 4px 14px ${colors.accent}30`
               }}
             >
-              Get Started
+              Start Free
             </Link>
           </div>
         </nav>
@@ -340,7 +339,7 @@ function HeroSection() {
           className="text-xl sm:text-2xl max-w-3xl mx-auto mb-12 leading-relaxed"
           style={{ color: colors.textMuted }}
         >
-          The wealth strategies used by the ultra-wealthy aren't secret—they're just
+          The wealth strategies used by the ultra-wealthy aren&apos;t secret—they&apos;re just
           buried under affiliate-driven content and paywalled advice.
           <span className="font-semibold" style={{ color: colors.text }}>
             {" "}We surface them for free.
@@ -350,7 +349,7 @@ function HeroSection() {
         {/* CTA Buttons — Larger, more prominent */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
           <Link
-            href="#tools"
+            href="/designs/design-11-autonomous/onboarding"
             className="group inline-flex items-center gap-3 px-8 py-4 text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
             style={{
               background: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.accentLight} 100%)`,
@@ -358,15 +357,15 @@ function HeroSection() {
               boxShadow: `0 8px 30px ${colors.accent}35`
             }}
           >
-            Explore All Tools
+            Start Your Financial Clarity
             <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
           <Link
-            href="#methodology"
+            href="#tools"
             className="inline-flex items-center gap-3 px-8 py-4 text-lg font-semibold rounded-2xl transition-all duration-300 hover:bg-black/5"
             style={{ color: colors.text }}
           >
-            See Our Methodology
+            Explore Tools
           </Link>
         </div>
 
@@ -419,7 +418,7 @@ function ProblemSection() {
             Two options, both broken
           </h2>
           <p className="text-xl lg:text-2xl leading-relaxed" style={{ color: colors.textMuted }}>
-            Getting your finances right shouldn't require choosing between expensive mistakes or expensive advisors.
+            Getting your finances right shouldn&apos;t require choosing between expensive mistakes or expensive advisors.
           </p>
         </div>
 
@@ -508,12 +507,189 @@ function ProblemSection() {
 }
 
 // ============================================================================
+// PERSONAL WEALTH ADVISOR SECTION
+// ============================================================================
+
+function PersonalWealthAdvisorSection() {
+  return (
+    <section className="py-32 relative overflow-hidden" style={{ backgroundColor: colors.bg }}>
+      {/* Gradient blobs */}
+      <GradientBlob
+        color={colors.blob1}
+        size={700}
+        top="-10%"
+        right="-5%"
+        opacity={0.3}
+        blur={100}
+        animate
+        delay={-2}
+      />
+      <GradientBlob
+        color={colors.blob2}
+        size={500}
+        bottom="10%"
+        left="-10%"
+        opacity={0.25}
+        blur={90}
+        animate
+        delay={-8}
+      />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          {/* Left side - Content */}
+          <div>
+            <div
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold mb-8"
+              style={{ backgroundColor: `${colors.accent}15`, color: colors.accent }}
+            >
+              <Sparkles className="w-4 h-4" />
+              Personal Wealth Advisor
+            </div>
+            <h2
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-8"
+              style={{ color: colors.text }}
+            >
+              Your finances.
+              <br />
+              <span
+                className="bg-clip-text text-transparent"
+                style={{
+                  backgroundImage: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.blob2} 100%)`
+                }}
+              >
+                Crystal clear.
+              </span>
+            </h2>
+            <p className="text-xl lg:text-2xl leading-relaxed mb-10" style={{ color: colors.textMuted }}>
+              Tell us about your financial situation once. Get personalized recommendations
+              that actually make sense for{" "}
+              <span className="font-semibold" style={{ color: colors.text }}>your</span> life,
+              updated as your circumstances change.
+            </p>
+
+            <ul className="space-y-5 mb-10">
+              {[
+                "Prioritized action items based on your actual numbers",
+                "See exactly how much each decision impacts you",
+                "No cookie-cutter advice — everything is personalized",
+                "Track your progress toward financial independence",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-4">
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                    style={{ backgroundColor: `${colors.success}15` }}
+                  >
+                    <Check className="w-4 h-4" style={{ color: colors.success }} />
+                  </div>
+                  <span className="text-lg" style={{ color: colors.textMuted }}>
+                    {item}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <Link
+              href="/designs/design-11-autonomous/onboarding"
+              className="group inline-flex items-center gap-3 px-8 py-4 text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+              style={{
+                background: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.accentLight} 100%)`,
+                color: "white",
+                boxShadow: `0 8px 30px ${colors.accent}35`
+              }}
+            >
+              Start Your Financial Clarity
+              <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+            </Link>
+          </div>
+
+          {/* Right side - Visual preview */}
+          <div
+            className="relative p-8 rounded-3xl"
+            style={{
+              backgroundColor: colors.bgAlt,
+              border: `1px solid ${colors.border}`,
+              boxShadow: "0 20px 60px rgba(0,0,0,0.08)"
+            }}
+          >
+            {/* Mock dashboard preview */}
+            <div className="mb-8">
+              <p className="text-sm font-medium mb-2" style={{ color: colors.textLight }}>
+                Your Financial Health Score
+              </p>
+              <div className="flex items-end gap-4">
+                <span className="text-6xl font-bold" style={{ color: colors.text }}>72</span>
+                <span className="text-2xl font-medium mb-2" style={{ color: colors.textLight }}>/100</span>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <div
+                className="p-4 rounded-xl"
+                style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium" style={{ color: colors.text }}>Net Worth</span>
+                  <span className="text-lg font-bold" style={{ color: colors.success }}>$87,400</span>
+                </div>
+                <div className="w-full h-2 rounded-full" style={{ backgroundColor: colors.border }}>
+                  <div
+                    className="h-2 rounded-full"
+                    style={{ width: "45%", backgroundColor: colors.success }}
+                  />
+                </div>
+              </div>
+
+              <div
+                className="p-4 rounded-xl"
+                style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium" style={{ color: colors.text }}>Savings Rate</span>
+                  <span className="text-lg font-bold" style={{ color: colors.accent }}>22%</span>
+                </div>
+                <div className="w-full h-2 rounded-full" style={{ backgroundColor: colors.border }}>
+                  <div
+                    className="h-2 rounded-full"
+                    style={{ width: "73%", backgroundColor: colors.accent }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm font-semibold" style={{ color: colors.text }}>
+                Top Recommendations
+              </p>
+              {[
+                { title: "Max your 401k match", impact: "+$3,600/yr" },
+                { title: "Build emergency fund", impact: "1.8 more months" },
+                { title: "Open Mega Backdoor Roth", impact: "+$23K tax-free" },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="flex items-center justify-between p-3 rounded-lg"
+                  style={{ backgroundColor: colors.bg }}
+                >
+                  <span className="text-sm" style={{ color: colors.textMuted }}>{item.title}</span>
+                  <span className="text-sm font-semibold" style={{ color: colors.success }}>{item.impact}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================================================
 // SOLUTION SECTION
 // ============================================================================
 
 function SolutionSection() {
   return (
-    <section className="py-32 relative overflow-hidden" style={{ backgroundColor: colors.bg }}>
+    <section className="py-32 relative overflow-hidden" style={{ backgroundColor: colors.bgAlt }}>
       {/* Gradient blobs */}
       <GradientBlob
         color={colors.blob4}
@@ -658,7 +834,7 @@ function FeeCalculator() {
             The true cost of 1% fees
           </h2>
           <p className="text-xl lg:text-2xl" style={{ color: colors.textMuted }}>
-            That "small" 1% annual fee compounds into a fortune over time.
+            That &quot;small&quot; 1% annual fee compounds into a fortune over time.
           </p>
         </div>
 
@@ -1201,6 +1377,7 @@ export default function AutonomousInspiredPage() {
         <Navigation />
         <HeroSection />
         <ProblemSection />
+        <PersonalWealthAdvisorSection />
         <SolutionSection />
         <FeeCalculator />
         <ToolsSection />
