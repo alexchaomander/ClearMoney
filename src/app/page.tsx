@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   ArrowRight,
   Calculator,
@@ -9,9 +7,13 @@ import {
   Eye,
   Users,
   Zap,
+  Clock,
+  Sparkles,
 } from "lucide-react";
-import { categories, tools, getLiveTools } from "@/lib/site-config";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { categories, tools, getLiveTools, getFeaturedTools } from "@/lib/site-config";
+import { Header } from "@/components/layout/Header";
+import { FeaturedTools } from "@/components/shared/FeaturedTools";
+import { NewsletterSignup } from "@/components/shared/NewsletterSignup";
 
 const principles = [
   {
@@ -42,186 +44,241 @@ const principles = [
 
 export default function HomePage() {
   const liveTools = getLiveTools();
+  const featuredTools = getFeaturedTools();
+  const comingSoonTools = tools.filter((t) => t.status === "coming-soon");
+  const uniqueCategories = [...new Set(liveTools.map((t) => t.categoryId))];
 
   return (
-    <div className="relative">
-      {/* Theme Toggle - Fixed Position */}
-      <div className="fixed right-4 top-4 z-50">
-        <ThemeToggle />
-      </div>
+    <div className="min-h-screen bg-neutral-950">
+      <Header />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-brand-600/10 via-transparent to-transparent" />
-        <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+        {/* Background effects */}
+        <div className="absolute inset-0 bg-grid opacity-50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-brand-600/5 via-transparent to-neutral-950" />
+
+        {/* Gradient orbs */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-brand-400/5 rounded-full blur-3xl" />
+
+        <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-32 lg:px-8">
           <div className="text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-1.5 text-sm font-medium text-brand-400">
+            {/* Badge */}
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-1.5">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75"></span>
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-500"></span>
               </span>
-              The honest alternative to corporate finance media
+              <span className="text-sm font-medium text-brand-400">
+                The honest alternative to corporate finance media
+              </span>
             </div>
 
-            <h1 className="text-4xl font-black tracking-tight text-neutral-900 dark:text-white sm:text-6xl lg:text-7xl">
-              Financial literacy{" "}
-              <span className="bg-gradient-to-r from-brand-400 to-brand-600 bg-clip-text text-transparent">
+            {/* Main heading */}
+            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
+              <span className="font-display italic">Financial literacy</span>{" "}
+              <span className="block mt-2 bg-gradient-to-r from-brand-400 to-brand-500 bg-clip-text text-transparent">
                 for everyone
               </span>
             </h1>
 
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-600 dark:text-neutral-400 sm:text-xl">
+            {/* Subheading */}
+            <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-neutral-400 sm:text-xl">
               Interactive tools and unbiased advice to help you make smarter
               money decisions. No affiliate bias. No corporate influence. Just
               math and honest opinions.
             </p>
 
-            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button size="xl" asChild>
-                <Link href="#tools">
-                  Explore Tools
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="xl" asChild>
-                <Link href="/blog/why-we-built-this">Our Mission</Link>
-              </Button>
+            {/* Stats */}
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-8 text-sm">
+              <div className="flex items-center gap-2">
+                <Calculator className="w-5 h-5 text-brand-400" />
+                <span className="text-neutral-300">
+                  <strong className="text-white">{liveTools.length}</strong> live tools
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-brand-400" />
+                <span className="text-neutral-300">
+                  <strong className="text-white">{uniqueCategories.length}</strong> categories
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-brand-400" />
+                <span className="text-neutral-300">
+                  <strong className="text-white">Zero</strong> affiliate bias
+                </span>
+              </div>
+            </div>
+
+            {/* CTA buttons */}
+            <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Link
+                href="#tools"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-white text-neutral-950 font-semibold hover:bg-neutral-100 transition-colors"
+              >
+                Explore Tools
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link
+                href="/about"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-neutral-700 text-white font-semibold hover:bg-neutral-800/50 transition-colors"
+              >
+                Our Mission
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
       {/* Categories Section */}
-      <section className="border-y border-neutral-200 bg-neutral-100/50 dark:border-neutral-800 dark:bg-neutral-900/30">
+      <section className="border-y border-neutral-800 bg-neutral-900/30">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
-            <h2 className="text-3xl font-black tracking-tight text-neutral-900 dark:text-white sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
               Your Money, Demystified
             </h2>
-            <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">
+            <p className="mt-4 text-lg text-neutral-400">
               Honest guidance across every area of personal finance.
             </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {categories.map((category) => (
-              <Link key={category.id} href={category.href}>
-                <Card className="group h-full transition-all hover:border-neutral-300 hover:bg-neutral-100 dark:hover:border-neutral-700 dark:hover:bg-neutral-900/80">
-                  <CardContent className="p-6">
-                    <div className="mb-3 text-3xl">{category.icon}</div>
-                    <h3 className="text-lg font-bold text-neutral-900 group-hover:text-brand-500 dark:text-white dark:group-hover:text-brand-400">
-                      {category.name}
-                    </h3>
-                    <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-                      {category.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+            {categories
+              .filter((cat, index, self) =>
+                self.findIndex((c) => c.id === cat.id) === index
+              )
+              .slice(0, 9)
+              .map((category, index) => (
+                <Link
+                  key={`${category.id}-${index}`}
+                  href={category.href}
+                  className="group p-5 rounded-xl border border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 hover:bg-neutral-900 transition-all animate-fade-up"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="flex items-start gap-4">
+                    <span className="text-2xl">{category.icon}</span>
+                    <div>
+                      <h3 className="font-semibold text-white group-hover:text-brand-400 transition-colors">
+                        {category.name}
+                      </h3>
+                      <p className="mt-1 text-sm text-neutral-500 line-clamp-2">
+                        {category.description}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
           </div>
         </div>
       </section>
 
-      {/* Tools Section */}
-      <section id="tools" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mb-12 text-center">
-          <h2 className="text-3xl font-black tracking-tight text-neutral-900 dark:text-white sm:text-4xl">
-            Decision Tools
-          </h2>
-          <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">
-            Plug in your numbers. Get an answer. No fluff.
-          </p>
-        </div>
+      {/* Featured Tools Section */}
+      <FeaturedTools limit={6} />
 
-        {/* Live Tools */}
-        {liveTools.length > 0 && (
-          <div className="mb-8">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-brand-500 dark:text-brand-400">
-              <Zap className="mr-2 inline h-4 w-4" />
-              Live Now
-            </h3>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {liveTools.map((tool) => (
-                <Link key={tool.id} href={tool.href}>
-                  <Card className="group h-full transition-all hover:border-brand-500/50 hover:bg-neutral-100 dark:hover:bg-neutral-900/80">
-                    <CardContent className="flex items-start justify-between p-6">
-                      <div className="flex-1">
-                        <h4 className="text-lg font-bold text-neutral-900 group-hover:text-brand-500 dark:text-white dark:group-hover:text-brand-400">
-                          {tool.name}
-                        </h4>
-                        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-                          {tool.description}
-                        </p>
-                      </div>
-                      <div className="ml-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white transition-all group-hover:bg-brand-500">
-                        <ArrowRight className="h-5 w-5" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
+      {/* All Tools Section */}
+      <section id="tools" className="py-16 sm:py-24 border-t border-neutral-800">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              All {liveTools.length} Decision Tools
+            </h2>
+            <p className="mt-4 text-lg text-neutral-400">
+              Plug in your numbers. Get an answer. No fluff.
+            </p>
           </div>
-        )}
 
-        {/* Coming Soon Tools - Preview */}
-        <div>
-          <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-neutral-500">
-            Coming Soon
-          </h3>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {tools
-              .filter((t) => t.status === "coming-soon")
-              .slice(0, 6)
-              .map((tool) => (
-                <Card
+          {/* Live Tools Grid */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {liveTools.map((tool, index) => {
+              const accentColor = tool.primaryColor || "#0ea5e9";
+              return (
+                <Link
                   key={tool.id}
-                  className="border-neutral-200/50 bg-neutral-100/50 dark:border-neutral-800/50 dark:bg-neutral-900/30"
+                  href={tool.href}
+                  className="group relative p-5 rounded-xl border border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 hover:bg-neutral-900 transition-all"
                 >
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <h4 className="text-sm font-medium text-neutral-600 dark:text-neutral-300">
+                  {/* Accent line */}
+                  <div
+                    className="absolute top-0 left-4 right-4 h-px opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ backgroundColor: accentColor }}
+                  />
+
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-white group-hover:text-brand-400 transition-colors truncate">
                         {tool.name}
-                      </h4>
-                      <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-xs text-neutral-500 dark:bg-neutral-800">
-                        Soon
-                      </span>
+                      </h3>
+                      <p className="mt-1 text-sm text-neutral-500 line-clamp-2">
+                        {tool.description}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center group-hover:bg-brand-500 transition-colors">
+                      <ArrowRight className="w-5 h-5 text-neutral-400 group-hover:text-white transition-colors" />
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
-          <p className="mt-4 text-center text-sm text-neutral-500">
-            {tools.filter((t) => t.status === "coming-soon").length} more tools
-            in development
-          </p>
+
+          {/* Coming Soon */}
+          {comingSoonTools.length > 0 && (
+            <div className="mt-16">
+              <div className="flex items-center gap-2 mb-6">
+                <Clock className="w-5 h-5 text-neutral-500" />
+                <h3 className="text-lg font-semibold text-neutral-400">
+                  Coming Soon
+                </h3>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {comingSoonTools.slice(0, 6).map((tool) => (
+                  <div
+                    key={tool.id}
+                    className="p-4 rounded-xl border border-neutral-800/50 bg-neutral-900/30"
+                  >
+                    <h4 className="text-sm font-medium text-neutral-500">
+                      {tool.name}
+                    </h4>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-4 text-center text-sm text-neutral-600">
+                {comingSoonTools.length} more tools in development
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
       {/* Principles Section */}
-      <section className="border-y border-neutral-200 bg-neutral-100/50 dark:border-neutral-800 dark:bg-neutral-900/30">
+      <section className="border-y border-neutral-800 bg-neutral-900/30">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
-            <h2 className="text-3xl font-black tracking-tight text-neutral-900 dark:text-white sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
               Why We're Different
             </h2>
-            <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">
+            <p className="mt-4 text-lg text-neutral-400">
               We're not here to sell you products. We're here to help you
               decide.
             </p>
           </div>
 
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {principles.map((principle) => (
-              <div key={principle.title} className="text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600/20 text-brand-500 dark:text-brand-400">
-                  <principle.icon className="h-6 w-6" />
+            {principles.map((principle, index) => (
+              <div
+                key={principle.title}
+                className="text-center animate-fade-up"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-500/10 border border-brand-500/20">
+                  <principle.icon className="h-7 w-7 text-brand-400" />
                 </div>
-                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-white">
                   {principle.title}
                 </h3>
-                <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+                <p className="mt-2 text-sm text-neutral-500">
                   {principle.description}
                 </p>
               </div>
@@ -231,110 +288,133 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-        <Card className="overflow-hidden">
-          <div className="relative bg-gradient-to-br from-brand-600/20 via-neutral-100 to-neutral-100 dark:via-neutral-900 dark:to-neutral-900 p-8 sm:p-12">
-            <div className="absolute right-0 top-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-brand-600/10 blur-3xl" />
-            <div className="relative">
-              <h2 className="text-2xl font-black tracking-tight text-neutral-900 dark:text-white sm:text-3xl">
-                The financial advice industry is broken.
-              </h2>
-              <p className="mt-4 max-w-2xl text-neutral-600 dark:text-neutral-400">
-                Most "advice" sites exist to serve banks and advertisers, not
-                you. They're paid to push products, inflate valuations, and bury
-                the real math under walls of SEO content.
-              </p>
-              <p className="mt-4 max-w-2xl font-medium text-neutral-900 dark:text-white">
-                We're building something different. A platform that serves
-                people, not corporations.
-              </p>
-              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                <Button size="lg" asChild>
-                  <Link href="/tools/bilt-calculator">
-                    Try a Calculator
-                    <Calculator className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <Link href="/blog">
-                    Read Our Takes
-                    <BookOpen className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
+      <section className="mx-auto max-w-4xl px-4 py-16 sm:py-24 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
+          {/* Background */}
+          <div className="absolute inset-0 bg-grid opacity-30" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-500 to-transparent" />
+
+          <div className="relative p-8 sm:p-12">
+            <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+              The financial advice industry is broken.
+            </h2>
+            <p className="mt-4 max-w-2xl text-neutral-400">
+              Most "advice" sites exist to serve banks and advertisers, not
+              you. They're paid to push products, inflate valuations, and bury
+              the real math under walls of SEO content.
+            </p>
+            <p className="mt-4 max-w-2xl font-medium text-white">
+              We're building something different. A platform that serves
+              people, not corporations.
+            </p>
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+              <Link
+                href="/tools/bilt-calculator"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand-500 text-white font-semibold hover:bg-brand-400 transition-colors"
+              >
+                Try a Calculator
+                <Calculator className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/blog"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-neutral-700 text-white font-semibold hover:bg-neutral-800 transition-colors"
+              >
+                Read Our Takes
+                <BookOpen className="w-4 h-4" />
+              </Link>
             </div>
           </div>
-        </Card>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="border-t border-neutral-800">
+        <div className="mx-auto max-w-2xl px-4 py-16 sm:py-24 sm:px-6">
+          <NewsletterSignup />
+        </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-200 dark:border-neutral-800">
+      <footer className="border-t border-neutral-800 bg-neutral-900/30">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <span className="text-xl font-black text-neutral-900 dark:text-white">ClearMoney</span>
-              <p className="mt-2 text-sm text-neutral-500">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center">
+                  <Calculator className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-lg font-bold text-white">
+                  Clear<span className="text-brand-400">Money</span>
+                </span>
+              </div>
+              <p className="mt-3 text-sm text-neutral-500">
                 Financial literacy for everyone. No corporate influence.
               </p>
             </div>
             <div>
-              <h4 className="mb-3 text-sm font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+              <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-500">
                 Categories
               </h4>
-              <div className="flex flex-col gap-2 text-sm text-neutral-500">
-                {categories.slice(0, 4).map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={cat.href}
-                    className="hover:text-neutral-900 dark:hover:text-white"
-                  >
-                    {cat.shortName}
-                  </Link>
-                ))}
+              <div className="flex flex-col gap-2 text-sm">
+                {categories
+                  .filter((cat, index, self) =>
+                    self.findIndex((c) => c.id === cat.id) === index
+                  )
+                  .slice(0, 4)
+                  .map((cat) => (
+                    <Link
+                      key={cat.id}
+                      href={cat.href}
+                      className="text-neutral-400 hover:text-white transition-colors"
+                    >
+                      {cat.shortName}
+                    </Link>
+                  ))}
               </div>
             </div>
             <div>
-              <h4 className="mb-3 text-sm font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+              <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-500">
                 Company
               </h4>
-              <div className="flex flex-col gap-2 text-sm text-neutral-500">
-                <Link href="/about" className="hover:text-neutral-900 dark:hover:text-white">
+              <div className="flex flex-col gap-2 text-sm">
+                <Link href="/about" className="text-neutral-400 hover:text-white transition-colors">
                   About
                 </Link>
-                <Link href="/methodology" className="hover:text-neutral-900 dark:hover:text-white">
+                <Link href="/methodology" className="text-neutral-400 hover:text-white transition-colors">
                   Methodology
                 </Link>
-                <Link href="/transparency" className="hover:text-neutral-900 dark:hover:text-white">
+                <Link href="/transparency" className="text-neutral-400 hover:text-white transition-colors">
                   Transparency
                 </Link>
-                <Link href="/blog" className="hover:text-neutral-900 dark:hover:text-white">
+                <Link href="/blog" className="text-neutral-400 hover:text-white transition-colors">
                   Blog
                 </Link>
               </div>
             </div>
             <div>
-              <h4 className="mb-3 text-sm font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+              <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-500">
                 Legal
               </h4>
-              <div className="flex flex-col gap-2 text-sm text-neutral-500">
-                <Link href="/privacy" className="hover:text-neutral-900 dark:hover:text-white">
+              <div className="flex flex-col gap-2 text-sm">
+                <Link href="/privacy" className="text-neutral-400 hover:text-white transition-colors">
                   Privacy Policy
                 </Link>
-                <Link href="/terms" className="hover:text-neutral-900 dark:hover:text-white">
+                <Link href="/terms" className="text-neutral-400 hover:text-white transition-colors">
                   Terms of Service
                 </Link>
-                <Link href="/disclosures" className="hover:text-neutral-900 dark:hover:text-white">
+                <Link href="/disclosures" className="text-neutral-400 hover:text-white transition-colors">
                   Disclosures
                 </Link>
               </div>
             </div>
           </div>
-          <div className="mt-8 border-t border-neutral-200 dark:border-neutral-800 pt-8 text-center text-xs text-neutral-500">
+          <div className="mt-8 border-t border-neutral-800 pt-8 text-center text-xs text-neutral-600">
             <p>
               We may earn affiliate commissions from some links. See our{" "}
               <Link
                 href="/transparency"
-                className="underline hover:text-neutral-700 dark:hover:text-neutral-300"
+                className="text-neutral-400 hover:text-white transition-colors underline"
               >
                 transparency page
               </Link>{" "}

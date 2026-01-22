@@ -27,7 +27,7 @@ function simulatePayoff(
       (sum, debt) => sum + debt.minimumPayment,
       0
     );
-    let availableExtra = extraPayment;
+    const availableExtra = extraPayment;
 
     const monthSnapshot: MonthlySnapshot = {
       month,
