@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import {
-  formatCurrency,
   formatNumber,
   formatPercent,
   formatWithSign,

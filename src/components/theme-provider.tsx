@@ -24,6 +24,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("dark");
   const [mounted, setMounted] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setMounted(true);
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
@@ -37,6 +38,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setThemeState(prefersDark ? "dark" : "light");
     }
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (mounted) {

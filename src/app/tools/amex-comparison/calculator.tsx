@@ -514,12 +514,12 @@ export function Calculator() {
 
             <MethodologySection title="Methodology & assumptions">
               <p>
-                We multiply your monthly spend by 12, then apply each card's
+                We multiply your monthly spend by 12, then apply each card&apos;s
                 earning rates to estimate annual points. We value points at the
                 cents-per-point number you select, not inflated marketing rates.
               </p>
               <p>
-                Credits are discounted by the percentage you say you'll use. For
+                Credits are discounted by the percentage you say you&apos;ll use. For
                 Platinum lounge access, we estimate $50 per visit and multiply
                 by your flights per year when you say lounge access is valuable.
               </p>
