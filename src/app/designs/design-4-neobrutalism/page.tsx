@@ -16,7 +16,6 @@ import {
   Menu,
   Eye,
   Code2,
-  FileText,
   AlertTriangle,
   Check,
   Send,
@@ -347,47 +346,49 @@ export default function NeoBrutalismHomepage() {
         <div className="relative max-w-7xl mx-auto px-4 py-16 md:py-24 lg:py-32 md:px-8">
           <div className="max-w-4xl">
             {/* Anti-tag */}
-            <div className="inline-block mb-6">
+            <div className="inline-flex gap-3 mb-6 flex-wrap">
               <div className="brutal-border bg-black text-white px-4 py-2 font-mono-brutal text-sm brutal-shadow-accent rotate-[-1deg]">
                 THE ANTI-NERDWALLET
+              </div>
+              <div className="brutal-border bg-[#c5f82a] text-black px-4 py-2 font-mono-brutal text-sm brutal-shadow rotate-[1deg]">
+                YOUR PERSONAL WEALTH ADVISOR
               </div>
             </div>
 
             {/* Main headline */}
             <h1 className="font-brutal text-5xl md:text-7xl lg:text-8xl font-black leading-[0.9] tracking-tighter mb-8">
-              FINANCIAL
+              FIRE YOUR
               <br />
               <span className="inline-block bg-[#c5f82a] brutal-border px-2 brutal-shadow mt-2">
-                LITERACY
+                FINANCIAL ADVISOR
               </span>
               <br />
               <span className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-600">
-                WITHOUT THE BS.
+                (THEY WORK FOR WALL ST, NOT YOU)
               </span>
             </h1>
 
             {/* Subhead */}
             <p className="font-brutal text-xl md:text-2xl max-w-2xl mb-10 leading-relaxed">
-              Plug in your numbers. Get an honest answer.{" "}
-              <span className="bg-black text-white px-1">No affiliate-driven recommendations.</span>{" "}
-              Just math. Answers, not articles.
+              Get a personalized financial plan in 5 minutes.{" "}
+              <span className="bg-black text-white px-1">No 1% AUM fees. No product pushing.</span>{" "}
+              Just honest, math-backed advice that prioritizes YOUR wealth, not theirs.
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap gap-4">
               <Link
-                href="#tools"
-                className="inline-flex items-center gap-2 font-brutal font-bold text-xl px-8 py-4 bg-black text-white brutal-border brutal-shadow-lg brutal-shadow-hover brutal-shadow-active hover:bg-[#c5f82a] hover:text-black transition-colors"
+                href="/designs/design-4-neobrutalism/onboarding"
+                className="inline-flex items-center gap-2 font-brutal font-bold text-xl px-8 py-4 bg-[#c5f82a] text-black brutal-border brutal-shadow-lg brutal-shadow-hover brutal-shadow-active hover:bg-black hover:text-[#c5f82a] transition-colors"
               >
-                EXPLORE 31+ TOOLS
+                START YOUR FINANCIAL AUDIT
                 <ArrowRight className="w-6 h-6" />
               </Link>
               <Link
-                href="/methodology"
+                href="#tools"
                 className="inline-flex items-center gap-2 font-brutal font-bold text-xl px-8 py-4 bg-white text-black brutal-border brutal-shadow-lg brutal-shadow-hover brutal-shadow-active hover:bg-[#c5f82a] transition-colors"
               >
-                <FileText className="w-6 h-6" />
-                SEE OUR MATH
+                EXPLORE 31+ TOOLS
               </Link>
             </div>
 
@@ -403,6 +404,94 @@ export default function NeoBrutalismHomepage() {
                   <div className="font-brutal font-bold text-sm uppercase tracking-wide">{stat.label}</div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PERSONAL WEALTH ADVISOR - New hero section */}
+      <section className="brutal-border-thick border-l-0 border-r-0 bg-black text-white">
+        <div className="max-w-7xl mx-auto px-4 py-16 md:py-24 md:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left side */}
+            <div>
+              <div className="inline-block mb-6">
+                <div className="brutal-border border-white bg-[#c5f82a] text-black px-4 py-2 font-mono-brutal text-sm brutal-shadow-sm">
+                  NEW: PERSONAL WEALTH ADVISOR
+                </div>
+              </div>
+
+              <h2 className="font-brutal text-4xl md:text-5xl font-black uppercase tracking-tight mb-6">
+                WALL STREET HATES THIS.
+                <br />
+                <span className="text-[#c5f82a]">WE LOVE THAT.</span>
+              </h2>
+
+              <p className="font-brutal text-xl text-gray-300 mb-8 leading-relaxed">
+                Traditional advisors charge 1% of your assets to give you cookie-cutter advice.
+                We built a system that analyzes YOUR situation and tells you exactly what to do next,
+                prioritized by impact. No sales pitch. No upsells.
+              </p>
+
+              <div className="space-y-4 mb-8">
+                {[
+                  "5-minute financial audit",
+                  "Personalized action items ranked by impact",
+                  "Track your progress over time",
+                  "100% free, forever",
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-3">
+                    <div className="w-6 h-6 brutal-border border-white bg-[#c5f82a] flex items-center justify-center flex-shrink-0">
+                      <Check className="w-4 h-4 text-black" />
+                    </div>
+                    <span className="font-brutal font-bold">{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              <Link
+                href="/designs/design-4-neobrutalism/onboarding"
+                className="inline-flex items-center gap-2 font-brutal font-bold text-lg px-8 py-4 bg-[#c5f82a] text-black brutal-border border-white brutal-shadow-accent brutal-shadow-hover brutal-shadow-active hover:bg-white transition-colors"
+              >
+                START YOUR FINANCIAL AUDIT
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </div>
+
+            {/* Right side - Preview cards */}
+            <div className="space-y-4">
+              <div className="brutal-border border-white bg-gray-900 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-mono-brutal text-[#c5f82a] text-sm">FINANCIAL HEALTH SCORE</span>
+                  <span className="font-brutal text-4xl font-black text-[#c5f82a]">72/100</span>
+                </div>
+                <div className="w-full bg-gray-700 h-4 brutal-border border-white">
+                  <div className="bg-[#c5f82a] h-full" style={{ width: "72%" }} />
+                </div>
+              </div>
+
+              <div className="brutal-border border-white bg-gray-900 p-6">
+                <span className="font-mono-brutal text-gray-400 text-sm">TOP PRIORITY ACTION</span>
+                <div className="mt-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 brutal-border border-white bg-[#c5f82a] flex items-center justify-center">
+                      <span className="font-mono-brutal text-black font-bold">1</span>
+                    </div>
+                    <div>
+                      <h4 className="font-brutal font-bold text-lg">Max your 401k match</h4>
+                      <p className="font-mono-brutal text-sm text-gray-400">You&apos;re leaving $3,600/yr on the table</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="brutal-border border-white bg-gray-900 p-6">
+                <span className="font-mono-brutal text-gray-400 text-sm">YOUR ADVISOR SAYS</span>
+                <p className="font-brutal text-lg mt-2 text-white">
+                  &quot;That 22% APR credit card is <span className="text-[#c5f82a]">literally stealing</span> from your future self.
+                  Kill it before investing another dollar.&quot;
+                </p>
+              </div>
             </div>
           </div>
         </div>

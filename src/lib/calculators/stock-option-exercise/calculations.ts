@@ -287,7 +287,7 @@ function calculateScenario(
   const cashRequired = option.strikePrice * optionsToExercise;
   const intrinsicValue = option.currentFMV * optionsToExercise;
 
-  let exerciseCost: ExerciseCost = {
+  const exerciseCost: ExerciseCost = {
     cashRequired: 0,
     isoAMTLiability: 0,
     nsoOrdinaryIncome: 0,
@@ -370,7 +370,7 @@ function calculateScenario(
         ? scenario.holdingPeriod >= 12
         : saleDate >= twoYearsFromGrant && saleDate >= oneYearFromExercise;
 
-    let capitalGainType: "short_term" | "long_term" | "ordinary" =
+    const capitalGainType: "short_term" | "long_term" | "ordinary" =
       qualifiesForLTCG ? "long_term" : "short_term";
 
     const costBasis = option.optionType === "iso" ? cashRequired : intrinsicValue;
@@ -551,7 +551,8 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
     );
   }
 
-  let recommendedStrategy: "exercise_and_hold" | "exercise_and_sell" | "cashless";
+  const recommendedStrategy: "exercise_and_hold" | "exercise_and_sell" | "cashless" =
+    bestStrategy.strategy;
   const recommendations: string[] = [];
   const warnings: string[] = [];
 
@@ -576,8 +577,6 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
   const bestStrategy = strategies.reduce((best, current) =>
     current.profit > best.profit ? current : best
   );
-
-  recommendedStrategy = bestStrategy.strategy;
 
   if (option.optionType === "iso") {
     if (amtAnalysis && amtAnalysis.isInAMT) {

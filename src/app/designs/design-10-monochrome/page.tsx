@@ -182,7 +182,7 @@ const staggerItem = {
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: "easeOut" }
+    transition: { duration: 0.5, ease: "easeOut" as const }
   },
 };
 
@@ -360,7 +360,7 @@ function HeroSection() {
             }}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>The Anti-NerdWallet</span>
+            <span>Your Personal Wealth Advisor</span>
           </div>
 
           {/* Main headline */}
@@ -380,29 +380,30 @@ function HeroSection() {
             className="max-w-2xl mx-auto text-lg sm:text-xl leading-relaxed mb-12"
             style={{ color: emerald[200] + "99" }}
           >
-            Plug in your numbers. Get an honest answer. No affiliate-driven recommendations.
-            <span className="font-medium" style={{ color: emerald[100] }}> Just math.</span>
-            {" "}Answers, not articles.
+            A refined approach to personal finance. Receive curated guidance tailored to your unique circumstances.
+            <span className="font-medium" style={{ color: emerald[100] }}> No affiliates. No agenda.</span>
+            {" "}Simply clarity.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <motion.a
-              href="#tools"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="group inline-flex items-center gap-3 px-8 py-4 text-base font-medium rounded-lg transition-all duration-300"
-              style={{
-                backgroundColor: emerald[500],
-                color: emerald[950],
-              }}
-            >
-              Explore All Tools
-              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-            </motion.a>
+            <Link href="/designs/design-10-monochrome/onboarding">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="group inline-flex items-center gap-3 px-8 py-4 text-base font-medium rounded-lg transition-all duration-300 cursor-pointer"
+                style={{
+                  backgroundColor: emerald[500],
+                  color: emerald[950],
+                }}
+              >
+                Begin Your Journey
+                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+              </motion.div>
+            </Link>
 
             <motion.a
-              href="#methodology"
+              href="#tools"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="inline-flex items-center gap-3 px-8 py-4 text-base font-medium rounded-lg transition-all duration-300"
@@ -411,7 +412,7 @@ function HeroSection() {
                 color: emerald[100],
               }}
             >
-              How We're Different
+              Explore Tools
             </motion.a>
           </div>
         </motion.div>
@@ -461,6 +462,121 @@ function HeroSection() {
               style={{ color: emerald[600] }}
             />
           </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================================================
+// PERSONAL WEALTH ADVISOR SECTION
+// ============================================================================
+
+function WealthAdvisorSection() {
+  return (
+    <section className="relative py-32 bg-black overflow-hidden">
+      {/* Background */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(ellipse 60% 50% at 50% 50%, ${emerald[900]}30 0%, transparent 70%)`,
+        }}
+      />
+
+      <div className="relative z-10 max-w-5xl mx-auto px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+          className="text-center"
+        >
+          {/* Section label */}
+          <div
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-wider uppercase mb-8"
+            style={{
+              backgroundColor: `${emerald[900]}80`,
+              color: emerald[300],
+              border: `1px solid ${emerald[800]}`,
+            }}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Personalized Guidance</span>
+          </div>
+
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-white mb-6 leading-tight">
+            Your Personal <span className="italic" style={{ color: emerald[400] }}>Wealth Advisor</span>
+          </h2>
+          <p
+            className="max-w-2xl mx-auto text-lg leading-relaxed mb-12"
+            style={{ color: emerald[300] }}
+          >
+            Beyond calculators and tools, discover a refined approach to financial planning.
+            Share your circumstances, receive curated recommendations tailored precisely to your journey.
+          </p>
+
+          {/* Features */}
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-50px" }}
+            className="grid md:grid-cols-3 gap-6 mb-12"
+          >
+            {[
+              {
+                title: "Personalized Analysis",
+                description: "Your income, assets, and aspirations inform every recommendation",
+              },
+              {
+                title: "Prioritized Guidance",
+                description: "Understand which actions will have the greatest impact first",
+              },
+              {
+                title: "Progress Tracking",
+                description: "Visualize your wealth journey with elegant milestones",
+              },
+            ].map((feature) => (
+              <motion.div
+                key={feature.title}
+                variants={staggerItem}
+                className="p-6 rounded-xl"
+                style={{
+                  backgroundColor: emerald[950],
+                  border: `1px solid ${emerald[900]}`,
+                }}
+              >
+                <h3
+                  className="font-serif text-xl mb-3"
+                  style={{ color: emerald[100] }}
+                >
+                  {feature.title}
+                </h3>
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: emerald[400] }}
+                >
+                  {feature.description}
+                </p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* CTA */}
+          <Link href="/designs/design-10-monochrome/onboarding">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="group inline-flex items-center gap-3 px-8 py-4 text-base font-medium rounded-lg transition-all duration-300 cursor-pointer"
+              style={{
+                backgroundColor: emerald[500],
+                color: emerald[950],
+              }}
+            >
+              Begin Your Journey
+              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+            </motion.div>
+          </Link>
         </motion.div>
       </div>
     </section>
@@ -627,7 +743,7 @@ function FeaturedToolsSection() {
           viewport={{ once: true, margin: "-50px" }}
           className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {featuredTools.map((tool, index) => (
+          {featuredTools.map((tool) => (
             <motion.div
               key={tool.name}
               variants={staggerItem}
@@ -898,15 +1014,15 @@ function MethodologySection() {
               className="text-lg leading-relaxed mb-8"
               style={{ color: emerald[300] }}
             >
-              The financial advice industry is broken. Most "advice" sites exist to serve banks
-              and advertisers, not you. They're paid to push products, inflate valuations, and
+              The financial advice industry is broken. Most &quot;advice&quot; sites exist to serve banks
+              and advertisers, not you. They&apos;re paid to push products, inflate valuations, and
               bury the real math under walls of SEO content.
             </p>
             <p
               className="text-lg leading-relaxed font-medium"
               style={{ color: emerald[100] }}
             >
-              We're building something different. A platform that serves people, not corporations.
+              We&apos;re building something different. A platform that serves people, not corporations.
             </p>
 
             {/* Them vs Us Comparison */}
@@ -965,7 +1081,7 @@ function MethodologySection() {
             viewport={{ once: true, margin: "-50px" }}
             className="space-y-6"
           >
-            {principles.map((principle, index) => (
+            {principles.map((principle) => (
               <motion.div
                 key={principle.title}
                 variants={staggerItem}
@@ -1249,6 +1365,7 @@ export default function MonochromeLuxePage() {
       <div className="min-h-screen bg-black text-white antialiased">
         <Navigation />
         <HeroSection />
+        <WealthAdvisorSection />
         <CategoriesSection />
         <FeaturedToolsSection />
         <AllToolsSection />
