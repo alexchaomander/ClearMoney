@@ -51,7 +51,56 @@ const colors = {
   border: "#e5e5e5",
   success: "#00a86b",
   warning: "#ff6b35",
+  // Gradient blob colors
+  blob1: "#0066ff",
+  blob2: "#8b5cf6",
+  blob3: "#06b6d4",
+  blob4: "#10b981",
 };
+
+// ============================================================================
+// GRADIENT BLOB COMPONENT
+// ============================================================================
+// Soft, blurred gradient shapes for visual depth (Linear/Stripe style)
+
+function GradientBlob({
+  color,
+  size = 400,
+  top,
+  left,
+  right,
+  bottom,
+  opacity = 0.3,
+  blur = 80,
+  animate = false,
+}: {
+  color: string;
+  size?: number;
+  top?: string;
+  left?: string;
+  right?: string;
+  bottom?: string;
+  opacity?: number;
+  blur?: number;
+  animate?: boolean;
+}) {
+  return (
+    <div
+      className={`absolute rounded-full pointer-events-none ${animate ? "animate-blob" : ""}`}
+      style={{
+        width: size,
+        height: size,
+        background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
+        top,
+        left,
+        right,
+        bottom,
+        opacity,
+        filter: `blur(${blur}px)`,
+      }}
+    />
+  );
+}
 
 // Categories with tool counts
 const categories = [
@@ -184,10 +233,39 @@ function Navigation() {
 function HeroSection() {
   return (
     <section
-      className="min-h-screen flex items-center justify-center pt-16"
+      className="min-h-screen flex items-center justify-center pt-16 relative overflow-hidden"
       style={{ backgroundColor: colors.bg }}
     >
-      <div className="max-w-4xl mx-auto px-6 py-20 text-center">
+      {/* Gradient blobs for visual depth */}
+      <GradientBlob
+        color={colors.blob1}
+        size={600}
+        top="-10%"
+        right="-5%"
+        opacity={0.15}
+        blur={100}
+        animate
+      />
+      <GradientBlob
+        color={colors.blob2}
+        size={500}
+        top="30%"
+        left="-10%"
+        opacity={0.12}
+        blur={90}
+        animate
+      />
+      <GradientBlob
+        color={colors.blob3}
+        size={400}
+        bottom="10%"
+        right="20%"
+        opacity={0.1}
+        blur={80}
+        animate
+      />
+
+      <div className="relative z-10 max-w-4xl mx-auto px-6 py-20 text-center">
         {/* Badge */}
         <div
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-8"
@@ -354,8 +432,26 @@ function ProblemSection() {
 
 function SolutionSection() {
   return (
-    <section className="py-24" style={{ backgroundColor: colors.bg }}>
-      <div className="max-w-6xl mx-auto px-6">
+    <section className="py-24 relative overflow-hidden" style={{ backgroundColor: colors.bg }}>
+      {/* Gradient blobs */}
+      <GradientBlob
+        color={colors.blob4}
+        size={450}
+        top="20%"
+        right="-5%"
+        opacity={0.1}
+        blur={90}
+      />
+      <GradientBlob
+        color={colors.blob1}
+        size={350}
+        bottom="10%"
+        left="-5%"
+        opacity={0.08}
+        blur={80}
+      />
+
+      <div className="relative z-10 max-w-6xl mx-auto px-6">
         <div className="max-w-3xl mx-auto text-center mb-16">
           <div
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-6"
@@ -453,8 +549,18 @@ function FeeCalculator() {
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 
   return (
-    <section className="py-24" style={{ backgroundColor: colors.bgAlt }}>
-      <div className="max-w-4xl mx-auto px-6">
+    <section className="py-24 relative overflow-hidden" style={{ backgroundColor: colors.bgAlt }}>
+      {/* Subtle gradient accent */}
+      <GradientBlob
+        color={colors.warning}
+        size={300}
+        top="50%"
+        right="10%"
+        opacity={0.06}
+        blur={100}
+      />
+
+      <div className="relative z-10 max-w-4xl mx-auto px-6">
         <div className="text-center mb-12">
           <h2
             className="text-3xl sm:text-4xl font-bold tracking-tight mb-4"
@@ -565,8 +671,26 @@ function FeeCalculator() {
 
 function ToolsSection() {
   return (
-    <section id="tools" className="py-24" style={{ backgroundColor: colors.bg }}>
-      <div className="max-w-6xl mx-auto px-6">
+    <section id="tools" className="py-24 relative overflow-hidden" style={{ backgroundColor: colors.bg }}>
+      {/* Gradient blobs */}
+      <GradientBlob
+        color={colors.blob2}
+        size={500}
+        top="-10%"
+        left="10%"
+        opacity={0.1}
+        blur={100}
+      />
+      <GradientBlob
+        color={colors.blob3}
+        size={400}
+        bottom="20%"
+        right="-5%"
+        opacity={0.08}
+        blur={80}
+      />
+
+      <div className="relative z-10 max-w-6xl mx-auto px-6">
         <div className="text-center mb-16">
           <h2
             className="text-3xl sm:text-4xl font-bold tracking-tight mb-4"
@@ -714,8 +838,18 @@ function NewsletterSection() {
   const [email, setEmail] = useState("");
 
   return (
-    <section className="py-24" style={{ backgroundColor: colors.bg }}>
-      <div className="max-w-2xl mx-auto px-6 text-center">
+    <section className="py-24 relative overflow-hidden" style={{ backgroundColor: colors.bg }}>
+      {/* Gradient blob */}
+      <GradientBlob
+        color={colors.blob1}
+        size={500}
+        top="50%"
+        left="50%"
+        opacity={0.08}
+        blur={120}
+      />
+
+      <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
         <h2
           className="text-3xl sm:text-4xl font-bold tracking-tight mb-4"
           style={{ color: colors.text }}
@@ -854,6 +988,34 @@ export default function AutonomousInspiredPage() {
 
         body {
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        /* Blob animation */
+        @keyframes blob {
+          0%, 100% {
+            transform: translate(0, 0) scale(1);
+          }
+          25% {
+            transform: translate(20px, -30px) scale(1.05);
+          }
+          50% {
+            transform: translate(-20px, 20px) scale(0.95);
+          }
+          75% {
+            transform: translate(30px, 10px) scale(1.02);
+          }
+        }
+
+        .animate-blob {
+          animation: blob 20s ease-in-out infinite;
+        }
+
+        .animate-blob:nth-child(2) {
+          animation-delay: -5s;
+        }
+
+        .animate-blob:nth-child(3) {
+          animation-delay: -10s;
         }
 
         /* Custom range slider */
