@@ -12,7 +12,6 @@ import {
   TrendingUp,
   Shield,
   Clock,
-  DollarSign,
   PiggyBank,
   Receipt,
   CreditCard,
@@ -21,86 +20,44 @@ import {
   Heart,
   Building2,
   Percent,
-  BarChart3,
   Zap,
   Brain,
   LineChart,
+  Sparkles,
 } from "lucide-react";
 
 // ============================================================================
-// AUTONOMOUS-INSPIRED DESIGN
+// AUTONOMOUS-INSPIRED DESIGN — REFINED EDITION
 // ============================================================================
-// Clean, minimalist wealth advisor aesthetic
-// - Light gray background (#f5f5f5)
-// - Large, bold sans-serif headlines
-// - Generous whitespace and breathing room
-// - Sophisticated yet approachable
-// - Interactive fee calculator
-// - FAQ accordion sections
+// Elevated minimalist wealth advisor aesthetic with:
+// - Prominent gradient mesh blobs (Linear/Stripe style)
+// - Larger, more impactful typography
+// - Premium feel with refined spacing
+// - Subtle grain texture for depth
 // ============================================================================
 
-// Color palette - minimal, sophisticated
+// Color palette - sophisticated with vivid accents
 const colors = {
-  bg: "#f5f5f5",
+  bg: "#fafafa",
   bgAlt: "#ffffff",
-  text: "#1a1a1a",
-  textMuted: "#666666",
-  textLight: "#999999",
-  accent: "#0066ff",
-  accentHover: "#0052cc",
+  text: "#0a0a0a",
+  textMuted: "#525252",
+  textLight: "#a3a3a3",
+  accent: "#2563eb",
+  accentLight: "#3b82f6",
   border: "#e5e5e5",
-  success: "#00a86b",
-  warning: "#ff6b35",
-  // Gradient blob colors
-  blob1: "#0066ff",
-  blob2: "#8b5cf6",
-  blob3: "#06b6d4",
-  blob4: "#10b981",
+  borderLight: "#f5f5f5",
+  success: "#059669",
+  successLight: "#10b981",
+  warning: "#ea580c",
+  warningLight: "#f97316",
+  // Gradient blob colors - more saturated
+  blob1: "#3b82f6", // Blue
+  blob2: "#8b5cf6", // Purple
+  blob3: "#06b6d4", // Cyan
+  blob4: "#10b981", // Emerald
+  blob5: "#f59e0b", // Amber
 };
-
-// ============================================================================
-// GRADIENT BLOB COMPONENT
-// ============================================================================
-// Soft, blurred gradient shapes for visual depth (Linear/Stripe style)
-
-function GradientBlob({
-  color,
-  size = 400,
-  top,
-  left,
-  right,
-  bottom,
-  opacity = 0.3,
-  blur = 80,
-  animate = false,
-}: {
-  color: string;
-  size?: number;
-  top?: string;
-  left?: string;
-  right?: string;
-  bottom?: string;
-  opacity?: number;
-  blur?: number;
-  animate?: boolean;
-}) {
-  return (
-    <div
-      className={`absolute rounded-full pointer-events-none ${animate ? "animate-blob" : ""}`}
-      style={{
-        width: size,
-        height: size,
-        background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
-        top,
-        left,
-        right,
-        bottom,
-        opacity,
-        filter: `blur(${blur}px)`,
-      }}
-    />
-  );
-}
 
 // Categories with tool counts
 const categories = [
@@ -173,7 +130,53 @@ const faqItems = [
 ];
 
 // ============================================================================
-// COMPONENTS
+// GRADIENT BLOB COMPONENT — More visible, more dynamic
+// ============================================================================
+
+function GradientBlob({
+  color,
+  size = 600,
+  top,
+  left,
+  right,
+  bottom,
+  opacity = 0.4,
+  blur = 80,
+  animate = false,
+  delay = 0,
+}: {
+  color: string;
+  size?: number;
+  top?: string;
+  left?: string;
+  right?: string;
+  bottom?: string;
+  opacity?: number;
+  blur?: number;
+  animate?: boolean;
+  delay?: number;
+}) {
+  return (
+    <div
+      className={`absolute rounded-full pointer-events-none ${animate ? "animate-blob" : ""}`}
+      style={{
+        width: size,
+        height: size,
+        background: `radial-gradient(circle at center, ${color} 0%, ${color}80 25%, ${color}40 50%, transparent 70%)`,
+        top,
+        left,
+        right,
+        bottom,
+        opacity,
+        filter: `blur(${blur}px)`,
+        animationDelay: `${delay}s`,
+      }}
+    />
+  );
+}
+
+// ============================================================================
+// NAVIGATION
 // ============================================================================
 
 function Navigation() {
@@ -187,30 +190,35 @@ function Navigation() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white/90 backdrop-blur-md shadow-sm" : "bg-transparent"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        isScrolled
+          ? "bg-white/80 backdrop-blur-xl shadow-[0_1px_0_0_rgba(0,0,0,0.05)]"
+          : "bg-transparent"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-6">
-        <nav className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <nav className="flex items-center justify-between h-20">
+          <Link href="/" className="flex items-center gap-3 group">
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: colors.accent }}
+              className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
+              style={{
+                background: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.blob2} 100%)`,
+                boxShadow: `0 4px 14px ${colors.accent}40`
+              }}
             >
-              <Calculator className="w-4 h-4 text-white" />
+              <Calculator className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-semibold tracking-tight" style={{ color: colors.text }}>
+            <span className="text-2xl font-bold tracking-tight" style={{ color: colors.text }}>
               ClearMoney
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-10">
             {["Tools", "Methodology", "About"].map((item) => (
               <Link
                 key={item}
                 href={`#${item.toLowerCase()}`}
-                className="text-sm font-medium transition-colors hover:opacity-70"
+                className="text-base font-medium transition-colors duration-200 hover:text-black"
                 style={{ color: colors.textMuted }}
               >
                 {item}
@@ -218,8 +226,12 @@ function Navigation() {
             ))}
             <Link
               href="#tools"
-              className="px-4 py-2 text-sm font-medium rounded-lg transition-all hover:opacity-90"
-              style={{ backgroundColor: colors.accent, color: "white" }}
+              className="px-5 py-2.5 text-base font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+              style={{
+                background: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.accentLight} 100%)`,
+                color: "white",
+                boxShadow: `0 4px 14px ${colors.accent}30`
+              }}
             >
               Get Started
             </Link>
@@ -230,148 +242,210 @@ function Navigation() {
   );
 }
 
+// ============================================================================
+// HERO SECTION — Dramatic gradient blobs, larger type
+// ============================================================================
+
 function HeroSection() {
   return (
     <section
-      className="min-h-screen flex items-center justify-center pt-16 relative overflow-hidden"
+      className="min-h-screen flex items-center justify-center relative overflow-hidden"
       style={{ backgroundColor: colors.bg }}
     >
-      {/* Gradient blobs for visual depth */}
+      {/* Prominent gradient blobs */}
       <GradientBlob
         color={colors.blob1}
-        size={600}
-        top="-10%"
-        right="-5%"
-        opacity={0.15}
+        size={800}
+        top="-20%"
+        right="-10%"
+        opacity={0.35}
         blur={100}
         animate
+        delay={0}
       />
       <GradientBlob
         color={colors.blob2}
-        size={500}
-        top="30%"
-        left="-10%"
-        opacity={0.12}
+        size={700}
+        top="20%"
+        left="-15%"
+        opacity={0.3}
         blur={90}
         animate
+        delay={-7}
       />
       <GradientBlob
         color={colors.blob3}
-        size={400}
-        bottom="10%"
-        right="20%"
-        opacity={0.1}
+        size={500}
+        bottom="0%"
+        right="25%"
+        opacity={0.25}
         blur={80}
         animate
+        delay={-14}
+      />
+      <GradientBlob
+        color={colors.blob4}
+        size={400}
+        bottom="20%"
+        left="10%"
+        opacity={0.2}
+        blur={70}
+        animate
+        delay={-3}
       />
 
-      <div className="relative z-10 max-w-4xl mx-auto px-6 py-20 text-center">
+      {/* Subtle noise texture overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.015] pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+        }}
+      />
+
+      <div className="relative z-10 max-w-5xl mx-auto px-6 lg:px-8 py-32 text-center">
         {/* Badge */}
         <div
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-8"
-          style={{ backgroundColor: colors.bgAlt, color: colors.textMuted, border: `1px solid ${colors.border}` }}
+          className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-sm font-medium mb-10 backdrop-blur-sm"
+          style={{
+            backgroundColor: "rgba(255,255,255,0.8)",
+            color: colors.text,
+            border: `1px solid ${colors.border}`,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+          }}
         >
-          <Zap className="w-3.5 h-3.5" style={{ color: colors.accent }} />
-          31+ Free Financial Tools
+          <Sparkles className="w-4 h-4" style={{ color: colors.accent }} />
+          31+ Free Financial Decision Tools
         </div>
 
-        {/* Main headline */}
+        {/* Main headline — Much larger */}
         <h1
-          className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
+          className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight leading-[1.05] mb-8"
           style={{ color: colors.text }}
         >
-          Fire your financial advisor.
+          Fire your financial
           <br />
-          <span style={{ color: colors.textMuted }}>Become clear.</span>
+          advisor.{" "}
+          <span
+            className="bg-clip-text text-transparent"
+            style={{
+              backgroundImage: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.blob2} 50%, ${colors.blob3} 100%)`
+            }}
+          >
+            Become clear.
+          </span>
         </h1>
 
-        {/* Subheadline */}
+        {/* Subheadline — Larger, more readable */}
         <p
-          className="text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
+          className="text-xl sm:text-2xl max-w-3xl mx-auto mb-12 leading-relaxed"
           style={{ color: colors.textMuted }}
         >
           The wealth strategies used by the ultra-wealthy aren't secret—they're just
           buried under affiliate-driven content and paywalled advice.
-          <span className="font-medium" style={{ color: colors.text }}>
+          <span className="font-semibold" style={{ color: colors.text }}>
             {" "}We surface them for free.
           </span>
         </p>
 
-        {/* CTA */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+        {/* CTA Buttons — Larger, more prominent */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
           <Link
             href="#tools"
-            className="inline-flex items-center gap-2 px-6 py-3 text-base font-medium rounded-lg transition-all hover:opacity-90"
-            style={{ backgroundColor: colors.accent, color: "white" }}
+            className="group inline-flex items-center gap-3 px-8 py-4 text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+            style={{
+              background: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.accentLight} 100%)`,
+              color: "white",
+              boxShadow: `0 8px 30px ${colors.accent}35`
+            }}
           >
             Explore All Tools
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
           <Link
             href="#methodology"
-            className="inline-flex items-center gap-2 px-6 py-3 text-base font-medium rounded-lg transition-all hover:bg-gray-100"
+            className="inline-flex items-center gap-3 px-8 py-4 text-lg font-semibold rounded-2xl transition-all duration-300 hover:bg-black/5"
             style={{ color: colors.text }}
           >
             See Our Methodology
           </Link>
         </div>
 
-        {/* Trust indicators */}
-        <div className="mt-16 flex flex-wrap items-center justify-center gap-8">
+        {/* Trust indicators — Larger */}
+        <div className="mt-20 flex flex-wrap items-center justify-center gap-10">
           {[
-            { icon: Shield, label: "No affiliate bias" },
+            { icon: Shield, label: "Zero affiliate bias" },
             { icon: Calculator, label: "31+ free tools" },
             { icon: FileText, label: "Open methodology" },
           ].map((item) => (
-            <div key={item.label} className="flex items-center gap-2">
-              <item.icon className="w-4 h-4" style={{ color: colors.textLight }} />
-              <span className="text-sm" style={{ color: colors.textMuted }}>
+            <div key={item.label} className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ backgroundColor: `${colors.accent}10` }}
+              >
+                <item.icon className="w-5 h-5" style={{ color: colors.accent }} />
+              </div>
+              <span className="text-base font-medium" style={{ color: colors.textMuted }}>
                 {item.label}
               </span>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Bottom fade */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
+        style={{
+          background: `linear-gradient(to top, ${colors.bgAlt}, transparent)`
+        }}
+      />
     </section>
   );
 }
 
+// ============================================================================
+// PROBLEM SECTION
+// ============================================================================
+
 function ProblemSection() {
   return (
-    <section className="py-24" style={{ backgroundColor: colors.bgAlt }}>
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="max-w-3xl mx-auto text-center mb-16">
+    <section className="py-32 relative" style={{ backgroundColor: colors.bgAlt }}>
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto text-center mb-20">
           <h2
-            className="text-3xl sm:text-4xl font-bold tracking-tight mb-6"
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-8"
             style={{ color: colors.text }}
           >
             Two options, both broken
           </h2>
-          <p className="text-lg" style={{ color: colors.textMuted }}>
+          <p className="text-xl lg:text-2xl leading-relaxed" style={{ color: colors.textMuted }}>
             Getting your finances right shouldn't require choosing between expensive mistakes or expensive advisors.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {/* DIY Option */}
           <div
-            className="p-8 rounded-2xl"
-            style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}
+            className="p-10 rounded-3xl transition-all duration-300 hover:shadow-lg"
+            style={{
+              backgroundColor: colors.bg,
+              border: `1px solid ${colors.border}`
+            }}
           >
             <div
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-6"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold mb-8"
               style={{ backgroundColor: `${colors.warning}15`, color: colors.warning }}
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
               Option A: DIY
             </div>
             <h3
-              className="text-xl font-semibold mb-4"
+              className="text-2xl lg:text-3xl font-bold mb-6"
               style={{ color: colors.text }}
             >
               Do It Yourself
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-4">
               {[
                 "Accounts scattered everywhere",
                 "Spreadsheets always wrong or outdated",
@@ -379,9 +453,9 @@ function ProblemSection() {
                 "SEO content buries the real answers",
                 "Affiliate bias everywhere you look",
               ].map((item) => (
-                <li key={item} className="flex items-start gap-3">
-                  <X className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: colors.warning }} />
-                  <span className="text-sm" style={{ color: colors.textMuted }}>
+                <li key={item} className="flex items-start gap-4">
+                  <X className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: colors.warning }} />
+                  <span className="text-base lg:text-lg" style={{ color: colors.textMuted }}>
                     {item}
                   </span>
                 </li>
@@ -391,23 +465,26 @@ function ProblemSection() {
 
           {/* Advisor Option */}
           <div
-            className="p-8 rounded-2xl"
-            style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}
+            className="p-10 rounded-3xl transition-all duration-300 hover:shadow-lg"
+            style={{
+              backgroundColor: colors.bg,
+              border: `1px solid ${colors.border}`
+            }}
           >
             <div
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-6"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold mb-8"
               style={{ backgroundColor: `${colors.warning}15`, color: colors.warning }}
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
               Option B: Hire an Advisor
             </div>
             <h3
-              className="text-xl font-semibold mb-4"
+              className="text-2xl lg:text-3xl font-bold mb-6"
               style={{ color: colors.text }}
             >
               Traditional Wealth Manager
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-4">
               {[
                 "1-2% of assets annually in fees",
                 "Over 30 years, that's 30-40% of your wealth",
@@ -415,9 +492,9 @@ function ProblemSection() {
                 "Cookie-cutter portfolios for most clients",
                 "Misaligned incentives (AUM-based fees)",
               ].map((item) => (
-                <li key={item} className="flex items-start gap-3">
-                  <X className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: colors.warning }} />
-                  <span className="text-sm" style={{ color: colors.textMuted }}>
+                <li key={item} className="flex items-start gap-4">
+                  <X className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: colors.warning }} />
+                  <span className="text-base lg:text-lg" style={{ color: colors.textMuted }}>
                     {item}
                   </span>
                 </li>
@@ -430,45 +507,49 @@ function ProblemSection() {
   );
 }
 
+// ============================================================================
+// SOLUTION SECTION
+// ============================================================================
+
 function SolutionSection() {
   return (
-    <section className="py-24 relative overflow-hidden" style={{ backgroundColor: colors.bg }}>
+    <section className="py-32 relative overflow-hidden" style={{ backgroundColor: colors.bg }}>
       {/* Gradient blobs */}
       <GradientBlob
         color={colors.blob4}
-        size={450}
-        top="20%"
-        right="-5%"
-        opacity={0.1}
-        blur={90}
+        size={600}
+        top="10%"
+        right="-10%"
+        opacity={0.25}
+        blur={100}
       />
       <GradientBlob
         color={colors.blob1}
-        size={350}
-        bottom="10%"
-        left="-5%"
-        opacity={0.08}
-        blur={80}
+        size={500}
+        bottom="5%"
+        left="-10%"
+        opacity={0.2}
+        blur={90}
       />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-6">
-        <div className="max-w-3xl mx-auto text-center mb-16">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto text-center mb-20">
           <div
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-6"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold mb-8"
             style={{ backgroundColor: `${colors.success}15`, color: colors.success }}
           >
-            <Check className="w-3.5 h-3.5" />
+            <Check className="w-4 h-4" />
             A Better Way
           </div>
           <h2
-            className="text-3xl sm:text-4xl font-bold tracking-tight mb-6"
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-8"
             style={{ color: colors.text }}
           >
             Tools that respect your intelligence
           </h2>
-          <p className="text-lg" style={{ color: colors.textMuted }}>
+          <p className="text-xl lg:text-2xl leading-relaxed" style={{ color: colors.textMuted }}>
             Plug in your numbers. Get an honest answer. No affiliate-driven recommendations.
-            <span className="font-medium" style={{ color: colors.text }}> Just math.</span>
+            <span className="font-semibold" style={{ color: colors.text }}> Just math.</span>
           </p>
         </div>
 
@@ -507,22 +588,27 @@ function SolutionSection() {
           ].map((item) => (
             <div
               key={item.title}
-              className="p-6 rounded-xl"
-              style={{ backgroundColor: colors.bgAlt, border: `1px solid ${colors.border}` }}
+              className="group p-8 rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+              style={{
+                backgroundColor: colors.bgAlt,
+                border: `1px solid ${colors.border}`
+              }}
             >
               <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                style={{ backgroundColor: `${colors.accent}10` }}
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110"
+                style={{
+                  background: `linear-gradient(135deg, ${colors.accent}15 0%, ${colors.blob2}15 100%)`
+                }}
               >
-                <item.icon className="w-5 h-5" style={{ color: colors.accent }} />
+                <item.icon className="w-7 h-7" style={{ color: colors.accent }} />
               </div>
               <h3
-                className="text-lg font-semibold mb-2"
+                className="text-xl lg:text-2xl font-bold mb-3"
                 style={{ color: colors.text }}
               >
                 {item.title}
               </h3>
-              <p className="text-sm leading-relaxed" style={{ color: colors.textMuted }}>
+              <p className="text-base lg:text-lg leading-relaxed" style={{ color: colors.textMuted }}>
                 {item.description}
               </p>
             </div>
@@ -533,13 +619,16 @@ function SolutionSection() {
   );
 }
 
+// ============================================================================
+// FEE CALCULATOR
+// ============================================================================
+
 function FeeCalculator() {
   const [assets, setAssets] = useState(500000);
   const [years, setYears] = useState(20);
-  const advisorFee = 0.01; // 1% annual fee
-  const growthRate = 0.07; // 7% annual return
+  const advisorFee = 0.01;
+  const growthRate = 0.07;
 
-  // Calculate wealth with and without advisor fees
   const wealthWithFees = assets * Math.pow(1 + growthRate - advisorFee, years);
   const wealthWithoutFees = assets * Math.pow(1 + growthRate, years);
   const costOfFees = wealthWithoutFees - wealthWithFees;
@@ -549,39 +638,43 @@ function FeeCalculator() {
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 
   return (
-    <section className="py-24 relative overflow-hidden" style={{ backgroundColor: colors.bgAlt }}>
+    <section className="py-32 relative overflow-hidden" style={{ backgroundColor: colors.bgAlt }}>
       {/* Subtle gradient accent */}
       <GradientBlob
-        color={colors.warning}
-        size={300}
-        top="50%"
-        right="10%"
-        opacity={0.06}
+        color={colors.blob5}
+        size={500}
+        top="30%"
+        right="5%"
+        opacity={0.15}
         blur={100}
       />
 
-      <div className="relative z-10 max-w-4xl mx-auto px-6">
-        <div className="text-center mb-12">
+      <div className="relative z-10 max-w-5xl mx-auto px-6 lg:px-8">
+        <div className="text-center mb-16">
           <h2
-            className="text-3xl sm:text-4xl font-bold tracking-tight mb-4"
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6"
             style={{ color: colors.text }}
           >
             The true cost of 1% fees
           </h2>
-          <p className="text-lg" style={{ color: colors.textMuted }}>
+          <p className="text-xl lg:text-2xl" style={{ color: colors.textMuted }}>
             That "small" 1% annual fee compounds into a fortune over time.
           </p>
         </div>
 
         <div
-          className="p-8 rounded-2xl"
-          style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}
+          className="p-10 lg:p-12 rounded-3xl"
+          style={{
+            backgroundColor: colors.bg,
+            border: `1px solid ${colors.border}`,
+            boxShadow: "0 4px 40px rgba(0,0,0,0.03)"
+          }}
         >
           {/* Sliders */}
-          <div className="grid sm:grid-cols-2 gap-8 mb-8">
+          <div className="grid sm:grid-cols-2 gap-10 mb-10">
             <div>
-              <label className="block text-sm font-medium mb-3" style={{ color: colors.text }}>
-                Starting Portfolio: {formatCurrency(assets)}
+              <label className="block text-lg font-semibold mb-4" style={{ color: colors.text }}>
+                Starting Portfolio: <span style={{ color: colors.accent }}>{formatCurrency(assets)}</span>
               </label>
               <input
                 type="range"
@@ -590,17 +683,17 @@ function FeeCalculator() {
                 step={50000}
                 value={assets}
                 onChange={(e) => setAssets(Number(e.target.value))}
-                className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                className="w-full h-3 rounded-full appearance-none cursor-pointer"
                 style={{ backgroundColor: colors.border }}
               />
-              <div className="flex justify-between text-xs mt-1" style={{ color: colors.textLight }}>
+              <div className="flex justify-between text-sm mt-2" style={{ color: colors.textLight }}>
                 <span>$100K</span>
                 <span>$2M</span>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-3" style={{ color: colors.text }}>
-                Investment Horizon: {years} years
+              <label className="block text-lg font-semibold mb-4" style={{ color: colors.text }}>
+                Investment Horizon: <span style={{ color: colors.accent }}>{years} years</span>
               </label>
               <input
                 type="range"
@@ -609,10 +702,10 @@ function FeeCalculator() {
                 step={1}
                 value={years}
                 onChange={(e) => setYears(Number(e.target.value))}
-                className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                className="w-full h-3 rounded-full appearance-none cursor-pointer"
                 style={{ backgroundColor: colors.border }}
               />
-              <div className="flex justify-between text-xs mt-1" style={{ color: colors.textLight }}>
+              <div className="flex justify-between text-sm mt-2" style={{ color: colors.textLight }}>
                 <span>5 years</span>
                 <span>40 years</span>
               </div>
@@ -621,45 +714,45 @@ function FeeCalculator() {
 
           {/* Results */}
           <div
-            className="p-6 rounded-xl mb-6"
+            className="p-8 rounded-2xl mb-8"
             style={{ backgroundColor: colors.bgAlt, border: `1px solid ${colors.border}` }}
           >
-            <div className="grid sm:grid-cols-3 gap-6 text-center">
+            <div className="grid sm:grid-cols-3 gap-8 text-center">
               <div>
-                <p className="text-sm mb-1" style={{ color: colors.textMuted }}>
+                <p className="text-base mb-2" style={{ color: colors.textMuted }}>
                   With 1% advisor fee
                 </p>
-                <p className="text-2xl font-bold" style={{ color: colors.text }}>
+                <p className="text-3xl lg:text-4xl font-bold" style={{ color: colors.text }}>
                   {formatCurrency(wealthWithFees)}
                 </p>
               </div>
               <div>
-                <p className="text-sm mb-1" style={{ color: colors.textMuted }}>
+                <p className="text-base mb-2" style={{ color: colors.textMuted }}>
                   Without fees
                 </p>
-                <p className="text-2xl font-bold" style={{ color: colors.success }}>
+                <p className="text-3xl lg:text-4xl font-bold" style={{ color: colors.success }}>
                   {formatCurrency(wealthWithoutFees)}
                 </p>
               </div>
               <div>
-                <p className="text-sm mb-1" style={{ color: colors.textMuted }}>
+                <p className="text-base mb-2" style={{ color: colors.textMuted }}>
                   Cost of fees
                 </p>
-                <p className="text-2xl font-bold" style={{ color: colors.warning }}>
+                <p className="text-3xl lg:text-4xl font-bold" style={{ color: colors.warning }}>
                   {formatCurrency(costOfFees)}
                 </p>
               </div>
             </div>
           </div>
 
-          <p className="text-center text-sm" style={{ color: colors.textMuted }}>
+          <p className="text-center text-lg" style={{ color: colors.textMuted }}>
             That 1% fee costs you{" "}
-            <span className="font-semibold" style={{ color: colors.warning }}>
+            <span className="font-bold" style={{ color: colors.warning }}>
               {percentLost.toFixed(1)}%
             </span>{" "}
             of your potential wealth over {years} years.
             <br />
-            <span style={{ color: colors.textLight }}>
+            <span className="text-base" style={{ color: colors.textLight }}>
               Assumes 7% annual returns. Your results may vary.
             </span>
           </p>
@@ -669,67 +762,74 @@ function FeeCalculator() {
   );
 }
 
+// ============================================================================
+// TOOLS SECTION
+// ============================================================================
+
 function ToolsSection() {
   return (
-    <section id="tools" className="py-24 relative overflow-hidden" style={{ backgroundColor: colors.bg }}>
+    <section id="tools" className="py-32 relative overflow-hidden" style={{ backgroundColor: colors.bg }}>
       {/* Gradient blobs */}
       <GradientBlob
         color={colors.blob2}
-        size={500}
-        top="-10%"
-        left="10%"
-        opacity={0.1}
+        size={600}
+        top="-5%"
+        left="5%"
+        opacity={0.2}
         blur={100}
       />
       <GradientBlob
         color={colors.blob3}
-        size={400}
-        bottom="20%"
+        size={500}
+        bottom="10%"
         right="-5%"
-        opacity={0.08}
-        blur={80}
+        opacity={0.18}
+        blur={90}
       />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-6">
-        <div className="text-center mb-16">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="text-center mb-20">
           <h2
-            className="text-3xl sm:text-4xl font-bold tracking-tight mb-4"
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6"
             style={{ color: colors.text }}
           >
             Every tool you need
           </h2>
-          <p className="text-lg max-w-2xl mx-auto" style={{ color: colors.textMuted }}>
+          <p className="text-xl lg:text-2xl max-w-2xl mx-auto" style={{ color: colors.textMuted }}>
             31+ calculators across 8 categories. All free. All transparent.
           </p>
         </div>
 
         {/* Category grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-20">
           {categories.map((category) => (
             <Link
               key={category.id}
               href={`#${category.id}`}
-              className="group p-5 rounded-xl transition-all hover:shadow-md"
-              style={{ backgroundColor: colors.bgAlt, border: `1px solid ${colors.border}` }}
+              className="group p-6 rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+              style={{
+                backgroundColor: colors.bgAlt,
+                border: `1px solid ${colors.border}`
+              }}
             >
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-4">
                 <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: `${colors.accent}10` }}
+                  className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
+                  style={{ background: `linear-gradient(135deg, ${colors.accent}15 0%, ${colors.blob2}15 100%)` }}
                 >
-                  <category.icon className="w-5 h-5" style={{ color: colors.accent }} />
+                  <category.icon className="w-6 h-6" style={{ color: colors.accent }} />
                 </div>
                 <span
-                  className="text-xs font-medium px-2 py-1 rounded-full"
+                  className="text-sm font-semibold px-3 py-1 rounded-full"
                   style={{ backgroundColor: colors.bg, color: colors.textMuted }}
                 >
                   {category.count} tools
                 </span>
               </div>
-              <h3 className="font-semibold mb-1" style={{ color: colors.text }}>
+              <h3 className="text-lg font-bold mb-2" style={{ color: colors.text }}>
                 {category.name}
               </h3>
-              <p className="text-sm" style={{ color: colors.textLight }}>
+              <p className="text-base" style={{ color: colors.textLight }}>
                 {category.description}
               </p>
             </Link>
@@ -737,31 +837,34 @@ function ToolsSection() {
         </div>
 
         {/* Featured strategies */}
-        <div className="mb-8">
+        <div className="mb-10">
           <h3
-            className="text-xl font-semibold mb-6"
+            className="text-2xl lg:text-3xl font-bold mb-8"
             style={{ color: colors.text }}
           >
             Popular strategies
           </h3>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {featuredStrategies.map((strategy) => (
               <Link
                 key={strategy.title}
                 href="#"
-                className="group p-5 rounded-xl transition-all hover:shadow-md"
-                style={{ backgroundColor: colors.bgAlt, border: `1px solid ${colors.border}` }}
+                className="group p-6 rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                style={{
+                  backgroundColor: colors.bgAlt,
+                  border: `1px solid ${colors.border}`
+                }}
               >
-                <p className="text-xs font-medium mb-2" style={{ color: colors.accent }}>
+                <p className="text-sm font-semibold mb-3" style={{ color: colors.accent }}>
                   {strategy.category}
                 </p>
                 <h4
-                  className="font-semibold mb-2 group-hover:underline"
+                  className="text-lg font-bold mb-3 group-hover:underline"
                   style={{ color: colors.text }}
                 >
                   {strategy.title}
                 </h4>
-                <p className="text-sm" style={{ color: colors.textMuted }}>
+                <p className="text-base" style={{ color: colors.textMuted }}>
                   {strategy.description}
                 </p>
               </Link>
@@ -772,11 +875,11 @@ function ToolsSection() {
         <div className="text-center">
           <Link
             href="#"
-            className="inline-flex items-center gap-2 text-sm font-medium transition-colors hover:opacity-70"
+            className="inline-flex items-center gap-2 text-lg font-semibold transition-all duration-200 hover:gap-3"
             style={{ color: colors.accent }}
           >
             View all 31+ tools
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
       </div>
@@ -784,44 +887,57 @@ function ToolsSection() {
   );
 }
 
+// ============================================================================
+// FAQ SECTION
+// ============================================================================
+
 function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="py-24" style={{ backgroundColor: colors.bgAlt }}>
-      <div className="max-w-3xl mx-auto px-6">
-        <div className="text-center mb-12">
+    <section className="py-32" style={{ backgroundColor: colors.bgAlt }}>
+      <div className="max-w-4xl mx-auto px-6 lg:px-8">
+        <div className="text-center mb-16">
           <h2
-            className="text-3xl sm:text-4xl font-bold tracking-tight mb-4"
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6"
             style={{ color: colors.text }}
           >
             Frequently asked questions
           </h2>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {faqItems.map((item, index) => (
             <div
               key={index}
-              className="rounded-xl overflow-hidden"
-              style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}
+              className="rounded-2xl overflow-hidden transition-all duration-300"
+              style={{
+                backgroundColor: colors.bg,
+                border: `1px solid ${colors.border}`,
+                boxShadow: openIndex === index ? "0 4px 20px rgba(0,0,0,0.05)" : "none"
+              }}
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full flex items-center justify-between p-5 text-left"
+                className="w-full flex items-center justify-between p-6 lg:p-8 text-left"
               >
-                <span className="font-medium pr-4" style={{ color: colors.text }}>
+                <span className="text-lg lg:text-xl font-semibold pr-4" style={{ color: colors.text }}>
                   {item.question}
                 </span>
-                {openIndex === index ? (
-                  <ChevronUp className="w-5 h-5 flex-shrink-0" style={{ color: colors.textMuted }} />
-                ) : (
-                  <ChevronDown className="w-5 h-5 flex-shrink-0" style={{ color: colors.textMuted }} />
-                )}
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-200"
+                  style={{ backgroundColor: openIndex === index ? `${colors.accent}15` : colors.borderLight }}
+                >
+                  {openIndex === index ? (
+                    <ChevronUp className="w-5 h-5" style={{ color: colors.accent }} />
+                  ) : (
+                    <ChevronDown className="w-5 h-5" style={{ color: colors.textMuted }} />
+                  )}
+                </div>
               </button>
               {openIndex === index && (
-                <div className="px-5 pb-5">
-                  <p className="text-sm leading-relaxed" style={{ color: colors.textMuted }}>
+                <div className="px-6 lg:px-8 pb-6 lg:pb-8">
+                  <p className="text-base lg:text-lg leading-relaxed" style={{ color: colors.textMuted }}>
                     {item.answer}
                   </p>
                 </div>
@@ -834,39 +950,43 @@ function FAQSection() {
   );
 }
 
+// ============================================================================
+// NEWSLETTER SECTION
+// ============================================================================
+
 function NewsletterSection() {
   const [email, setEmail] = useState("");
 
   return (
-    <section className="py-24 relative overflow-hidden" style={{ backgroundColor: colors.bg }}>
+    <section className="py-32 relative overflow-hidden" style={{ backgroundColor: colors.bg }}>
       {/* Gradient blob */}
       <GradientBlob
         color={colors.blob1}
-        size={500}
+        size={700}
         top="50%"
         left="50%"
-        opacity={0.08}
+        opacity={0.15}
         blur={120}
       />
 
-      <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
+      <div className="relative z-10 max-w-3xl mx-auto px-6 lg:px-8 text-center">
         <h2
-          className="text-3xl sm:text-4xl font-bold tracking-tight mb-4"
+          className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6"
           style={{ color: colors.text }}
         >
           Get tools, not fluff
         </h2>
-        <p className="text-lg mb-8" style={{ color: colors.textMuted }}>
+        <p className="text-xl lg:text-2xl mb-10" style={{ color: colors.textMuted }}>
           New calculator launches, methodology updates, and honest takes on financial products. Weekly max.
         </p>
 
-        <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
+        <form className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto" onSubmit={(e) => e.preventDefault()}>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@email.com"
-            className="flex-1 px-4 py-3 rounded-lg text-base outline-none focus:ring-2"
+            className="flex-1 px-6 py-4 rounded-xl text-lg outline-none transition-all duration-200 focus:ring-2 focus:ring-blue-500/20"
             style={{
               backgroundColor: colors.bgAlt,
               border: `1px solid ${colors.border}`,
@@ -875,14 +995,18 @@ function NewsletterSection() {
           />
           <button
             type="submit"
-            className="px-6 py-3 rounded-lg text-base font-medium transition-all hover:opacity-90"
-            style={{ backgroundColor: colors.accent, color: "white" }}
+            className="px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+            style={{
+              background: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.accentLight} 100%)`,
+              color: "white",
+              boxShadow: `0 4px 14px ${colors.accent}30`
+            }}
           >
             Subscribe
           </button>
         </form>
 
-        <p className="mt-4 text-xs" style={{ color: colors.textLight }}>
+        <p className="mt-6 text-sm" style={{ color: colors.textLight }}>
           No spam. Unsubscribe anytime.
         </p>
       </div>
@@ -890,47 +1014,53 @@ function NewsletterSection() {
   );
 }
 
+// ============================================================================
+// FOOTER
+// ============================================================================
+
 function Footer() {
   return (
     <footer
-      className="py-16"
+      className="py-20"
       style={{ backgroundColor: colors.bgAlt, borderTop: `1px solid ${colors.border}` }}
     >
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-16">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
+            <Link href="/" className="flex items-center gap-3 mb-6">
               <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: colors.accent }}
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{
+                  background: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.blob2} 100%)`
+                }}
               >
-                <Calculator className="w-4 h-4 text-white" />
+                <Calculator className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-semibold tracking-tight" style={{ color: colors.text }}>
+              <span className="text-2xl font-bold tracking-tight" style={{ color: colors.text }}>
                 ClearMoney
               </span>
             </Link>
-            <p className="text-sm max-w-xs mb-4" style={{ color: colors.textMuted }}>
+            <p className="text-base max-w-sm mb-4 leading-relaxed" style={{ color: colors.textMuted }}>
               Financial clarity for everyone. No affiliate bias. No paywalls.
               Just honest tools and transparent methodology.
             </p>
-            <p className="text-xs" style={{ color: colors.textLight }}>
+            <p className="text-sm font-medium" style={{ color: colors.textLight }}>
               Built with conviction, not VC pressure.
             </p>
           </div>
 
           {/* Links */}
           <div>
-            <h4 className="font-semibold mb-4" style={{ color: colors.text }}>
+            <h4 className="text-lg font-bold mb-5" style={{ color: colors.text }}>
               Tools
             </h4>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {["Investing", "Taxes", "Credit Cards", "Budgeting"].map((item) => (
                 <li key={item}>
                   <Link
                     href="#"
-                    className="text-sm transition-colors hover:opacity-70"
+                    className="text-base transition-colors duration-200 hover:text-black"
                     style={{ color: colors.textMuted }}
                   >
                     {item}
@@ -941,15 +1071,15 @@ function Footer() {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4" style={{ color: colors.text }}>
+            <h4 className="text-lg font-bold mb-5" style={{ color: colors.text }}>
               Company
             </h4>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {["Methodology", "About", "Privacy", "Terms"].map((item) => (
                 <li key={item}>
                   <Link
                     href="#"
-                    className="text-sm transition-colors hover:opacity-70"
+                    className="text-base transition-colors duration-200 hover:text-black"
                     style={{ color: colors.textMuted }}
                   >
                     {item}
@@ -961,13 +1091,13 @@ function Footer() {
         </div>
 
         <div
-          className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+          className="pt-10 flex flex-col sm:flex-row items-center justify-between gap-4"
           style={{ borderTop: `1px solid ${colors.border}` }}
         >
-          <p className="text-xs" style={{ color: colors.textLight }}>
+          <p className="text-sm" style={{ color: colors.textLight }}>
             &copy; {new Date().getFullYear()} ClearMoney. All rights reserved.
           </p>
-          <p className="text-xs" style={{ color: colors.textLight }}>
+          <p className="text-sm" style={{ color: colors.textLight }}>
             Not financial advice. We provide tools, you make decisions.
           </p>
         </div>
@@ -984,63 +1114,86 @@ export default function AutonomousInspiredPage() {
   return (
     <>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
         body {
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Blob animation */
+        /* Blob animation - slower, more subtle */
         @keyframes blob {
           0%, 100% {
             transform: translate(0, 0) scale(1);
           }
-          25% {
-            transform: translate(20px, -30px) scale(1.05);
+          33% {
+            transform: translate(30px, -50px) scale(1.1);
           }
-          50% {
-            transform: translate(-20px, 20px) scale(0.95);
-          }
-          75% {
-            transform: translate(30px, 10px) scale(1.02);
+          66% {
+            transform: translate(-20px, 30px) scale(0.9);
           }
         }
 
         .animate-blob {
-          animation: blob 20s ease-in-out infinite;
-        }
-
-        .animate-blob:nth-child(2) {
-          animation-delay: -5s;
-        }
-
-        .animate-blob:nth-child(3) {
-          animation-delay: -10s;
+          animation: blob 25s ease-in-out infinite;
         }
 
         /* Custom range slider */
-        input[type="range"]::-webkit-slider-thumb {
+        input[type="range"] {
           -webkit-appearance: none;
           appearance: none;
-          width: 20px;
-          height: 20px;
-          background: ${colors.accent};
-          border-radius: 50%;
+          background: transparent;
           cursor: pointer;
         }
 
-        input[type="range"]::-moz-range-thumb {
-          width: 20px;
-          height: 20px;
-          background: ${colors.accent};
+        input[type="range"]::-webkit-slider-track {
+          height: 8px;
+          background: ${colors.border};
+          border-radius: 9999px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 24px;
+          height: 24px;
+          background: linear-gradient(135deg, ${colors.accent} 0%, ${colors.accentLight} 100%);
           border-radius: 50%;
-          cursor: pointer;
+          margin-top: -8px;
+          box-shadow: 0 2px 8px ${colors.accent}40;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px ${colors.accent}50;
+        }
+
+        input[type="range"]::-moz-range-track {
+          height: 8px;
+          background: ${colors.border};
+          border-radius: 9999px;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+          width: 24px;
+          height: 24px;
+          background: linear-gradient(135deg, ${colors.accent} 0%, ${colors.accentLight} 100%);
+          border-radius: 50%;
           border: none;
+          box-shadow: 0 2px 8px ${colors.accent}40;
         }
 
         /* Smooth scroll */
         html {
           scroll-behavior: smooth;
+        }
+
+        /* Selection */
+        ::selection {
+          background: ${colors.accent}30;
+          color: ${colors.text};
         }
       `}</style>
 
