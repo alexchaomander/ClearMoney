@@ -359,6 +359,40 @@ export const tools: Tool[] = [
     featured: false,
   },
   {
+    id: "strategy-match-finder",
+    name: "Strategy Match Finder",
+    description:
+      "Match your risk, tax, and behavior profile to strategy archetypes.",
+    href: "/investing/strategy-match-finder",
+    categoryId: "investing",
+    status: "live",
+    primaryColor: "#8b5cf6",
+    designStyle: "analytical",
+    featured: true,
+  },
+  {
+    id: "rebalance-vs-drift",
+    name: "Rebalance vs Drift Calculator",
+    description:
+      "Compare the cost of rebalancing now versus the risk drag of waiting.",
+    href: "/investing/rebalance-vs-drift",
+    categoryId: "investing",
+    status: "live",
+    primaryColor: "#38bdf8",
+    designStyle: "analytical",
+  },
+  {
+    id: "factor-tilt-comparator",
+    name: "Factor Tilt Comparator",
+    description:
+      "Compare base portfolio assumptions against common factor tilts.",
+    href: "/investing/factor-tilt-comparator",
+    categoryId: "investing",
+    status: "live",
+    primaryColor: "#f59e0b",
+    designStyle: "analytical",
+  },
+  {
     id: "compound-interest",
     name: "Compound Interest Calculator",
     description: "See how your money grows over time with compound interest.",
@@ -565,6 +599,17 @@ export const tools: Tool[] = [
     designStyle: "analytical",
     inspiredBy: ["Mad Fientist", "Money Guy Show"],
     featured: true,
+  },
+  {
+    id: "tax-aware-rebalance",
+    name: "Tax-Aware Rebalance Impact",
+    description:
+      "Estimate the taxes triggered by rebalancing and the drift needed to justify it.",
+    href: "/taxes/tax-aware-rebalance",
+    categoryId: "taxes",
+    status: "live",
+    primaryColor: "#10b981",
+    designStyle: "analytical",
   },
   {
     id: "medicare-irmaa",

@@ -24,6 +24,7 @@ import {
   LineChart,
   Sparkles,
 } from "lucide-react";
+import { tools as siteTools } from "@/lib/site-config";
 
 // ============================================================================
 // AUTONOMOUS-INSPIRED DESIGN — REFINED EDITION
@@ -60,8 +61,8 @@ const colors = {
 
 // Categories with tool counts
 const categories = [
-  { id: "investing", name: "Investing", icon: TrendingUp, count: 13, description: "Roth strategies, FIRE, backdoor conversions" },
-  { id: "taxes", name: "Tax Strategy", icon: Receipt, count: 10, description: "Brackets, RSUs, crypto, estate planning" },
+  { id: "investing", name: "Investing", icon: TrendingUp, count: 15, description: "Roth strategies, FIRE, backdoor conversions" },
+  { id: "taxes", name: "Tax Strategy", icon: Receipt, count: 11, description: "Brackets, RSUs, crypto, estate planning" },
   { id: "credit-cards", name: "Credit Cards", icon: CreditCard, count: 6, description: "Annual fees, points, affiliate-free analysis" },
   { id: "budgeting", name: "Budgeting", icon: PiggyBank, count: 4, description: "Emergency funds, home affordability, goals" },
   { id: "banking", name: "Banking", icon: Building2, count: 3, description: "HYSA, I Bonds, bank bonuses" },
@@ -69,6 +70,21 @@ const categories = [
   { id: "equity", name: "Equity Comp", icon: Percent, count: 1, description: "Stock options, RSU tax planning" },
   { id: "giving", name: "Charitable", icon: Heart, count: 1, description: "Appreciated stock donations" },
 ];
+
+const TOOL_NAME_ALIASES: Record<string, string> = {
+  "Roth vs Traditional": "Roth vs Traditional Calculator",
+  "Mega Backdoor Roth": "Mega Backdoor Roth Calculator",
+  "529-to-Roth Rollover": "529-to-Roth Rollover Planner",
+};
+
+const toolHrefByName = new Map(
+  siteTools.map((tool) => [tool.name.toLowerCase(), tool.href])
+);
+
+const getToolHref = (name: string) => {
+  const canonical = TOOL_NAME_ALIASES[name] ?? name;
+  return toolHrefByName.get(canonical.toLowerCase()) ?? "#";
+};
 
 // Featured strategies/tools
 const featuredStrategies = [
@@ -107,6 +123,11 @@ const featuredStrategies = [
     description: "Calculate your exact path to financial independence with personalized projections.",
     category: "Investing",
   },
+  {
+    title: "Rebalance vs Drift Calculator",
+    description: "Quantify when drift becomes riskier than rebalancing costs.",
+    category: "Investing",
+  },
 ];
 
 // FAQ items
@@ -117,7 +138,7 @@ const faqItems = [
   },
   {
     question: "Is ClearMoney really free?",
-    answer: "Yes. All 31+ calculators and tools are completely free with no paywalls. We believe financial literacy shouldn't cost money. We may offer premium features in the future, but our core tools will always be free.",
+    answer: "Yes. All 37+ calculators and tools are completely free with no paywalls. We believe financial literacy shouldn't cost money. We may offer premium features in the future, but our core tools will always be free.",
   },
   {
     question: "How do you make money then?",
@@ -318,7 +339,7 @@ function HeroSection() {
           }}
         >
           <Sparkles className="w-4 h-4" style={{ color: colors.accent }} />
-          31+ Free Financial Decision Tools
+          37+ Free Financial Decision Tools
         </div>
 
         {/* Main headline — Much larger */}
@@ -378,7 +399,7 @@ function HeroSection() {
         <div className="mt-20 flex flex-wrap items-center justify-center gap-10">
           {[
             { icon: Shield, label: "Zero affiliate bias" },
-            { icon: Calculator, label: "31+ free tools" },
+            { icon: Calculator, label: "37+ free tools" },
             { icon: FileText, label: "Open methodology" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-3">
@@ -738,7 +759,7 @@ function SolutionSection() {
           {[
             {
               icon: Calculator,
-              title: "31+ Decision Tools",
+              title: "37+ Decision Tools",
               description: "Every major financial decision has a calculator. Roth conversions, FIRE planning, debt payoff, home affordability—all free.",
             },
             {
@@ -977,7 +998,7 @@ function ToolsSection() {
             Every tool you need
           </h2>
           <p className="text-xl lg:text-2xl max-w-2xl mx-auto" style={{ color: colors.textMuted }}>
-            31+ calculators across 8 categories. All free. All transparent.
+            37+ calculators across 8 categories. All free. All transparent.
           </p>
         </div>
 
@@ -1029,7 +1050,7 @@ function ToolsSection() {
             {featuredStrategies.map((strategy) => (
               <Link
                 key={strategy.title}
-                href="#"
+                href={getToolHref(strategy.title)}
                 className="group p-6 rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
                 style={{
                   backgroundColor: colors.bgAlt,
@@ -1059,7 +1080,7 @@ function ToolsSection() {
             className="inline-flex items-center gap-2 text-lg font-semibold transition-all duration-200 hover:gap-3"
             style={{ color: colors.accent }}
           >
-            View all 31+ tools
+            View all 37+ tools
             <ArrowRight className="w-5 h-5" />
           </Link>
         </div>

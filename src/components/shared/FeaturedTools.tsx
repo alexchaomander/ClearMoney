@@ -32,8 +32,21 @@ export function FeaturedTools({
   className,
 }: FeaturedToolsProps) {
   // Get featured tools that are live
+  const featuredPriority = ["strategy-match-finder"];
   const featuredTools = tools
-    .filter((tool) => tool.status === "live" && tool.featured)
+    .map((tool, index) => ({ tool, index }))
+    .filter(({ tool }) => tool.status === "live" && tool.featured)
+    .sort((a, b) => {
+      const aPriority = featuredPriority.indexOf(a.tool.id);
+      const bPriority = featuredPriority.indexOf(b.tool.id);
+      const aRank = aPriority === -1 ? Number.MAX_SAFE_INTEGER : aPriority;
+      const bRank = bPriority === -1 ? Number.MAX_SAFE_INTEGER : bPriority;
+      if (aRank !== bRank) {
+        return aRank - bRank;
+      }
+      return a.index - b.index;
+    })
+    .map(({ tool }) => tool)
     .slice(0, limit);
 
   // If not enough featured tools, fill with other live tools

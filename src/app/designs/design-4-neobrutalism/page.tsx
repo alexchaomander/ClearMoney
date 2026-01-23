@@ -20,6 +20,7 @@ import {
   Check,
   Send,
 } from "lucide-react";
+import { tools as siteTools } from "@/lib/site-config";
 
 // Neo-Brutalism Design System
 // - Hard black borders (3-4px)
@@ -31,14 +32,33 @@ import {
 
 const categories = [
   { id: "credit-cards", name: "Credit Cards", icon: CreditCard, count: 6 },
-  { id: "investing", name: "Investing", icon: TrendingUp, count: 11 },
+  { id: "investing", name: "Investing", icon: TrendingUp, count: 13 },
   { id: "banking", name: "Banking", icon: Landmark, count: 3 },
-  { id: "taxes", name: "Taxes", icon: Receipt, count: 10 },
+  { id: "taxes", name: "Taxes", icon: Receipt, count: 11 },
   { id: "debt", name: "Debt", icon: Target, count: 2 },
   { id: "budgeting", name: "Budgeting", icon: DollarSign, count: 4 },
   { id: "giving", name: "Giving", icon: Heart, count: 1 },
   { id: "credit", name: "Credit Score", icon: BarChart3, count: 1 },
 ];
+
+const TOOL_NAME_ALIASES: Record<string, string> = {
+  "Roth vs Traditional": "Roth vs Traditional Calculator",
+  "Mega Backdoor Roth": "Mega Backdoor Roth Calculator",
+  "529-to-Roth Rollover": "529-to-Roth Rollover Planner",
+  "Appreciated Stock Donation": "Appreciated Stock Donation Calculator",
+  "Stock Option Exercise Tool": "Stock Option Exercise Decision Tool",
+  "OBBB Tax Savings": "OBBB Tax Savings Calculator",
+  "Estate Tax Calculator": "Estate Tax Exposure Calculator",
+};
+
+const toolHrefByName = new Map(
+  siteTools.map((tool) => [tool.name.toLowerCase(), tool.href])
+);
+
+const getToolHref = (name: string) => {
+  const canonical = TOOL_NAME_ALIASES[name] ?? name;
+  return toolHrefByName.get(canonical.toLowerCase()) ?? "#";
+};
 
 const featuredTools = [
   {
@@ -123,6 +143,8 @@ const allTools = [
   { name: "TPG Transparency Tool", category: "credit-cards" },
   // Investing
   { name: "Strategy Match Finder", category: "investing" },
+  { name: "Rebalance vs Drift Calculator", category: "investing" },
+  { name: "Factor Tilt Comparator", category: "investing" },
   { name: "Roth vs Traditional", category: "investing" },
   { name: "2026 Contribution Limits", category: "investing" },
   { name: "Roth Catch-Up Planner", category: "investing" },
@@ -138,6 +160,7 @@ const allTools = [
   { name: "HYSA Finder", category: "banking" },
   { name: "Bank Bonus Calculator", category: "banking" },
   // Taxes
+  { name: "Tax-Aware Rebalance Impact", category: "taxes" },
   { name: "RSU Tax Calculator", category: "taxes" },
   { name: "Crypto Cost Basis", category: "taxes" },
   { name: "Backdoor Roth Guide", category: "taxes" },
@@ -325,7 +348,7 @@ export default function NeoBrutalismHomepage() {
                 NO AFFILIATE BIAS
               </span>
               <span>{"///"}</span>
-              <span>31+ FREE CALCULATORS</span>
+              <span>37+ FREE CALCULATORS</span>
               <span>{"///"}</span>
               <span className="flex items-center gap-2">
                 <Eye className="w-4 h-4" />
@@ -396,14 +419,14 @@ export default function NeoBrutalismHomepage() {
                 href="#tools"
                 className="inline-flex items-center gap-2 font-brutal font-bold text-xl px-8 py-4 bg-white text-black brutal-border brutal-shadow-lg brutal-shadow-hover brutal-shadow-active hover:bg-[#c5f82a] transition-colors"
               >
-                EXPLORE 31+ TOOLS
+                EXPLORE 37+ TOOLS
               </Link>
             </div>
 
             {/* Stats row */}
             <div className="flex flex-wrap gap-6 mt-12">
               {[
-                { value: "31+", label: "Free Tools" },
+                { value: "37+", label: "Free Tools" },
                 { value: "$0", label: "Always Free" },
                 { value: "0%", label: "Affiliate Bias" },
               ].map((stat) => (
@@ -520,7 +543,7 @@ export default function NeoBrutalismHomepage() {
           {featuredTools.map((tool, index) => (
             <Link
               key={tool.id}
-              href="#"
+              href={getToolHref(tool.name)}
               className={`group p-6 border-b-3 border-r-3 border-black bg-white hover:bg-black hover:text-white transition-colors relative ${
                 index % 3 === 2 ? "lg:border-r-0" : ""
               }`}
@@ -555,7 +578,7 @@ export default function NeoBrutalismHomepage() {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
             <div>
               <h2 className="font-brutal text-4xl md:text-5xl font-black uppercase tracking-tight mb-4">
-                ALL 31+ CALCULATORS
+                ALL 37+ CALCULATORS
               </h2>
               <p className="font-brutal text-xl text-gray-600">
                 Every tool is free. Every formula is public. No hidden agendas. Tools first, content second.
@@ -603,7 +626,7 @@ export default function NeoBrutalismHomepage() {
             {filteredTools.map((tool, index) => (
               <Link
                 key={index}
-                href="#"
+                href={getToolHref(tool.name)}
                 className="group brutal-border bg-white p-4 brutal-shadow-sm brutal-shadow-hover brutal-shadow-active hover:bg-[#c5f82a] transition-all"
               >
                 <div className="font-mono-brutal text-xs text-gray-500 uppercase tracking-wider mb-1">
