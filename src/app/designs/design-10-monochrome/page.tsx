@@ -21,6 +21,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { tools as siteTools } from "@/lib/site-config";
 
 // ============================================================================
 // MONOCHROME LUXE - Deep Emerald
@@ -49,13 +50,26 @@ const emerald = {
 const categories = [
   { id: "credit-cards", name: "Credit Cards", icon: CreditCard, count: 6 },
   { id: "banking", name: "Banking", icon: Building2, count: 3 },
-  { id: "investing", name: "Investing", icon: TrendingUp, count: 13 },
-  { id: "taxes", name: "Taxes", icon: FileText, count: 10 },
+  { id: "investing", name: "Investing", icon: TrendingUp, count: 15 },
+  { id: "taxes", name: "Taxes", icon: FileText, count: 11 },
   { id: "debt", name: "Debt", icon: Receipt, count: 2 },
   { id: "budgeting", name: "Budgeting", icon: PiggyBank, count: 4 },
   { id: "equity", name: "Equity Comp", icon: Percent, count: 1 },
   { id: "giving", name: "Charitable Giving", icon: Heart, count: 1 },
 ];
+
+const toolHrefByName = new Map(
+  siteTools.map((tool) => [tool.name.toLowerCase(), tool.href])
+);
+
+const TOOL_NAME_ALIASES: Record<string, string> = {
+  "Stock Option Exercise Tool": "Stock Option Exercise Decision Tool",
+};
+
+const getToolHref = (name: string) => {
+  const canonical = TOOL_NAME_ALIASES[name] ?? name;
+  return toolHrefByName.get(canonical.toLowerCase()) ?? "#";
+};
 
 // Featured tools - punchy, honest descriptions
 const featuredTools = [
@@ -113,6 +127,8 @@ const allTools = {
   ],
   "Investing": [
     "Strategy Match Finder",
+    "Rebalance vs Drift Calculator",
+    "Factor Tilt Comparator",
     "Roth vs Traditional Calculator",
     "2026 Contribution Limits",
     "Roth Catch-Up Planner",
@@ -127,6 +143,7 @@ const allTools = {
     "Total Compensation Calculator",
   ],
   "Taxes": [
+    "Tax-Aware Rebalance Impact",
     "RSU Tax Calculator",
     "Crypto Cost Basis Calculator",
     "Backdoor Roth IRA Guide",
@@ -431,7 +448,7 @@ function HeroSection() {
           className="mt-20 flex flex-wrap items-center justify-center gap-x-12 gap-y-6"
         >
           {[
-            { label: "Free Tools", value: "31+" },
+            { label: "Free Tools", value: "37+" },
             { label: "Always Free", value: "$0" },
             { label: "Affiliate Bias", value: "0%" },
           ].map((stat) => (
@@ -756,7 +773,7 @@ function FeaturedToolsSection() {
               className="group"
             >
               <Link
-                href="#"
+                href={getToolHref(tool.name)}
                 className="block relative p-6 rounded-xl transition-all duration-500 overflow-hidden"
                 style={{
                   backgroundColor: emerald[950],
@@ -861,7 +878,7 @@ function AllToolsSection() {
           className="text-center mb-12"
         >
           <h2 className="font-serif text-4xl sm:text-5xl text-white mb-6">
-            All <span style={{ color: emerald[400] }}>31+</span> Decision Tools
+            All <span style={{ color: emerald[400] }}>37+</span> Decision Tools
           </h2>
           <p
             className="max-w-xl mx-auto text-lg"
@@ -905,7 +922,7 @@ function AllToolsSection() {
                 transition={{ duration: 0.3, delay: index * 0.02 }}
               >
                 <Link
-                  href="#"
+                  href={getToolHref(tool.name)}
                   className="group block p-4 rounded-lg transition-all duration-300"
                   style={{
                     backgroundColor: emerald[950],
