@@ -31,7 +31,7 @@ import {
 
 const categories = [
   { id: "credit-cards", name: "Credit Cards", icon: CreditCard, count: 6 },
-  { id: "investing", name: "Investing", icon: TrendingUp, count: 10 },
+  { id: "investing", name: "Investing", icon: TrendingUp, count: 11 },
   { id: "banking", name: "Banking", icon: Landmark, count: 3 },
   { id: "taxes", name: "Taxes", icon: Receipt, count: 10 },
   { id: "debt", name: "Debt", icon: Target, count: 2 },
@@ -54,6 +54,13 @@ const featuredTools = [
     description: "When can you tell your boss to get lost?",
     category: "Investing",
     hot: false,
+  },
+  {
+    id: 10,
+    name: "Strategy Match Finder",
+    description: "Map your risk profile to strategy archetypes.",
+    category: "Investing",
+    hot: true,
   },
   {
     id: 3,
@@ -115,6 +122,7 @@ const allTools = [
   { name: "Points Valuation Dashboard", category: "credit-cards" },
   { name: "TPG Transparency Tool", category: "credit-cards" },
   // Investing
+  { name: "Strategy Match Finder", category: "investing" },
   { name: "Roth vs Traditional", category: "investing" },
   { name: "2026 Contribution Limits", category: "investing" },
   { name: "Roth Catch-Up Planner", category: "investing" },
