@@ -60,7 +60,7 @@ const colors = {
 
 // Categories with tool counts
 const categories = [
-  { id: "investing", name: "Investing", icon: TrendingUp, count: 12, description: "Roth strategies, FIRE, backdoor conversions" },
+  { id: "investing", name: "Investing", icon: TrendingUp, count: 13, description: "Roth strategies, FIRE, backdoor conversions" },
   { id: "taxes", name: "Tax Strategy", icon: Receipt, count: 10, description: "Brackets, RSUs, crypto, estate planning" },
   { id: "credit-cards", name: "Credit Cards", icon: CreditCard, count: 6, description: "Annual fees, points, affiliate-free analysis" },
   { id: "budgeting", name: "Budgeting", icon: PiggyBank, count: 4, description: "Emergency funds, home affordability, goals" },
@@ -76,6 +76,11 @@ const featuredStrategies = [
     title: "Roth vs Traditional",
     description: "Optimize your retirement contributions based on your actual tax situation—not generic rules of thumb.",
     category: "Tax Strategy",
+  },
+  {
+    title: "Strategy Match Finder",
+    description: "Map your risk, tax, and behavior profile to strategy archetypes.",
+    category: "Investing",
   },
   {
     title: "Mega Backdoor Roth",

@@ -49,7 +49,7 @@ const emerald = {
 const categories = [
   { id: "credit-cards", name: "Credit Cards", icon: CreditCard, count: 6 },
   { id: "banking", name: "Banking", icon: Building2, count: 3 },
-  { id: "investing", name: "Investing", icon: TrendingUp, count: 12 },
+  { id: "investing", name: "Investing", icon: TrendingUp, count: 13 },
   { id: "taxes", name: "Taxes", icon: FileText, count: 10 },
   { id: "debt", name: "Debt", icon: Receipt, count: 2 },
   { id: "budgeting", name: "Budgeting", icon: PiggyBank, count: 4 },
@@ -67,6 +67,11 @@ const featuredTools = [
   {
     name: "FIRE Calculator",
     description: "When can you tell your boss to get lost?",
+    category: "investing",
+  },
+  {
+    name: "Strategy Match Finder",
+    description: "Match your strategy style to your risk profile.",
     category: "investing",
   },
   {
@@ -107,6 +112,7 @@ const allTools = {
     "Bank Bonus Calculator",
   ],
   "Investing": [
+    "Strategy Match Finder",
     "Roth vs Traditional Calculator",
     "2026 Contribution Limits",
     "Roth Catch-Up Planner",
