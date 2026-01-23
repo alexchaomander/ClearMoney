@@ -368,7 +368,7 @@ export const tools: Tool[] = [
     status: "live",
     primaryColor: "#8b5cf6",
     designStyle: "analytical",
-    featured: true,
+featured: true,
   },
   {
     id: "rebalance-vs-drift",
