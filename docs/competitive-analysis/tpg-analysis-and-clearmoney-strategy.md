@@ -6,6 +6,86 @@ The Points Guy (TPG) has built a $50M+ annual revenue business primarily through
 
 ---
 
+## Part 0: Broader Competitive Landscape (Consolidated)
+
+This section consolidates the prior cross‑category competitive analysis into a single reference. It frames where ClearMoney sits beyond TPG, and where the biggest gaps are.
+
+### Category Snapshots
+
+**Credit Cards**
+| Competitor | Strengths | Weaknesses | ClearMoney Opportunity |
+|------------|-----------|------------|------------------------|
+| The Points Guy | Massive content, fast news | Affiliate bias, inflated valuations | Transparent valuations + math |
+| NerdWallet | Brand trust, clean comparisons | Affiliate-driven | Calculator-first, no product push |
+| Credit Karma | Free scores, good simulator | Data selling, upsells | Privacy-first, no account |
+| Doctor of Credit | Community trust | Niche | Accessible, beginner-friendly |
+| r/churning | Unbiased expert community | Overwhelming | Simplified entry point |
+
+**Debt**
+| Competitor | Strengths | Weaknesses | ClearMoney Opportunity |
+|------------|-----------|------------|------------------------|
+| Undebt.it | Multi-strategy calculator | Dated UI | Modern visuals + clarity |
+| Dave Ramsey / EveryDollar | Simple message | Snowball only | Show both methods equally |
+| NerdWallet | Clean UI | Affiliate funnel | Neutral, math-first |
+| Bankrate | Comprehensive | Affiliate-driven | No product recommendations |
+
+**Budgeting**
+| Competitor | Strengths | Weaknesses | ClearMoney Opportunity |
+|------------|-----------|------------|------------------------|
+| YNAB | Great philosophy | Subscription, learning curve | Free + simple |
+| Mint | Broad features | Shutting down, ads | Privacy-first alternative |
+| Copilot | Beautiful UX | Subscription, Apple-only | Free, cross-platform |
+| EveryDollar | Simple | Limited free version | Full tools free |
+| Personal Capital | Good dashboard | Sells advisory services | No upsell |
+
+**Investing/Retirement**
+| Competitor | Strengths | Weaknesses | ClearMoney Opportunity |
+|------------|-----------|------------|------------------------|
+| Engaging Data FIRE | Great math | Dated UI | Modern + accessible |
+| ProjectionLab | Comprehensive | Complex, paid | Single-purpose simplicity |
+| Networthify | Simple | Limited depth | More scenarios |
+| Personal Capital | Tracking | Requires login | No account needed |
+| Fidelity/Vanguard | Trusted | Product‑aligned | Product‑agnostic |
+
+**Credit Scores**
+| Competitor | Strengths | Weaknesses | ClearMoney Opportunity |
+|------------|-----------|------------|------------------------|
+| Credit Karma | Free scores | Data selling, upsell | Education without agenda |
+| myFICO | Real scores | Expensive | Free education |
+| Experian | Bureau source | Paid upsell | Free simulator |
+
+### Competitive Positioning Matrix
+
+```
+                    HIGH TRUST
+                        ↑
+                        |
+         ClearMoney (?) |  r/churning
+         Doctor of     |  FIRE blogs
+         Credit        |
+                        |
+  SIMPLE ←--------------+-------------→ COMPLEX
+                        |
+                        |
+         Credit Karma   |  Personal Capital
+         NerdWallet     |  ProjectionLab
+         TPG           |
+                        |
+                        ↓
+                    LOW TRUST
+```
+
+### Gap Analysis (Where ClearMoney Wins)
+
+1. **Transparent methodology** — show math and assumptions openly.  
+2. **Both sides of debates** — snowball vs avalanche, Roth vs Traditional, etc.  
+3. **Behavior-aware inputs** — ask how people actually use products.  
+4. **Privacy-first** — single-session tools, no data selling.  
+5. **Modern design** — visually compelling calculators.  
+6. **No affiliate agenda** — recommendations can be honest.
+
+---
+
 ## Part 1: The Points Guy Deep Dive
 
 ### 1.1 Company Overview
