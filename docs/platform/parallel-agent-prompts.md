@@ -421,7 +421,9 @@ Parallelization:
 
 ---
 
-## Prompt 4 — Provider Routing Strategy
+## Prompt 4 — Provider Routing Strategy ✅ COMPLETED
+
+> **Status:** Completed. See `docs/platform/provider-routing.md` for the full routing strategy including provider hierarchy, health scoring, failover logic, and observability.
 
 Role:
 You are the reliability engineer for a multi-provider system.
