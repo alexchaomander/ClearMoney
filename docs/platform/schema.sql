@@ -139,7 +139,8 @@ CREATE TABLE api_keys (
 
 CREATE INDEX idx_api_keys_app_id ON api_keys(app_id) WHERE revoked_at IS NULL;
 CREATE INDEX idx_api_keys_key_prefix ON api_keys(key_prefix) WHERE revoked_at IS NULL;
-CREATE UNIQUE INDEX idx_api_keys_key_hash ON api_keys(key_hash) WHERE revoked_at IS NULL;
+-- Key hash must be globally unique to prevent reuse of compromised keys
+CREATE UNIQUE INDEX idx_api_keys_key_hash ON api_keys(key_hash);
 
 COMMENT ON TABLE api_keys IS 'API keys for authenticating app requests. Keys are hashed; only prefix is stored in plain text.';
 COMMENT ON COLUMN api_keys.key_hash IS 'SHA-256 hash of the full API key for secure comparison';
@@ -172,6 +173,8 @@ CREATE TABLE users (
 -- Multi-tenancy: unique constraint ensures same external_user_id can exist in different apps
 CREATE UNIQUE INDEX idx_users_app_external ON users(app_id, external_user_id) WHERE deleted_at IS NULL;
 CREATE INDEX idx_users_app_id ON users(app_id) WHERE deleted_at IS NULL;
+-- Enable composite FK from consents to ensure tenant consistency
+CREATE UNIQUE INDEX idx_users_app_id_id ON users(app_id, id);
 
 COMMENT ON TABLE users IS 'End users of consuming apps. Each user belongs to exactly one app.';
 COMMENT ON COLUMN users.external_user_id IS 'The app''s own identifier for this user (unique within the app)';
@@ -190,13 +193,9 @@ CREATE TABLE institutions (
     supported_products JSONB,                      -- { "accounts": true, "transactions": true, ... }
     providers JSONB,                               -- { "plaid": { "institution_id": "..." }, "mx": { ... } }
 
-    -- Provenance fields
-    provider TEXT,
-    provider_item_id TEXT,
-    provider_account_id TEXT,
-    last_refreshed_at TIMESTAMPTZ,
-    confidence NUMERIC(3,2) CHECK (confidence >= 0 AND confidence <= 1),
-    sync_status sync_status DEFAULT 'synced',
+    -- Note: No provenance fields here. Institutions are master data shared across
+    -- all apps and can be supported by multiple providers. Provider-specific details
+    -- are stored in the `providers` JSONB column.
 
     -- Audit columns
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -215,8 +214,8 @@ COMMENT ON COLUMN institutions.providers IS 'Maps provider names to provider-spe
 -- -----------------------------------------------------------------------------
 CREATE TABLE consents (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    app_id UUID NOT NULL REFERENCES apps(id) ON DELETE CASCADE,  -- Denormalized for efficient queries
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    app_id UUID NOT NULL,
+    user_id UUID NOT NULL,
 
     status consent_status NOT NULL DEFAULT 'active',
     scopes TEXT[] NOT NULL,                        -- Array of granted scopes
@@ -244,6 +243,12 @@ CREATE TABLE consents (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Composite FK ensures app_id matches the user's app_id (tenant consistency)
+ALTER TABLE consents ADD CONSTRAINT fk_consents_app
+    FOREIGN KEY (app_id) REFERENCES apps(id) ON DELETE CASCADE;
+ALTER TABLE consents ADD CONSTRAINT fk_consents_user
+    FOREIGN KEY (app_id, user_id) REFERENCES users(app_id, id) ON DELETE CASCADE;
 
 CREATE INDEX idx_consents_app_user ON consents(app_id, user_id)
     WHERE status = 'active';
@@ -682,7 +687,7 @@ CREATE INDEX idx_consent_audit_app_id ON consent_audit_log(app_id, created_at DE
 CREATE INDEX idx_consent_audit_user_id ON consent_audit_log(user_id, created_at DESC);
 CREATE INDEX idx_consent_audit_connection_id ON consent_audit_log(connection_id, created_at DESC);
 
-COMMENT ON TABLE consent_audit_log IS 'Immutable audit log for all consent-related events. Retained for 7 years.';
+COMMENT ON TABLE consent_audit_log IS 'Immutable audit log for all consent-related events. Retained for 7 years. Note: user_id, connection_id, and consent_id intentionally omit FK constraints to preserve audit records even after referenced entities are deleted.';
 
 -- -----------------------------------------------------------------------------
 -- TOKEN_VAULT
@@ -706,7 +711,8 @@ CREATE TABLE token_vault (
 );
 
 -- No indexes on encrypted columns for security
-CREATE INDEX idx_token_vault_connection_id ON token_vault(connection_id);
+-- Unique constraint enforces 1:1 relationship between connections and token storage
+CREATE UNIQUE INDEX idx_token_vault_connection_id ON token_vault(connection_id);
 
 -- Restrict access to token service role only
 -- REVOKE SELECT ON token_vault FROM public;

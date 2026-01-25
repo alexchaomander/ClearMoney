@@ -112,8 +112,82 @@ erDiagram
         text name
         text country
         text logo_url
+        text primary_color
         jsonb supported_products
         jsonb providers
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    consents {
+        uuid id PK
+        uuid app_id FK
+        uuid user_id FK
+        consent_status status
+        text[] scopes
+        timestamptz expires_at
+        timestamptz revoked_at
+        timestamptz created_at
+    }
+
+    sync_jobs {
+        uuid id PK
+        uuid connection_id FK
+        text type
+        sync_job_status status
+        jsonb items_synced
+        text error_message
+        timestamptz created_at
+    }
+
+    webhook_subscriptions {
+        uuid id PK
+        uuid app_id FK
+        text url
+        text[] events
+        boolean is_active
+        timestamptz created_at
+    }
+
+    webhook_events {
+        uuid id PK
+        uuid app_id FK
+        webhook_direction direction
+        text event_type
+        jsonb payload
+        text status
+        timestamptz created_at
+    }
+
+    decision_traces {
+        uuid id PK
+        uuid user_id FK
+        uuid trace_id
+        text event_type
+        jsonb input_data
+        jsonb rules_applied
+        jsonb result
+        numeric confidence
+        timestamptz created_at
+    }
+
+    consent_audit_log {
+        uuid id PK
+        uuid app_id FK
+        text event_type
+        uuid user_id
+        text actor_type
+        text[] scopes_affected
+        timestamptz created_at
+    }
+
+    token_vault {
+        uuid id PK
+        uuid connection_id FK
+        text provider
+        bytea access_token_encrypted
+        bytea refresh_token_encrypted
+        text key_id
         timestamptz created_at
     }
 
@@ -146,6 +220,7 @@ erDiagram
         uuid account_id FK
         numeric current
         numeric available
+        numeric limit
         text currency
         timestamptz as_of
     }
@@ -229,6 +304,7 @@ Platform users belonging to apps. The combination of `(app_id, external_user_id)
 | `external_user_id` | TEXT | App's identifier for this user |
 | `email` | TEXT | Optional email |
 | `created_at` | TIMESTAMPTZ | Creation timestamp |
+| `updated_at` | TIMESTAMPTZ | Last update timestamp |
 | `deleted_at` | TIMESTAMPTZ | Soft delete timestamp |
 
 #### `institutions`
@@ -474,7 +550,9 @@ Encrypted storage for provider OAuth tokens. Access restricted to token service.
 
 ## Provenance Fields
 
-All data tables include provenance fields to track data origin and freshness:
+Financial data tables that are sourced from external providers include provenance fields to track data origin and freshness. These fields are present on: `users`, `consents`, `connections`, `accounts`, `balances`, `transactions`, `holdings`, `securities`, and `liabilities`.
+
+**Note:** Operational tables (`apps`, `api_keys`, `sync_jobs`, `webhook_subscriptions`, `webhook_events`, `consent_audit_log`, `token_vault`) and master data tables (`institutions`) do not include provenance fields.
 
 | Field | Type | Description |
 |-------|------|-------------|
