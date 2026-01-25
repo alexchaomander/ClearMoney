@@ -197,11 +197,8 @@ CREATE TABLE consent_records (
   CONSTRAINT purpose_not_empty CHECK (length(trim(purpose)) > 0)
 );
 
--- Ensure app_id matches user's app_id (tenant consistency)
--- Requires unique index on users(app_id, id) to support composite FK
+-- Composite FK enforces tenant consistency (consent.app_id must match user.app_id)
 CREATE UNIQUE INDEX idx_users_app_id_id ON users(app_id, id);
-
--- Composite FK ensures consent's app_id matches the user's app_id
 ALTER TABLE consent_records ADD CONSTRAINT fk_consent_user_app
   FOREIGN KEY (app_id, user_id) REFERENCES users(app_id, id) ON DELETE CASCADE;
 
@@ -892,11 +889,8 @@ CREATE TRIGGER token_vault_updated_at
   BEFORE UPDATE ON token_vault
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Note: Token access tracking (last_accessed_at, access_count) is handled at the
--- application layer in TokenServiceImpl.executeProviderCall(), not via database
--- triggers. PostgreSQL triggers cannot fire on SELECT, so access auditing must
--- be done when the TokenService reads and decrypts tokens. The application
--- explicitly updates these fields after each successful token decryption.
+-- Access tracking (last_accessed_at, access_count) is updated in
+-- TokenServiceImpl.executeProviderCall() since PostgreSQL triggers cannot fire on SELECT
 ```
 
 ### Encryption Implementation
@@ -916,8 +910,7 @@ const KMS_CONFIG = {
   },
 };
 
-// Encrypted payload with clearly separated components
-// Note: encryptedDataKey and ciphertext are stored separately to avoid
+// Stores encryptedDataKey and ciphertext separately to avoid
 // hardcoded size assumptions about KMS encrypted data key length
 interface EncryptedPayload {
   encryptedDataKey: Buffer;  // KMS-encrypted data encryption key
@@ -927,9 +920,8 @@ interface EncryptedPayload {
   keyId: string;             // KMS key ID for audit/rotation
 }
 
-// Encrypt a token using envelope encryption
+// Envelope encryption: KMS generates DEK, we encrypt locally with AES-256-GCM
 async function encryptToken(plaintext: string): Promise<EncryptedPayload> {
-  // Generate a data key from KMS
   const generateKeyCommand = new GenerateDataKeyCommand({
     KeyId: KMS_CONFIG.keyAlias,
     KeySpec: KMS_CONFIG.algorithm,
@@ -943,18 +935,15 @@ async function encryptToken(plaintext: string): Promise<EncryptedPayload> {
     throw new Error('Failed to generate data key from KMS');
   }
 
-  // Use the plaintext data key to encrypt locally with AES-256-GCM
   const nonce = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv('aes-256-gcm', dataKey, nonce);
-
   const ciphertext = Buffer.concat([
     cipher.update(plaintext, 'utf8'),
     cipher.final(),
   ]);
-
   const authTag = cipher.getAuthTag();
 
-  // Zero out the plaintext data key from memory
+  // Zero out plaintext data key from memory
   dataKey.fill(0);
 
   return {
@@ -966,38 +955,32 @@ async function encryptToken(plaintext: string): Promise<EncryptedPayload> {
   };
 }
 
-// Decrypt a token
 async function decryptToken(payload: EncryptedPayload): Promise<string> {
-  // Decrypt the data key using KMS
   const decryptCommand = new DecryptCommand({
     CiphertextBlob: payload.encryptedDataKey,
     EncryptionContext: KMS_CONFIG.encryptionContext,
   });
 
   const { Plaintext: dataKey } = await kmsClient.send(decryptCommand);
-
   if (!dataKey) {
     throw new Error('Failed to decrypt data key from KMS');
   }
 
-  // Use the plaintext data key to decrypt locally
   const decipher = crypto.createDecipheriv('aes-256-gcm', dataKey, payload.nonce);
   decipher.setAuthTag(payload.authTag);
-
   const decrypted = Buffer.concat([
     decipher.update(payload.ciphertext),
     decipher.final(),
   ]);
 
-  // Zero out the plaintext data key from memory
+  // Zero out plaintext data key from memory
   dataKey.fill(0);
 
   return decrypted.toString('utf8');
 }
 
-// Serialize EncryptedPayload for database storage (as JSONB or concatenated BYTEA)
+// Format: [4-byte DEK length][encryptedDataKey][ciphertext][nonce][authTag]
 function serializeEncryptedPayload(payload: EncryptedPayload): Buffer {
-  // Format: [4-byte DEK length][encryptedDataKey][ciphertext][nonce][authTag]
   const dekLength = Buffer.alloc(4);
   dekLength.writeUInt32BE(payload.encryptedDataKey.length, 0);
 
@@ -1010,16 +993,11 @@ function serializeEncryptedPayload(payload: EncryptedPayload): Buffer {
   ]);
 }
 
-// Deserialize from database storage
 function deserializeEncryptedPayload(data: Buffer, keyId: string): EncryptedPayload {
   const dekLength = data.readUInt32BE(0);
-  let offset = 4;
-
-  const encryptedDataKey = data.slice(offset, offset + dekLength);
-  offset += dekLength;
-
-  // Remaining: ciphertext + nonce (12) + authTag (16)
-  const ciphertext = data.slice(offset, data.length - 28);
+  const encryptedDataKey = data.slice(4, 4 + dekLength);
+  // Remaining bytes: ciphertext, then nonce (12 bytes), then authTag (16 bytes)
+  const ciphertext = data.slice(4 + dekLength, data.length - 28);
   const nonce = data.slice(data.length - 28, data.length - 16);
   const authTag = data.slice(data.length - 16);
 
@@ -1099,7 +1077,6 @@ class TokenServiceImpl implements TokenService {
   }
 
   async executeProviderCall<T>(params: ProviderCallParams): Promise<T> {
-    // Get and decrypt tokens
     const tokenRecord = await db.queryOne(
       'SELECT * FROM token_vault WHERE connection_id = $1',
       [params.connectionId]
@@ -1109,12 +1086,9 @@ class TokenServiceImpl implements TokenService {
       throw new NotFoundError('No tokens found for connection');
     }
 
-    // Check if token needs refresh (but only if we haven't just refreshed)
-    // The _isRetryAfterRefresh flag prevents infinite loops if refresh fails
-    // to update expiration or there's clock skew
+    // Refresh expiring tokens (flag prevents infinite loops on refresh failure)
     if (this.isTokenExpiringSoon(tokenRecord.access_token_expires_at) && !params._isRetryAfterRefresh) {
       await this.refreshTokens(params.connectionId);
-      // Re-fetch with flag to prevent another refresh attempt
       return this.executeProviderCall({ ...params, _isRetryAfterRefresh: true });
     }
 
@@ -1122,13 +1096,12 @@ class TokenServiceImpl implements TokenService {
       deserializeEncryptedPayload(tokenRecord.access_token_encrypted, tokenRecord.key_id)
     );
 
-    // Update access tracking (application-level, since triggers can't fire on SELECT)
+    // Track access at application layer (PostgreSQL triggers cannot fire on SELECT)
     await db.query(
       'UPDATE token_vault SET last_accessed_at = now(), access_count = access_count + 1 WHERE id = $1',
       [tokenRecord.id]
     );
 
-    // Audit log the access
     await this.logTokenAccess({
       eventType: 'token_accessed',
       connectionId: params.connectionId,
@@ -1138,7 +1111,6 @@ class TokenServiceImpl implements TokenService {
       callerService: params.callerService,
     });
 
-    // Execute the provider call
     const provider = getProviderAdapter(tokenRecord.provider);
     return provider.execute({
       operation: params.operation,
