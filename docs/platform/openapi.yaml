@@ -1,0 +1,2014 @@
+openapi: 3.1.0
+info:
+  title: Context Graph API
+  version: 1.0.0
+  description: |
+    Multi-tenant financial connectivity platform API (Context Graph for Finance).
+
+    This platform provides provider-agnostic access to financial data with
+    built-in data normalization, consent management, and decision tracing.
+
+    ## Multi-Tenancy Model
+    - **Apps**: Each consuming application (tenant) is registered as an App
+    - **API Keys**: Each app has its own API key for authentication
+    - **Users**: Users are scoped per app (same external_user_id can exist in multiple apps)
+    - **Data Isolation**: All data is isolated per app
+servers:
+  - url: https://api.contextgraph.example.com
+    description: Production
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
+paths:
+  /v1/apps:
+    post:
+      summary: Register a new app (admin only)
+      description: |
+        Register a new tenant application on the platform.
+        Returns the app details and a newly generated API key.
+        Only platform administrators can create apps.
+      security:
+        - AdminApiKeyAuth: []
+      tags:
+        - Apps
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppCreateRequest'
+            example:
+              name: ClearMoney
+              webhook_url: https://api.clearmoney.com/webhooks
+      responses:
+        '201':
+          description: App created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppWithApiKey'
+              example:
+                id: app_clearmoney
+                name: ClearMoney
+                webhook_url: https://api.clearmoney.com/webhooks
+                created_at: '2024-01-01T12:00:00Z'
+                api_key: cgk_live_abc123xyz
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+    get:
+      summary: List all apps (admin only)
+      description: List all registered tenant applications.
+      security:
+        - AdminApiKeyAuth: []
+      tags:
+        - Apps
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Apps list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedApps'
+              example:
+                data:
+                  - id: app_clearmoney
+                    name: ClearMoney
+                    webhook_url: https://api.clearmoney.com/webhooks
+                    created_at: '2024-01-01T12:00:00Z'
+                  - id: app_acme
+                    name: Acme Finance
+                    webhook_url: https://api.acme.com/hooks
+                    created_at: '2024-02-15T10:00:00Z'
+                next_cursor: null
+                has_more: false
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/apps/{app_id}:
+    get:
+      summary: Get an app (admin only)
+      description: Get details of a registered tenant application.
+      security:
+        - AdminApiKeyAuth: []
+      tags:
+        - Apps
+      parameters:
+        - $ref: '#/components/parameters/AppId'
+      responses:
+        '200':
+          description: App details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/App'
+              example:
+                id: app_clearmoney
+                name: ClearMoney
+                webhook_url: https://api.clearmoney.com/webhooks
+                created_at: '2024-01-01T12:00:00Z'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      summary: Update an app (admin only)
+      description: Update a registered tenant application.
+      security:
+        - AdminApiKeyAuth: []
+      tags:
+        - Apps
+      parameters:
+        - $ref: '#/components/parameters/AppId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppUpdateRequest'
+            example:
+              webhook_url: https://api.clearmoney.com/v2/webhooks
+      responses:
+        '200':
+          description: App updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/App'
+              example:
+                id: app_clearmoney
+                name: ClearMoney
+                webhook_url: https://api.clearmoney.com/v2/webhooks
+                created_at: '2024-01-01T12:00:00Z'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      summary: Delete an app (admin only)
+      description: |
+        Delete a tenant application and all associated data.
+        This is a destructive operation and cannot be undone.
+      security:
+        - AdminApiKeyAuth: []
+      tags:
+        - Apps
+      parameters:
+        - $ref: '#/components/parameters/AppId'
+      responses:
+        '204':
+          description: App deleted
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/apps/{app_id}/rotate-key:
+    post:
+      summary: Rotate app API key (admin only)
+      description: |
+        Generate a new API key for the app. The old key is immediately invalidated.
+      security:
+        - AdminApiKeyAuth: []
+      tags:
+        - Apps
+      parameters:
+        - $ref: '#/components/parameters/AppId'
+      responses:
+        '200':
+          description: New API key generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyResponse'
+              example:
+                api_key: cgk_live_newkey456
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/users:
+    post:
+      summary: Create a user
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+            example:
+              external_user_id: user_123
+              email: user@example.com
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              example:
+                id: usr_001
+                app_id: app_clearmoney
+                external_user_id: user_123
+                email: user@example.com
+                created_at: '2024-01-01T12:00:00Z'
+                provider: finicity
+                provider_item_id: fin_item_9
+                provider_account_id: null
+                last_refreshed_at: '2024-01-01T12:00:00Z'
+                confidence: 0.98
+                sync_status: synced
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/users/{user_id}:
+    get:
+      summary: Get a user
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              example:
+                id: usr_001
+                app_id: app_clearmoney
+                external_user_id: user_123
+                email: user@example.com
+                created_at: '2024-01-01T12:00:00Z'
+                provider: mx
+                provider_item_id: mx_item_22
+                provider_account_id: null
+                last_refreshed_at: '2024-01-02T08:00:00Z'
+                confidence: 0.95
+                sync_status: synced
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      summary: Update a user
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+            example:
+              email: new-email@example.com
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              example:
+                id: usr_001
+                app_id: app_clearmoney
+                external_user_id: user_123
+                email: new-email@example.com
+                created_at: '2024-01-01T12:00:00Z'
+                provider: plaid
+                provider_item_id: pl_item_3
+                provider_account_id: null
+                last_refreshed_at: '2024-01-02T08:00:00Z'
+                confidence: 0.95
+                sync_status: synced
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      summary: Delete a user
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '204':
+          description: User deleted
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/users/{user_id}/consents:
+    post:
+      summary: Create a consent for a user
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsentCreateRequest'
+            example:
+              scopes:
+                - accounts:read
+                - transactions:read
+              expires_at: '2025-01-01T00:00:00Z'
+      responses:
+        '201':
+          description: Consent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consent'
+              example:
+                id: con_001
+                app_id: app_clearmoney
+                user_id: usr_001
+                status: active
+                scopes:
+                  - accounts:read
+                  - transactions:read
+                created_at: '2024-01-01T12:00:00Z'
+                expires_at: '2025-01-01T00:00:00Z'
+                revoked_at: null
+                provider: fdx
+                provider_item_id: fdx_item_10
+                provider_account_id: null
+                last_refreshed_at: '2024-01-01T12:00:00Z'
+                confidence: 1.0
+                sync_status: synced
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+    get:
+      summary: List consents for a user
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Consents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedConsents'
+              example:
+                data:
+                  - id: con_001
+                    app_id: app_clearmoney
+                    user_id: usr_001
+                    status: active
+                    scopes:
+                      - accounts:read
+                    created_at: '2024-01-01T12:00:00Z'
+                    expires_at: '2025-01-01T00:00:00Z'
+                    revoked_at: null
+                    provider: finicity
+                    provider_item_id: fin_item_9
+                    provider_account_id: null
+                    last_refreshed_at: '2024-01-01T12:00:00Z'
+                    confidence: 0.99
+                    sync_status: synced
+                next_cursor: null
+                has_more: false
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/consents/{consent_id}:
+    get:
+      summary: Get a consent
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConsentId'
+      responses:
+        '200':
+          description: Consent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consent'
+              example:
+                id: con_001
+                app_id: app_clearmoney
+                user_id: usr_001
+                status: active
+                scopes:
+                  - accounts:read
+                  - transactions:read
+                created_at: '2024-01-01T12:00:00Z'
+                expires_at: '2025-01-01T00:00:00Z'
+                revoked_at: null
+                provider: plaid
+                provider_item_id: pl_item_3
+                provider_account_id: null
+                last_refreshed_at: '2024-01-02T08:00:00Z'
+                confidence: 0.96
+                sync_status: synced
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      summary: Revoke a consent
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConsentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsentRevokeRequest'
+            example:
+              reason: user_request
+      responses:
+        '200':
+          description: Consent revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consent'
+              example:
+                id: con_001
+                app_id: app_clearmoney
+                user_id: usr_001
+                status: revoked
+                scopes:
+                  - accounts:read
+                created_at: '2024-01-01T12:00:00Z'
+                expires_at: '2025-01-01T00:00:00Z'
+                revoked_at: '2024-02-01T12:00:00Z'
+                provider: mx
+                provider_item_id: mx_item_22
+                provider_account_id: null
+                last_refreshed_at: '2024-02-01T12:00:00Z'
+                confidence: 0.9
+                sync_status: synced
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      summary: Delete a consent
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConsentId'
+      responses:
+        '204':
+          description: Consent deleted
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/link/token/create:
+    post:
+      summary: Create a link token
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkTokenCreateRequest'
+            example:
+              user_id: usr_001
+              redirect_uri: https://app.example.com/callback
+      responses:
+        '201':
+          description: Link token created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkTokenResponse'
+              example:
+                link_token: link_abc123
+                expires_at: '2024-01-01T12:15:00Z'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/connections:
+    post:
+      summary: Create a connection by exchanging a public token
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectionCreateRequest'
+            example:
+              user_id: usr_001
+              public_token: public-token-xyz
+      responses:
+        '201':
+          description: Connection created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connection'
+              example:
+                id: con_123
+                user_id: usr_001
+                institution_id: inst_001
+                status: active
+                created_at: '2024-01-01T12:00:00Z'
+                last_error: null
+                provider: plaid
+                provider_item_id: pl_item_3
+                provider_account_id: null
+                last_refreshed_at: '2024-01-01T12:05:00Z'
+                confidence: 0.97
+                sync_status: synced
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/users/{user_id}/connections:
+    get:
+      summary: List connections for a user
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Connections
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedConnections'
+              example:
+                data:
+                  - id: con_123
+                    user_id: usr_001
+                    institution_id: inst_001
+                    status: active
+                    created_at: '2024-01-01T12:00:00Z'
+                    last_error: null
+                    provider: mx
+                    provider_item_id: mx_item_22
+                    provider_account_id: null
+                    last_refreshed_at: '2024-01-01T12:05:00Z'
+                    confidence: 0.93
+                    sync_status: synced
+                next_cursor: null
+                has_more: false
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/connections/{connection_id}:
+    get:
+      summary: Get a connection
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConnectionId'
+      responses:
+        '200':
+          description: Connection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connection'
+              example:
+                id: con_123
+                user_id: usr_001
+                institution_id: inst_001
+                status: active
+                created_at: '2024-01-01T12:00:00Z'
+                last_error: null
+                provider: finicity
+                provider_item_id: fin_item_9
+                provider_account_id: null
+                last_refreshed_at: '2024-01-01T12:05:00Z'
+                confidence: 0.93
+                sync_status: synced
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      summary: Delete a connection
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConnectionId'
+      responses:
+        '204':
+          description: Connection deleted
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/connections/{connection_id}/refresh:
+    post:
+      summary: Refresh a connection
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConnectionId'
+      responses:
+        '202':
+          description: Refresh initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connection'
+              example:
+                id: con_123
+                user_id: usr_001
+                institution_id: inst_001
+                status: active
+                created_at: '2024-01-01T12:00:00Z'
+                last_error: null
+                provider: plaid
+                provider_item_id: pl_item_3
+                provider_account_id: null
+                last_refreshed_at: '2024-01-03T10:00:00Z'
+                confidence: 0.9
+                sync_status: syncing
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/institutions:
+    get:
+      summary: List institutions
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Institutions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInstitutions'
+              example:
+                data:
+                  - id: inst_001
+                    name: Example Bank
+                    country: US
+                    supported_products:
+                      - accounts
+                      - transactions
+                    provider: finicity
+                    provider_item_id: fin_item_9
+                    provider_account_id: null
+                    last_refreshed_at: '2024-01-01T00:00:00Z'
+                    confidence: 0.92
+                    sync_status: synced
+                next_cursor: null
+                has_more: false
+  /v1/institutions/{institution_id}:
+    get:
+      summary: Get an institution
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/InstitutionId'
+      responses:
+        '200':
+          description: Institution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Institution'
+              example:
+                id: inst_001
+                name: Example Bank
+                country: US
+                supported_products:
+                  - accounts
+                  - transactions
+                provider: mx
+                provider_item_id: mx_item_22
+                provider_account_id: null
+                last_refreshed_at: '2024-01-01T00:00:00Z'
+                confidence: 0.92
+                sync_status: synced
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/institutions/search:
+    get:
+      summary: Search institutions
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          example: example bank
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Institutions search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInstitutions'
+              example:
+                data:
+                  - id: inst_001
+                    name: Example Bank
+                    country: US
+                    supported_products:
+                      - accounts
+                      - transactions
+                    provider: plaid
+                    provider_item_id: pl_item_3
+                    provider_account_id: null
+                    last_refreshed_at: '2024-01-01T00:00:00Z'
+                    confidence: 0.92
+                    sync_status: synced
+                next_cursor: null
+                has_more: false
+  /v1/connections/{connection_id}/accounts:
+    get:
+      summary: List accounts for a connection
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConnectionId'
+        - $ref: '#/components/parameters/AccountType'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Accounts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAccounts'
+              example:
+                data:
+                  - id: acc_001
+                    connection_id: con_123
+                    name: Checking
+                    type: checking
+                    subtype: personal
+                    currency: USD
+                    mask: '1234'
+                    provider: mx
+                    provider_item_id: mx_item_22
+                    provider_account_id: mx_acc_1
+                    last_refreshed_at: '2024-01-01T12:10:00Z'
+                    confidence: 0.9
+                    sync_status: synced
+                next_cursor: null
+                has_more: false
+  /v1/accounts/{account_id}:
+    get:
+      summary: Get an account
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+              example:
+                id: acc_001
+                connection_id: con_123
+                name: Checking
+                type: checking
+                subtype: personal
+                currency: USD
+                mask: '1234'
+                provider: plaid
+                provider_item_id: pl_item_3
+                provider_account_id: pl_acc_1
+                last_refreshed_at: '2024-01-01T12:10:00Z'
+                confidence: 0.9
+                sync_status: synced
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/accounts/{account_id}/balances:
+    get:
+      summary: Get balances for an account
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Balances
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+              example:
+                account_id: acc_001
+                available: 1200.5
+                current: 1500.75
+                currency: USD
+                as_of: '2024-01-01T12:10:00Z'
+                provider: finicity
+                provider_item_id: fin_item_9
+                provider_account_id: fin_acc_1
+                last_refreshed_at: '2024-01-01T12:10:00Z'
+                confidence: 0.95
+                sync_status: synced
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/connections/{connection_id}/balances:
+    get:
+      summary: Get balances for a connection
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConnectionId'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Balances
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBalances'
+              example:
+                data:
+                  - account_id: acc_001
+                    available: 1200.5
+                    current: 1500.75
+                    currency: USD
+                    as_of: '2024-01-01T12:10:00Z'
+                    provider: plaid
+                    provider_item_id: pl_item_3
+                    provider_account_id: pl_acc_1
+                    last_refreshed_at: '2024-01-01T12:10:00Z'
+                    confidence: 0.95
+                    sync_status: synced
+                next_cursor: null
+                has_more: false
+  /v1/accounts/{account_id}/transactions:
+    get:
+      summary: List transactions for an account
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/TransactionStartDate'
+        - $ref: '#/components/parameters/TransactionEndDate'
+        - $ref: '#/components/parameters/TransactionCategory'
+        - $ref: '#/components/parameters/TransactionSort'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Transactions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTransactions'
+              example:
+                data:
+                  - id: txn_001
+                    account_id: acc_001
+                    amount: -25.5
+                    currency: USD
+                    date: '2024-01-01'
+                    description: Coffee Shop
+                    category: food_and_drink
+                    pending: false
+                    provider: mx
+                    provider_item_id: mx_item_22
+                    provider_account_id: mx_acc_1
+                    last_refreshed_at: '2024-01-01T12:10:00Z'
+                    confidence: 0.92
+                    sync_status: synced
+                next_cursor: null
+                has_more: false
+  /v1/connections/{connection_id}/transactions:
+    get:
+      summary: List transactions for a connection
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConnectionId'
+        - $ref: '#/components/parameters/TransactionStartDate'
+        - $ref: '#/components/parameters/TransactionEndDate'
+        - $ref: '#/components/parameters/TransactionAccountId'
+        - $ref: '#/components/parameters/TransactionCategory'
+        - $ref: '#/components/parameters/TransactionSort'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Transactions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTransactions'
+              example:
+                data:
+                  - id: txn_001
+                    account_id: acc_001
+                    amount: -25.5
+                    currency: USD
+                    date: '2024-01-01'
+                    description: Coffee Shop
+                    category: food_and_drink
+                    pending: false
+                    provider: finicity
+                    provider_item_id: fin_item_9
+                    provider_account_id: fin_acc_1
+                    last_refreshed_at: '2024-01-01T12:10:00Z'
+                    confidence: 0.92
+                    sync_status: synced
+                next_cursor: null
+                has_more: false
+  /v1/accounts/{account_id}/holdings:
+    get:
+      summary: List holdings for an account
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/HoldingSecurityType'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Holdings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHoldings'
+              example:
+                data:
+                  - id: hol_001
+                    account_id: acc_002
+                    security_id: sec_001
+                    quantity: 10
+                    cost_basis: 1500
+                    market_value: 1800
+                    currency: USD
+                    provider: fdx
+                    provider_item_id: fdx_item_10
+                    provider_account_id: fdx_acc_1
+                    last_refreshed_at: '2024-01-01T12:10:00Z'
+                    confidence: 0.9
+                    sync_status: synced
+                next_cursor: null
+                has_more: false
+  /v1/connections/{connection_id}/holdings:
+    get:
+      summary: List holdings for a connection
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConnectionId'
+        - $ref: '#/components/parameters/HoldingSecurityType'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Holdings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHoldings'
+              example:
+                data:
+                  - id: hol_001
+                    account_id: acc_002
+                    security_id: sec_001
+                    quantity: 10
+                    cost_basis: 1500
+                    market_value: 1800
+                    currency: USD
+                    provider: plaid
+                    provider_item_id: pl_item_3
+                    provider_account_id: pl_acc_2
+                    last_refreshed_at: '2024-01-01T12:10:00Z'
+                    confidence: 0.9
+                    sync_status: synced
+                next_cursor: null
+                has_more: false
+  /v1/securities:
+    get:
+      summary: List securities
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Securities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSecurities'
+              example:
+                data:
+                  - id: sec_001
+                    name: Example ETF
+                    ticker: EXMP
+                    type: etf
+                    currency: USD
+                    provider: finicity
+                    provider_item_id: fin_item_9
+                    provider_account_id: null
+                    last_refreshed_at: '2024-01-01T12:10:00Z'
+                    confidence: 0.9
+                    sync_status: synced
+                next_cursor: null
+                has_more: false
+  /v1/securities/{security_id}:
+    get:
+      summary: Get a security
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SecurityId'
+      responses:
+        '200':
+          description: Security
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Security'
+              example:
+                id: sec_001
+                name: Example ETF
+                ticker: EXMP
+                type: etf
+                currency: USD
+                provider: mx
+                provider_item_id: mx_item_22
+                provider_account_id: null
+                last_refreshed_at: '2024-01-01T12:10:00Z'
+                confidence: 0.9
+                sync_status: synced
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/accounts/{account_id}/liabilities:
+    get:
+      summary: List liabilities for an account
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Liabilities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLiabilities'
+              example:
+                data:
+                  - id: lia_001
+                    account_id: acc_003
+                    type: credit_card
+                    balance: 2000
+                    interest_rate: 0.199
+                    due_date: '2024-02-15'
+                    provider: plaid
+                    provider_item_id: pl_item_3
+                    provider_account_id: pl_acc_3
+                    last_refreshed_at: '2024-01-01T12:10:00Z'
+                    confidence: 0.88
+                    sync_status: synced
+                next_cursor: null
+                has_more: false
+  /v1/connections/{connection_id}/liabilities:
+    get:
+      summary: List liabilities for a connection
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConnectionId'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Liabilities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLiabilities'
+              example:
+                data:
+                  - id: lia_001
+                    account_id: acc_003
+                    type: credit_card
+                    balance: 2000
+                    interest_rate: 0.199
+                    due_date: '2024-02-15'
+                    provider: mx
+                    provider_item_id: mx_item_22
+                    provider_account_id: mx_acc_3
+                    last_refreshed_at: '2024-01-01T12:10:00Z'
+                    confidence: 0.88
+                    sync_status: synced
+                next_cursor: null
+                has_more: false
+  /v1/connections/{connection_id}/sync-status:
+    get:
+      summary: Get sync status for a connection
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConnectionId'
+      responses:
+        '200':
+          description: Sync status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncStatus'
+              example:
+                connection_id: con_123
+                status: syncing
+                last_successful_sync: '2024-01-03T10:00:00Z'
+                next_refresh_at: '2024-01-03T11:00:00Z'
+  /v1/coverage:
+    get:
+      summary: Get platform-wide coverage and freshness
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Coverage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coverage'
+              example:
+                data_freshness_minutes: 15
+                coverage_ratio: 0.98
+                provider: fdx
+                provider_item_id: null
+                provider_account_id: null
+                last_refreshed_at: '2024-01-03T10:00:00Z'
+                confidence: 0.97
+                sync_status: synced
+  /v1/webhooks/provider:
+    post:
+      summary: Receive provider webhook (internal)
+      description: |
+        Internal endpoint for receiving webhooks from financial data providers.
+        Authentication is handled via provider-specific signature verification
+        (e.g., X-Plaid-Signature header) in application logic, not via API key or JWT.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderWebhookEvent'
+            example:
+              id: wh_evt_001
+              type: connection.updated
+              created_at: '2024-01-03T10:00:00Z'
+              data:
+                connection_id: con_123
+                status: active
+      responses:
+        '202':
+          description: Webhook accepted
+  /v1/webhook-subscriptions:
+    post:
+      summary: Create a webhook subscription
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookSubscriptionCreateRequest'
+            example:
+              url: https://app.example.com/webhooks
+              events:
+                - connection.updated
+                - transactions.sync_completed
+      responses:
+        '201':
+          description: Subscription created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscription'
+              example:
+                id: wh_sub_001
+                url: https://app.example.com/webhooks
+                events:
+                  - connection.updated
+                  - transactions.sync_completed
+                secret: whsec_123
+                created_at: '2024-01-03T10:00:00Z'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+    get:
+      summary: List webhook subscriptions
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Subscriptions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWebhookSubscriptions'
+              example:
+                data:
+                  - id: wh_sub_001
+                    url: https://app.example.com/webhooks
+                    events:
+                      - connection.updated
+                    created_at: '2024-01-03T10:00:00Z'
+                next_cursor: null
+                has_more: false
+  /v1/webhook-subscriptions/{webhook_subscription_id}:
+    delete:
+      summary: Delete a webhook subscription
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WebhookSubscriptionId'
+      responses:
+        '204':
+          description: Subscription deleted
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+components:
+  securitySchemes:
+    AdminApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Admin-API-Key
+      description: Platform admin API key for app management operations
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: App-specific API key (scoped to a single tenant app)
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: User JWT token for end-user authenticated requests
+  parameters:
+    AppId:
+      name: app_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique app identifier (e.g., "app_clearmoney")
+    UserId:
+      name: user_id
+      in: path
+      required: true
+      schema:
+        type: string
+    ConsentId:
+      name: consent_id
+      in: path
+      required: true
+      schema:
+        type: string
+    ConnectionId:
+      name: connection_id
+      in: path
+      required: true
+      schema:
+        type: string
+    InstitutionId:
+      name: institution_id
+      in: path
+      required: true
+      schema:
+        type: string
+    AccountId:
+      name: account_id
+      in: path
+      required: true
+      schema:
+        type: string
+    SecurityId:
+      name: security_id
+      in: path
+      required: true
+      schema:
+        type: string
+    WebhookSubscriptionId:
+      name: webhook_subscription_id
+      in: path
+      required: true
+      schema:
+        type: string
+    Cursor:
+      name: cursor
+      in: query
+      schema:
+        type:
+          - string
+          - "null"
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 50
+        minimum: 1
+        maximum: 200
+    AccountType:
+      name: type
+      in: query
+      schema:
+        type: string
+        enum: [checking, savings, investment, credit, loan]
+    TransactionStartDate:
+      name: start_date
+      in: query
+      schema:
+        type: string
+        format: date
+    TransactionEndDate:
+      name: end_date
+      in: query
+      schema:
+        type: string
+        format: date
+    TransactionAccountId:
+      name: account_id
+      in: query
+      schema:
+        type: string
+    TransactionCategory:
+      name: category
+      in: query
+      schema:
+        type: string
+    TransactionSort:
+      name: sort
+      in: query
+      schema:
+        type: string
+        default: date
+      description: Sort field for transactions. Results sorted by date descending (newest first).
+    HoldingSecurityType:
+      name: security_type
+      in: query
+      schema:
+        type: string
+  responses:
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: 404
+              message: Connection not found
+              type: invalid_request
+              request_id: 7c1d45a4-5f44-4a2a-8c3c-15c9a6f2d0a1
+  schemas:
+    App:
+      type: object
+      description: A registered tenant application
+      required: [id, name, created_at]
+      properties:
+        id:
+          type: string
+          description: Unique app identifier (e.g., "app_clearmoney")
+          example: app_clearmoney
+        name:
+          type: string
+          description: Display name of the app
+          example: ClearMoney
+        webhook_url:
+          type:
+            - string
+            - "null"
+          format: uri
+          description: Default webhook URL for this app
+        created_at:
+          type: string
+          format: date-time
+    AppWithApiKey:
+      allOf:
+        - $ref: '#/components/schemas/App'
+        - type: object
+          required: [api_key]
+          properties:
+            api_key:
+              type: string
+              description: The API key for this app. Only returned on creation.
+              example: cgk_live_abc123xyz
+    AppCreateRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: Display name of the app
+          minLength: 1
+          maxLength: 100
+        webhook_url:
+          type:
+            - string
+            - "null"
+          format: uri
+          description: Default webhook URL for this app
+    AppUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Display name of the app
+          minLength: 1
+          maxLength: 100
+        webhook_url:
+          type:
+            - string
+            - "null"
+          format: uri
+          description: Default webhook URL for this app
+    ApiKeyResponse:
+      type: object
+      required: [api_key]
+      properties:
+        api_key:
+          type: string
+          description: The new API key
+          example: cgk_live_newkey456
+    Provenance:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: Provider name
+          example: plaid
+        provider_item_id:
+          type:
+            - string
+            - "null"
+          description: Provider connection/item identifier
+        provider_account_id:
+          type:
+            - string
+            - "null"
+          description: Provider account identifier
+        last_refreshed_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        sync_status:
+          type: string
+          enum: [synced, syncing, stale, error]
+    User:
+      allOf:
+        - $ref: '#/components/schemas/Provenance'
+        - type: object
+          required: [id, app_id, external_user_id, created_at]
+          properties:
+            id:
+              type: string
+              description: Platform-generated user ID
+            app_id:
+              type: string
+              description: The app this user belongs to (derived from API key)
+              example: app_clearmoney
+            external_user_id:
+              type: string
+              description: App's identifier for this user (unique within the app)
+            email:
+              type:
+                - string
+                - "null"
+              format: email
+            created_at:
+              type: string
+              format: date-time
+    UserCreateRequest:
+      type: object
+      required: [external_user_id]
+      properties:
+        external_user_id:
+          type: string
+        email:
+          type:
+            - string
+            - "null"
+          format: email
+    UserUpdateRequest:
+      type: object
+      properties:
+        email:
+          type:
+            - string
+            - "null"
+          format: email
+    Consent:
+      allOf:
+        - $ref: '#/components/schemas/Provenance'
+        - type: object
+          required: [id, app_id, user_id, status, scopes, created_at]
+          properties:
+            id:
+              type: string
+            app_id:
+              type: string
+              description: The app this consent belongs to
+            user_id:
+              type: string
+            status:
+              type: string
+              enum: [active, revoked, expired]
+            scopes:
+              type: array
+              items:
+                type: string
+            created_at:
+              type: string
+              format: date-time
+            expires_at:
+              type:
+                - string
+                - "null"
+              format: date-time
+            revoked_at:
+              type:
+                - string
+                - "null"
+              format: date-time
+    ConsentCreateRequest:
+      type: object
+      required: [scopes]
+      properties:
+        scopes:
+          type: array
+          items:
+            type: string
+        expires_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+    ConsentRevokeRequest:
+      type: object
+      properties:
+        reason:
+          type:
+            - string
+            - "null"
+    LinkTokenCreateRequest:
+      type: object
+      required: [user_id]
+      properties:
+        user_id:
+          type: string
+        redirect_uri:
+          type:
+            - string
+            - "null"
+          format: uri
+    LinkTokenResponse:
+      type: object
+      required: [link_token, expires_at]
+      properties:
+        link_token:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+    Connection:
+      allOf:
+        - $ref: '#/components/schemas/Provenance'
+        - type: object
+          required: [id, user_id, institution_id, status, created_at]
+          properties:
+            id:
+              type: string
+            user_id:
+              type: string
+            institution_id:
+              type: string
+            status:
+              type: string
+              enum: [active, error, disconnected, pending]
+            created_at:
+              type: string
+              format: date-time
+            last_error:
+              type:
+                - string
+                - "null"
+    ConnectionCreateRequest:
+      type: object
+      required: [user_id, public_token]
+      properties:
+        user_id:
+          type: string
+        public_token:
+          type: string
+    Institution:
+      allOf:
+        - $ref: '#/components/schemas/Provenance'
+        - type: object
+          required: [id, name, country, supported_products]
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            country:
+              type: string
+            supported_products:
+              type: array
+              items:
+                type: string
+    Account:
+      allOf:
+        - $ref: '#/components/schemas/Provenance'
+        - type: object
+          required: [id, connection_id, name, type, currency]
+          properties:
+            id:
+              type: string
+            connection_id:
+              type: string
+            name:
+              type: string
+            type:
+              type: string
+              enum: [checking, savings, investment, credit, loan]
+            subtype:
+              type:
+                - string
+                - "null"
+            currency:
+              type: string
+            mask:
+              type:
+                - string
+                - "null"
+    Balance:
+      allOf:
+        - $ref: '#/components/schemas/Provenance'
+        - type: object
+          required: [account_id, current, currency]
+          properties:
+            account_id:
+              type: string
+            available:
+              type:
+                - number
+                - "null"
+            current:
+              type: number
+            currency:
+              type: string
+            as_of:
+              type:
+                - string
+                - "null"
+              format: date-time
+    Transaction:
+      allOf:
+        - $ref: '#/components/schemas/Provenance'
+        - type: object
+          required: [id, account_id, amount, currency, date, description]
+          properties:
+            id:
+              type: string
+            account_id:
+              type: string
+            amount:
+              type: number
+            currency:
+              type: string
+            date:
+              type: string
+              format: date
+            description:
+              type: string
+            category:
+              type:
+                - string
+                - "null"
+            pending:
+              type: boolean
+    Holding:
+      allOf:
+        - $ref: '#/components/schemas/Provenance'
+        - type: object
+          required: [id, account_id, security_id, quantity]
+          properties:
+            id:
+              type: string
+            account_id:
+              type: string
+            security_id:
+              type: string
+            quantity:
+              type: number
+            cost_basis:
+              type:
+                - number
+                - "null"
+            market_value:
+              type:
+                - number
+                - "null"
+            currency:
+              type:
+                - string
+                - "null"
+    Security:
+      allOf:
+        - $ref: '#/components/schemas/Provenance'
+        - type: object
+          required: [id, name, type]
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            ticker:
+              type:
+                - string
+                - "null"
+            type:
+              type: string
+              enum: [stock, bond, mutual_fund, etf, option, crypto, other]
+            currency:
+              type:
+                - string
+                - "null"
+    Liability:
+      allOf:
+        - $ref: '#/components/schemas/Provenance'
+        - type: object
+          required: [id, account_id, type, balance]
+          properties:
+            id:
+              type: string
+            account_id:
+              type: string
+            type:
+              type: string
+              enum: [credit_card, mortgage, student_loan, auto_loan, personal_loan, other]
+            balance:
+              type: number
+            interest_rate:
+              type:
+                - number
+                - "null"
+            due_date:
+              type:
+                - string
+                - "null"
+              format: date
+    SyncStatus:
+      type: object
+      required: [connection_id, status]
+      properties:
+        connection_id:
+          type: string
+        status:
+          type: string
+          enum: [synced, syncing, stale, error]
+        last_successful_sync:
+          type:
+            - string
+            - "null"
+          format: date-time
+        next_refresh_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+    Coverage:
+      allOf:
+        - $ref: '#/components/schemas/Provenance'
+        - type: object
+          required: [data_freshness_minutes, coverage_ratio]
+          properties:
+            data_freshness_minutes:
+              type: integer
+            coverage_ratio:
+              type: number
+              minimum: 0
+              maximum: 1
+    WebhookSubscription:
+      type: object
+      required: [id, url, events, created_at]
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookEventType'
+        secret:
+          type: string
+          description: The webhook secret used to sign payloads. Only returned on creation.
+          writeOnly: true
+        created_at:
+          type: string
+          format: date-time
+    WebhookSubscriptionCreateRequest:
+      type: object
+      required: [url, events]
+      properties:
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookEventType'
+    ProviderWebhookEvent:
+      type: object
+      required: [id, type, created_at, data]
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/WebhookEventType'
+        created_at:
+          type: string
+          format: date-time
+        data:
+          type: object
+          description: Provider-specific payload
+    WebhookEventType:
+      type: string
+      enum:
+        - connection.created
+        - connection.updated
+        - connection.error
+        - connection.removed
+        - transactions.sync_completed
+        - transactions.new
+        - transactions.updated
+        - transactions.removed
+        - accounts.sync_completed
+        - holdings.sync_completed
+        - liabilities.sync_completed
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, type]
+          properties:
+            code:
+              type: integer
+              example: 404
+            message:
+              type: string
+              example: Connection not found
+            type:
+              type: string
+              enum: [invalid_request, authentication_error, rate_limit, api_error, provider_error]
+            request_id:
+              type: string
+              format: uuid
+    PaginatedApps:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/App'
+    PaginatedConsents:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Consent'
+    PaginatedConnections:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Connection'
+    PaginatedInstitutions:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Institution'
+    PaginatedAccounts:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Account'
+    PaginatedBalances:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Balance'
+    PaginatedTransactions:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Transaction'
+    PaginatedHoldings:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Holding'
+    PaginatedSecurities:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Security'
+    PaginatedLiabilities:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Liability'
+    PaginatedWebhookSubscriptions:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/WebhookSubscription'
+    Pagination:
+      type: object
+      required: [data, next_cursor, has_more]
+      properties:
+        data:
+          type: array
+          items: {}
+        next_cursor:
+          type:
+            - string
+            - "null"
+        has_more:
+          type: boolean
