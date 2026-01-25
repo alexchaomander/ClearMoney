@@ -467,39 +467,48 @@ Event 1: context.snapshot (id: evt_cs_001)
 
 ```typescript
 interface CausalGraph {
-  trace_id: string;
-  root_events: DecisionTraceEvent[];  // Events with no parent
-  edges: Map<string, string[]>;       // parent_id -> child_ids
+  traceId: string;
+  rootEvents: DecisionTraceEvent[];  // Events with no parent
+  edges: Map<string, string[]>;      // parentId -> childIds
 }
 
 function buildCausalGraph(events: DecisionTraceEvent[]): CausalGraph {
   const edges = new Map<string, string[]>();
-  const root_events: DecisionTraceEvent[] = [];
+  const rootEvents: DecisionTraceEvent[] = [];
 
   for (const event of events) {
     if (!event.parent_event_id) {
-      root_events.push(event);
+      rootEvents.push(event);
+      continue;
+    }
+
+    const existingChildren = edges.get(event.parent_event_id);
+    if (existingChildren) {
+      existingChildren.push(event.id);
     } else {
-      const children = edges.get(event.parent_event_id) || [];
-      children.push(event.id);
-      edges.set(event.parent_event_id, children);
+      edges.set(event.parent_event_id, [event.id]);
     }
   }
 
   return {
-    trace_id: events[0]?.trace_id ?? '',
-    root_events,
+    traceId: events[0]?.trace_id ?? '',
+    rootEvents,
     edges,
   };
 }
 
-// Reconstruct full trace
-async function getTraceEvents(traceId: string, appId: string): Promise<DecisionTraceEvent[]> {
-  return db.query(`
+// Reconstruct full trace for a given recommendation journey
+async function getTraceEvents(
+  traceId: string,
+  appId: string
+): Promise<DecisionTraceEvent[]> {
+  const result = await db.query<DecisionTraceEvent>(`
     SELECT * FROM decision_trace_events
     WHERE trace_id = $1 AND app_id = $2
     ORDER BY timestamp ASC
   `, [traceId, appId]);
+
+  return result.rows;
 }
 ```
 
