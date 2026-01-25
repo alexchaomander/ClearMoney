@@ -9,6 +9,11 @@ import { CoverageGap } from "../mocks/platform-mocks";
 // Shows what data is missing and why it matters
 // ============================================================================
 
+// Each coverage gap reduces insight accuracy by this percentage
+const ACCURACY_IMPACT_PER_GAP = 5;
+// Maximum total accuracy impact from coverage gaps
+const MAX_ACCURACY_IMPACT = 15;
+
 interface CoverageGapsCardProps {
   gaps: CoverageGap[];
 }
@@ -196,7 +201,7 @@ export function CoverageGapsCard({ gaps }: CoverageGapsCardProps) {
         <p className="text-xs" style={{ color: colors.textMuted }}>
           Resolving these gaps will improve your recommendation accuracy by up to{' '}
           <span className="font-semibold" style={{ color: colors.accent }}>
-            {Math.min(gaps.length * 5, 15)}%
+            {Math.min(gaps.length * ACCURACY_IMPACT_PER_GAP, MAX_ACCURACY_IMPACT)}%
           </span>
         </p>
       </div>

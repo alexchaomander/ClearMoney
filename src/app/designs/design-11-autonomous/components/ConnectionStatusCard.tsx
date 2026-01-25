@@ -1,6 +1,6 @@
 "use client";
 
-import { Link2, AlertCircle, RefreshCw, Trash2, Plus, CheckCircle2 } from "lucide-react";
+import { Link2, AlertCircle, RefreshCw, Plus, CheckCircle2 } from "lucide-react";
 import { colors } from "../shared";
 import { MockConnection, formatRelativeTime } from "../mocks/platform-mocks";
 
@@ -14,7 +14,6 @@ interface ConnectionStatusCardProps {
   insightAccuracy: number;
   onAddConnection: () => void;
   onReconnect: (connectionId: string) => void;
-  onRemove: (connectionId: string) => void;
 }
 
 function getStatusConfig(status: MockConnection['status']) {
@@ -51,7 +50,6 @@ export function ConnectionStatusCard({
   insightAccuracy,
   onAddConnection,
   onReconnect,
-  onRemove,
 }: ConnectionStatusCardProps) {
   const activeConnections = connections.filter(c => c.status === 'active');
   const problemConnections = connections.filter(c => c.status !== 'active');
