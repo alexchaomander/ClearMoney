@@ -293,8 +293,8 @@ paths:
               user_id: usr_001
               redirect_uri: https://app.example.com/callback
       responses:
-        '200':
-          description: Link token
+        '201':
+          description: Link token created
           content:
             application/json:
               schema:
@@ -976,17 +976,21 @@ paths:
                 $ref: '#/components/schemas/Coverage'
               example:
                 data_freshness_minutes: 15
-                last_refreshed_at: '2024-01-03T10:00:00Z'
                 coverage_ratio: 0.98
                 provider: fdx
                 provider_item_id: null
                 provider_account_id: null
-                last_refreshed_at_provider: '2024-01-03T10:00:00Z'
+                last_refreshed_at: '2024-01-03T10:00:00Z'
                 confidence: 0.97
                 sync_status: synced
   /v1/webhooks/provider:
     post:
       summary: Receive provider webhook (internal)
+      description: |
+        Internal endpoint for receiving webhooks from financial data providers.
+        Authentication is handled via provider-specific signature verification
+        (e.g., X-Plaid-Signature header) in application logic, not via API key or JWT.
+      security: []
       requestBody:
         required: true
         content:
@@ -1056,11 +1060,10 @@ paths:
                     url: https://app.example.com/webhooks
                     events:
                       - connection.updated
-                    secret: whsec_123
                     created_at: '2024-01-03T10:00:00Z'
                 next_cursor: null
                 has_more: false
-  /v1/webhook-subscriptions/{id}:
+  /v1/webhook-subscriptions/{webhook_subscription_id}:
     delete:
       summary: Delete a webhook subscription
       security:
@@ -1120,7 +1123,7 @@ components:
       schema:
         type: string
     WebhookSubscriptionId:
-      name: id
+      name: webhook_subscription_id
       in: path
       required: true
       schema:
@@ -1128,65 +1131,56 @@ components:
     Cursor:
       name: cursor
       in: query
-      required: false
       schema:
-        type: string
-        nullable: true
+        type:
+          - string
+          - "null"
     Limit:
       name: limit
       in: query
-      required: false
       schema:
         type: integer
         default: 50
-        maximum: 200
         minimum: 1
+        maximum: 200
     AccountType:
       name: type
       in: query
-      required: false
       schema:
         type: string
         enum: [checking, savings, investment, credit, loan]
     TransactionStartDate:
       name: start_date
       in: query
-      required: false
       schema:
         type: string
         format: date
     TransactionEndDate:
       name: end_date
       in: query
-      required: false
       schema:
         type: string
         format: date
     TransactionAccountId:
       name: account_id
       in: query
-      required: false
       schema:
         type: string
     TransactionCategory:
       name: category
       in: query
-      required: false
       schema:
         type: string
     TransactionSort:
       name: sort
       in: query
-      required: false
       schema:
         type: string
-        enum: [date]
         default: date
-      description: Sort field, default descending by date.
+      description: Sort field for transactions. Results sorted by date descending (newest first).
     HoldingSecurityType:
       name: security_type
       in: query
-      required: false
       schema:
         type: string
   responses:
@@ -1211,17 +1205,20 @@ components:
           description: Provider name
           example: plaid
         provider_item_id:
-          type: string
-          nullable: true
+          type:
+            - string
+            - "null"
           description: Provider connection/item identifier
         provider_account_id:
-          type: string
-          nullable: true
+          type:
+            - string
+            - "null"
           description: Provider account identifier
         last_refreshed_at:
-          type: string
+          type:
+            - string
+            - "null"
           format: date-time
-          nullable: true
         confidence:
           type: number
           minimum: 0
@@ -1240,9 +1237,10 @@ components:
             external_user_id:
               type: string
             email:
-              type: string
+              type:
+                - string
+                - "null"
               format: email
-              nullable: true
             created_at:
               type: string
               format: date-time
@@ -1253,16 +1251,18 @@ components:
         external_user_id:
           type: string
         email:
-          type: string
+          type:
+            - string
+            - "null"
           format: email
-          nullable: true
     UserUpdateRequest:
       type: object
       properties:
         email:
-          type: string
+          type:
+            - string
+            - "null"
           format: email
-          nullable: true
     Consent:
       allOf:
         - $ref: '#/components/schemas/Provenance'
@@ -1284,13 +1284,15 @@ components:
               type: string
               format: date-time
             expires_at:
-              type: string
+              type:
+                - string
+                - "null"
               format: date-time
-              nullable: true
             revoked_at:
-              type: string
+              type:
+                - string
+                - "null"
               format: date-time
-              nullable: true
     ConsentCreateRequest:
       type: object
       required: [scopes]
@@ -1300,15 +1302,17 @@ components:
           items:
             type: string
         expires_at:
-          type: string
+          type:
+            - string
+            - "null"
           format: date-time
-          nullable: true
     ConsentRevokeRequest:
       type: object
       properties:
         reason:
-          type: string
-          nullable: true
+          type:
+            - string
+            - "null"
     LinkTokenCreateRequest:
       type: object
       required: [user_id]
@@ -1316,9 +1320,10 @@ components:
         user_id:
           type: string
         redirect_uri:
-          type: string
+          type:
+            - string
+            - "null"
           format: uri
-          nullable: true
     LinkTokenResponse:
       type: object
       required: [link_token, expires_at]
@@ -1347,8 +1352,9 @@ components:
               type: string
               format: date-time
             last_error:
-              type: string
-              nullable: true
+              type:
+                - string
+                - "null"
     ConnectionCreateRequest:
       type: object
       required: [user_id, public_token]
@@ -1389,13 +1395,15 @@ components:
               type: string
               enum: [checking, savings, investment, credit, loan]
             subtype:
-              type: string
-              nullable: true
+              type:
+                - string
+                - "null"
             currency:
               type: string
             mask:
-              type: string
-              nullable: true
+              type:
+                - string
+                - "null"
     Balance:
       allOf:
         - $ref: '#/components/schemas/Provenance'
@@ -1405,16 +1413,18 @@ components:
             account_id:
               type: string
             available:
-              type: number
-              nullable: true
+              type:
+                - number
+                - "null"
             current:
               type: number
             currency:
               type: string
             as_of:
-              type: string
+              type:
+                - string
+                - "null"
               format: date-time
-              nullable: true
     Transaction:
       allOf:
         - $ref: '#/components/schemas/Provenance'
@@ -1435,8 +1445,9 @@ components:
             description:
               type: string
             category:
-              type: string
-              nullable: true
+              type:
+                - string
+                - "null"
             pending:
               type: boolean
     Holding:
@@ -1454,14 +1465,17 @@ components:
             quantity:
               type: number
             cost_basis:
-              type: number
-              nullable: true
+              type:
+                - number
+                - "null"
             market_value:
-              type: number
-              nullable: true
+              type:
+                - number
+                - "null"
             currency:
-              type: string
-              nullable: true
+              type:
+                - string
+                - "null"
     Security:
       allOf:
         - $ref: '#/components/schemas/Provenance'
@@ -1473,14 +1487,16 @@ components:
             name:
               type: string
             ticker:
-              type: string
-              nullable: true
+              type:
+                - string
+                - "null"
             type:
               type: string
               enum: [stock, bond, mutual_fund, etf, option, crypto, other]
             currency:
-              type: string
-              nullable: true
+              type:
+                - string
+                - "null"
     Liability:
       allOf:
         - $ref: '#/components/schemas/Provenance'
@@ -1497,12 +1513,14 @@ components:
             balance:
               type: number
             interest_rate:
-              type: number
-              nullable: true
+              type:
+                - number
+                - "null"
             due_date:
-              type: string
+              type:
+                - string
+                - "null"
               format: date
-              nullable: true
     SyncStatus:
       type: object
       required: [connection_id, status]
@@ -1513,13 +1531,15 @@ components:
           type: string
           enum: [synced, syncing, stale, error]
         last_successful_sync:
-          type: string
+          type:
+            - string
+            - "null"
           format: date-time
-          nullable: true
         next_refresh_at:
-          type: string
+          type:
+            - string
+            - "null"
           format: date-time
-          nullable: true
     Coverage:
       allOf:
         - $ref: '#/components/schemas/Provenance'
@@ -1528,21 +1548,13 @@ components:
           properties:
             data_freshness_minutes:
               type: integer
-            last_refreshed_at:
-              type: string
-              format: date-time
-              nullable: true
             coverage_ratio:
               type: number
               minimum: 0
               maximum: 1
-            last_refreshed_at_provider:
-              type: string
-              format: date-time
-              nullable: true
     WebhookSubscription:
       type: object
-      required: [id, url, events, secret, created_at]
+      required: [id, url, events, created_at]
       properties:
         id:
           type: string
@@ -1555,6 +1567,8 @@ components:
             $ref: '#/components/schemas/WebhookEventType'
         secret:
           type: string
+          description: The webhook secret used to sign payloads. Only returned on creation.
+          writeOnly: true
         created_at:
           type: string
           format: date-time
@@ -1715,7 +1729,8 @@ components:
           type: array
           items: {}
         next_cursor:
-          type: string
-          nullable: true
+          type:
+            - string
+            - "null"
         has_more:
           type: boolean
