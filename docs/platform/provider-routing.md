@@ -107,7 +107,7 @@ async function selectProvider(context: RoutingContext): Promise<RoutingDecision>
   // Step 2: Check for existing healthy connection (prefer continuity)
   if (context.existingConnectionProvider) {
     const existingHealth = await getProviderHealth(context.existingConnectionProvider);
-    if (existingHealth.score >= 70 && supportedProviders.includes(context.existingConnectionProvider)) {
+    if (existingHealth.score >= HEALTH_THRESHOLDS.healthy && supportedProviders.includes(context.existingConnectionProvider)) {
       return buildDecision({
         selected: context.existingConnectionProvider,
         reason: 'existing_connection',
@@ -157,8 +157,8 @@ async function selectProvider(context: RoutingContext): Promise<RoutingDecision>
       const precedenceA = DEFAULT_PRECEDENCE.indexOf(a.provider);
       const precedenceB = DEFAULT_PRECEDENCE.indexOf(b.provider);
 
-      // If health scores differ significantly (>10 points), prefer healthier
-      if (Math.abs(a.healthScore - b.healthScore) > 10) {
+      // If health scores differ significantly, prefer healthier
+      if (Math.abs(a.healthScore - b.healthScore) > SIGNIFICANT_HEALTH_SCORE_DIFFERENCE) {
         return b.healthScore - a.healthScore;
       }
 
@@ -174,16 +174,40 @@ async function selectProvider(context: RoutingContext): Promise<RoutingDecision>
   const selected = healthySorted[0].provider;
   const fallbackChain = healthySorted.slice(1).map(c => c.provider);
 
+  // Determine the reason for selection
+  let reason: RoutingReason;
+  if (healthySorted.length === 1) {
+    reason = 'only_option';
+  } else {
+    // Check if we chose based on health (not default precedence)
+    const selectedPrecedence = DEFAULT_PRECEDENCE.indexOf(selected);
+    const nextBestPrecedence = DEFAULT_PRECEDENCE.indexOf(healthySorted[1].provider);
+    const healthDiff = healthySorted[0].healthScore - healthySorted[1].healthScore;
+
+    if (selectedPrecedence > nextBestPrecedence && healthDiff > SIGNIFICANT_HEALTH_SCORE_DIFFERENCE) {
+      // Selected a lower-precedence provider due to better health
+      reason = 'health_based';
+    } else {
+      reason = 'default_precedence';
+    }
+  }
+
   return buildDecision({
     selected,
-    reason: healthySorted.length === 1 ? 'only_option' : 'default_precedence',
+    reason,
     candidates,
     fallbackChain,
     decisionId,
   });
 }
 
+// Routing configuration constants
 const DEFAULT_PRECEDENCE: ProviderType[] = ['fdx', 'plaid', 'mx', 'finicity'];
+const SIGNIFICANT_HEALTH_SCORE_DIFFERENCE = 10;  // Points difference to prefer healthier provider
+const HEALTH_THRESHOLDS = {
+  healthy: 80,
+  degraded: 50,
+};
 ```
 
 ### Fallback Execution
@@ -202,11 +226,12 @@ async function executeWithFallback<T>(
   let lastError: Error | null = null;
   let attemptCount = 0;
   const maxTotalAttempts = 3;
+  const maxRateLimitWaitSeconds = 60;
 
-  for (const provider of providers) {
-    if (attemptCount >= maxTotalAttempts) {
-      break;
-    }
+  let providerIndex = 0;
+
+  while (attemptCount < maxTotalAttempts && providerIndex < providers.length) {
+    const provider = providers[providerIndex];
 
     try {
       attemptCount++;
@@ -239,25 +264,30 @@ async function executeWithFallback<T>(
       }
 
       // Handle rate limiting
-      if (error.code === 'RATE_LIMITED' && error.retryAfter > 60) {
-        continue;  // Skip to next provider if wait is too long
-      }
-
-      // For 5xx errors, retry once with same provider
-      if (is5xxError(error) && attemptCount < maxTotalAttempts) {
-        await sleep(1000);  // 1 second delay
-        try {
-          attemptCount++;
-          return await request.execute(provider);
-        } catch (retryError) {
-          lastError = retryError;
-          // Continue to next provider
+      if (error.code === 'RATE_LIMITED') {
+        if (error.retryAfter <= maxRateLimitWaitSeconds) {
+          // Wait and retry same provider for short delays
+          await sleep(error.retryAfter * 1000);
+          continue;  // Retry same provider (don't increment providerIndex)
+        } else {
+          // Failover to next provider for long waits
+          providerIndex++;
+          continue;
         }
       }
+
+      // For 5xx errors, retry once with same provider before failover
+      if (is5xxError(error) && attemptCount < maxTotalAttempts) {
+        await sleep(1000);  // 1 second delay
+        continue;  // Retry same provider
+      }
+
+      // For other retryable errors (timeout, etc.), failover immediately
+      providerIndex++;
     }
   }
 
-  // All providers failed
+  // All providers failed or attempts exhausted
   throw new ProviderUnavailableError(
     'All providers failed',
     lastError,
@@ -345,8 +375,12 @@ async function getInstitutionOverride(institutionId: string): Promise<RoutingOve
 
 function matchesPattern(institutionId: string, pattern: string): boolean {
   // Convert SQL LIKE pattern to regex
+  // First, escape all regex special characters except % and _
+  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+
+  // Then convert SQL LIKE wildcards to regex equivalents
   const regex = new RegExp(
-    '^' + pattern
+    '^' + escaped
       .replace(/%/g, '.*')
       .replace(/_/g, '.')
     + '$'
@@ -453,25 +487,49 @@ interface HealthScore {
   calculatedAt: string;
 }
 
+// Health scoring configuration constants
+const HEALTH_SCORING_CONFIG = {
+  // Component weights (must sum to 1.0)
+  weights: {
+    successRate: 0.4,
+    latency: 0.3,
+    freshness: 0.2,
+    errorDiversity: 0.1,
+  },
+
+  // Latency scoring parameters
+  latency: {
+    optimalMs: 500,           // Score 100 if p95 latency <= this
+    maxMs: 5000,              // Score 0 if p95 latency >= this
+  },
+
+  // Error diversity scoring
+  errorDiversity: {
+    penaltyPerErrorType: 15,  // Points deducted per distinct error type
+  },
+};
+
 function calculateHealthScore(metrics: HealthMetrics): number {
-  // Success rate: 40% weight
-  const successComponent = metrics.successRate * 0.4;
+  const { weights, latency, errorDiversity } = HEALTH_SCORING_CONFIG;
 
-  // Latency score: 30% weight
-  // 100 if p95 < 500ms, linear decrease to 0 at 5000ms
+  // Success rate component
+  const successComponent = metrics.successRate * weights.successRate;
+
+  // Latency score: 100 if p95 < optimalMs, linear decrease to 0 at maxMs
+  const latencyRange = latency.maxMs - latency.optimalMs;
   const latencyScore = Math.max(0, Math.min(100,
-    100 - ((metrics.p95LatencyMs - 500) / 45)
+    100 - ((metrics.p95LatencyMs - latency.optimalMs) / latencyRange) * 100
   ));
-  const latencyComponent = latencyScore * 0.3;
+  const latencyComponent = latencyScore * weights.latency;
 
-  // Freshness score: 20% weight
-  const freshnessComponent = metrics.syncFreshnessRate * 0.2;
+  // Freshness score component
+  const freshnessComponent = metrics.syncFreshnessRate * weights.freshness;
 
-  // Error diversity penalty: 10% weight
-  // Penalize providers with many different error types (indicates instability)
-  // 0 errors = 100, each error type reduces by 15, min 0
-  const errorDiversityScore = Math.max(0, 100 - (metrics.distinctErrorTypes * 15));
-  const errorComponent = errorDiversityScore * 0.1;
+  // Error diversity penalty: penalize providers with many distinct error types
+  const errorDiversityScore = Math.max(0,
+    100 - (metrics.distinctErrorTypes * errorDiversity.penaltyPerErrorType)
+  );
+  const errorComponent = errorDiversityScore * weights.errorDiversity;
 
   return Math.round(successComponent + latencyComponent + freshnessComponent + errorComponent);
 }
