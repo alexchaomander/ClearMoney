@@ -1,16 +1,186 @@
 openapi: 3.1.0
 info:
-  title: ClearMoney Platform API
+  title: Context Graph API
   version: 1.0.0
   description: |
-    Provider-agnostic financial connectivity platform API.
+    Multi-tenant financial connectivity platform API (Context Graph for Finance).
+
+    This platform provides provider-agnostic access to financial data with
+    built-in data normalization, consent management, and decision tracing.
+
+    ## Multi-Tenancy Model
+    - **Apps**: Each consuming application (tenant) is registered as an App
+    - **API Keys**: Each app has its own API key for authentication
+    - **Users**: Users are scoped per app (same external_user_id can exist in multiple apps)
+    - **Data Isolation**: All data is isolated per app
 servers:
-  - url: https://api.clearmoney.example.com
+  - url: https://api.contextgraph.example.com
     description: Production
 security:
   - ApiKeyAuth: []
   - BearerAuth: []
 paths:
+  /v1/apps:
+    post:
+      summary: Register a new app (admin only)
+      description: |
+        Register a new tenant application on the platform.
+        Returns the app details and a newly generated API key.
+        Only platform administrators can create apps.
+      security:
+        - AdminApiKeyAuth: []
+      tags:
+        - Apps
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppCreateRequest'
+            example:
+              name: ClearMoney
+              webhook_url: https://api.clearmoney.com/webhooks
+      responses:
+        '201':
+          description: App created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppWithApiKey'
+              example:
+                id: app_clearmoney
+                name: ClearMoney
+                webhook_url: https://api.clearmoney.com/webhooks
+                created_at: '2024-01-01T12:00:00Z'
+                api_key: cgk_live_abc123xyz
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+    get:
+      summary: List all apps (admin only)
+      description: List all registered tenant applications.
+      security:
+        - AdminApiKeyAuth: []
+      tags:
+        - Apps
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Apps list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedApps'
+              example:
+                data:
+                  - id: app_clearmoney
+                    name: ClearMoney
+                    webhook_url: https://api.clearmoney.com/webhooks
+                    created_at: '2024-01-01T12:00:00Z'
+                  - id: app_acme
+                    name: Acme Finance
+                    webhook_url: https://api.acme.com/hooks
+                    created_at: '2024-02-15T10:00:00Z'
+                next_cursor: null
+                has_more: false
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/apps/{app_id}:
+    get:
+      summary: Get an app (admin only)
+      description: Get details of a registered tenant application.
+      security:
+        - AdminApiKeyAuth: []
+      tags:
+        - Apps
+      parameters:
+        - $ref: '#/components/parameters/AppId'
+      responses:
+        '200':
+          description: App details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/App'
+              example:
+                id: app_clearmoney
+                name: ClearMoney
+                webhook_url: https://api.clearmoney.com/webhooks
+                created_at: '2024-01-01T12:00:00Z'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      summary: Update an app (admin only)
+      description: Update a registered tenant application.
+      security:
+        - AdminApiKeyAuth: []
+      tags:
+        - Apps
+      parameters:
+        - $ref: '#/components/parameters/AppId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppUpdateRequest'
+            example:
+              webhook_url: https://api.clearmoney.com/v2/webhooks
+      responses:
+        '200':
+          description: App updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/App'
+              example:
+                id: app_clearmoney
+                name: ClearMoney
+                webhook_url: https://api.clearmoney.com/v2/webhooks
+                created_at: '2024-01-01T12:00:00Z'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      summary: Delete an app (admin only)
+      description: |
+        Delete a tenant application and all associated data.
+        This is a destructive operation and cannot be undone.
+      security:
+        - AdminApiKeyAuth: []
+      tags:
+        - Apps
+      parameters:
+        - $ref: '#/components/parameters/AppId'
+      responses:
+        '204':
+          description: App deleted
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/apps/{app_id}/rotate-key:
+    post:
+      summary: Rotate app API key (admin only)
+      description: |
+        Generate a new API key for the app. The old key is immediately invalidated.
+      security:
+        - AdminApiKeyAuth: []
+      tags:
+        - Apps
+      parameters:
+        - $ref: '#/components/parameters/AppId'
+      responses:
+        '200':
+          description: New API key generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyResponse'
+              example:
+                api_key: cgk_live_newkey456
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
   /v1/users:
     post:
       summary: Create a user
@@ -34,6 +204,7 @@ paths:
                 $ref: '#/components/schemas/User'
               example:
                 id: usr_001
+                app_id: app_clearmoney
                 external_user_id: user_123
                 email: user@example.com
                 created_at: '2024-01-01T12:00:00Z'
@@ -62,6 +233,7 @@ paths:
                 $ref: '#/components/schemas/User'
               example:
                 id: usr_001
+                app_id: app_clearmoney
                 external_user_id: user_123
                 email: user@example.com
                 created_at: '2024-01-01T12:00:00Z'
@@ -96,6 +268,7 @@ paths:
                 $ref: '#/components/schemas/User'
               example:
                 id: usr_001
+                app_id: app_clearmoney
                 external_user_id: user_123
                 email: new-email@example.com
                 created_at: '2024-01-01T12:00:00Z'
@@ -145,6 +318,7 @@ paths:
                 $ref: '#/components/schemas/Consent'
               example:
                 id: con_001
+                app_id: app_clearmoney
                 user_id: usr_001
                 status: active
                 scopes:
@@ -179,6 +353,7 @@ paths:
               example:
                 data:
                   - id: con_001
+                    app_id: app_clearmoney
                     user_id: usr_001
                     status: active
                     scopes:
@@ -213,6 +388,7 @@ paths:
                 $ref: '#/components/schemas/Consent'
               example:
                 id: con_001
+                app_id: app_clearmoney
                 user_id: usr_001
                 status: active
                 scopes:
@@ -252,6 +428,7 @@ paths:
                 $ref: '#/components/schemas/Consent'
               example:
                 id: con_001
+                app_id: app_clearmoney
                 user_id: usr_001
                 status: revoked
                 scopes:
@@ -1077,15 +1254,29 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
 components:
   securitySchemes:
+    AdminApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Admin-API-Key
+      description: Platform admin API key for app management operations
     ApiKeyAuth:
       type: apiKey
       in: header
       name: X-API-Key
+      description: App-specific API key (scoped to a single tenant app)
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: User JWT token for end-user authenticated requests
   parameters:
+    AppId:
+      name: app_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique app identifier (e.g., "app_clearmoney")
     UserId:
       name: user_id
       in: path
@@ -1197,6 +1388,75 @@ components:
               type: invalid_request
               request_id: 7c1d45a4-5f44-4a2a-8c3c-15c9a6f2d0a1
   schemas:
+    App:
+      type: object
+      description: A registered tenant application
+      required: [id, name, created_at]
+      properties:
+        id:
+          type: string
+          description: Unique app identifier (e.g., "app_clearmoney")
+          example: app_clearmoney
+        name:
+          type: string
+          description: Display name of the app
+          example: ClearMoney
+        webhook_url:
+          type:
+            - string
+            - "null"
+          format: uri
+          description: Default webhook URL for this app
+        created_at:
+          type: string
+          format: date-time
+    AppWithApiKey:
+      allOf:
+        - $ref: '#/components/schemas/App'
+        - type: object
+          required: [api_key]
+          properties:
+            api_key:
+              type: string
+              description: The API key for this app. Only returned on creation.
+              example: cgk_live_abc123xyz
+    AppCreateRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: Display name of the app
+          minLength: 1
+          maxLength: 100
+        webhook_url:
+          type:
+            - string
+            - "null"
+          format: uri
+          description: Default webhook URL for this app
+    AppUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Display name of the app
+          minLength: 1
+          maxLength: 100
+        webhook_url:
+          type:
+            - string
+            - "null"
+          format: uri
+          description: Default webhook URL for this app
+    ApiKeyResponse:
+      type: object
+      required: [api_key]
+      properties:
+        api_key:
+          type: string
+          description: The new API key
+          example: cgk_live_newkey456
     Provenance:
       type: object
       properties:
@@ -1230,12 +1490,18 @@ components:
       allOf:
         - $ref: '#/components/schemas/Provenance'
         - type: object
-          required: [id, external_user_id, created_at]
+          required: [id, app_id, external_user_id, created_at]
           properties:
             id:
               type: string
+              description: Platform-generated user ID
+            app_id:
+              type: string
+              description: The app this user belongs to (derived from API key)
+              example: app_clearmoney
             external_user_id:
               type: string
+              description: App's identifier for this user (unique within the app)
             email:
               type:
                 - string
@@ -1267,10 +1533,13 @@ components:
       allOf:
         - $ref: '#/components/schemas/Provenance'
         - type: object
-          required: [id, user_id, status, scopes, created_at]
+          required: [id, app_id, user_id, status, scopes, created_at]
           properties:
             id:
               type: string
+            app_id:
+              type: string
+              description: The app this consent belongs to
             user_id:
               type: string
             status:
@@ -1631,6 +1900,15 @@ components:
             request_id:
               type: string
               format: uuid
+    PaginatedApps:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/App'
     PaginatedConsents:
       allOf:
         - $ref: '#/components/schemas/Pagination'
