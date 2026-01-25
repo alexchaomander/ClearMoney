@@ -1120,7 +1120,9 @@ Parallelization:
 
 ---
 
-## Prompt 7 — Sync + Freshness Spec
+## Prompt 7 — Sync + Freshness Spec ✅ COMPLETED
+
+> **Status:** Completed. See `docs/platform/sync-and-freshness.md` for the full sync cadence, freshness scoring, confidence model, and job lifecycle specification.
 
 Role:
 You are designing the data freshness and sync system for real-time financial data.
