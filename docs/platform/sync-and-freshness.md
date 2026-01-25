@@ -53,7 +53,6 @@ Different data types have different volatility and user impact, requiring differ
 
 ```typescript
 function getNextScheduledSync(
-  userId: string,
   dataType: DataType,
   userTimezone: string
 ): Date {
@@ -1025,7 +1024,7 @@ Guidelines for displaying freshness information to end users.
 | Freshness | Badge Text | Color | Icon | Tooltip |
 |-----------|------------|-------|------|---------|
 | Fresh | "Live" | Green (#22c55e) | `✓` | "Updated {relative_time}" |
-| Stale | "Updating..." | Yellow (#eab308) | `⟳` | "Last updated {relative_time}. Refreshing..." |
+| Stale | "Stale" | Yellow (#eab308) | `⚠` | "Last updated {relative_time}. Refresh recommended." |
 | Expired | "Outdated" | Red (#ef4444) | `⚠` | "Data is {age} old. Please reconnect." |
 | Error | "Error" | Red (#ef4444) | `✕` | "{error_message}" |
 | Syncing | "Syncing" | Blue (#3b82f6) | `⟳` (animated) | "Fetching latest data..." |
@@ -1243,12 +1242,31 @@ CREATE TABLE sync_job_history (
   completed_at TIMESTAMPTZ NOT NULL
 ) PARTITION BY RANGE (completed_at);
 
--- Create monthly partitions
+-- Create initial partitions (example)
+-- NOTE: Use pg_partman or a cron job to automatically create future partitions
 CREATE TABLE sync_job_history_2026_01 PARTITION OF sync_job_history
   FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
 
 CREATE TABLE sync_job_history_2026_02 PARTITION OF sync_job_history
   FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
+
+-- Automated partition management (recommended: use pg_partman extension)
+-- Alternative: Run this weekly via cron to create next month's partition
+CREATE OR REPLACE FUNCTION create_next_month_partition()
+RETURNS void AS $$
+DECLARE
+  next_month DATE := date_trunc('month', now()) + INTERVAL '1 month';
+  partition_name TEXT := 'sync_job_history_' || to_char(next_month, 'YYYY_MM');
+  start_date TEXT := to_char(next_month, 'YYYY-MM-DD');
+  end_date TEXT := to_char(next_month + INTERVAL '1 month', 'YYYY-MM-DD');
+BEGIN
+  EXECUTE format(
+    'CREATE TABLE IF NOT EXISTS %I PARTITION OF sync_job_history
+     FOR VALUES FROM (%L) TO (%L)',
+    partition_name, start_date, end_date
+  );
+END;
+$$ LANGUAGE plpgsql;
 
 -- Index for analytics queries
 CREATE INDEX idx_sync_job_history_app_completed
@@ -1290,6 +1308,23 @@ CREATE TRIGGER sync_job_archive
   AFTER UPDATE ON sync_jobs
   FOR EACH ROW
   EXECUTE FUNCTION archive_completed_sync_job();
+
+-- Cleanup archived jobs from sync_jobs table (run hourly via cron)
+-- Keeps sync_jobs table small for efficient worker queries
+CREATE OR REPLACE FUNCTION cleanup_archived_sync_jobs()
+RETURNS INTEGER AS $$
+DECLARE
+  deleted_count INTEGER;
+BEGIN
+  -- Delete completed jobs older than 24 hours (already archived to history)
+  DELETE FROM sync_jobs
+  WHERE status IN ('completed', 'partial', 'failed', 'cancelled')
+    AND completed_at < now() - INTERVAL '24 hours';
+
+  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+  RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Cleanup old pending jobs (jobs stuck in pending for > 1 hour)
 CREATE OR REPLACE FUNCTION cleanup_stuck_sync_jobs()
