@@ -52,40 +52,28 @@ Different data types have different volatility and user impact, requiring differ
 ### Timezone Handling
 
 ```typescript
-function getNextScheduledSync(
-  dataType: DataType,
-  userTimezone: string
-): Date {
+function getNextDailySync(now: DateTime, hour: number): DateTime {
+  const scheduled = now.set({ hour, minute: 0, second: 0, millisecond: 0 });
+  return scheduled <= now ? scheduled.plus({ days: 1 }) : scheduled;
+}
+
+function getNextWeeklySync(now: DateTime, weekday: number, hour: number): DateTime {
+  const scheduled = now.set({ weekday, hour, minute: 0, second: 0, millisecond: 0 });
+  return scheduled <= now ? scheduled.plus({ weeks: 1 }) : scheduled;
+}
+
+function getNextScheduledSync(dataType: DataType, userTimezone: string): Date {
   const now = DateTime.now().setZone(userTimezone);
 
   switch (dataType) {
     case 'transactions':
-      // Next 6 AM in user's timezone
-      let next = now.set({ hour: 6, minute: 0, second: 0, millisecond: 0 });
-      if (next <= now) {
-        next = next.plus({ days: 1 });
-      }
-      return next.toJSDate();
-
+      return getNextDailySync(now, 6).toJSDate();
     case 'holdings':
-      // Next 7 AM in user's timezone
-      let next = now.set({ hour: 7, minute: 0, second: 0, millisecond: 0 });
-      if (next <= now) {
-        next = next.plus({ days: 1 });
-      }
-      return next.toJSDate();
-
+      return getNextDailySync(now, 7).toJSDate();
     case 'liabilities':
-      // Next Sunday at 2 AM in user's timezone
-      let next = now.set({ weekday: 7, hour: 2, minute: 0 });
-      if (next <= now) {
-        next = next.plus({ weeks: 1 });
-      }
-      return next.toJSDate();
-
+      return getNextWeeklySync(now, 7, 2).toJSDate();
     case 'balances':
     default:
-      // 4 hours from now
       return now.plus({ hours: 4 }).toJSDate();
   }
 }
@@ -195,11 +183,19 @@ interface RateLimitConfig {
   burstWindowSeconds: number;  // Short window for burst detection
 }
 
-const REFRESH_RATE_LIMITS: Record<string, RateLimitConfig> = {
+type RateLimitScope = 'connection' | 'user' | 'app';
+
+const REFRESH_RATE_LIMITS: Record<RateLimitScope, RateLimitConfig> = {
   connection: { maxRequests: 10, windowSeconds: 3600, burstAllowance: 3, burstWindowSeconds: 60 },
   user: { maxRequests: 50, windowSeconds: 3600, burstAllowance: 5, burstWindowSeconds: 60 },
   app: { maxRequests: 1000, windowSeconds: 3600, burstAllowance: 20, burstWindowSeconds: 60 },
 };
+
+interface RateLimitResult {
+  allowed: boolean;
+  retryAfter?: number;
+  remaining?: number;
+}
 
 /**
  * Sliding window rate limiter with burst allowance.
@@ -211,29 +207,17 @@ const REFRESH_RATE_LIMITS: Record<string, RateLimitConfig> = {
  * 3. Count remaining entries for sliding window check
  * 4. Additionally check burst window for short-term spike protection
  */
-async function checkRateLimit(
-  scope: 'connection' | 'user' | 'app',
-  scopeId: string
-): Promise<{ allowed: boolean; retryAfter?: number; remaining?: number }> {
+async function checkRateLimit(scope: RateLimitScope, scopeId: string): Promise<RateLimitResult> {
   const config = REFRESH_RATE_LIMITS[scope];
   const key = `rate_limit:refresh:${scope}:${scopeId}`;
   const now = Date.now();
   const windowStart = now - config.windowSeconds * 1000;
   const burstWindowStart = now - config.burstWindowSeconds * 1000;
 
-  // Use Redis transaction for atomicity
   const pipeline = redis.pipeline();
-
-  // Remove entries outside the main window
   pipeline.zremrangebyscore(key, 0, windowStart);
-
-  // Count requests in main window (sliding window check)
   pipeline.zcount(key, windowStart, now);
-
-  // Count requests in burst window
   pipeline.zcount(key, burstWindowStart, now);
-
-  // Get oldest entry timestamp for retry-after calculation
   pipeline.zrange(key, 0, 0, 'WITHSCORES');
 
   const results = await pipeline.exec();
@@ -243,39 +227,25 @@ async function checkRateLimit(
 
   // Check main window limit
   if (mainWindowCount >= config.maxRequests) {
-    const oldestTimestamp = oldestEntry?.[0]
-      ? parseInt(oldestEntry[0][1], 10)
-      : now;
-    const retryAfter = Math.ceil(
-      (oldestTimestamp + config.windowSeconds * 1000 - now) / 1000
-    );
-    return {
-      allowed: false,
-      retryAfter: Math.max(1, retryAfter),
-      remaining: 0,
-    };
+    const oldestTimestamp = oldestEntry?.[0] ? parseInt(oldestEntry[0][1], 10) : now;
+    const retryAfter = Math.ceil((oldestTimestamp + config.windowSeconds * 1000 - now) / 1000);
+    return { allowed: false, retryAfter: Math.max(1, retryAfter), remaining: 0 };
   }
 
-  // Check burst window limit (allows short bursts up to burstAllowance)
+  // Check burst window limit
   if (burstWindowCount >= config.burstAllowance) {
-    // Burst limit hit, but main window still has capacity
-    // Calculate when burst window will have room
-    const burstRetryAfter = config.burstWindowSeconds;
     return {
       allowed: false,
-      retryAfter: burstRetryAfter,
+      retryAfter: config.burstWindowSeconds,
       remaining: config.maxRequests - mainWindowCount,
     };
   }
 
-  // Request allowed - add to sorted set
+  // Request allowed - add to sorted set with TTL buffer
   await redis.zadd(key, now, `${now}:${Math.random().toString(36).slice(2)}`);
-  await redis.expire(key, config.windowSeconds + 60);  // TTL with buffer
+  await redis.expire(key, config.windowSeconds + 60);
 
-  return {
-    allowed: true,
-    remaining: config.maxRequests - mainWindowCount - 1,
-  };
+  return { allowed: true, remaining: config.maxRequests - mainWindowCount - 1 };
 }
 ```
 
@@ -438,15 +408,25 @@ Different failure types require different retry strategies.
 ### Backoff Implementation
 
 ```typescript
+type RetryStrategy = 'exponential' | 'fixed' | 'none';
+
 interface RetryConfig {
   maxRetries: number;
-  strategy: 'exponential' | 'fixed' | 'none';
+  strategy: RetryStrategy;
   initialDelayMs: number;
   maxDelayMs: number;
-  jitterPercent: number;  // Add randomness to prevent thundering herd
+  jitterPercent: number;
 }
 
-const RETRY_CONFIGS: Record<string, RetryConfig> = {
+type FailureType =
+  | 'NETWORK_TIMEOUT'
+  | 'PROVIDER_5XX'
+  | 'PROVIDER_429'
+  | 'PROVIDER_4XX_AUTH'
+  | 'PARSING_ERROR'
+  | 'INTERNAL_ERROR';
+
+const RETRY_CONFIGS: Record<FailureType, RetryConfig> = {
   NETWORK_TIMEOUT: {
     maxRetries: 3,
     strategy: 'exponential',
@@ -463,7 +443,7 @@ const RETRY_CONFIGS: Record<string, RetryConfig> = {
   },
   PROVIDER_429: {
     maxRetries: 2,
-    strategy: 'fixed',  // Use Retry-After value
+    strategy: 'fixed',
     initialDelayMs: 60000,
     maxDelayMs: 300000,
     jitterPercent: 10,
@@ -491,62 +471,69 @@ const RETRY_CONFIGS: Record<string, RetryConfig> = {
   },
 };
 
+function calculateBaseDelay(
+  config: RetryConfig,
+  attemptNumber: number,
+  retryAfterHeader: number | undefined,
+  failureType: FailureType
+): number {
+  if (retryAfterHeader && failureType === 'PROVIDER_429') {
+    return Math.min(retryAfterHeader * 1000, config.maxDelayMs);
+  }
+
+  if (config.strategy === 'exponential') {
+    return Math.min(config.initialDelayMs * Math.pow(2, attemptNumber), config.maxDelayMs);
+  }
+
+  return config.initialDelayMs;
+}
+
+function applyJitter(baseDelay: number, jitterPercent: number): number {
+  const jitterRange = baseDelay * (jitterPercent / 100);
+  const jitter = Math.random() * jitterRange - jitterRange / 2;
+  return Math.max(0, Math.round(baseDelay + jitter));
+}
+
 function calculateNextRetryDelay(
-  failureType: string,
+  failureType: FailureType,
   attemptNumber: number,
   retryAfterHeader?: number
 ): number {
   const config = RETRY_CONFIGS[failureType];
-  if (!config || config.strategy === 'none') {
-    return -1;  // No retry
+
+  if (config.strategy === 'none') {
+    return -1;
   }
 
-  let baseDelay: number;
-
-  if (retryAfterHeader && failureType === 'PROVIDER_429') {
-    // Use provider-specified delay
-    baseDelay = Math.min(retryAfterHeader * 1000, config.maxDelayMs);
-  } else if (config.strategy === 'exponential') {
-    // Exponential backoff: initial * 2^attempt
-    baseDelay = Math.min(
-      config.initialDelayMs * Math.pow(2, attemptNumber),
-      config.maxDelayMs
-    );
-  } else {
-    baseDelay = config.initialDelayMs;
-  }
-
-  // Add jitter to prevent thundering herd
-  const jitterRange = baseDelay * (config.jitterPercent / 100);
-  const jitter = Math.random() * jitterRange - jitterRange / 2;
-
-  return Math.max(0, Math.round(baseDelay + jitter));
+  const baseDelay = calculateBaseDelay(config, attemptNumber, retryAfterHeader, failureType);
+  return applyJitter(baseDelay, config.jitterPercent);
 }
 ```
 
 ### Retry-After Header Handling
 
 ```typescript
+function parseRetryAfterAsSeconds(value: string): number | undefined {
+  const seconds = parseInt(value, 10);
+  return isNaN(seconds) ? undefined : seconds;
+}
+
+function parseRetryAfterAsDate(value: string): number | undefined {
+  const date = new Date(value);
+  if (isNaN(date.getTime())) {
+    return undefined;
+  }
+  const delayMs = date.getTime() - Date.now();
+  return Math.max(0, Math.ceil(delayMs / 1000));
+}
+
 function parseRetryAfter(headers: Headers): number | undefined {
   const retryAfter = headers.get('Retry-After');
   if (!retryAfter) {
     return undefined;
   }
 
-  // Try parsing as seconds (integer)
-  const seconds = parseInt(retryAfter, 10);
-  if (!isNaN(seconds)) {
-    return seconds;
-  }
-
-  // Try parsing as HTTP date
-  const date = new Date(retryAfter);
-  if (!isNaN(date.getTime())) {
-    const delayMs = date.getTime() - Date.now();
-    return Math.max(0, Math.ceil(delayMs / 1000));
-  }
-
-  return undefined;
+  return parseRetryAfterAsSeconds(retryAfter) ?? parseRetryAfterAsDate(retryAfter);
 }
 ```
 
@@ -582,41 +569,21 @@ type FreshnessState = 'fresh' | 'stale' | 'expired';
 interface FreshnessThresholds {
   freshMaxAgeMs: number;
   staleMaxAgeMs: number;
-  // expired is anything older than staleMaxAgeMs
 }
 
-const FRESHNESS_THRESHOLDS: Record<string, FreshnessThresholds> = {
-  balances: {
-    freshMaxAgeMs: 4 * 60 * 60 * 1000,       // 4 hours
-    staleMaxAgeMs: 24 * 60 * 60 * 1000,      // 24 hours
-  },
-  transactions: {
-    freshMaxAgeMs: 24 * 60 * 60 * 1000,      // 24 hours
-    staleMaxAgeMs: 3 * 24 * 60 * 60 * 1000,  // 3 days
-  },
-  holdings: {
-    freshMaxAgeMs: 24 * 60 * 60 * 1000,      // 24 hours
-    staleMaxAgeMs: 3 * 24 * 60 * 60 * 1000,  // 3 days
-  },
-  liabilities: {
-    freshMaxAgeMs: 7 * 24 * 60 * 60 * 1000,  // 7 days
-    staleMaxAgeMs: 14 * 24 * 60 * 60 * 1000, // 14 days
-  },
-  account_metadata: {
-    freshMaxAgeMs: 7 * 24 * 60 * 60 * 1000,  // 7 days
-    staleMaxAgeMs: 30 * 24 * 60 * 60 * 1000, // 30 days
-  },
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+
+const FRESHNESS_THRESHOLDS: Record<DataType, FreshnessThresholds> = {
+  balances: { freshMaxAgeMs: 4 * HOUR_MS, staleMaxAgeMs: 24 * HOUR_MS },
+  transactions: { freshMaxAgeMs: 1 * DAY_MS, staleMaxAgeMs: 3 * DAY_MS },
+  holdings: { freshMaxAgeMs: 1 * DAY_MS, staleMaxAgeMs: 3 * DAY_MS },
+  liabilities: { freshMaxAgeMs: 7 * DAY_MS, staleMaxAgeMs: 14 * DAY_MS },
+  account_metadata: { freshMaxAgeMs: 7 * DAY_MS, staleMaxAgeMs: 30 * DAY_MS },
 };
 
-function calculateFreshnessState(
-  dataType: string,
-  lastSyncedAt: Date
-): FreshnessState {
+function calculateFreshnessState(dataType: DataType, lastSyncedAt: Date): FreshnessState {
   const thresholds = FRESHNESS_THRESHOLDS[dataType];
-  if (!thresholds) {
-    return 'expired';  // Unknown data type defaults to expired
-  }
-
   const ageMs = Date.now() - lastSyncedAt.getTime();
 
   if (ageMs <= thresholds.freshMaxAgeMs) {
@@ -648,41 +615,45 @@ confidence = (
 
 ### Component Calculations
 
-#### Freshness Score (0.0–1.0)
+#### Freshness Score (0.0-1.0)
 
 ```typescript
-function calculateFreshnessScore(
-  dataType: string,
-  lastSyncedAt: Date
-): number {
+const SCORE_FRESH_MAX = 1.0;
+const SCORE_FRESH_MIN = 0.8;
+const SCORE_STALE_MIN = 0.4;
+const SCORE_EXPIRED_MIN = 0.1;
+
+function calculateFreshnessScore(dataType: DataType, lastSyncedAt: Date): number {
   const thresholds = FRESHNESS_THRESHOLDS[dataType];
   const ageMs = Date.now() - lastSyncedAt.getTime();
 
+  // Fresh: 1.0 to 0.8 (linear decay within fresh window)
   if (ageMs <= thresholds.freshMaxAgeMs) {
-    // Fresh: 1.0 to 0.8 (linear decay within fresh window)
-    return 1.0 - 0.2 * (ageMs / thresholds.freshMaxAgeMs);
+    const decayRatio = ageMs / thresholds.freshMaxAgeMs;
+    return SCORE_FRESH_MAX - (SCORE_FRESH_MAX - SCORE_FRESH_MIN) * decayRatio;
   }
 
+  // Stale: 0.8 to 0.4 (linear decay within stale window)
   if (ageMs <= thresholds.staleMaxAgeMs) {
-    // Stale: 0.8 to 0.4 (linear decay within stale window)
     const staleAgeMs = ageMs - thresholds.freshMaxAgeMs;
     const staleWindowMs = thresholds.staleMaxAgeMs - thresholds.freshMaxAgeMs;
-    return 0.8 - 0.4 * (staleAgeMs / staleWindowMs);
+    const decayRatio = staleAgeMs / staleWindowMs;
+    return SCORE_FRESH_MIN - (SCORE_FRESH_MIN - SCORE_STALE_MIN) * decayRatio;
   }
 
   // Expired: 0.4 to 0.1 (asymptotic decay)
   const expiredAgeMs = ageMs - thresholds.staleMaxAgeMs;
   const decayFactor = Math.min(expiredAgeMs / thresholds.staleMaxAgeMs, 1);
-  return Math.max(0.1, 0.4 - 0.3 * decayFactor);
+  return Math.max(SCORE_EXPIRED_MIN, SCORE_STALE_MIN - (SCORE_STALE_MIN - SCORE_EXPIRED_MIN) * decayFactor);
 }
 ```
 
-#### Coverage Score (0.0–1.0)
+#### Coverage Score (0.0-1.0)
 
 ```typescript
 function calculateCoverageScore(
-  requestedDataTypes: string[],
-  syncedDataTypes: string[]
+  requestedDataTypes: DataType[],
+  syncedDataTypes: DataType[]
 ): number {
   if (requestedDataTypes.length === 0) {
     return 1.0;
@@ -693,126 +664,129 @@ function calculateCoverageScore(
 
   return successCount / requestedDataTypes.length;
 }
-
-// Example:
-// User consented to: ['balances', 'transactions', 'holdings']
-// Successfully synced: ['balances', 'transactions']
-// Coverage score: 2/3 = 0.67
 ```
 
-#### Provider Health Score (0.0–1.0)
+#### Provider Health Score (0.0-1.0)
 
 Pulled from the provider health monitoring system (see provider-routing.md):
 
 ```typescript
 async function getProviderHealthScore(provider: string): Promise<number> {
   const health = await providerHealthService.getHealth(provider);
-
-  // Health score is already 0-100, normalize to 0-1
   return health.score / 100;
 }
 ```
 
-#### Consistency Score (0.0–1.0)
+#### Consistency Score (0.0-1.0)
 
 Detects anomalies that reduce confidence:
 
 ```typescript
-interface ConsistencyCheck {
-  name: string;
-  penalty: number;  // Deducted from 1.0 if triggered
-}
+type ConsistencyCheckName =
+  | 'missing_recent_transactions'
+  | 'balance_mismatch'
+  | 'duplicate_transactions'
+  | 'stale_holdings_prices'
+  | 'account_count_changed';
 
-const CONSISTENCY_CHECKS: ConsistencyCheck[] = [
-  { name: 'missing_recent_transactions', penalty: 0.3 },  // No txns in last 7 days
-  { name: 'balance_mismatch', penalty: 0.2 },             // Balance doesn't match txn sum
-  { name: 'duplicate_transactions', penalty: 0.15 },      // Detected duplicates
-  { name: 'stale_holdings_prices', penalty: 0.1 },        // Security prices > 1 day old
-  { name: 'account_count_changed', penalty: 0.05 },       // Accounts added/removed unexpectedly
-];
+const CONSISTENCY_PENALTIES: Record<ConsistencyCheckName, number> = {
+  missing_recent_transactions: 0.3,
+  balance_mismatch: 0.2,
+  duplicate_transactions: 0.15,
+  stale_holdings_prices: 0.1,
+  account_count_changed: 0.05,
+};
 
-async function calculateConsistencyScore(
-  connectionId: string
-): Promise<number> {
+async function calculateConsistencyScore(connectionId: string): Promise<number> {
   const violations = await runConsistencyChecks(connectionId);
 
-  let score = 1.0;
-  for (const violation of violations) {
-    const check = CONSISTENCY_CHECKS.find(c => c.name === violation);
-    if (check) {
-      score -= check.penalty;
-    }
-  }
+  const totalPenalty = violations.reduce((sum, violation) => {
+    const penalty = CONSISTENCY_PENALTIES[violation as ConsistencyCheckName] ?? 0;
+    return sum + penalty;
+  }, 0);
 
-  return Math.max(0, score);
+  return Math.max(0, 1.0 - totalPenalty);
 }
 ```
 
 ### Aggregate Confidence Calculation
 
 ```typescript
-interface ConnectionConfidence {
-  overall: number;
-  byDataType: Record<string, number>;
-  factors: {
-    freshness: number;
-    coverage: number;
-    providerHealth: number;
-    consistency: number;
-  };
+interface ConfidenceFactors {
+  freshness: number;
+  coverage: number;
+  providerHealth: number;
+  consistency: number;
 }
 
-async function calculateConnectionConfidence(
-  connectionId: string,
-  requestedDataTypes: string[]
-): Promise<ConnectionConfidence> {
-  const connection = await getConnection(connectionId);
-  const syncStatus = await getSyncStatus(connectionId);
+interface ConnectionConfidence {
+  overall: number;
+  byDataType: Record<DataType, number>;
+  factors: ConfidenceFactors;
+}
 
-  // Calculate per-data-type freshness
-  const dataTypeFreshness: Record<string, number> = {};
-  let totalFreshness = 0;
+const CONFIDENCE_WEIGHTS: Record<keyof ConfidenceFactors, number> = {
+  freshness: 0.40,
+  coverage: 0.30,
+  providerHealth: 0.20,
+  consistency: 0.10,
+};
+
+function calculateWeightedConfidence(factors: ConfidenceFactors): number {
+  const weighted =
+    CONFIDENCE_WEIGHTS.freshness * factors.freshness +
+    CONFIDENCE_WEIGHTS.coverage * factors.coverage +
+    CONFIDENCE_WEIGHTS.providerHealth * factors.providerHealth +
+    CONFIDENCE_WEIGHTS.consistency * factors.consistency;
+
+  return Math.round(weighted * 100) / 100;
+}
+
+function calculateDataTypeFreshness(
+  requestedDataTypes: DataType[],
+  syncStatus: SyncStatus
+): { byDataType: Record<DataType, number>; average: number } {
+  const byDataType: Record<string, number> = {};
+  let total = 0;
 
   for (const dataType of requestedDataTypes) {
     const lastSynced = syncStatus.byDataType[dataType]?.lastSyncedAt;
     const freshness = lastSynced
       ? calculateFreshnessScore(dataType, new Date(lastSynced))
       : 0;
-    dataTypeFreshness[dataType] = freshness;
-    totalFreshness += freshness;
+    byDataType[dataType] = freshness;
+    total += freshness;
   }
 
-  const avgFreshness = requestedDataTypes.length > 0
-    ? totalFreshness / requestedDataTypes.length
-    : 0;
+  const average = requestedDataTypes.length > 0 ? total / requestedDataTypes.length : 0;
 
-  // Calculate other factors
-  const coverage = calculateCoverageScore(
-    requestedDataTypes,
-    Object.keys(syncStatus.byDataType).filter(dt =>
-      syncStatus.byDataType[dt].status !== 'error'
-    )
-  );
+  return { byDataType: byDataType as Record<DataType, number>, average };
+}
 
-  const providerHealth = await getProviderHealthScore(connection.provider);
-  const consistency = await calculateConsistencyScore(connectionId);
+async function calculateConnectionConfidence(
+  connectionId: string,
+  requestedDataTypes: DataType[]
+): Promise<ConnectionConfidence> {
+  const connection = await getConnection(connectionId);
+  const syncStatus = await getSyncStatus(connectionId);
 
-  // Weighted aggregate
-  const overall =
-    0.40 * avgFreshness +
-    0.30 * coverage +
-    0.20 * providerHealth +
-    0.10 * consistency;
+  const freshnessResult = calculateDataTypeFreshness(requestedDataTypes, syncStatus);
+
+  const syncedDataTypes = Object.keys(syncStatus.byDataType).filter(
+    dt => syncStatus.byDataType[dt].status !== 'error'
+  ) as DataType[];
+
+  const factors: ConfidenceFactors = {
+    freshness: freshnessResult.average,
+    coverage: calculateCoverageScore(requestedDataTypes, syncedDataTypes),
+    providerHealth: await getProviderHealthScore(connection.provider),
+    consistency: await calculateConsistencyScore(connectionId),
+  };
 
   return {
-    overall: Math.round(overall * 100) / 100,  // 2 decimal places
-    byDataType: dataTypeFreshness,
-    factors: {
-      freshness: avgFreshness,
-      coverage,
-      providerHealth,
-      consistency,
-    },
+    overall: calculateWeightedConfidence(factors),
+    byDataType: freshnessResult.byDataType,
+    factors,
   };
 }
 ```
@@ -1032,9 +1006,12 @@ Guidelines for displaying freshness information to end users.
 ### Relative Time Formatting
 
 ```typescript
+function pluralize(count: number, singular: string): string {
+  return count === 1 ? singular : `${singular}s`;
+}
+
 function formatRelativeTime(date: Date): string {
-  const now = Date.now();
-  const diffMs = now - date.getTime();
+  const diffMs = Date.now() - date.getTime();
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -1043,13 +1020,13 @@ function formatRelativeTime(date: Date): string {
     return 'just now';
   }
   if (diffMinutes < 60) {
-    return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+    return `${diffMinutes} ${pluralize(diffMinutes, 'minute')} ago`;
   }
   if (diffHours < 24) {
-    return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    return `${diffHours} ${pluralize(diffHours, 'hour')} ago`;
   }
   if (diffDays < 7) {
-    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    return `${diffDays} ${pluralize(diffDays, 'day')} ago`;
   }
 
   return date.toLocaleDateString();
@@ -1060,41 +1037,50 @@ function formatRelativeTime(date: Date): string {
 
 ```typescript
 interface ConfidenceMeterProps {
-  confidence: number;  // 0.0 - 1.0
+  confidence: number;
   showLabel?: boolean;
 }
 
-function getConfidenceDisplay(confidence: number): {
+interface ConfidenceDisplay {
   label: string;
   color: string;
   description: string;
-} {
-  if (confidence >= 0.9) {
-    return {
-      label: 'Excellent',
-      color: '#22c55e',  // green
-      description: 'Your data is complete and up-to-date',
-    };
-  }
-  if (confidence >= 0.75) {
-    return {
-      label: 'Good',
-      color: '#84cc16',  // lime
-      description: 'Your data is mostly current',
-    };
-  }
-  if (confidence >= 0.5) {
-    return {
-      label: 'Fair',
-      color: '#eab308',  // yellow
-      description: 'Some data may be outdated',
-    };
-  }
-  return {
+}
+
+type ConfidenceLevel = 'excellent' | 'good' | 'fair' | 'limited';
+
+const CONFIDENCE_DISPLAYS: Record<ConfidenceLevel, ConfidenceDisplay> = {
+  excellent: {
+    label: 'Excellent',
+    color: '#22c55e',
+    description: 'Your data is complete and up-to-date',
+  },
+  good: {
+    label: 'Good',
+    color: '#84cc16',
+    description: 'Your data is mostly current',
+  },
+  fair: {
+    label: 'Fair',
+    color: '#eab308',
+    description: 'Some data may be outdated',
+  },
+  limited: {
     label: 'Limited',
-    color: '#ef4444',  // red
+    color: '#ef4444',
     description: 'Data quality is low. Consider reconnecting accounts.',
-  };
+  },
+};
+
+function getConfidenceLevel(confidence: number): ConfidenceLevel {
+  if (confidence >= 0.9) return 'excellent';
+  if (confidence >= 0.75) return 'good';
+  if (confidence >= 0.5) return 'fair';
+  return 'limited';
+}
+
+function getConfidenceDisplay(confidence: number): ConfidenceDisplay {
+  return CONFIDENCE_DISPLAYS[getConfidenceLevel(confidence)];
 }
 ```
 
@@ -1365,17 +1351,34 @@ Comprehensive error handling for sync operations.
 ### Error Recovery Matrix
 
 ```typescript
+type RecoveryStrategy =
+  | 'exponential_backoff'
+  | 'wait_for_provider_health'
+  | 'retry_failed_types_only'
+  | 'retry_with_longer_timeout'
+  | 'wait_for_rate_limit_reset';
+
+type SyncErrorCode =
+  | 'SYNC_FAILED_TRANSIENT'
+  | 'SYNC_FAILED_AUTH'
+  | 'SYNC_FAILED_PROVIDER'
+  | 'SYNC_PARTIAL'
+  | 'SYNC_TIMEOUT'
+  | 'ACCOUNT_CLOSED'
+  | 'CONSENT_EXPIRED'
+  | 'RATE_LIMITED';
+
 interface ErrorRecovery {
   code: string;
   autoRecovery: boolean;
-  recoveryStrategy?: string;
+  recoveryStrategy?: RecoveryStrategy;
   maxRecoveryAttempts?: number;
   userActionRequired: boolean;
   userActionCta?: string;
-  escalationThreshold?: number;  // After N failures, escalate
+  escalationThreshold?: number;
 }
 
-const ERROR_RECOVERY: Record<string, ErrorRecovery> = {
+const ERROR_RECOVERY: Record<SyncErrorCode, ErrorRecovery> = {
   SYNC_FAILED_TRANSIENT: {
     code: 'E001',
     autoRecovery: true,
@@ -1435,37 +1438,41 @@ const ERROR_RECOVERY: Record<string, ErrorRecovery> = {
 ### Connection Status Updates on Error
 
 ```typescript
+const ERROR_TO_STATUS: Partial<Record<SyncErrorCode | 'INSTITUTION_NOT_SUPPORTED', ConnectionStatus>> = {
+  SYNC_FAILED_AUTH: 'needs_reauth',
+  ACCOUNT_CLOSED: 'disconnected',
+  CONSENT_EXPIRED: 'revoked',
+  INSTITUTION_NOT_SUPPORTED: 'error',
+  SYNC_FAILED_PROVIDER: 'degraded',
+  SYNC_FAILED_TRANSIENT: 'degraded',
+};
+
 async function updateConnectionStatusOnError(
   connectionId: string,
-  errorCode: string
+  errorCode: SyncErrorCode | 'INSTITUTION_NOT_SUPPORTED'
 ): Promise<void> {
-  const statusMapping: Record<string, ConnectionStatus> = {
-    SYNC_FAILED_AUTH: 'needs_reauth',
-    ACCOUNT_CLOSED: 'disconnected',
-    CONSENT_EXPIRED: 'revoked',
-    INSTITUTION_NOT_SUPPORTED: 'error',
-    SYNC_FAILED_PROVIDER: 'degraded',
-    SYNC_FAILED_TRANSIENT: 'degraded',
-  };
+  const newStatus = ERROR_TO_STATUS[errorCode];
 
-  const newStatus = statusMapping[errorCode];
-  if (newStatus) {
-    await db.connections.update({
-      where: { id: connectionId },
-      data: {
-        status: newStatus,
-        error_code: errorCode,
-        updated_at: new Date(),
-      },
-    });
+  if (!newStatus) {
+    return;
+  }
 
-    // Send webhook to app
-    await sendWebhook(connectionId, 'connection.status_changed', {
+  await db.connections.update({
+    where: { id: connectionId },
+    data: {
       status: newStatus,
       error_code: errorCode,
-      requires_user_action: ERROR_RECOVERY[errorCode]?.userActionRequired ?? false,
-    });
-  }
+      updated_at: new Date(),
+    },
+  });
+
+  const recovery = ERROR_RECOVERY[errorCode as SyncErrorCode];
+
+  await sendWebhook(connectionId, 'connection.status_changed', {
+    status: newStatus,
+    error_code: errorCode,
+    requires_user_action: recovery?.userActionRequired ?? false,
+  });
 }
 ```
 
