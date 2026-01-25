@@ -193,32 +193,90 @@ interface RateLimitConfig {
   maxRequests: number;
   windowSeconds: number;
   burstAllowance: number;
+  burstWindowSeconds: number;  // Short window for burst detection
 }
 
 const REFRESH_RATE_LIMITS: Record<string, RateLimitConfig> = {
-  connection: { maxRequests: 10, windowSeconds: 3600, burstAllowance: 3 },
-  user: { maxRequests: 50, windowSeconds: 3600, burstAllowance: 5 },
-  app: { maxRequests: 1000, windowSeconds: 3600, burstAllowance: 20 },
+  connection: { maxRequests: 10, windowSeconds: 3600, burstAllowance: 3, burstWindowSeconds: 60 },
+  user: { maxRequests: 50, windowSeconds: 3600, burstAllowance: 5, burstWindowSeconds: 60 },
+  app: { maxRequests: 1000, windowSeconds: 3600, burstAllowance: 20, burstWindowSeconds: 60 },
 };
 
+/**
+ * Sliding window rate limiter with burst allowance.
+ * Uses Redis sorted sets for accurate sliding window tracking.
+ *
+ * Algorithm:
+ * 1. Store each request timestamp in a sorted set (score = timestamp)
+ * 2. Remove entries older than the window
+ * 3. Count remaining entries for sliding window check
+ * 4. Additionally check burst window for short-term spike protection
+ */
 async function checkRateLimit(
   scope: 'connection' | 'user' | 'app',
   scopeId: string
-): Promise<{ allowed: boolean; retryAfter?: number }> {
+): Promise<{ allowed: boolean; retryAfter?: number; remaining?: number }> {
   const config = REFRESH_RATE_LIMITS[scope];
   const key = `rate_limit:refresh:${scope}:${scopeId}`;
+  const now = Date.now();
+  const windowStart = now - config.windowSeconds * 1000;
+  const burstWindowStart = now - config.burstWindowSeconds * 1000;
 
-  const current = await redis.incr(key);
-  if (current === 1) {
-    await redis.expire(key, config.windowSeconds);
+  // Use Redis transaction for atomicity
+  const pipeline = redis.pipeline();
+
+  // Remove entries outside the main window
+  pipeline.zremrangebyscore(key, 0, windowStart);
+
+  // Count requests in main window (sliding window check)
+  pipeline.zcount(key, windowStart, now);
+
+  // Count requests in burst window
+  pipeline.zcount(key, burstWindowStart, now);
+
+  // Get oldest entry timestamp for retry-after calculation
+  pipeline.zrange(key, 0, 0, 'WITHSCORES');
+
+  const results = await pipeline.exec();
+  const mainWindowCount = results[1][1] as number;
+  const burstWindowCount = results[2][1] as number;
+  const oldestEntry = results[3][1] as [string, string][] | undefined;
+
+  // Check main window limit
+  if (mainWindowCount >= config.maxRequests) {
+    const oldestTimestamp = oldestEntry?.[0]
+      ? parseInt(oldestEntry[0][1], 10)
+      : now;
+    const retryAfter = Math.ceil(
+      (oldestTimestamp + config.windowSeconds * 1000 - now) / 1000
+    );
+    return {
+      allowed: false,
+      retryAfter: Math.max(1, retryAfter),
+      remaining: 0,
+    };
   }
 
-  if (current > config.maxRequests) {
-    const ttl = await redis.ttl(key);
-    return { allowed: false, retryAfter: ttl };
+  // Check burst window limit (allows short bursts up to burstAllowance)
+  if (burstWindowCount >= config.burstAllowance) {
+    // Burst limit hit, but main window still has capacity
+    // Calculate when burst window will have room
+    const burstRetryAfter = config.burstWindowSeconds;
+    return {
+      allowed: false,
+      retryAfter: burstRetryAfter,
+      remaining: config.maxRequests - mainWindowCount,
+    };
   }
 
-  return { allowed: true };
+  // Request allowed - add to sorted set
+  await redis.zadd(key, now, `${now}:${Math.random().toString(36).slice(2)}`);
+  await redis.expire(key, config.windowSeconds + 60);  // TTL with buffer
+
+  return {
+    allowed: true,
+    remaining: config.maxRequests - mainWindowCount - 1,
+  };
 }
 ```
 
