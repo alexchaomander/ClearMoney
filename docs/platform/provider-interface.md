@@ -158,8 +158,7 @@ interface SyncBalancesResult {
 }
 
 interface NormalizedBalance {
-  accountId: string;                 // Platform account ID
-  providerAccountId: string;         // Provider's account ID
+  accountId: string;                 // Platform account ID (maps to provider account via NormalizedAccount)
   current: number;                   // Current balance
   available: number | null;          // Available balance
   limit: number | null;              // Credit limit (for credit accounts)
@@ -410,7 +409,7 @@ interface WebhookVerificationResult {
 | `id` | Generated UUID | Generated UUID | Generated UUID | Generated UUID |
 | `providerTransactionId` | `transaction_id` | `guid` | `id` | `transactionId` |
 | `accountId` | Lookup by `account_id` | Lookup by `account_guid` | Lookup by `accountId` | Lookup by `accountId` |
-| `amount` | `-amount` (Plaid uses positive for debits) | `amount` | `amount` | `amount` (check sign) |
+| `amount` | `-amount` (Plaid uses positive for debits) | `amount` | `-amount` (Finicity uses positive for debits) | `amount` (check sign via `debitCreditMemo`) |
 | `currency` | `iso_currency_code` \|\| 'USD' | `currency_code` \|\| 'USD' | `currency` \|\| 'USD' | `currencyCode` \|\| 'USD' |
 | `date` | `date` | `transacted_at` (parse date) | `postedDate` (parse) | `postedTimestamp` (parse date) |
 | `datetime` | `datetime` \|\| null | `transacted_at` | `transactionDate` | `postedTimestamp` |
@@ -495,9 +494,9 @@ function normalizeAmount(provider: ProviderType, amount: number, type?: string):
 | `accountId` | Lookup by `account_id` | Lookup by `account_guid` | Lookup by `accountId` | Lookup by `accountId` |
 | `providerLiabilityId` | `account_id` | `guid` | `id` | `accountId` |
 | `type` | Infer from account type | `loan_type` (map) | `type` (map) | `loanType` (map) |
-| `currentBalance` | `balances.current` | `balance` | `currentBalance` | `principalBalance` + interest |
+| `currentBalance` | `balances.current` | `balance` | `currentBalance` | `currentBalance` (use directly; includes accrued interest) |
 | `principalBalance` | Varies by type | `principal_balance` | `principal` | `principalBalance` |
-| `interestRate` | `aprs[0].apr_percentage` / 100 | `interest_rate` / 100 | `interestRate` / 100 | `interestRate` / 100 |
+| `interestRate` | `aprs[].apr_percentage` / 100 (see APR selection below) | `interest_rate` / 100 | `interestRate` / 100 | `interestRate` / 100 |
 | `interestRateType` | `aprs[0].apr_type` (map) | `interest_rate_type` | `interestRateType` | `interestRateType` |
 | `minimumPayment` | `minimum_payment_amount` | `minimum_payment` | `minimumPaymentAmount` | `minimumPaymentAmount` |
 | `nextPaymentDueDate` | `next_payment_due_date` | `payment_due_at` | `nextPaymentDate` | `nextPaymentDate` |
@@ -505,6 +504,27 @@ function normalizeAmount(provider: ProviderType, amount: number, type?: string):
 | `originationDate` | `origination_date` | `originated_at` | `originatingDate` | `originationDate` |
 | `originationPrincipal` | `origination_principal_amount` | `original_principal` | `originalPrincipal` | `originalPrincipal` |
 | `ytdInterestPaid` | `ytd_interest_paid` | `ytd_interest_paid` | `ytdInterestPaid` | `ytdInterestPaid` |
+
+**Plaid APR Selection Logic:**
+
+Plaid's `aprs` array can contain multiple APR entries with different types. Use this priority order to select the most relevant rate:
+
+```typescript
+const aprPriority = ['purchase_apr', 'balance_transfer_apr', 'cash_apr', 'special'];
+
+function selectPlaidApr(aprs: Array<{ apr_type: string; apr_percentage: number }>): number | null {
+  if (!aprs || aprs.length === 0) return null;
+
+  // Find the highest-priority APR type available
+  for (const aprType of aprPriority) {
+    const match = aprs.find(apr => apr.apr_type === aprType);
+    if (match) return match.apr_percentage / 100;
+  }
+
+  // Fallback to first APR if no priority match
+  return aprs[0].apr_percentage / 100;
+}
+```
 
 ---
 
@@ -518,6 +538,7 @@ type PlatformErrorCode =
   | 'REAUTHENTICATION_REQUIRED'    // User must re-link account
   | 'INVALID_CREDENTIALS'           // Credentials rejected
   | 'MFA_REQUIRED'                  // MFA challenge needed
+  | 'UNSUPPORTED_MFA'               // Institution requires unsupported MFA method (terminal)
   | 'CONSENT_EXPIRED'               // FDX consent expired
   | 'CONSENT_REVOKED'               // User revoked consent
 
@@ -554,7 +575,7 @@ type PlatformErrorType =
 |------------------|---------------------|------------|-----------|-------|
 | `ITEM_LOGIN_REQUIRED` | `REAUTHENTICATION_REQUIRED` | `authentication_error` | No | User must re-link |
 | `INVALID_CREDENTIALS` | `INVALID_CREDENTIALS` | `authentication_error` | No | Wrong username/password |
-| `MFA_NOT_SUPPORTED` | `MFA_REQUIRED` | `authentication_error` | No | MFA flow needed |
+| `MFA_NOT_SUPPORTED` | `UNSUPPORTED_MFA` | `authentication_error` | No | Institution requires MFA method not supported by provider; user must link via alternative institution |
 | `INSTITUTION_NOT_RESPONDING` | `INSTITUTION_DOWN` | `provider_error` | Yes | Exponential backoff |
 | `INSTITUTION_NOT_AVAILABLE` | `INSTITUTION_NOT_SUPPORTED` | `provider_error` | No | Not supported |
 | `RATE_LIMIT_EXCEEDED` | `RATE_LIMITED` | `rate_limit` | Yes | Respect `Retry-After` |
@@ -705,9 +726,6 @@ const defaultCircuitBreakerConfig: CircuitBreakerConfig = {
 **State Machine:**
 
 ```
-                    ┌─────────────────────────────────────┐
-                    │                                     │
-                    ▼                                     │
 ┌──────────┐  failure rate   ┌──────────┐  timeout   ┌──────────┐
 │  CLOSED  │ ──────────────► │   OPEN   │ ─────────► │HALF-OPEN │
 └──────────┘   >= threshold  └──────────┘            └──────────┘
@@ -715,12 +733,13 @@ const defaultCircuitBreakerConfig: CircuitBreakerConfig = {
      │                                                    │
      │         3 consecutive successes                    │
      └────────────────────────────────────────────────────┘
-                            │
-                            │ failure
-                            ▼
-                       ┌──────────┐
-                       │   OPEN   │ (reset timer)
-                       └──────────┘
+                                                          │
+                                                          │ failure
+                                                          ▼
+                                                     ┌──────────┐
+                                                     │   OPEN   │
+                                                     └──────────┘
+                                                     (reset timer)
 ```
 
 **Behavior:**
@@ -739,7 +758,7 @@ const defaultCircuitBreakerConfig: CircuitBreakerConfig = {
 | `exchangeToken` | 30s | No retry (credential verification) |
 | `syncAccounts` | 30s | 1 retry with 2s delay |
 | `syncBalances` | 30s | 1 retry with 2s delay |
-| `syncTransactions` | 120s | No retry (may be slow for large histories) |
+| `syncTransactions` | 120s | No retry (long-running; timeout excluded from default retry) |
 | `syncHoldings` | 60s | 1 retry with 5s delay |
 | `syncLiabilities` | 60s | 1 retry with 5s delay |
 | `refreshItem` | 5s | No retry (async trigger) |
@@ -764,12 +783,17 @@ const defaultRetryConfig: RetryConfig = {
   backoffMultiplier: 2,
   retryableErrors: [
     'PROVIDER_UNAVAILABLE',
-    'PROVIDER_TIMEOUT',
+    'PROVIDER_TIMEOUT',  // Note: operation-specific retry behavior in Timeouts table overrides this
     'INSTITUTION_DOWN',
     'DATA_UNAVAILABLE',
     'UNKNOWN_PROVIDER_ERROR',
   ],
 };
+
+// Note: The Timeouts table above specifies per-operation retry behavior.
+// Operations marked "No retry" should NOT retry on timeout, even though
+// PROVIDER_TIMEOUT is listed as retryable by default. The operation-specific
+// configuration takes precedence over the default retry config.
 
 // Delay calculation: min(baseDelay * (multiplier ^ attempt), maxDelay)
 // Attempt 1: 1000ms
