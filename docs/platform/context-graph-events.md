@@ -487,7 +487,7 @@ function buildCausalGraph(events: DecisionTraceEvent[]): CausalGraph {
   }
 
   return {
-    trace_id: events[0]?.trace_id,
+    trace_id: events[0]?.trace_id ?? '',
     root_events,
     edges,
   };
@@ -1227,15 +1227,17 @@ FROM funnel;
 
 ```sql
 -- Join recommendations with outcomes to measure rule effectiveness
+-- Uses jsonb_array_elements to unnest ALL rules (not just the first)
 SELECT
-  r.payload->'rules_applied'->0->>'rule_id' AS rule_id,
-  r.payload->'rules_applied'->0->>'rule_version' AS rule_version,
+  rule->>'rule_id' AS rule_id,
+  rule->>'rule_version' AS rule_version,
   r.payload->>'recommendation_type' AS recommendation_type,
   COUNT(DISTINCT r.trace_id) AS total_recommendations,
   COUNT(DISTINCT o.trace_id) AS measured_outcomes,
   AVG((o.payload->>'effectiveness_score')::float) AS avg_effectiveness,
   COUNT(DISTINCT CASE WHEN (o.payload->>'recommendation_effective')::boolean THEN o.trace_id END) AS successful_outcomes
-FROM decision_trace_events r
+FROM decision_trace_events r,
+  jsonb_array_elements(r.payload->'rules_applied') AS rule
 LEFT JOIN decision_trace_events o ON r.trace_id = o.trace_id
   AND o.event_type = 'outcome.measured'
   AND o.app_id = r.app_id
@@ -1243,8 +1245,8 @@ WHERE r.app_id = $1
   AND r.event_type = 'recommendation.created'
   AND r.timestamp >= $2
 GROUP BY
-  r.payload->'rules_applied'->0->>'rule_id',
-  r.payload->'rules_applied'->0->>'rule_version',
+  rule->>'rule_id',
+  rule->>'rule_version',
   r.payload->>'recommendation_type'
 ORDER BY total_recommendations DESC;
 ```
@@ -1253,24 +1255,29 @@ ORDER BY total_recommendations DESC;
 
 ```sql
 -- Performance metrics by recommendation type
+-- Uses CTE for better performance (avoids correlated subqueries)
+WITH trace_statuses AS (
+  SELECT DISTINCT trace_id, event_type
+  FROM decision_trace_events
+  WHERE app_id = $1
+    AND event_type IN ('recommendation.accepted', 'action.completed')
+)
 SELECT
-  payload->>'recommendation_type' AS type,
+  r.payload->>'recommendation_type' AS type,
   COUNT(*) AS total,
-  COUNT(DISTINCT user_id) AS unique_users,
-  AVG((payload->'result'->>'confidence')::float) AS avg_confidence,
-  COUNT(*) FILTER (WHERE trace_id IN (
-    SELECT trace_id FROM decision_trace_events
-    WHERE event_type = 'recommendation.accepted' AND app_id = $1
-  )) AS accepted_count,
-  COUNT(*) FILTER (WHERE trace_id IN (
-    SELECT trace_id FROM decision_trace_events
-    WHERE event_type = 'action.completed' AND app_id = $1
-  )) AS completed_count
-FROM decision_trace_events
-WHERE app_id = $1
-  AND event_type = 'recommendation.created'
-  AND timestamp >= $2
-GROUP BY payload->>'recommendation_type'
+  COUNT(DISTINCT r.user_id) AS unique_users,
+  AVG((r.payload->'result'->>'confidence')::float) AS avg_confidence,
+  COUNT(DISTINCT accepted.trace_id) AS accepted_count,
+  COUNT(DISTINCT completed.trace_id) AS completed_count
+FROM decision_trace_events r
+LEFT JOIN trace_statuses accepted
+  ON r.trace_id = accepted.trace_id AND accepted.event_type = 'recommendation.accepted'
+LEFT JOIN trace_statuses completed
+  ON r.trace_id = completed.trace_id AND completed.event_type = 'action.completed'
+WHERE r.app_id = $1
+  AND r.event_type = 'recommendation.created'
+  AND r.timestamp >= $2
+GROUP BY r.payload->>'recommendation_type'
 ORDER BY total DESC;
 ```
 
