@@ -551,9 +551,14 @@ async function verifyReplayInvariant(event: DecisionTraceEvent<RecommendationCre
   const payload = event.payload;
 
   // Re-run the recommendation engine with stored inputs
+  // IMPORTANT: Must include parameters to reproduce non-default rule behavior
   const replayed_result = await recommendationEngine.evaluate({
     input_set: payload.input_set,
-    rules: payload.rules_applied.map(r => ({ id: r.rule_id, version: r.rule_version })),
+    rules: payload.rules_applied.map(r => ({
+      id: r.rule_id,
+      version: r.rule_version,
+      parameters: r.parameters,  // Required for reproducibility
+    })),
     assumptions: payload.assumptions,
     random_seed: payload.provenance.random_seed,
     as_of_timestamp: event.timestamp,
