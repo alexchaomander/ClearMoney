@@ -757,7 +757,9 @@ Parallelization:
 
 ---
 
-## Prompt 6 — Context Graph / Decision Trace Model
+## Prompt 6 — Context Graph / Decision Trace Model ✅ COMPLETED
+
+> **Status:** Completed. See `docs/platform/context-graph-events.md` for the full decision trace model including event types, schemas, causal linking, replay semantics, and query patterns.
 
 Role:
 You are a product + data engineer designing the "decision trace" model for explainable financial recommendations in a **multi-tenant** platform.
