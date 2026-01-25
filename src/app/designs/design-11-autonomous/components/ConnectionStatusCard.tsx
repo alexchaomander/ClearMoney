@@ -2,12 +2,16 @@
 
 import { Link2, AlertCircle, RefreshCw, Plus, CheckCircle2 } from "lucide-react";
 import { colors } from "../shared";
-import { MockConnection, formatRelativeTime } from "../mocks/platform-mocks";
+import { MockConnection, ConnectionStatus, formatRelativeTime } from "../mocks/platform-mocks";
 
-// ============================================================================
-// CONNECTION STATUS CARD
-// Enhanced connection status with actionable CTAs
-// ============================================================================
+// Error color constant (consistent with other components)
+const ERROR_COLOR = '#ef4444';
+
+interface StatusConfig {
+  color: string;
+  label: string;
+  showPulse: boolean;
+}
 
 interface ConnectionStatusCardProps {
   connections: MockConnection[];
@@ -16,33 +20,19 @@ interface ConnectionStatusCardProps {
   onReconnect: (connectionId: string) => void;
 }
 
-function getStatusConfig(status: MockConnection['status']) {
-  switch (status) {
-    case 'active':
-      return {
-        color: colors.success,
-        label: 'Connected',
-        showPulse: true,
-      };
-    case 'degraded':
-      return {
-        color: colors.warning,
-        label: 'Limited',
-        showPulse: false,
-      };
-    case 'error':
-      return {
-        color: '#ef4444',
-        label: 'Error',
-        showPulse: false,
-      };
-    case 'needs_reauth':
-      return {
-        color: '#ef4444',
-        label: 'Reconnect needed',
-        showPulse: false,
-      };
-  }
+const STATUS_CONFIGS: Record<ConnectionStatus, StatusConfig> = {
+  active: { color: colors.success, label: 'Connected', showPulse: true },
+  degraded: { color: colors.warning, label: 'Limited', showPulse: false },
+  error: { color: ERROR_COLOR, label: 'Error', showPulse: false },
+  needs_reauth: { color: ERROR_COLOR, label: 'Reconnect needed', showPulse: false },
+};
+
+function requiresAction(status: ConnectionStatus): boolean {
+  return status === 'needs_reauth' || status === 'error';
+}
+
+function pluralize(count: number, singular: string): string {
+  return `${count} ${singular}${count === 1 ? '' : 's'}`;
 }
 
 export function ConnectionStatusCard({
@@ -50,8 +40,7 @@ export function ConnectionStatusCard({
   insightAccuracy,
   onAddConnection,
   onReconnect,
-}: ConnectionStatusCardProps) {
-  const activeConnections = connections.filter(c => c.status === 'active');
+}: ConnectionStatusCardProps): React.ReactElement {
   const problemConnections = connections.filter(c => c.status !== 'active');
 
   return (
@@ -76,7 +65,7 @@ export function ConnectionStatusCard({
               Connected Accounts
             </h3>
             <p className="text-sm" style={{ color: colors.textMuted }}>
-              {connections.length} institution{connections.length !== 1 ? 's' : ''} connected
+              {pluralize(connections.length, 'institution')} connected
             </p>
           </div>
         </div>
@@ -85,8 +74,8 @@ export function ConnectionStatusCard({
       {/* Institution tiles grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
         {connections.map((connection) => {
-          const statusConfig = getStatusConfig(connection.status);
-          const needsAction = connection.status === 'needs_reauth' || connection.status === 'error';
+          const config = STATUS_CONFIGS[connection.status];
+          const needsAction = requiresAction(connection.status);
 
           return (
             <div
@@ -96,18 +85,18 @@ export function ConnectionStatusCard({
               }`}
               style={{
                 backgroundColor: colors.bg,
-                border: `1px solid ${needsAction ? statusConfig.color : colors.border}`,
-                ringColor: needsAction ? statusConfig.color : undefined,
-              }}
+                border: `1px solid ${needsAction ? config.color : colors.border}`,
+                '--tw-ring-color': needsAction ? config.color : undefined,
+              } as React.CSSProperties}
             >
               {/* Status indicator */}
               <div
                 className={`absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full ${
-                  statusConfig.showPulse ? 'animate-pulse' : ''
+                  config.showPulse ? 'animate-pulse' : ''
                 }`}
                 style={{
-                  backgroundColor: statusConfig.color,
-                  boxShadow: statusConfig.showPulse ? `0 0 8px ${statusConfig.color}` : undefined,
+                  backgroundColor: config.color,
+                  boxShadow: config.showPulse ? `0 0 8px ${config.color}` : undefined,
                 }}
               />
 
@@ -126,7 +115,7 @@ export function ConnectionStatusCard({
                 {connection.institutionName}
               </p>
               <p className="text-xs mb-2" style={{ color: colors.textMuted }}>
-                {connection.accountCount} account{connection.accountCount !== 1 ? 's' : ''}
+                {pluralize(connection.accountCount, 'account')}
               </p>
 
               {/* Action buttons based on status */}
@@ -135,8 +124,8 @@ export function ConnectionStatusCard({
                   onClick={() => onReconnect(connection.id)}
                   className="w-full text-xs font-medium py-1.5 px-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-1"
                   style={{
-                    backgroundColor: `${statusConfig.color}15`,
-                    color: statusConfig.color,
+                    backgroundColor: `${config.color}15`,
+                    color: config.color,
                   }}
                 >
                   <RefreshCw className="w-3 h-3" />
@@ -218,12 +207,12 @@ export function ConnectionStatusCard({
       {problemConnections.length > 0 && (
         <div
           className="p-4 rounded-xl flex items-start gap-3"
-          style={{ backgroundColor: '#ef444410' }}
+          style={{ backgroundColor: `${ERROR_COLOR}10` }}
         >
-          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#ef4444' }} />
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: ERROR_COLOR }} />
           <div>
             <p className="text-sm font-medium" style={{ color: colors.text }}>
-              {problemConnections.length} connection{problemConnections.length !== 1 ? 's' : ''} need attention
+              {pluralize(problemConnections.length, 'connection')} need attention
             </p>
             <p className="text-xs mt-1" style={{ color: colors.textMuted }}>
               Reconnect to keep your recommendations accurate

@@ -3,10 +3,17 @@
 // Mock data for Context Graph platform UI components
 // ============================================================================
 
-// Types
+// Shared type definitions
+export type FreshnessStatus = 'fresh' | 'stale' | 'expired';
+export type ConnectionStatus = 'active' | 'degraded' | 'error' | 'needs_reauth';
+export type DataType = 'balances' | 'transactions' | 'holdings' | 'liabilities';
+export type AssumptionSource = 'calculated' | 'user_input' | 'default';
+export type GapType = 'missing_account_type' | 'stale_data' | 'incomplete_history';
+export type Severity = 'low' | 'medium' | 'high';
+
 export interface ConnectionDataType {
-  type: 'balances' | 'transactions' | 'holdings' | 'liabilities';
-  status: 'fresh' | 'stale' | 'expired';
+  type: DataType;
+  status: FreshnessStatus;
   lastUpdated: string;
 }
 
@@ -15,7 +22,7 @@ export interface MockConnection {
   institutionName: string;
   institutionLogo: string;
   institutionColor: string;
-  status: 'active' | 'degraded' | 'error' | 'needs_reauth';
+  status: ConnectionStatus;
   accountCount: number;
   lastSyncedAt: string;
   dataTypes: ConnectionDataType[];
@@ -38,7 +45,7 @@ export interface DecisionTraceRule {
 export interface DecisionTraceAssumption {
   label: string;
   value: string;
-  source: 'calculated' | 'user_input' | 'default';
+  source: AssumptionSource;
 }
 
 export interface MockDecisionTrace {
@@ -51,10 +58,10 @@ export interface MockDecisionTrace {
 }
 
 export interface CoverageGap {
-  type: 'missing_account_type' | 'stale_data' | 'incomplete_history';
+  type: GapType;
   title: string;
   impact: string;
-  severity: 'low' | 'medium' | 'high';
+  severity: Severity;
   cta: {
     label: string;
     action: () => void;
@@ -288,25 +295,31 @@ export const mockCoverageGaps: CoverageGap[] = [
 // HELPER FUNCTIONS
 // ============================================================================
 
-export function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
-  const now = Date.now();
-  const diffMs = now - date.getTime();
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+const MS_PER_MINUTE = 1000 * 60;
+const MS_PER_HOUR = MS_PER_MINUTE * 60;
+const MS_PER_DAY = MS_PER_HOUR * 24;
 
-  if (diffMinutes < 1) return 'just now';
-  if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-  return date.toLocaleDateString();
+function pluralize(count: number, singular: string): string {
+  return `${count} ${singular}${count === 1 ? '' : 's'}`;
 }
 
-export function getOverallFreshness(connections: MockConnection[]): 'fresh' | 'stale' | 'expired' {
+export function formatRelativeTime(dateString: string): string {
+  const diffMs = Date.now() - new Date(dateString).getTime();
+  const diffMinutes = Math.floor(diffMs / MS_PER_MINUTE);
+  const diffHours = Math.floor(diffMs / MS_PER_HOUR);
+  const diffDays = Math.floor(diffMs / MS_PER_DAY);
+
+  if (diffMinutes < 1) return 'just now';
+  if (diffMinutes < 60) return `${pluralize(diffMinutes, 'minute')} ago`;
+  if (diffHours < 24) return `${pluralize(diffHours, 'hour')} ago`;
+  if (diffDays < 7) return `${pluralize(diffDays, 'day')} ago`;
+  return new Date(dateString).toLocaleDateString();
+}
+
+export function getOverallFreshness(connections: MockConnection[]): FreshnessStatus {
   const statuses = connections.flatMap(c => c.dataTypes.map(dt => dt.status));
-  if (statuses.some(s => s === 'expired')) return 'expired';
-  if (statuses.some(s => s === 'stale')) return 'stale';
+  if (statuses.includes('expired')) return 'expired';
+  if (statuses.includes('stale')) return 'stale';
   return 'fresh';
 }
 

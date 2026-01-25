@@ -1,20 +1,25 @@
 "use client";
 
-import { RefreshCw, Check, AlertTriangle, Clock } from "lucide-react";
+import { RefreshCw, Check, AlertTriangle, Clock, LucideIcon } from "lucide-react";
 import { colors } from "../shared";
-import { MockConnection, formatRelativeTime } from "../mocks/platform-mocks";
+import { MockConnection, FreshnessStatus, formatRelativeTime } from "../mocks/platform-mocks";
 
-// ============================================================================
-// DATA FRESHNESS WIDGET
-// Shows users how fresh their connected data is
-// ============================================================================
+// Error color constant (used for expired/error states across components)
+const ERROR_COLOR = '#ef4444';
+
+interface FreshnessConfig {
+  label: string;
+  color: string;
+  bgColor: string;
+  icon: LucideIcon;
+}
 
 interface DataFreshnessWidgetProps {
   connections: MockConnection[];
   onRefresh?: (connectionId: string) => void;
 }
 
-function getFreshnessConfig(status: 'fresh' | 'stale' | 'expired') {
+function getFreshnessConfig(status: FreshnessStatus): FreshnessConfig {
   switch (status) {
     case 'fresh':
       return {
@@ -33,24 +38,39 @@ function getFreshnessConfig(status: 'fresh' | 'stale' | 'expired') {
     case 'expired':
       return {
         label: 'Outdated',
-        color: '#ef4444',
-        bgColor: '#ef444415',
+        color: ERROR_COLOR,
+        bgColor: `${ERROR_COLOR}15`,
         icon: AlertTriangle,
       };
   }
 }
 
-function getConnectionOverallStatus(connection: MockConnection): 'fresh' | 'stale' | 'expired' {
+function getConnectionOverallStatus(connection: MockConnection): FreshnessStatus {
   const statuses = connection.dataTypes.map(dt => dt.status);
-  if (statuses.some(s => s === 'expired')) return 'expired';
-  if (statuses.some(s => s === 'stale')) return 'stale';
+  if (statuses.includes('expired')) return 'expired';
+  if (statuses.includes('stale')) return 'stale';
   return 'fresh';
 }
 
-export function DataFreshnessWidget({ connections, onRefresh }: DataFreshnessWidgetProps) {
-  const overallConfidence = connections.length > 0
-    ? Math.round(connections.reduce((sum, c) => sum + c.confidence, 0) / connections.length * 100)
-    : 0;
+function calculateOverallConfidence(connections: MockConnection[]): number {
+  if (connections.length === 0) return 0;
+  const totalConfidence = connections.reduce((sum, c) => sum + c.confidence, 0);
+  return Math.round((totalConfidence / connections.length) * 100);
+}
+
+function countFreshDataSources(connections: MockConnection[]): { fresh: number; total: number } {
+  const fresh = connections.reduce(
+    (sum, c) => sum + c.dataTypes.filter(dt => dt.status === 'fresh').length,
+    0
+  );
+  const total = connections.reduce((sum, c) => sum + c.dataTypes.length, 0);
+  return { fresh, total };
+}
+
+export function DataFreshnessWidget({ connections, onRefresh }: DataFreshnessWidgetProps): React.ReactElement {
+  const overallConfidence = calculateOverallConfidence(connections);
+  const freshnessStats = countFreshDataSources(connections);
+  const isHighConfidence = overallConfidence >= 80;
 
   return (
     <div
@@ -71,8 +91,8 @@ export function DataFreshnessWidget({ connections, onRefresh }: DataFreshnessWid
           <span
             className="text-sm font-bold px-2 py-1 rounded-full"
             style={{
-              backgroundColor: overallConfidence >= 80 ? `${colors.success}15` : `${colors.warning}15`,
-              color: overallConfidence >= 80 ? colors.success : colors.warning,
+              backgroundColor: isHighConfidence ? `${colors.success}15` : `${colors.warning}15`,
+              color: isHighConfidence ? colors.success : colors.warning,
             }}
           >
             {overallConfidence}%
@@ -90,7 +110,7 @@ export function DataFreshnessWidget({ connections, onRefresh }: DataFreshnessWid
             className="h-full rounded-full transition-all duration-500"
             style={{
               width: `${overallConfidence}%`,
-              background: overallConfidence >= 80
+              background: isHighConfidence
                 ? `linear-gradient(90deg, ${colors.success} 0%, ${colors.blob4} 100%)`
                 : `linear-gradient(90deg, ${colors.warning} 0%, ${colors.warningLight} 100%)`,
             }}
@@ -156,11 +176,10 @@ export function DataFreshnessWidget({ connections, onRefresh }: DataFreshnessWid
         })}
       </div>
 
-      {/* Data type breakdown (collapsed by default, could expand) */}
+      {/* Data source freshness summary */}
       <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${colors.border}` }}>
         <p className="text-xs" style={{ color: colors.textMuted }}>
-          {connections.reduce((sum, c) => sum + c.dataTypes.filter(dt => dt.status === 'fresh').length, 0)} of{' '}
-          {connections.reduce((sum, c) => sum + c.dataTypes.length, 0)} data sources are fresh
+          {freshnessStats.fresh} of {freshnessStats.total} data sources are fresh
         </p>
       </div>
     </div>

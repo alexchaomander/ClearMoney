@@ -1,13 +1,14 @@
 "use client";
 
-import { X, Check, XCircle, Database, GitBranch, Lightbulb, HelpCircle, Link2 } from "lucide-react";
+import { X, Check, XCircle, Database, GitBranch, Lightbulb, HelpCircle, Link2, LucideIcon } from "lucide-react";
 import { colors } from "../shared";
-import { MockDecisionTrace } from "../mocks/platform-mocks";
+import { MockDecisionTrace, AssumptionSource } from "../mocks/platform-mocks";
 
-// ============================================================================
-// DECISION TRACE DRAWER
-// "Why this recommendation?" explainer drawer
-// ============================================================================
+interface SourceConfig {
+  icon: LucideIcon;
+  color: string;
+  label: string;
+}
 
 interface DecisionTraceDrawerProps {
   isOpen: boolean;
@@ -15,32 +16,19 @@ interface DecisionTraceDrawerProps {
   recommendation: MockDecisionTrace;
 }
 
-function getSourceIcon(source: 'calculated' | 'user_input' | 'default') {
-  switch (source) {
-    case 'calculated':
-      return { icon: GitBranch, color: colors.accent };
-    case 'user_input':
-      return { icon: Database, color: colors.success };
-    case 'default':
-      return { icon: Lightbulb, color: colors.textMuted };
-  }
-}
+const SOURCE_CONFIGS: Record<AssumptionSource, SourceConfig> = {
+  calculated: { icon: GitBranch, color: colors.accent, label: 'Calculated' },
+  user_input: { icon: Database, color: colors.success, label: 'You provided' },
+  default: { icon: Lightbulb, color: colors.textMuted, label: 'Default' },
+};
 
-function getSourceLabel(source: 'calculated' | 'user_input' | 'default') {
-  switch (source) {
-    case 'calculated':
-      return 'Calculated';
-    case 'user_input':
-      return 'You provided';
-    case 'default':
-      return 'Default';
-  }
-}
+const CONFIDENCE_THRESHOLD = 80;
 
-export function DecisionTraceDrawer({ isOpen, onClose, recommendation }: DecisionTraceDrawerProps) {
+export function DecisionTraceDrawer({ isOpen, onClose, recommendation }: DecisionTraceDrawerProps): React.ReactElement | null {
   if (!isOpen) return null;
 
   const confidencePercent = Math.round(recommendation.confidence * 100);
+  const isHighConfidence = confidencePercent >= CONFIDENCE_THRESHOLD;
 
   return (
     <>
@@ -91,13 +79,13 @@ export function DecisionTraceDrawer({ isOpen, onClose, recommendation }: Decisio
                 className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${confidencePercent}%`,
-                  backgroundColor: confidencePercent >= 80 ? colors.success : colors.warning,
+                  backgroundColor: isHighConfidence ? colors.success : colors.warning,
                 }}
               />
             </div>
             <span
               className="text-sm font-bold"
-              style={{ color: confidencePercent >= 80 ? colors.success : colors.warning }}
+              style={{ color: isHighConfidence ? colors.success : colors.warning }}
             >
               {confidencePercent}%
             </span>
@@ -172,8 +160,8 @@ export function DecisionTraceDrawer({ isOpen, onClose, recommendation }: Decisio
             </h3>
             <div className="space-y-2">
               {recommendation.assumptions.map((assumption, index) => {
-                const sourceConfig = getSourceIcon(assumption.source);
-                const SourceIcon = sourceConfig.icon;
+                const config = SOURCE_CONFIGS[assumption.source];
+                const SourceIcon = config.icon;
 
                 return (
                   <div
@@ -182,7 +170,7 @@ export function DecisionTraceDrawer({ isOpen, onClose, recommendation }: Decisio
                     style={{ backgroundColor: colors.bg }}
                   >
                     <div className="flex items-center gap-3">
-                      <SourceIcon className="w-4 h-4" style={{ color: sourceConfig.color }} />
+                      <SourceIcon className="w-4 h-4" style={{ color: config.color }} />
                       <span className="text-sm" style={{ color: colors.text }}>
                         {assumption.label}
                       </span>
@@ -194,11 +182,11 @@ export function DecisionTraceDrawer({ isOpen, onClose, recommendation }: Decisio
                       <span
                         className="text-xs px-2 py-0.5 rounded-full"
                         style={{
-                          backgroundColor: `${sourceConfig.color}15`,
-                          color: sourceConfig.color,
+                          backgroundColor: `${config.color}15`,
+                          color: config.color,
                         }}
                       >
-                        {getSourceLabel(assumption.source)}
+                        {config.label}
                       </span>
                     </div>
                   </div>
