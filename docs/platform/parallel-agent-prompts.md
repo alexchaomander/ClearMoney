@@ -564,7 +564,9 @@ Parallelization:
 
 ---
 
-## Prompt 5 — Consent Ledger + Token Vault
+## Prompt 5 — Consent Ledger + Token Vault ✅ COMPLETED
+
+> **Status:** Completed. See `docs/platform/consent-and-vault.md` for the full consent management and token vault design including scope model, consent lifecycle, data deletion flow, encryption, and audit logging.
 
 Role:
 You are a security/privacy architect designing for a **multi-tenant** financial data platform.
