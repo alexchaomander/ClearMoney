@@ -358,6 +358,113 @@ Premium features should provide genuine value, not gate essential information.
 
 **Tier 3: Sponsorships (Selective)**
 
+---
+
+## Context Graph Roadmap (Platform + ClearMoney)
+
+Inspired by Foundation Capital’s “Context Graphs” thesis: the durable asset is the decision trace—what data was used, what policy applied, which exceptions were granted, who approved, and why. Our goal is to build a personal-finance context graph by becoming the execution path for user decisions and capturing decision traces across accounts, transactions, holdings, liabilities, and recommendations. citeturn0view0
+
+This roadmap splits into two parallel tracks:
+- **Connect Platform**: The Plaid-like connectivity layer + normalized finance graph + decision trace store.
+- **ClearMoney App**: The advisor experience built on top of the platform APIs.
+
+### Phase A — Foundations (0–3 months)
+
+**Platform**
+- Choose first aggregator (Plaid or MX), design provider abstraction interface.
+- Token vault + consent ledger (scopes, freshness, revocation).
+- Core schema: user, connection, institution, account, balance, transaction.
+- Sync pipeline + webhook ingestion.
+- Data provenance: each record tagged with provider + timestamp + confidence.
+
+**ClearMoney**
+- Account connect flow using platform link token.
+- “Coverage & freshness” widget on dashboard.
+- Basic decision traces for top 3 actions:
+  - Emergency fund gap
+  - Credit utilization reduction
+  - High-interest debt payoff
+
+**Milestone**
+- End-to-end: link accounts → normalize data → show dashboard snapshot → generate 3 recommendations with “why” trace.
+
+---
+
+### Phase B — Wealth Context (3–6 months)
+
+**Platform**
+- Add investments + holdings + securities.
+- Add liabilities (mortgage, student loans, auto).
+- Net-worth graph (assets/liabilities) with category rollups.
+- “Context events” table for decision traces (input set, rules applied, approvals, outcome).
+
+**ClearMoney**
+- Portfolio allocation + concentration view.
+- Debt strategy recommendations (snowball/avalanche).
+- First “decision replay” UI: show inputs, rules, and outcome for a recommendation.
+
+**Milestone**
+- Full net-worth view + 5–7 recommendations with traceable rationale.
+
+---
+
+### Phase C — Advisor-Grade Decisions (6–12 months)
+
+**Platform**
+- Add income verification + payroll data (if available).
+- Add tax context (brackets, realized gains from holdings, withholding).
+- Multi-provider routing per institution.
+- Confidence scoring model (coverage, freshness, provenance).
+
+**ClearMoney**
+- Tax-aware recommendations:
+  - Roth vs Traditional
+  - Tax-loss harvesting candidates
+  - Contribution order optimization
+- Personalized “decision history” timeline.
+
+**Milestone**
+- Advisor-grade recommendations for tax + retirement with replayable traces.
+
+---
+
+### Phase D — Context Graph Flywheel (12–18 months)
+
+**Platform**
+- Decision trace library becomes searchable “precedent.”
+- Graph queries: “when did we recommend X and why?”
+- “Explainability as API”: expose trace, rule IDs, and precedent links.
+- Incremental enrichment: categorization improvements + merchant normalization.
+
+**ClearMoney**
+- Proactive recommendations triggered by context changes.
+- Quarterly “advisor review” with timeline of decisions + outcomes.
+- Confidence-based nudges (“Connect X to improve accuracy by Y%”).
+
+**Milestone**
+- Context graph becomes the source of truth for “why” across financial decisions.
+
+---
+
+### Phase E — Platform Expansion (18+ months)
+
+**Platform**
+- Add insurance, crypto, alternative assets, and employer benefits.
+- Partner APIs for fee-only advisors.
+- Enterprise API tier for other fintechs.
+
+**ClearMoney**
+- “Life event” workflows (job change, home purchase, equity windfall).
+- Scalable advisor marketplace using context graph + consented data.
+
+---
+
+### Operating Principles
+
+- **Execution path first**: To build a context graph, we must be in the decision loop, not just reading data after the fact. citeturn0view0
+- **Decision traces are product**: Every recommendation writes a trace that captures inputs, policy, and rationale.
+- **Data minimization + consent**: Users see, control, and revoke every data scope.
+
 We will accept sponsorships under strict conditions:
 - No editorial control—sponsor cannot review or modify content
 - Clear "Sponsored" labeling, not hidden advertorials
