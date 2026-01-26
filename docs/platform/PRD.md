@@ -641,7 +641,7 @@ This creates significant engineering overhead and inconsistent user experiences 
 | **Sync API** | Fetching current data | REST API with pagination |
 | **Async Webhooks** | Event notifications | HTTPS POST with retry |
 | **Polling** | Fallback for webhook failures | Recommended interval: 60s |
-| **SDK** | Preferred for connection flows | JavaScript, Python, iOS, Android |
+| **SDK** | Preferred for connection flows | JavaScript (MVP); Python (Phase 2); iOS, Android (Phase 3) |
 | **REST API** | Direct integration | OpenAPI 3.0 spec available |
 
 ---
@@ -789,9 +789,11 @@ The percentage of users who take action on at least one recommendation within 30
 | Data freshness (within SLA) | N/A | 95% | MVP |
 | Decision trace "Why this?" click rate | N/A | >15% | Phase 1 |
 | App integration time | N/A | <8 hours | Phase 1 |
-| User trust score (survey) | N/A | >4.0/5.0 | Phase 2 |
+| User trust score (survey)* | N/A | >4.0/5.0 | Phase 2 |
 | Provider failover success rate | N/A | >99% | Phase 2 |
 | Self-service onboarding completion | N/A | >80% | Phase 3 |
+
+*\*User Trust Score Survey Methodology: Measured via in-app survey triggered after 30 days of active usage. Survey includes 3 questions on a 5-point Likert scale: (1) "I trust the recommendations this app provides" (2) "I understand why recommendations are made for me" (3) "I feel my financial data is secure." Score is the average across all three questions.*
 
 ### Guardrail Metrics (things we don't want to hurt)
 
