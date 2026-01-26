@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -15,6 +16,7 @@ import {
   BarChart3,
   Zap,
   CheckCircle2,
+  HelpCircle,
 } from "lucide-react";
 import {
   colors,
@@ -24,6 +26,17 @@ import {
   AppNavigation,
   mockUser,
 } from "../shared";
+import { DataFreshnessWidget } from "../components/DataFreshnessWidget";
+import { DecisionTraceDrawer } from "../components/DecisionTraceDrawer";
+import { CoverageGapsCard } from "../components/CoverageGapsCard";
+import {
+  mockConnections,
+  mockDecisionTrace,
+  mockDebtPayoffTrace,
+  mockRothTrace,
+  mockCoverageGaps,
+  MockDecisionTrace,
+} from "../mocks/platform-mocks";
 
 // ============================================================================
 // DASHBOARD PAGE
@@ -34,6 +47,7 @@ import {
 // - Prioritized action cards (Top 3)
 // - Key metrics: Income, Savings Rate, Debt
 // - "Your advisor recommends..." section
+// - Data freshness and coverage indicators
 // ============================================================================
 
 // Format currency helper
@@ -51,31 +65,34 @@ const topRecommendations = [
     title: "Maximize your 401k match",
     description: "You're missing $3,600 in free money from your employer each year.",
     impact: "+$3,600/yr",
-    priority: "high",
+    priority: "high" as const,
     link: "/designs/design-11-autonomous/recommendations",
     source: "Based on your Fidelity 401(k) data",
+    trace: mockRothTrace,
   },
   {
     id: 2,
     title: "Build your emergency fund",
     description: "Currently at 1.7 months. Target is 3 months of expenses.",
     impact: "+1.3 months needed",
-    priority: "high",
+    priority: "high" as const,
     link: "/designs/design-11-autonomous/recommendations",
     source: "Based on your Chase Savings balance",
+    trace: mockDecisionTrace,
   },
   {
     id: 3,
-    title: "Open a Mega Backdoor Roth",
-    description: "$23K additional tax-advantaged space available through your employer.",
-    impact: "+$23K tax-free",
-    priority: "medium",
+    title: "Pay off high-interest credit card",
+    description: "Your Amex card at 22% APR costs you $110/month in interest.",
+    impact: "-$1,320/yr",
+    priority: "medium" as const,
     link: "/designs/design-11-autonomous/recommendations",
-    source: "Based on your employer benefits",
+    source: "Based on your American Express data",
+    trace: mockDebtPayoffTrace,
   },
 ];
 
-// Connected accounts data
+// Connected accounts data (for legacy section)
 const connectedAccounts = [
   { id: "chase", name: "Chase", logo: "C", color: "#1a73e8", accounts: 2 },
   { id: "fidelity", name: "Fidelity", logo: "F", color: "#4a8c3c", accounts: 1 },
@@ -514,10 +531,14 @@ function DataDrivenInsights() {
 }
 
 // ============================================================================
-// RECOMMENDATIONS CARD
+// RECOMMENDATIONS CARD WITH "WHY THIS?" BUTTON
 // ============================================================================
 
-function RecommendationsCard() {
+function RecommendationsCard({
+  onWhyThisClick,
+}: {
+  onWhyThisClick: (trace: MockDecisionTrace) => void;
+}) {
   return (
     <div
       className="p-8 rounded-3xl"
@@ -552,10 +573,9 @@ function RecommendationsCard() {
 
       <div className="space-y-4">
         {topRecommendations.map((rec) => (
-          <Link
+          <div
             key={rec.id}
-            href={rec.link}
-            className="block p-5 rounded-2xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+            className="p-5 rounded-2xl transition-all duration-200 hover:shadow-lg"
             style={{
               backgroundColor: colors.bg,
               border: `1px solid ${colors.border}`,
@@ -576,10 +596,21 @@ function RecommendationsCard() {
                   >
                     {rec.priority} priority
                   </span>
+                  {/* Why this? button */}
+                  <button
+                    onClick={() => onWhyThisClick(rec.trace)}
+                    className="text-xs font-medium flex items-center gap-1 px-2 py-1 rounded-full transition-all duration-200 hover:bg-black/5"
+                    style={{ color: colors.textMuted }}
+                  >
+                    <HelpCircle className="w-3 h-3" />
+                    Why this?
+                  </button>
                 </div>
-                <h4 className="text-base font-semibold mb-1" style={{ color: colors.text }}>
-                  {rec.title}
-                </h4>
+                <Link href={rec.link}>
+                  <h4 className="text-base font-semibold mb-1 hover:underline" style={{ color: colors.text }}>
+                    {rec.title}
+                  </h4>
+                </Link>
                 <p className="text-sm mb-2" style={{ color: colors.textMuted }}>
                   {rec.description}
                 </p>
@@ -598,7 +629,7 @@ function RecommendationsCard() {
                 </span>
               </div>
             </div>
-          </Link>
+          </div>
         ))}
       </div>
     </div>
@@ -675,6 +706,19 @@ function GoalsProgress() {
 // ============================================================================
 
 export default function DashboardPage() {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedTrace, setSelectedTrace] = useState<MockDecisionTrace>(mockDecisionTrace);
+
+  const handleWhyThisClick = (trace: MockDecisionTrace) => {
+    setSelectedTrace(trace);
+    setIsDrawerOpen(true);
+  };
+
+  const handleRefreshConnection = (connectionId: string) => {
+    console.log('Refreshing connection:', connectionId);
+    // In a real app, this would trigger a sync
+  };
+
   return (
     <>
       <GlobalStyles />
@@ -731,10 +775,19 @@ export default function DashboardPage() {
               <DataDrivenInsights />
             </div>
 
+            {/* Data Freshness & Coverage Gaps Row */}
+            <div className="grid lg:grid-cols-2 gap-8 mb-8">
+              <DataFreshnessWidget
+                connections={mockConnections}
+                onRefresh={handleRefreshConnection}
+              />
+              <CoverageGapsCard gaps={mockCoverageGaps} />
+            </div>
+
             {/* Secondary grid */}
             <div className="grid lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2">
-                <RecommendationsCard />
+                <RecommendationsCard onWhyThisClick={handleWhyThisClick} />
               </div>
               <GoalsProgress />
             </div>
@@ -779,6 +832,13 @@ export default function DashboardPage() {
           </div>
         </main>
       </div>
+
+      {/* Decision Trace Drawer */}
+      <DecisionTraceDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        recommendation={selectedTrace}
+      />
     </>
   );
 }
