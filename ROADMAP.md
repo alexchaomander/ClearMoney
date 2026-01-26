@@ -368,43 +368,54 @@ This roadmap splits into two parallel tracks:
 - **Connect Platform**: The Plaid-like connectivity layer + normalized finance graph + decision trace store.
 - **ClearMoney App**: The advisor experience built on top of the platform APIs.
 
-### Phase A — Foundations (0–3 months)
+### Phase A — Investment-Focused MVP (0–3 months)
+
+> **Strategic choice:** We start with investments rather than banking because:
+> 1. Direct brokerage APIs are free (Schwab, IBKR, Alpaca)
+> 2. Investment-specialized aggregators (SnapTrade) cost 50-70% less than Plaid
+> 3. Higher-value use cases (tax optimization, asset allocation)
+> 4. Less competitive market positioning
 
 **Platform**
-- Choose first aggregator (Plaid or MX), design provider abstraction interface.
+- Provider abstraction interface supporting direct APIs + aggregators.
+- Direct Schwab API integration (free, covers former TD Ameritrade users).
+- SnapTrade integration for other brokerages (Fidelity, Vanguard, Robinhood, etc.).
 - Token vault + consent ledger (scopes, freshness, revocation).
-- Core schema: user, connection, institution, account, balance, transaction.
+- Core schema: user, connection, institution, account, holdings, positions, tax lots.
 - Sync pipeline + webhook ingestion.
 - Data provenance: each record tagged with provider + timestamp + confidence.
 
 **ClearMoney**
-- Account connect flow using platform link token.
-- “Coverage & freshness” widget on dashboard.
-- Basic decision traces for top 3 actions:
-  - Emergency fund gap
-  - Credit utilization reduction
-  - High-interest debt payoff
+- Investment account connect flow using platform link token.
+- Portfolio allocation + concentration view.
+- Basic decision traces for top 3 investment actions:
+  - Asset allocation drift
+  - Concentration risk alerts
+  - Tax-loss harvesting candidates
 
 **Milestone**
-- End-to-end: link accounts → normalize data → show dashboard snapshot → generate 3 recommendations with “why” trace.
+- End-to-end: link brokerage → normalize holdings → show allocation → generate 3 recommendations with "why" trace.
 
 ---
 
-### Phase B — Wealth Context (3–6 months)
+### Phase B — Complete Net Worth (3–6 months)
 
 **Platform**
-- Add investments + holdings + securities.
-- Add liabilities (mortgage, student loans, auto).
+- Add bank account connectivity via Plaid.
+- Add liabilities (mortgage, student loans, auto) via Plaid Liabilities + Method Financial.
+- Add real estate (home values via Zillow/manual entry).
 - Net-worth graph (assets/liabilities) with category rollups.
-- “Context events” table for decision traces (input set, rules applied, approvals, outcome).
+- "Context events" table for decision traces (input set, rules applied, approvals, outcome).
 
 **ClearMoney**
-- Portfolio allocation + concentration view.
+- Net worth dashboard with all account types.
+- Cash flow analysis from bank transactions.
 - Debt strategy recommendations (snowball/avalanche).
-- First “decision replay” UI: show inputs, rules, and outcome for a recommendation.
+- Emergency fund adequacy check.
+- First "decision replay" UI: show inputs, rules, and outcome for a recommendation.
 
 **Milestone**
-- Full net-worth view + 5–7 recommendations with traceable rationale.
+- Full net-worth view across investments, bank, debt, real estate + 5–7 recommendations with traceable rationale.
 
 ---
 

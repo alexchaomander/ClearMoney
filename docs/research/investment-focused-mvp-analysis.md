@@ -470,15 +470,30 @@ Combine direct APIs (where free) with SnapTrade for the rest.
 
 ## Technical Implementation
 
-### Provider Interface (Same as PRD)
+> **Note:** For the complete, authoritative technical specification including Pydantic models, database schema, and provider implementations, see [`docs/platform/implementation-prompt-investment-mvp.md`](../platform/implementation-prompt-investment-mvp.md). The code samples below are simplified for illustration purposes.
+
+### Provider Interface
+
+The provider abstraction layer supports multiple data sources with a unified interface. Key methods include:
+
+- `create_link_token()` - Initiate account linking flow
+- `exchange_token()` - Complete OAuth/token exchange
+- `get_accounts()` - Retrieve investment accounts for a connection
+- `get_holdings()` - Fetch current positions with cost basis
+- `get_transactions()` - Pull transaction history
+- `get_cost_basis()` - Get tax lot information
+- `refresh()` - Trigger data sync
 
 ```python
-from abc import ABC, abstractmethod
-from typing import List, Optional
-from datetime import datetime
-
+# Simplified example - see implementation-prompt-investment-mvp.md for full interface
 class InvestmentProvider(ABC):
     """Abstract interface for investment data providers."""
+
+    @property
+    @abstractmethod
+    def provider_name(self) -> str:
+        """Return provider identifier."""
+        pass
 
     @abstractmethod
     async def get_accounts(self, connection_id: str) -> List[InvestmentAccount]:
@@ -486,87 +501,47 @@ class InvestmentProvider(ABC):
         pass
 
     @abstractmethod
-    async def get_holdings(self, account_id: str) -> List[Holding]:
-        """Get current holdings for an account."""
-        pass
-
-    @abstractmethod
-    async def get_transactions(
+    async def get_holdings(
         self,
-        account_id: str,
-        start_date: datetime,
-        end_date: datetime
-    ) -> List[InvestmentTransaction]:
-        """Get investment transactions for date range."""
+        connection_id: str,
+        account_id: Optional[str] = None
+    ) -> List[Holding]:
+        """Get current holdings. Optionally filter by account."""
         pass
 
-    @abstractmethod
-    async def get_cost_basis(self, account_id: str) -> List[TaxLot]:
-        """Get cost basis / tax lot information."""
-        pass
-
-
-class SchwabProvider(InvestmentProvider):
-    """Direct Schwab API implementation."""
-    pass
-
-
-class SnapTradeProvider(InvestmentProvider):
-    """SnapTrade aggregator implementation."""
-    pass
+    # ... additional methods defined in implementation prompt
 ```
 
 ### Data Model Extensions
 
+> **Note:** The complete database schema with all fields, constraints, and indexes is defined in [`docs/platform/implementation-prompt-investment-mvp.md`](../platform/implementation-prompt-investment-mvp.md). The schema below is a simplified overview.
+
+Key tables for investment data:
+
+| Table | Purpose |
+|-------|---------|
+| `investment_accounts` | Extends base accounts with investment-specific fields (type, tax-advantaged status, contribution limits) |
+| `holdings` | Current positions with security identifiers, quantities, prices, cost basis, and unrealized gains |
+| `tax_lots` | Individual tax lots for cost basis tracking and tax-loss harvesting |
+| `investment_transactions` | Buy, sell, dividend, transfer, and other transaction types |
+| `portfolio_snapshots` | Daily snapshots for performance tracking |
+| `investment_recommendations` | Generated recommendations with decision traces |
+
 ```sql
--- Investment-specific tables (extend existing schema)
+-- Simplified schema overview - see implementation prompt for complete DDL
 
 CREATE TYPE investment_account_type AS ENUM (
-    'brokerage',
-    'ira_traditional',
-    'ira_roth',
-    'ira_sep',
-    'ira_simple',
-    '401k',
-    '401k_roth',
-    '403b',
-    '457b',
-    '529',
-    'hsa',
-    'pension',
-    'trust',
-    'custodial',
-    'other'
+    'brokerage', 'ira_traditional', 'ira_roth', '401k', '401k_roth',
+    '403b', '457b', '529', 'hsa', 'pension', 'trust', 'custodial', 'other'
 );
 
-CREATE TABLE holdings (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-    symbol VARCHAR(20),
-    cusip VARCHAR(9),
-    isin VARCHAR(12),
-    name VARCHAR(255) NOT NULL,
-    quantity DECIMAL(20, 8) NOT NULL,
-    price DECIMAL(20, 8),
-    market_value DECIMAL(20, 2),
-    cost_basis DECIMAL(20, 2),
-    currency VARCHAR(3) DEFAULT 'USD',
-    asset_class VARCHAR(50),  -- equity, fixed_income, cash, etc.
-    as_of_date TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+CREATE TYPE transaction_type AS ENUM (
+    'buy', 'sell', 'dividend', 'interest', 'transfer_in', 'transfer_out',
+    'fee', 'tax', 'split', 'merger', 'spinoff', 'other'
 );
 
-CREATE TABLE tax_lots (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    holding_id UUID NOT NULL REFERENCES holdings(id) ON DELETE CASCADE,
-    acquired_date DATE NOT NULL,
-    quantity DECIMAL(20, 8) NOT NULL,
-    cost_per_share DECIMAL(20, 8) NOT NULL,
-    total_cost DECIMAL(20, 2) NOT NULL,
-    term VARCHAR(10),  -- short, long
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- Holdings include unrealized_gain_loss for tax-loss harvesting
+-- CHECK constraint ensures at least one security identifier (symbol, cusip, isin, figi)
 ```
 
 ### Routing Logic

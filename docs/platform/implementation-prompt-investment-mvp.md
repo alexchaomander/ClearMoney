@@ -173,6 +173,21 @@ CREATE TYPE asset_class AS ENUM (
 
 CREATE TYPE tax_term AS ENUM ('short', 'long');
 
+CREATE TYPE transaction_type AS ENUM (
+    'buy',
+    'sell',
+    'dividend',
+    'interest',
+    'transfer_in',
+    'transfer_out',
+    'fee',
+    'tax',
+    'split',
+    'merger',
+    'spinoff',
+    'other'
+);
+
 -- Investment accounts (extends base accounts table)
 CREATE TABLE investment_accounts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -221,7 +236,12 @@ CREATE TABLE holdings (
     provider_security_id VARCHAR(255),         -- Provider's internal ID
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    -- Ensure at least one security identifier is present
+    CONSTRAINT holdings_has_identifier CHECK (
+        symbol IS NOT NULL OR cusip IS NOT NULL OR isin IS NOT NULL OR figi IS NOT NULL
+    )
 );
 
 CREATE INDEX idx_holdings_account ON holdings(account_id);
@@ -256,7 +276,7 @@ CREATE TABLE investment_transactions (
     account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
 
     -- Transaction details
-    transaction_type VARCHAR(50) NOT NULL,     -- buy, sell, dividend, transfer, fee, etc.
+    transaction_type transaction_type NOT NULL,
     transaction_date DATE NOT NULL,
     settlement_date DATE,
 
@@ -349,13 +369,18 @@ from datetime import datetime, date
 from pydantic import BaseModel
 
 class InvestmentAccount(BaseModel):
+    id: str  # Internal ID for the account
     provider_account_id: str
     name: str
     account_type: str  # brokerage, ira_traditional, 401k, etc.
+    investment_type: str  # Maps to investment_account_type enum
     balance: float
     currency: str = "USD"
+    is_tax_advantaged: bool = False
 
 class Holding(BaseModel):
+    id: str  # Internal ID for the holding
+    account_id: str  # Reference to parent account
     symbol: Optional[str]
     cusip: Optional[str]
     name: str
@@ -363,6 +388,7 @@ class Holding(BaseModel):
     price: Optional[float]
     market_value: Optional[float]
     cost_basis: Optional[float]
+    unrealized_gain_loss: Optional[float]  # market_value - cost_basis
     asset_class: Optional[str]
     security_type: Optional[str]
 
@@ -551,6 +577,10 @@ class SchwabProvider(InvestmentProvider):
 ### SnapTrade Provider (Aggregator)
 
 ```python
+import time
+import hmac
+import hashlib
+
 class SnapTradeProvider(InvestmentProvider):
     """SnapTrade aggregator for brokerages without direct APIs.
 
@@ -613,11 +643,10 @@ class SnapTradeProvider(InvestmentProvider):
     # ... implement remaining methods
 
     def _get_headers(self) -> dict:
-        """Generate authenticated headers."""
-        import time
-        import hmac
-        import hashlib
+        """Generate authenticated headers.
 
+        Note: In production, import time, hmac, and hashlib at the top of the file.
+        """
         timestamp = str(int(time.time()))
         signature = hmac.new(
             self.consumer_key.encode(),
