@@ -1,6 +1,6 @@
 # Sync + Freshness Specification
 
-This document defines the data synchronization system and freshness scoring model for the Context Graph platform. It covers sync cadence, job lifecycle, retry policies, staleness thresholds, and confidence scoring.
+This document defines the data synchronization system and freshness scoring model for the Strata platform. It covers sync cadence, job lifecycle, retry policies, staleness thresholds, and confidence scoring.
 
 ---
 
@@ -101,7 +101,7 @@ Users or apps can trigger immediate data refresh via the API.
 ```mermaid
 sequenceDiagram
     participant App
-    participant API as Context Graph API
+    participant API as Strata API
     participant Queue as Job Queue
     participant Worker as Sync Worker
     participant Provider

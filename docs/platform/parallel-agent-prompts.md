@@ -4,7 +4,7 @@ Purpose: A single document containing detailed, step-by-step prompts to run mult
 
 Date: 2026-01-24
 
-**Important**: This platform is designed as **standalone infrastructure** — a multi-tenant "Context Graph for Finance" that can serve multiple consumer apps. ClearMoney is the first customer, but the platform must be app-agnostic. Do NOT hardcode ClearMoney references in the platform layer (Prompts 1–7, 9). Only Prompt 8 (UI scaffolding) is ClearMoney-specific.
+**Important**: This platform is designed as **standalone infrastructure** — a multi-tenant "Strata for Finance" that can serve multiple consumer apps. ClearMoney is the first customer, but the platform must be app-agnostic. Do NOT hardcode ClearMoney references in the platform layer (Prompts 1–7, 9). Only Prompt 8 (UI scaffolding) is ClearMoney-specific.
 
 ---
 
@@ -13,7 +13,7 @@ Date: 2026-01-24
 > **Status:** Completed and merged. See `docs/platform/openapi.yaml` for the implemented spec.
 
 Role:
-You are a systems API designer. Produce a complete OpenAPI 3.1 spec for a **multi-tenant, provider-agnostic financial connectivity platform** called the "Context Graph API".
+You are a systems API designer. Produce a complete OpenAPI 3.1 spec for a **multi-tenant, provider-agnostic financial connectivity platform** called the "Strata API".
 
 Scope:
 - Define the external API only.
@@ -24,7 +24,7 @@ Scope:
 Requirements:
 
 ### Platform naming:
-- API title: "Context Graph API" (NOT ClearMoney)
+- API title: "Strata API" (NOT ClearMoney)
 - Server URL: `https://api.contextgraph.example.com` (generic placeholder)
 - Description: "A multi-tenant financial connectivity platform providing normalized access to financial data across providers."
 
@@ -151,7 +151,7 @@ Output:
 - Write to `docs/platform/openapi.yaml`.
 
 Deliverable checklist:
-- [x] API titled "Context Graph API" (NOT ClearMoney)
+- [x] API titled "Strata API" (NOT ClearMoney)
 - [x] Multi-tenant: App schema and `/v1/apps` endpoints defined
 - [x] User schema includes `app_id` scoping (implicit from API key)
 - [x] All data endpoints present with correct HTTP methods
@@ -184,7 +184,7 @@ Parallelization:
 > **Reference:** The OpenAPI spec is complete at `docs/platform/openapi.yaml`. Entity names and field names are aligned.
 
 Role:
-You are a data architect. Define a normalized PostgreSQL schema for a **multi-tenant** financial connectivity platform (the "Context Graph").
+You are a data architect. Define a normalized PostgreSQL schema for a **multi-tenant** financial connectivity platform (the "Strata").
 
 Scope:
 - SQL schema (PostgreSQL 15+) + a human-readable data model doc.
@@ -757,9 +757,9 @@ Parallelization:
 
 ---
 
-## Prompt 6 — Context Graph / Decision Trace Model ✅ COMPLETED
+## Prompt 6 — Strata / Decision Trace Model ✅ COMPLETED
 
-> **Status:** Completed. See `docs/platform/context-graph-events.md` for the full decision trace model including event types, schemas, causal linking, replay semantics, and query patterns.
+> **Status:** Completed. See `docs/platform/strata-events.md` for the full decision trace model including event types, schemas, causal linking, replay semantics, and query patterns.
 
 Role:
 You are a product + data engineer designing the "decision trace" model for explainable financial recommendations in a **multi-tenant** platform.
@@ -1096,7 +1096,7 @@ Indexes needed:
 - `(recommendation_type, timestamp)` for analytics
 
 Output:
-- `docs/platform/context-graph-events.md`.
+- `docs/platform/strata-events.md`.
 
 Deliverable checklist:
 - [ ] Event type enum with descriptions
@@ -1109,7 +1109,7 @@ Deliverable checklist:
 - [ ] Query patterns with suggested indexes
 
 Execution instructions:
-- Create or overwrite `docs/platform/context-graph-events.md`.
+- Create or overwrite `docs/platform/strata-events.md`.
 - Do not modify any other files.
 - Use TypeScript interfaces for schema definitions.
 - Include Mermaid diagram for event flow.
@@ -1366,15 +1366,15 @@ Parallelization:
 
 > **Status:** Completed. See `src/app/designs/design-11-autonomous/components/` for the UI components and `mocks/platform-mocks.ts` for mock data.
 
-**Note:** This is the ONLY prompt that is ClearMoney-specific. ClearMoney is the first app consuming the Context Graph platform. Prompts 1–7 and 9 define the platform itself, which is app-agnostic.
+**Note:** This is the ONLY prompt that is ClearMoney-specific. ClearMoney is the first app consuming the Strata platform. Prompts 1–7 and 9 define the platform itself, which is app-agnostic.
 
 Role:
-You are a frontend engineer working on the ClearMoney Next.js application (the first consumer of the Context Graph API).
+You are a frontend engineer working on the ClearMoney Next.js application (the first consumer of the Strata API).
 
 Scope:
 - Add UI scaffolding for connectivity platform features using mocked data.
 - Build components that demonstrate the platform's value proposition.
-- This is the **client app** layer — it consumes the Context Graph API (defined in Prompts 1–7).
+- This is the **client app** layer — it consumes the Strata API (defined in Prompts 1–7).
 
 Requirements:
 
@@ -1641,7 +1641,7 @@ Parallelization:
 > **Status:** Completed. See `docs/platform/PRD.md` for the comprehensive product requirements document.
 
 Role:
-You are a product manager writing a comprehensive PRD for a **multi-tenant** financial connectivity platform (the "Context Graph API").
+You are a product manager writing a comprehensive PRD for a **multi-tenant** financial connectivity platform (the "Strata API").
 
 Scope:
 - Write a complete PRD that could be handed to an engineering team for implementation.
@@ -1653,7 +1653,7 @@ Requirements:
 ### Document structure:
 
 ```markdown
-# Context Graph API — Platform PRD
+# Strata API — Platform PRD
 
 ## 1. Executive Summary
 - One-paragraph vision

@@ -5,7 +5,7 @@ Last Updated: 2026-01-25
 
 ## Overview
 
-This document defines the consent management and token storage architecture for the Context Graph API. The system ensures:
+This document defines the consent management and token storage architecture for the Strata API. The system ensures:
 
 - **User Control**: Granular consent scopes with the ability to narrow or revoke at any time
 - **Data Minimization**: Only access data that users have explicitly consented to
@@ -810,7 +810,7 @@ CREATE INDEX idx_deletion_jobs_pending ON deletion_jobs(next_retry_at)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                          Context Graph API                               │
+│                          Strata API                               │
 │                        (API Servers - No Token Access)                   │
 └────────────────────────────────────┬────────────────────────────────────┘
                                      │
@@ -902,10 +902,10 @@ const kmsClient = new KMSClient({ region: process.env.AWS_REGION });
 
 // KMS key configuration
 const KMS_CONFIG = {
-  keyAlias: `alias/context-graph-tokens-${process.env.ENVIRONMENT}`,
+  keyAlias: `alias/strata-tokens-${process.env.ENVIRONMENT}`,
   algorithm: 'AES_256',
   encryptionContext: {
-    service: 'context-graph',
+    service: 'strata',
     component: 'token-vault',
   },
 };
@@ -1277,7 +1277,7 @@ interface ServiceAuthConfig {
 
   // Additional JWT validation for requests
   jwt: {
-    issuer: 'context-graph-api';
+    issuer: 'strata-api';
     audience: 'token-service';
     algorithm: 'RS256';
   };

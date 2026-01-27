@@ -304,7 +304,7 @@ export default function GraphPage() {
         <div className="mb-8">
           <div className="inline-block mb-4">
             <div className="brutal-border bg-black text-[#c5f82a] px-4 py-2 font-mono-brutal text-sm rotate-[-1deg]">
-              FINANCIAL CONTEXT GRAPH
+              FINANCIAL STRATA
             </div>
           </div>
           <h1 className="font-brutal text-5xl md:text-6xl font-black uppercase tracking-tight mb-4">

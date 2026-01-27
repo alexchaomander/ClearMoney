@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
-  title: Context Graph API
+  title: Strata API
   version: 1.0.0
   description: |
-    Multi-tenant financial connectivity platform API (Context Graph for Finance).
+    Multi-tenant financial connectivity platform API (Strata for Finance).
 
     This platform provides provider-agnostic access to financial data with
     built-in data normalization, consent management, and decision tracing.

@@ -1,7 +1,7 @@
 # Insurance Data Access & APIs: Comprehensive Research Report
 
 **Date:** January 2026
-**Purpose:** Research insurance data aggregation and API access for ClearMoney Context Graph
+**Purpose:** Research insurance data aggregation and API access for ClearMoney Strata
 
 ---
 

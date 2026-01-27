@@ -1,11 +1,11 @@
-# Context Graph API — Investment-Focused MVP Implementation Prompt
+# Strata API — Investment-Focused MVP Implementation Prompt
 
 **Date:** January 2026
 **Purpose:** Implementation prompt for a coding agent to build the investment-focused MVP
 
 ---
 
-**Role:** You are a backend engineer implementing the Context Graph API, a multi-tenant financial connectivity platform focused on **investment accounts** (brokerages, IRAs, 401ks).
+**Role:** You are a backend engineer implementing the Strata API, a multi-tenant financial connectivity platform focused on **investment accounts** (brokerages, IRAs, 401ks).
 
 **Strategic Context:** This MVP prioritizes investment data over banking data because:
 1. Direct brokerage APIs are available (free) — banks don't offer this
@@ -32,7 +32,7 @@
 | **Provider Interface** | `docs/platform/provider-interface.md` | Abstraction pattern |
 | **Provider Routing** | `docs/platform/provider-routing.md` | Multi-provider routing logic |
 | **Consent & Vault** | `docs/platform/consent-and-vault.md` | Token encryption, consent ledger |
-| **Decision Traces** | `docs/platform/context-graph-events.md` | Explainable recommendations |
+| **Decision Traces** | `docs/platform/strata-events.md` | Explainable recommendations |
 | **PRD** | `docs/platform/PRD.md` | Product requirements |
 | **Provider Research** | `docs/research/financial-data-providers-analysis.md` | Provider comparison |
 | **Investment MVP Analysis** | `docs/research/investment-focused-mvp-analysis.md` | Investment strategy details |
@@ -344,7 +344,7 @@ CREATE TABLE investment_recommendations (
     related_accounts JSONB,                    -- Array of account IDs
 
     -- Decision trace
-    trace_id UUID REFERENCES context_graph_events(id),
+    trace_id UUID REFERENCES strata_events(id),
 
     -- Timing
     expires_at TIMESTAMP WITH TIME ZONE,

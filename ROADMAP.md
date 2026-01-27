@@ -360,9 +360,9 @@ Premium features should provide genuine value, not gate essential information.
 
 ---
 
-## Context Graph Roadmap (Platform + ClearMoney)
+## Strata Roadmap (Platform + ClearMoney)
 
-Inspired by Foundation Capital’s “Context Graphs” thesis: the durable asset is the decision trace—what data was used, what policy applied, which exceptions were granted, who approved, and why. Our goal is to build a personal-finance context graph by becoming the execution path for user decisions and capturing decision traces across accounts, transactions, holdings, liabilities, and recommendations. citeturn0view0
+Inspired by Foundation Capital’s “Stratas” thesis: the durable asset is the decision trace—what data was used, what policy applied, which exceptions were granted, who approved, and why. Our goal is to build a Strata by becoming the execution path for user decisions and capturing decision traces across accounts, transactions, holdings, liabilities, and recommendations. citeturn0view0
 
 This roadmap splits into two parallel tracks:
 - **Connect Platform**: The Plaid-like connectivity layer + normalized finance graph + decision trace store.
@@ -439,7 +439,7 @@ This roadmap splits into two parallel tracks:
 
 ---
 
-### Phase D — Context Graph Flywheel (12–18 months)
+### Phase D — Strata Flywheel (12–18 months)
 
 **Platform**
 - Decision trace library becomes searchable “precedent.”
@@ -453,7 +453,7 @@ This roadmap splits into two parallel tracks:
 - Confidence-based nudges (“Connect X to improve accuracy by Y%”).
 
 **Milestone**
-- Context graph becomes the source of truth for “why” across financial decisions.
+- Strata becomes the source of truth for “why” across financial decisions.
 
 ---
 
@@ -466,13 +466,13 @@ This roadmap splits into two parallel tracks:
 
 **ClearMoney**
 - “Life event” workflows (job change, home purchase, equity windfall).
-- Scalable advisor marketplace using context graph + consented data.
+- Scalable advisor marketplace using Strata + consented data.
 
 ---
 
 ### Operating Principles
 
-- **Execution path first**: To build a context graph, we must be in the decision loop, not just reading data after the fact. citeturn0view0
+- **Execution path first**: To build Strata, we must be in the decision loop, not just reading data after the fact. citeturn0view0
 - **Decision traces are product**: Every recommendation writes a trace that captures inputs, policy, and rationale.
 - **Data minimization + consent**: Users see, control, and revoke every data scope.
 

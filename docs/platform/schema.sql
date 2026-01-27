@@ -1,4 +1,4 @@
--- Context Graph API - PostgreSQL Schema
+-- Strata API - PostgreSQL Schema
 -- Version: 1.0.0
 -- PostgreSQL 15+
 --
@@ -651,7 +651,7 @@ CREATE INDEX idx_decision_traces_user_id ON decision_traces(user_id, created_at 
 CREATE INDEX idx_decision_traces_trace_id ON decision_traces(trace_id, created_at);
 CREATE INDEX idx_decision_traces_event_type ON decision_traces(event_type, created_at DESC);
 
-COMMENT ON TABLE decision_traces IS 'Event log for explainable AI recommendations (Context Graph).';
+COMMENT ON TABLE decision_traces IS 'Event log for explainable AI recommendations (Strata).';
 COMMENT ON COLUMN decision_traces.trace_id IS 'Groups all events related to a single recommendation lifecycle';
 
 -- -----------------------------------------------------------------------------
