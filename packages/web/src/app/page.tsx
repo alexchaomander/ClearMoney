@@ -309,7 +309,7 @@ export default function HomePage() {
                       className="flex h-10 w-10 items-center justify-center rounded-2xl"
                       style={{ background: palette.accentSoft }}
                     >
-                      <Icon className="h-5 w-5" style={{ color: palette.accent }} />
+                      <span style={{ color: palette.accent }}><Icon className="h-5 w-5" /></span>
                     </div>
                     <div>
                       <p className="text-base font-semibold">{category.shortName}</p>
@@ -426,7 +426,7 @@ export default function HomePage() {
                         className="flex h-10 w-10 items-center justify-center rounded-xl"
                         style={{ background: palette.accentSoft }}
                       >
-                        <Icon className="h-5 w-5" style={{ color: palette.accent }} />
+                        <span style={{ color: palette.accent }}><Icon className="h-5 w-5" /></span>
                       </div>
                       <div>
                         <p className="text-sm font-semibold">{principle.title}</p>
