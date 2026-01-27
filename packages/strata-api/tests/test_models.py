@@ -111,10 +111,12 @@ async def test_create_connection(session: AsyncSession) -> None:
     session.add(user)
     await session.commit()
 
+    creds = {"access_token": "test_token_abc123", "item_id": "item_xyz"}
     conn = Connection(
         user_id=user.id,
         provider="plaid",
         provider_user_id="plaid_user_123",
+        credentials=creds,
         status=ConnectionStatus.active,
     )
     session.add(conn)
@@ -126,6 +128,7 @@ async def test_create_connection(session: AsyncSession) -> None:
     fetched = result.scalar_one()
     assert fetched.provider == "plaid"
     assert fetched.status == ConnectionStatus.active
+    assert fetched.credentials == creds
 
 
 @pytest.mark.asyncio

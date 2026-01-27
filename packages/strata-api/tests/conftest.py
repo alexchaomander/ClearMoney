@@ -1,6 +1,13 @@
+import os
 from collections.abc import AsyncGenerator
 
-import pytest
+# Set a test encryption key before app modules are imported
+os.environ.setdefault(
+    "STRATA_CREDENTIALS_ENCRYPTION_KEY",
+    "mkAPXR0pVobXiUOdyOROwMx-Cn_o17eqzjjHUBWUURM=",  # test-only key
+)
+
+import pytest  # noqa: E402
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,

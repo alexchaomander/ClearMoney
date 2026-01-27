@@ -8,6 +8,7 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite+aiosqlite:///./strata.db"
     database_echo: bool = False
+    credentials_encryption_key: str = ""
 
     model_config = {"env_prefix": "STRATA_"}
 
