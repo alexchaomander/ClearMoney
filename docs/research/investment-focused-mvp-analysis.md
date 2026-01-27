@@ -1,7 +1,7 @@
 # Investment-Focused MVP: Strategic Analysis
 
 **Date:** January 2026
-**Purpose:** Evaluate building Context Graph with investment accounts (brokerages, 401ks) as MVP instead of bank accounts
+**Purpose:** Evaluate building Strata with investment accounts (brokerages, 401ks) as MVP instead of bank accounts
 
 ---
 
@@ -282,7 +282,7 @@ Build direct integrations with brokerages that have public APIs.
 **Architecture:**
 ```
 ┌─────────────────────────────────┐
-│     Context Graph Platform      │
+│     Strata Platform      │
 └───────────────┬─────────────────┘
                 │
     ┌───────────┼───────────┐
@@ -329,7 +329,7 @@ Use SnapTrade as the single aggregator for all investment accounts.
 **Architecture:**
 ```
 ┌─────────────────────────────────┐
-│     Context Graph Platform      │
+│     Strata Platform      │
 └───────────────┬─────────────────┘
                 │
         ┌───────▼───────┐
@@ -381,7 +381,7 @@ Combine direct APIs (where free) with SnapTrade for the rest.
 **Architecture:**
 ```
 ┌─────────────────────────────────────────────────────────┐
-│              Context Graph Platform                      │
+│              Strata Platform                      │
 │           (Provider Abstraction Layer)                   │
 └────────────────────────┬────────────────────────────────┘
                          │

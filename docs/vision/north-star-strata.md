@@ -1,4 +1,4 @@
-# The Context Graph for Personal Finance: North Star Vision
+# The Strata for Personal Finance: North Star Vision
 
 **Version:** 1.0
 **Date:** January 2026
@@ -10,7 +10,7 @@
 
 ### What We're Building
 
-ClearMoney is building the **Context Graph for Personal Finance** — a comprehensive, unified data layer that connects every aspect of a person's financial life and transforms that data into personalized, explainable, advisor-grade guidance.
+ClearMoney is building the **Strata for Personal Finance** — a comprehensive, unified data layer that connects every aspect of a person's financial life and transforms that data into personalized, explainable, advisor-grade guidance.
 
 This is not another budgeting app. This is not another net worth tracker. This is the **operating system for financial decision-making**.
 
@@ -24,7 +24,7 @@ Today, financial advice exists in silos:
 
 **No single system sees your complete financial picture.**
 
-The Context Graph changes this. By connecting every financial account, asset, liability, income source, and obligation into a single, unified graph, we can provide recommendations that were previously only available to the ultra-wealthy with teams of advisors.
+The Strata changes this. By connecting every financial account, asset, liability, income source, and obligation into a single, unified graph, we can provide recommendations that were previously only available to the ultra-wealthy with teams of advisors.
 
 ### The Promise
 
@@ -43,11 +43,11 @@ This level of integrated, personalized, explainable advice has never been availa
 
 ---
 
-## II. The Context Graph Architecture
+## II. The Strata Architecture
 
-### What is a Context Graph?
+### What is a Strata?
 
-A Context Graph is more than a database of financial accounts. It is:
+A Strata is more than a database of financial accounts. It is:
 
 1. **A unified data model** that normalizes information from dozens of sources into a coherent structure
 2. **A relationship graph** that understands how different financial elements connect (your mortgage is tied to your home, your 401k is tied to your employer, your RSUs vest on a schedule)
@@ -83,7 +83,7 @@ A Context Graph is more than a database of financial accounts. It is:
                                        │
                                        ▼
                           ┌─────────────────────┐
-                          │   CONTEXT GRAPH     │
+                          │   STRATA     │
                           │                     │
                           │  Relationships,     │
                           │  Time series,       │
@@ -717,7 +717,7 @@ You can disconnect at any time.
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    CONTEXT GRAPH API                             │
+│                    STRATA API                             │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
 │  │   Accounts  │  │  Holdings   │  │    Sync     │              │
 │  │   Service   │  │   Service   │  │   Service   │              │
@@ -867,7 +867,7 @@ Target: >40%
 1. **Data Breadth** — No one else connects all seven pillars
 2. **Explainability** — Decision traces build trust others can't match
 3. **Provider Abstraction** — We can add new data sources faster
-4. **Context Graph** — Relationships between data enable unique insights
+4. **Strata** — Relationships between data enable unique insights
 5. **User Trust** — Transparency and integrity create loyalty
 
 ---
@@ -896,7 +896,7 @@ Target: >40%
 
 Financial stress affects 73% of Americans. Most people don't have access to good financial advice. The existing tools are either too simple (tracking only) or too expensive (human advisors).
 
-The Context Graph for Personal Finance changes this equation. By connecting all the data and making recommendations transparent, we can democratize access to advisor-grade financial guidance.
+The Strata for Personal Finance changes this equation. By connecting all the data and making recommendations transparent, we can democratize access to advisor-grade financial guidance.
 
 ### The Opportunity
 

@@ -1,11 +1,11 @@
-# Context Graph API - Data Model
+# Strata API - Data Model
 
 Version: 1.0.0
 Last Updated: 2026-01-24
 
 ## Overview
 
-This document describes the data model for the Context Graph API, a multi-tenant financial connectivity platform. The model is designed to:
+This document describes the data model for the Strata API, a multi-tenant financial connectivity platform. The model is designed to:
 
 1. **Support multi-tenancy** — Apps are tenants with isolated user data
 2. **Provide data provenance** — Track where data came from and how fresh it is
@@ -269,7 +269,7 @@ erDiagram
 ### Core Tables
 
 #### `apps`
-Registered tenant applications. Each app represents a consumer of the Context Graph API.
+Registered tenant applications. Each app represents a consumer of the Strata API.
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -473,7 +473,7 @@ Log of inbound and outbound webhook events.
 | `status` | TEXT | Delivery status |
 
 #### `decision_traces`
-Event log for explainable AI recommendations (Context Graph).
+Event log for explainable AI recommendations (Strata).
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -629,7 +629,7 @@ Tables with soft delete (`deleted_at` column):
 
 ```mermaid
 flowchart TD
-    A[App] -->|API Key| B[Context Graph API]
+    A[App] -->|API Key| B[Strata API]
     B -->|Create User| C[users table]
     C -->|Grant Consent| D[consents table]
     D -->|Create Connection| E[connections table]
@@ -645,4 +645,4 @@ flowchart TD
 - [OpenAPI Specification](./openapi.yaml) — API contract
 - [Consent and Vault Design](./consent-and-vault.md) — Security architecture
 - [Sync and Freshness](./sync-and-freshness.md) — Data freshness model
-- [Context Graph Events](./context-graph-events.md) — Decision trace schema
+- [Strata Events](./strata-events.md) — Decision trace schema

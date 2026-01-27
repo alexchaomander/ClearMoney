@@ -1,6 +1,6 @@
 // ============================================================================
 // PLATFORM MOCK DATA
-// Mock data for Context Graph platform UI components
+// Mock data for Strata platform UI components
 // ============================================================================
 
 // Shared type definitions

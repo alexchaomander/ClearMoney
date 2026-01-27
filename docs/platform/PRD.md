@@ -1,4 +1,4 @@
-# Context Graph API — Platform PRD
+# Strata API — Platform PRD
 
 **Version:** 1.0
 **Author:** Product Team
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-The Context Graph API is a multi-tenant financial connectivity platform that enables consumer applications to access, normalize, and analyze their users' financial data from multiple institutions. By abstracting the complexity of integrating with data providers (Plaid, MX, Finicity, FDX), the platform provides a unified API that any app can consume to deliver personalized, data-driven financial guidance. The platform differentiates through its decision trace system—a transparency layer that explains exactly how recommendations are generated, building user trust through explainability.
+The Strata API is a multi-tenant financial connectivity platform that enables consumer applications to access, normalize, and analyze their users' financial data from multiple institutions. By abstracting the complexity of integrating with data providers (Plaid, MX, Finicity, FDX), the platform provides a unified API that any app can consume to deliver personalized, data-driven financial guidance. The platform differentiates through its decision trace system—a transparency layer that explains exactly how recommendations are generated, building user trust through explainability.
 
 **Key Value Propositions:**
 
@@ -196,7 +196,7 @@ This creates significant engineering overhead and inconsistent user experiences 
 ### Persona 4: Marcus Thompson — Platform Admin
 
 **Background:**
-- DevOps engineer responsible for the Context Graph platform
+- DevOps engineer responsible for the Strata platform
 - Monitors system health, onboards new apps, and manages provider relationships
 - Previously managed infrastructure at an ad-tech company
 
@@ -281,7 +281,7 @@ This creates significant engineering overhead and inconsistent user experiences 
 
 **Precondition:**
 - User has installed the consumer app
-- App has integrated the Context Graph SDK
+- App has integrated the Strata SDK
 - User has at least one financial institution account
 
 **Flow:**
@@ -843,7 +843,7 @@ The percentage of users who take action on at least one recommendation within 30
 
 | Term | Definition |
 |------|------------|
-| **App** | A consumer application that integrates with the Context Graph API (tenant) |
+| **App** | A consumer application that integrates with the Strata API (tenant) |
 | **Connection** | A link between an end user and a financial institution via a provider |
 | **Provider** | A financial data aggregator (Plaid, MX, Finicity, FDX) |
 | **Decision Trace** | A record of inputs, rules, and assumptions used to generate a recommendation |
@@ -858,7 +858,7 @@ The percentage of users who take action on at least one recommendation within 30
 | Provider Abstraction Interface | `docs/platform/provider-interface.md` | Technical spec for provider integration |
 | Provider Routing Strategy | `docs/platform/provider-routing.md` | Health-based routing and failover logic |
 | Consent and Token Vault | `docs/platform/consent-and-vault.md` | Consent management and encryption |
-| Decision Trace Model | `docs/platform/context-graph-events.md` | Event schema and replay semantics |
+| Decision Trace Model | `docs/platform/strata-events.md` | Event schema and replay semantics |
 | Sync and Freshness | `docs/platform/sync-and-freshness.md` | Data sync cadence and confidence scoring |
 
 ### Competitive Analysis Summary
@@ -881,7 +881,7 @@ The percentage of users who take action on at least one recommendation within 30
                                       │ REST API / SDK
                                       ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         Context Graph API Gateway                            │
+│                         Strata API Gateway                            │
 │                   (Authentication, Rate Limiting, Routing)                   │
 └─────────────────────────────────────┬───────────────────────────────────────┘
                                       │
