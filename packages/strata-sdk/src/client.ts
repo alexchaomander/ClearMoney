@@ -18,6 +18,6 @@ export class StrataClient {
     if (!response.ok) {
       throw new Error(`Health check failed: ${response.status}`);
     }
-    return response.json() as Promise<HealthResponse>;
+    return response.json();
   }
 }
