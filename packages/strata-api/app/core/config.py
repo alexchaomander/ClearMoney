@@ -6,6 +6,10 @@ class Settings(BaseSettings):
     version: str = "0.1.0"
     debug: bool = False
 
+    database_url: str = "sqlite+aiosqlite:///./strata.db"
+    database_echo: bool = False
+    credentials_encryption_key: str = ""
+
     model_config = {"env_prefix": "STRATA_"}
 
 
