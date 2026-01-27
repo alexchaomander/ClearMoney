@@ -7,7 +7,7 @@ module.exports = [
       "dist/**",
       ".next/**",
       "node_modules/**",
-      "legacy/**",
+
       "eslint.config.js",
       "src/app/layout.tsx",
       "src/app/page.tsx",
