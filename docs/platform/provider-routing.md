@@ -5,7 +5,7 @@ Last Updated: 2026-01-24
 
 ## Overview
 
-This document defines the provider routing strategy for the Context Graph API. The routing layer intelligently selects which financial data provider (Plaid, MX, Finicity, or FDX) to use for each request based on:
+This document defines the provider routing strategy for the Strata API. The routing layer intelligently selects which financial data provider (Plaid, MX, Finicity, or FDX) to use for each request based on:
 
 - **Provider hierarchy** — Default precedence order
 - **Institution overrides** — Per-institution routing rules

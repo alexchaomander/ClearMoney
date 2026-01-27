@@ -1,7 +1,7 @@
 # Payroll and Income Verification APIs: Comprehensive Research Report
 
 **Date:** January 2026
-**Purpose:** Research payroll connectivity and income verification APIs for ClearMoney Context Graph
+**Purpose:** Research payroll connectivity and income verification APIs for ClearMoney Strata
 
 ---
 

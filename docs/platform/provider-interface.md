@@ -5,7 +5,7 @@ Last Updated: 2026-01-24
 
 ## Overview
 
-This document defines the internal provider abstraction layer that enables the Context Graph API to work with multiple financial data providers (Plaid, MX, Finicity, FDX) through a unified interface. The abstraction handles:
+This document defines the internal provider abstraction layer that enables the Strata API to work with multiple financial data providers (Plaid, MX, Finicity, FDX) through a unified interface. The abstraction handles:
 
 - **Normalization**: Converting provider-specific formats to canonical platform formats
 - **Error Handling**: Mapping provider errors to platform error codes with retry guidance
@@ -16,7 +16,7 @@ This document defines the internal provider abstraction layer that enables the C
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        Context Graph API                             │
+│                        Strata API                             │
 └─────────────────────────────────┬───────────────────────────────────┘
                                   │
                                   ▼

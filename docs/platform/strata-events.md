@@ -1,11 +1,11 @@
-# Context Graph / Decision Trace Model
+# Strata / Decision Trace Model
 
 Version: 1.0.0
 Last Updated: 2026-01-25
 
 ## Overview
 
-The Context Graph is the core differentiator of the platform—it provides **explainable financial recommendations** by capturing the complete decision trace: inputs, rules, assumptions, and outcomes. This enables:
+The Strata is the core differentiator of the platform—it provides **explainable financial recommendations** by capturing the complete decision trace: inputs, rules, assumptions, and outcomes. This enables:
 
 - **Transparency**: Users understand why recommendations were made
 - **Reproducibility**: Decisions can be replayed for debugging and auditing
