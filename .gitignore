@@ -16,6 +16,9 @@ build
 dist
 dist-ssr
 
+# Turbo
+.turbo
+
 # Logs
 logs
 *.log
@@ -55,3 +58,14 @@ next-env.d.ts
 
 # Legacy app node_modules (if installed separately)
 legacy/*/node_modules
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+*.egg-info/
+.eggs/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
