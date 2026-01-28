@@ -1,5 +1,4 @@
 from decimal import Decimal
-from typing import Any
 
 from pydantic import BaseModel
 
@@ -10,6 +9,27 @@ class AssetAllocation(BaseModel):
     category: str
     value: Decimal
     percentage: Decimal
+
+
+class TopHolding(BaseModel):
+    """Top holding in the portfolio."""
+
+    ticker: str | None
+    name: str
+    security_type: str
+    quantity: Decimal
+    market_value: Decimal
+    cost_basis: Decimal | None
+    account_name: str
+
+
+class ConcentrationAlert(BaseModel):
+    """Concentration risk alert."""
+
+    ticker: str | None
+    name: str
+    percentage: Decimal
+    message: str
 
 
 class PortfolioSummary(BaseModel):
@@ -23,5 +43,5 @@ class PortfolioSummary(BaseModel):
     taxable_value: Decimal
     allocation_by_asset_type: list[AssetAllocation]
     allocation_by_account_type: list[AssetAllocation]
-    top_holdings: list[dict[str, Any]]
-    concentration_alerts: list[dict[str, Any]]
+    top_holdings: list[TopHolding]
+    concentration_alerts: list[ConcentrationAlert]

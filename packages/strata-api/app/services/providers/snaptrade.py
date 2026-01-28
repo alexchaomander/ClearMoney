@@ -1,9 +1,12 @@
 import hashlib
-from datetime import datetime
+import logging
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
 
 from snaptrade_client import SnapTrade
+
+logger = logging.getLogger(__name__)
 
 from app.core.config import settings
 from app.models.connection import Connection
@@ -236,7 +239,7 @@ class SnapTradeProvider(BaseProvider):
                     quantity=Decimal(str(_safe_getattr(holding, "units", default=0) or 0)),
                     cost_basis=Decimal(str(book_value)) if book_value is not None else None,
                     market_value=Decimal(str(market_value)) if market_value is not None else None,
-                    as_of=datetime.utcnow(),
+                    as_of=datetime.now(timezone.utc),
                 )
             )
 
@@ -259,5 +262,8 @@ class SnapTradeProvider(BaseProvider):
                 user_id=snaptrade_user_id,
                 user_secret=user_secret,
             )
-        except Exception:
-            pass  # Log but don't fail if we can't delete from SnapTrade
+        except Exception as e:
+            # Log but don't fail if we can't delete from SnapTrade
+            logger.warning(
+                f"Failed to delete SnapTrade user {snaptrade_user_id}: {e}"
+            )

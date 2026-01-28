@@ -15,7 +15,12 @@ from app.models.investment_account import InvestmentAccount, InvestmentAccountTy
 from app.models.security import Security
 from app.models.user import User
 from app.schemas.holding import HoldingWithSecurityResponse
-from app.schemas.portfolio import AssetAllocation, PortfolioSummary
+from app.schemas.portfolio import (
+    AssetAllocation,
+    ConcentrationAlert,
+    PortfolioSummary,
+    TopHolding,
+)
 from app.schemas.security import SecurityResponse
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
@@ -67,7 +72,7 @@ async def get_portfolio_summary(
     allocation_by_account_type: dict[str, Decimal] = defaultdict(Decimal)
 
     # Track holdings for top holdings and concentration
-    all_holdings: list[dict] = []
+    all_holdings: list[TopHolding] = []
 
     for account in investment_accounts:
         account_value = account.balance
@@ -89,15 +94,15 @@ async def get_portfolio_summary(
             security_type = holding.security.security_type.value
             allocation_by_asset_type[security_type] += market_value
 
-            all_holdings.append({
-                "ticker": holding.security.ticker,
-                "name": holding.security.name,
-                "security_type": security_type,
-                "quantity": float(holding.quantity),
-                "market_value": float(market_value),
-                "cost_basis": float(holding.cost_basis) if holding.cost_basis else None,
-                "account_name": account.name,
-            })
+            all_holdings.append(TopHolding(
+                ticker=holding.security.ticker,
+                name=holding.security.name,
+                security_type=security_type,
+                quantity=holding.quantity,
+                market_value=market_value,
+                cost_basis=holding.cost_basis,
+                account_name=account.name,
+            ))
 
     # Calculate net worth
     net_worth = total_cash + total_investment - total_debt
@@ -144,22 +149,23 @@ async def get_portfolio_summary(
     # Get top holdings by market value
     top_holdings = sorted(
         all_holdings,
-        key=lambda x: x["market_value"],
+        key=lambda x: x.market_value,
         reverse=True,
     )[:10]
 
     # Calculate concentration alerts
-    concentration_alerts = []
+    concentration_alerts: list[ConcentrationAlert] = []
     if total_assets > 0:
         for holding in all_holdings:
-            percentage = Decimal(str(holding["market_value"])) / total_assets * Decimal("100")
+            percentage = (holding.market_value / total_assets * Decimal("100")).quantize(Decimal("0.01"))
             if percentage >= CONCENTRATION_THRESHOLD:
-                concentration_alerts.append({
-                    "ticker": holding["ticker"],
-                    "name": holding["name"],
-                    "percentage": float(percentage.quantize(Decimal("0.01"))),
-                    "message": f"{holding['ticker'] or holding['name']} represents {float(percentage.quantize(Decimal('0.1')))}% of your portfolio",
-                })
+                display_pct = percentage.quantize(Decimal("0.1"))
+                concentration_alerts.append(ConcentrationAlert(
+                    ticker=holding.ticker,
+                    name=holding.name,
+                    percentage=percentage,
+                    message=f"{holding.ticker or holding.name} represents {display_pct}% of your portfolio",
+                ))
 
     return PortfolioSummary(
         total_investment_value=total_investment,
