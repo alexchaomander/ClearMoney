@@ -22,7 +22,11 @@ from app.models import (  # noqa: F401
     CashAccount,
     Connection,
     DebtAccount,
+    Holding,
     IncomeSource,
+    Institution,
+    InvestmentAccount,
+    Security,
     User,
 )
 from app.main import app

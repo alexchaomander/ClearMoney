@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     database_echo: bool = False
     credentials_encryption_key: str = ""
 
+    # SnapTrade configuration
+    snaptrade_client_id: str = ""
+    snaptrade_consumer_key: str = ""
+
     model_config = {"env_prefix": "STRATA_"}
 
 
