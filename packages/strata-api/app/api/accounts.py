@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -31,28 +32,29 @@ async def list_all_accounts(
     session: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """List all accounts (cash, debt, investment) for the current user."""
-    # Get cash accounts
-    cash_result = await session.execute(
+    # Run queries concurrently since they are independent
+    cash_task = session.execute(
         select(CashAccount)
         .where(CashAccount.user_id == user.id)
         .order_by(CashAccount.created_at.desc())
     )
-    cash_accounts = cash_result.scalars().all()
-
-    # Get debt accounts
-    debt_result = await session.execute(
+    debt_task = session.execute(
         select(DebtAccount)
         .where(DebtAccount.user_id == user.id)
         .order_by(DebtAccount.created_at.desc())
     )
-    debt_accounts = debt_result.scalars().all()
-
-    # Get investment accounts
-    investment_result = await session.execute(
+    investment_task = session.execute(
         select(InvestmentAccount)
         .where(InvestmentAccount.user_id == user.id)
         .order_by(InvestmentAccount.created_at.desc())
     )
+
+    cash_result, debt_result, investment_result = await asyncio.gather(
+        cash_task, debt_task, investment_task
+    )
+
+    cash_accounts = cash_result.scalars().all()
+    debt_accounts = debt_result.scalars().all()
     investment_accounts = investment_result.scalars().all()
 
     return {

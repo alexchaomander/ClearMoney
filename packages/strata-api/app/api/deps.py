@@ -16,8 +16,18 @@ async def get_current_user(
     and returns the corresponding User model. If the user doesn't exist,
     it creates a new user record.
 
-    In production, this would validate the Clerk JWT token instead of
-    trusting the header directly.
+    SECURITY WARNING: This implementation trusts the x-clerk-user-id header
+    directly without validation. In production, you MUST:
+    1. Validate the Clerk session JWT token
+    2. Extract the user ID from the validated token
+    3. Never trust client-provided headers for authentication
+
+    Example production implementation:
+        from clerk_backend_api import Clerk
+        clerk = Clerk(api_key=settings.clerk_secret_key)
+        session_token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        claims = clerk.sessions.verify_token(session_token)
+        clerk_user_id = claims.sub
     """
     # Get or create user by clerk_id
     result = await session.execute(

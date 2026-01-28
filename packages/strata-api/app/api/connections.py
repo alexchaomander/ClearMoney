@@ -1,5 +1,7 @@
+import logging
+import secrets
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete, select
@@ -19,6 +21,12 @@ from app.schemas.connection import (
     LinkSessionResponse,
 )
 from app.services.providers.snaptrade import SnapTradeProvider
+
+logger = logging.getLogger(__name__)
+
+# In-memory store for pending link sessions (use Redis in production)
+# Maps session_token -> {user_id, user_secret, created_at}
+_pending_link_sessions: dict[str, dict] = {}
 
 router = APIRouter(prefix="/connections", tags=["connections"])
 
@@ -57,17 +65,41 @@ async def create_link_session(
     """Create a link session to connect a new investment account.
 
     Returns a redirect URL that the client should navigate to for the user
-    to authenticate with their brokerage.
+    to authenticate with their brokerage. The session_token should be passed
+    back in the callback to retrieve the stored credentials.
     """
     link_session = await provider.create_link_session(
         user_id=str(user.id),
         redirect_uri=request.redirect_uri,
     )
 
+    # Generate a secure session token and store the user_secret server-side
+    # In production, use Redis or database with TTL for this
+    session_token = secrets.token_urlsafe(32)
+    _pending_link_sessions[session_token] = {
+        "user_id": str(user.id),
+        "user_secret": link_session.user_secret,
+        "created_at": datetime.now(timezone.utc),
+    }
+
+    # Clean up old sessions (simple cleanup, use TTL in production)
+    _cleanup_old_sessions()
+
     return LinkSessionResponse(
         redirect_url=link_session.redirect_url,
-        session_id=link_session.session_id,
+        session_id=session_token,  # Return the session token, not the user_secret
     )
+
+
+def _cleanup_old_sessions() -> None:
+    """Remove sessions older than 15 minutes."""
+    cutoff = datetime.now(timezone.utc).timestamp() - 900  # 15 minutes
+    expired = [
+        token for token, data in _pending_link_sessions.items()
+        if data["created_at"].timestamp() < cutoff
+    ]
+    for token in expired:
+        del _pending_link_sessions[token]
 
 
 @router.post("/callback", response_model=ConnectionResponse)
@@ -81,6 +113,7 @@ async def handle_callback(
 
     This endpoint is called after the user completes the connection flow.
     It creates a new Connection record and fetches the initial account data.
+    The session_token from the link session must be provided to retrieve credentials.
     """
     if request.error:
         raise HTTPException(
@@ -88,15 +121,24 @@ async def handle_callback(
             detail=f"Connection failed: {request.error_description or request.error}",
         )
 
-    # Get the user secret from the request state (stored during link session)
-    # In a real implementation, you'd retrieve this from a session store
-    user_secret = request.state if hasattr(request, "state") else None
-
-    if not user_secret:
+    # Retrieve the user_secret from server-side storage using the session token
+    session_token = request.state
+    if not session_token or session_token not in _pending_link_sessions:
         raise HTTPException(
             status_code=400,
-            detail="Missing user secret. Please restart the connection flow.",
+            detail="Invalid or expired session. Please restart the connection flow.",
         )
+
+    pending_session = _pending_link_sessions.pop(session_token)
+
+    # Verify the session belongs to this user
+    if pending_session["user_id"] != str(user.id):
+        raise HTTPException(
+            status_code=403,
+            detail="Session does not belong to this user.",
+        )
+
+    user_secret = pending_session["user_secret"]
 
     # Handle the callback with the provider
     credentials = await provider.handle_callback(
@@ -112,7 +154,7 @@ async def handle_callback(
         provider_user_id=credentials.get("snaptrade_user_id", ""),
         credentials=credentials,
         status=ConnectionStatus.active,
-        last_synced_at=datetime.utcnow(),
+        last_synced_at=datetime.now(timezone.utc),
     )
     session.add(connection)
     await session.commit()
@@ -151,9 +193,30 @@ async def delete_connection(
     """Delete a connection and all associated accounts/holdings."""
     connection = await _get_user_connection(session, connection_id, user.id)
 
+    # Delete from provider first
     await provider.delete_connection(connection)
+
+    # Get all investment accounts for this connection
+    accounts_result = await session.execute(
+        select(InvestmentAccount).where(InvestmentAccount.connection_id == connection.id)
+    )
+    accounts = accounts_result.scalars().all()
+
+    # Delete holdings for each account, then delete the accounts
+    for account in accounts:
+        await session.execute(
+            delete(Holding).where(Holding.account_id == account.id)
+        )
+        await session.delete(account)
+
+    # Finally delete the connection
     await session.delete(connection)
     await session.commit()
+
+    logger.info(
+        f"Deleted connection {connection_id} with {len(accounts)} accounts "
+        f"for user {user.id}"
+    )
 
     return {"status": "deleted"}
 
@@ -171,7 +234,7 @@ async def sync_connection(
     try:
         await _sync_connection_accounts(session, connection, provider)
         connection.status = ConnectionStatus.active
-        connection.last_synced_at = datetime.utcnow()
+        connection.last_synced_at = datetime.now(timezone.utc)
         connection.error_code = None
         connection.error_message = None
     except Exception as e:
@@ -269,14 +332,22 @@ async def _get_or_create_security(
         )
         security = result.scalar_one_or_none()
         if security:
-            # Update price if we have newer data
-            if normalized_security.close_price is not None:
-                security.close_price = normalized_security.close_price
-                security.close_price_as_of = (
-                    normalized_security.close_price_as_of.date()
-                    if normalized_security.close_price_as_of
-                    else None
+            # Update price only if we have newer data
+            new_price_date = (
+                normalized_security.close_price_as_of.date()
+                if normalized_security.close_price_as_of
+                else None
+            )
+            should_update = (
+                normalized_security.close_price is not None
+                and (
+                    security.close_price_as_of is None
+                    or (new_price_date and new_price_date > security.close_price_as_of)
                 )
+            )
+            if should_update:
+                security.close_price = normalized_security.close_price
+                security.close_price_as_of = new_price_date
             return security
 
     # Create new security

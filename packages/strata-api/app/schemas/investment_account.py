@@ -3,11 +3,11 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
 
 from pydantic import BaseModel
 
 from app.models.investment_account import InvestmentAccountType
+from app.schemas.holding import HoldingWithSecurityResponse
 
 
 class InvestmentAccountCreate(BaseModel):
@@ -52,6 +52,6 @@ class InvestmentAccountResponse(BaseModel):
 class InvestmentAccountWithHoldingsResponse(InvestmentAccountResponse):
     """Investment account response with holdings included."""
 
-    holdings: list[Any] = []
+    holdings: list[HoldingWithSecurityResponse] = []
 
     model_config = {"from_attributes": True}
