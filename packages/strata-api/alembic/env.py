@@ -18,7 +18,11 @@ from app.db.base import Base  # noqa: E402
 from app.models import (  # noqa: E402, F401
     CashAccount,
     DebtAccount,
+    Holding,
     IncomeSource,
+    Institution,
+    InvestmentAccount,
+    Security,
     User,
 )
 from app.models.connection import Connection as ConnectionModel  # noqa: E402, F401
