@@ -161,11 +161,11 @@ export default function HomePage() {
                   <ArrowRight className="h-3 w-3" />
                 </Link>
                 <Link
-                  href="/about"
+                  href="/dashboard"
                   className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white"
                   style={{ background: palette.accent }}
                 >
-                  Methodology
+                  Dashboard
                   <ChevronRight className="h-3 w-3" />
                 </Link>
               </div>
