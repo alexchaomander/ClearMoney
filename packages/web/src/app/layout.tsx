@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { QueryProvider } from "@/lib/strata/query-provider";
+import { StrataProvider } from "@/lib/strata/client";
 
 const SITE_NAME = "ClearMoney";
 
@@ -65,9 +67,13 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen">
         <ThemeProvider>
-          <div className="flex min-h-screen flex-col">
-            <main className="flex-1">{children}</main>
-          </div>
+          <QueryProvider>
+            <StrataProvider>
+              <div className="flex min-h-screen flex-col">
+                <main className="flex-1">{children}</main>
+              </div>
+            </StrataProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>
