@@ -309,7 +309,7 @@ const SCHWAB_HOLDINGS: HoldingWithSecurity[] = [
     security: makeSecurity("demo-sec-schd", "SCHD", "Schwab U.S. Dividend Equity ETF", "etf", 80.0),
   },
   {
-    ...makeHolding("demo-h-014", "demo-acc-003", "demo-sec-vti2", 200, 42000, 53600),
+    ...makeHolding("demo-h-014", "demo-acc-003", "demo-sec-vti", 200, 42000, 53600),
     security: makeSecurity("demo-sec-vti", "VTI", "Vanguard Total Stock Market ETF", "etf", 268.0),
   },
   {
@@ -328,28 +328,9 @@ const HOLDINGS_BY_ACCOUNT: Record<string, HoldingWithSecurity[]> = {
   "demo-acc-003": SCHWAB_HOLDINGS,
 };
 
-// === Public accessors ===
+// === Pre-computed derived data (static, so computed once at module load) ===
 
-export function getDemoAccountsResponse(): AllAccountsResponse {
-  return {
-    investment_accounts: DEMO_INVESTMENT_ACCOUNTS,
-    cash_accounts: DEMO_CASH_ACCOUNTS,
-    debt_accounts: DEMO_DEBT_ACCOUNTS,
-  };
-}
-
-export function getDemoInvestmentAccountWithHoldings(
-  accountId: string
-): InvestmentAccountWithHoldings | null {
-  const account = DEMO_INVESTMENT_ACCOUNTS.find((a) => a.id === accountId);
-  if (!account) return null;
-  return {
-    ...account,
-    holdings: HOLDINGS_BY_ACCOUNT[accountId] ?? [],
-  };
-}
-
-export function getDemoHoldings(): HoldingDetail[] {
+function computeHoldings(): HoldingDetail[] {
   const details: HoldingDetail[] = [];
   for (const account of DEMO_INVESTMENT_ACCOUNTS) {
     const holdings = HOLDINGS_BY_ACCOUNT[account.id] ?? [];
@@ -377,7 +358,7 @@ export function getDemoHoldings(): HoldingDetail[] {
   return details;
 }
 
-export function getDemoPortfolioSummary(): PortfolioSummary {
+function computePortfolioSummary(allHoldings: HoldingDetail[]): PortfolioSummary {
   const totalInvestment = DEMO_INVESTMENT_ACCOUNTS.reduce((s, a) => s + a.balance, 0);
   const totalCash = DEMO_CASH_ACCOUNTS.reduce((s, a) => s + a.balance, 0);
   const totalDebt = DEMO_DEBT_ACCOUNTS.reduce((s, a) => s + a.balance, 0);
@@ -387,8 +368,6 @@ export function getDemoPortfolioSummary(): PortfolioSummary {
     .reduce((s, a) => s + a.balance, 0);
   const taxable = totalInvestment - taxAdvantaged;
 
-  // Aggregate market values by security type
-  const allHoldings = getDemoHoldings();
   const byType: Record<string, number> = {};
   for (const h of allHoldings) {
     const type = h.security.security_type;
@@ -407,7 +386,6 @@ export function getDemoPortfolioSummary(): PortfolioSummary {
     percentage: Math.round((a.balance / totalInvestment) * 10000) / 100,
   }));
 
-  // Top holdings by market value
   const sorted = [...allHoldings].sort(
     (a, b) => (b.market_value ?? 0) - (a.market_value ?? 0)
   );
@@ -421,7 +399,6 @@ export function getDemoPortfolioSummary(): PortfolioSummary {
     account_name: h.account_name,
   }));
 
-  // Concentration alerts for holdings > 8% of portfolio
   const concentrationAlerts = allHoldings
     .filter((h) => ((h.market_value ?? 0) / totalInvestment) > 0.08)
     .map((h) => ({
@@ -443,4 +420,36 @@ export function getDemoPortfolioSummary(): PortfolioSummary {
     top_holdings: topHoldings,
     concentration_alerts: concentrationAlerts,
   };
+}
+
+const DEMO_HOLDINGS = computeHoldings();
+const DEMO_PORTFOLIO_SUMMARY = computePortfolioSummary(DEMO_HOLDINGS);
+
+// === Public accessors ===
+
+export function getDemoAccountsResponse(): AllAccountsResponse {
+  return {
+    investment_accounts: DEMO_INVESTMENT_ACCOUNTS,
+    cash_accounts: DEMO_CASH_ACCOUNTS,
+    debt_accounts: DEMO_DEBT_ACCOUNTS,
+  };
+}
+
+export function getDemoInvestmentAccountWithHoldings(
+  accountId: string
+): InvestmentAccountWithHoldings | null {
+  const account = DEMO_INVESTMENT_ACCOUNTS.find((a) => a.id === accountId);
+  if (!account) return null;
+  return {
+    ...account,
+    holdings: HOLDINGS_BY_ACCOUNT[accountId] ?? [],
+  };
+}
+
+export function getDemoHoldings(): HoldingDetail[] {
+  return DEMO_HOLDINGS;
+}
+
+export function getDemoPortfolioSummary(): PortfolioSummary {
+  return DEMO_PORTFOLIO_SUMMARY;
 }

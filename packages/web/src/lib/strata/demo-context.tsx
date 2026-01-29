@@ -13,20 +13,35 @@ const STORAGE_KEY = "clearmoney-demo-mode";
 
 const DemoModeContext = createContext<boolean>(false);
 
+function getInitialDemoState(searchParams: URLSearchParams): boolean {
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === "true") return true;
+  if (typeof window === "undefined") return false;
+
+  const param = searchParams.get("demo");
+  if (param === "true") return true;
+  if (param === "false") return false;
+
+  return sessionStorage.getItem(STORAGE_KEY) === "true";
+}
+
 export function DemoModeProvider({ children }: { children: ReactNode }) {
   const searchParams = useSearchParams();
-  const [isDemo, setIsDemo] = useState(false);
+  const [isDemo, setIsDemo] = useState(() => getInitialDemoState(searchParams));
 
   useEffect(() => {
-    const envDemo = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
-    const paramDemo = searchParams.get("demo") === "true";
-    const storedDemo = sessionStorage.getItem(STORAGE_KEY) === "true";
+    const param = searchParams.get("demo");
 
-    const active = envDemo || paramDemo || storedDemo;
-    if (active) {
+    if (param === "true") {
       sessionStorage.setItem(STORAGE_KEY, "true");
+      setIsDemo(true);
+    } else if (param === "false") {
+      sessionStorage.removeItem(STORAGE_KEY);
+      setIsDemo(false);
+    } else {
+      const envDemo = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+      const storedDemo = sessionStorage.getItem(STORAGE_KEY) === "true";
+      setIsDemo(envDemo || storedDemo);
     }
-    setIsDemo(active);
   }, [searchParams]);
 
   return (
