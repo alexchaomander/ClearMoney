@@ -207,13 +207,24 @@ export function Header() {
               </Link>
             </nav>
 
-            {/* CTA Button */}
+            {/* CTA Buttons */}
             <div className="hidden md:flex items-center gap-3">
               <Link
                 href="/#tools"
-                className="px-4 py-2 text-sm font-medium text-neutral-950 bg-white hover:bg-neutral-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-800/50 rounded-lg transition-colors"
               >
                 Explore Tools
+              </Link>
+              <Link
+                href="/dashboard"
+                className={cn(
+                  "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+                  pathname.startsWith("/dashboard") || pathname.startsWith("/connect")
+                    ? "text-neutral-950 bg-brand-400"
+                    : "text-neutral-950 bg-white hover:bg-neutral-100"
+                )}
+              >
+                Dashboard
               </Link>
             </div>
 
@@ -282,10 +293,16 @@ export function Header() {
               </div>
 
               {/* CTA */}
-              <div className="pt-4">
+              <div className="pt-4 space-y-2">
+                <Link
+                  href="/dashboard"
+                  className="block w-full py-3 text-center text-sm font-medium text-neutral-950 bg-brand-400 hover:bg-brand-300 rounded-lg transition-colors"
+                >
+                  Dashboard
+                </Link>
                 <Link
                   href="/#tools"
-                  className="block w-full py-3 text-center text-sm font-medium text-neutral-950 bg-white hover:bg-neutral-100 rounded-lg transition-colors"
+                  className="block w-full py-3 text-center text-sm font-medium text-neutral-300 border border-neutral-700 hover:bg-neutral-800 rounded-lg transition-colors"
                 >
                   Explore All Tools
                 </Link>

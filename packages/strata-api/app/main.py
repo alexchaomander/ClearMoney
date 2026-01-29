@@ -2,8 +2,13 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.accounts import router as accounts_router
+from app.api.connections import router as connections_router
 from app.api.health import router as health_router
+from app.api.institutions import router as institutions_router
+from app.api.portfolio import router as portfolio_router
 from app.core.config import settings
 from app.db.session import close_db
 
@@ -22,4 +27,21 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Add CORS middleware
+# SECURITY: In production, replace "*" with specific frontend domain(s)
+# e.g., allow_origins=["https://clearmoney.app", "https://app.clearmoney.com"]
+# Using "*" with allow_credentials=True is insecure and should only be used in development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
 app.include_router(health_router, prefix="/api/v1")
+app.include_router(connections_router, prefix="/api/v1")
+app.include_router(accounts_router, prefix="/api/v1")
+app.include_router(institutions_router, prefix="/api/v1")
+app.include_router(portfolio_router, prefix="/api/v1")

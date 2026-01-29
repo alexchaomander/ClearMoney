@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.models.connection import Connection
     from app.models.debt_account import DebtAccount
     from app.models.income_source import IncomeSource
+    from app.models.investment_account import InvestmentAccount
 
 
 class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -30,5 +31,8 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     income_sources: Mapped[list["IncomeSource"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    investment_accounts: Mapped[list["InvestmentAccount"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )

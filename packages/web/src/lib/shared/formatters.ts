@@ -171,3 +171,31 @@ export function formatYears(years: number): string {
   if (Number.isInteger(years)) return `${years} years`;
   return `${years.toFixed(1)} years`;
 }
+
+/**
+ * Format a snake_case or kebab-case string to Title Case
+ *
+ * @param value - The string to format (e.g., "roth_ira", "mutual-fund")
+ * @returns Title case string (e.g., "Roth Ira", "Mutual Fund")
+ */
+export function formatTitleCase(value: string): string {
+  return value
+    .replace(/[_-]/g, " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
+}
+
+/**
+ * Get initials from a name string
+ *
+ * @param name - The name to extract initials from
+ * @param maxLength - Maximum number of initials (default: 2)
+ * @returns Uppercase initials (e.g., "JD" for "John Doe")
+ */
+export function getInitials(name: string, maxLength: number = 2): string {
+  return name
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .slice(0, maxLength)
+    .toUpperCase();
+}
