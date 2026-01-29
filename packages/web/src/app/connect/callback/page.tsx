@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Check, X, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { Check, X } from "lucide-react";
+import { useHandleConnectionCallback } from "@/lib/strata/hooks";
 
 type CallbackStatus = "loading" | "success" | "error";
 
@@ -14,35 +15,29 @@ export default function ConnectCallbackPage() {
   const [status, setStatus] = useState<CallbackStatus>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const callbackMutation = useHandleConnectionCallback();
+
   useEffect(() => {
     const handleCallback = async () => {
-      // Get OAuth callback parameters
       const code = searchParams.get("code");
       const state = searchParams.get("state");
       const error = searchParams.get("error");
       const errorDescription = searchParams.get("error_description");
 
-      // Check for errors from the OAuth provider
       if (error) {
         setStatus("error");
-        setErrorMessage(errorDescription || error);
+        setErrorMessage(errorDescription ?? error);
         return;
       }
 
       try {
-        // In production, this would call the Strata API to complete the connection:
-        // const strataClient = new StrataClient({
-        //   baseUrl: process.env.NEXT_PUBLIC_STRATA_API_URL!,
-        //   clerkUserId: user?.id,
-        // });
-        // await strataClient.handleConnectionCallback({ code, state });
-
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await callbackMutation.mutateAsync({
+          code: code ?? undefined,
+          state: state ?? undefined,
+        });
 
         setStatus("success");
 
-        // Redirect to dashboard after a short delay
         setTimeout(() => {
           router.push("/dashboard");
         }, 2000);
@@ -55,6 +50,7 @@ export default function ConnectCallbackPage() {
     };
 
     handleCallback();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, router]);
 
   return (
@@ -141,7 +137,7 @@ export default function ConnectCallbackPage() {
               Connection Failed
             </h1>
             <p className="text-neutral-400 mb-6">
-              {errorMessage || "Something went wrong while connecting your account."}
+              {errorMessage ?? "Something went wrong while connecting your account."}
             </p>
             <div className="flex flex-col gap-3">
               <Link
