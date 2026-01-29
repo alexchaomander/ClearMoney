@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Calculator, Plus, RefreshCw } from "lucide-react";
+import { Plus } from "lucide-react";
+import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { NetWorthCard } from "@/components/dashboard/NetWorthCard";
 import { AccountsList } from "@/components/dashboard/AccountsList";
 import { AllocationChart } from "@/components/dashboard/AllocationChart";
 import { HoldingsTable } from "@/components/dashboard/HoldingsTable";
 import { ConcentrationAlert } from "@/components/dashboard/ConcentrationAlert";
+import { EmptyState } from "@/components/dashboard/EmptyState";
 
 // Mock data for the dashboard
 const mockPortfolio = {
@@ -58,6 +60,7 @@ const mockHoldings = mockPortfolio.top_holdings.map((h, i) => ({
 
 export default function DashboardPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showEmptyState, setShowEmptyState] = useState(false); // Toggle for demo
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -65,6 +68,9 @@ export default function DashboardPage() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsRefreshing(false);
   };
+
+  // In production, this would check if accounts.length === 0
+  const hasAccounts = !showEmptyState;
 
   return (
     <div className="min-h-screen bg-neutral-950">
@@ -77,82 +83,53 @@ export default function DashboardPage() {
       />
 
       {/* Navigation */}
-      <header className="sticky top-0 z-50 bg-neutral-950/90 backdrop-blur-xl border-b border-neutral-800/60">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <nav className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-emerald-800 transition-all duration-300 group-hover:scale-105">
-                <Calculator className="w-4 h-4 text-emerald-100" />
-              </div>
-              <span className="font-serif text-xl tracking-tight text-white">
-                Clear<span className="text-emerald-400">Money</span>
-              </span>
-            </Link>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1">
-                {[
-                  { label: "Dashboard", href: "/dashboard", active: true },
-                  { label: "Connect", href: "/connect" },
-                ].map((item) => (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                      item.active
-                        ? "text-emerald-100 bg-emerald-900/60"
-                        : "text-neutral-400 hover:text-neutral-200"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-
-              <button
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="p-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-colors disabled:opacity-50"
-              >
-                <motion.div
-                  animate={isRefreshing ? { rotate: 360 } : {}}
-                  transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0, ease: "linear" }}
-                >
-                  <RefreshCw className="w-4 h-4 text-neutral-300" />
-                </motion.div>
-              </button>
-            </div>
-          </nav>
-        </div>
-      </header>
+      <DashboardHeader
+        onRefresh={handleRefresh}
+        isRefreshing={isRefreshing}
+        showRefresh={hasAccounts}
+      />
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex items-center justify-between mb-8"
-        >
-          <div>
-            <h1 className="font-serif text-3xl text-white mb-1">
-              Portfolio Dashboard
-            </h1>
-            <p className="text-neutral-400">
-              Your complete investment overview
-            </p>
-          </div>
-          <Link
-            href="/connect"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-colors"
+        {/* Demo toggle - remove in production */}
+        <div className="mb-4 flex justify-end">
+          <button
+            onClick={() => setShowEmptyState(!showEmptyState)}
+            className="text-xs px-3 py-1.5 rounded-full bg-neutral-800 text-neutral-400 hover:text-neutral-200 transition-colors"
           >
-            <Plus className="w-4 h-4" />
-            Add Account
-          </Link>
-        </motion.div>
+            {showEmptyState ? "Show with data" : "Show empty state"}
+          </button>
+        </div>
 
-        {/* Main Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        {!hasAccounts ? (
+          <EmptyState />
+        ) : (
+          <>
+            {/* Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex items-center justify-between mb-8"
+            >
+              <div>
+                <h1 className="font-serif text-3xl text-white mb-1">
+                  Portfolio Dashboard
+                </h1>
+                <p className="text-neutral-400">
+                  Your complete investment overview
+                </p>
+              </div>
+              <Link
+                href="/connect"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add Account
+              </Link>
+            </motion.div>
+
+            {/* Main Grid */}
+            <div className="grid lg:grid-cols-3 gap-6">
           {/* Left column - Net worth and accounts */}
           <div className="lg:col-span-2 space-y-6">
             {/* Net Worth Card */}
@@ -205,6 +182,8 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+          </>
+        )}
       </main>
     </div>
   );
