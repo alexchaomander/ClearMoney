@@ -12,12 +12,29 @@ import type {
   PortfolioSummary,
 } from './types';
 
+export interface StrataClientInterface {
+  setClerkUserId(userId: string): void;
+  healthCheck(): Promise<HealthResponse>;
+  createLinkSession(request?: LinkSessionRequest): Promise<LinkSessionResponse>;
+  handleConnectionCallback(request: ConnectionCallbackRequest): Promise<Connection>;
+  getConnections(): Promise<Connection[]>;
+  deleteConnection(connectionId: string): Promise<void>;
+  syncConnection(connectionId: string): Promise<Connection>;
+  getAccounts(): Promise<AllAccountsResponse>;
+  getInvestmentAccounts(): Promise<InvestmentAccount[]>;
+  getInvestmentAccount(accountId: string): Promise<InvestmentAccountWithHoldings>;
+  searchInstitutions(query?: string, limit?: number): Promise<Institution[]>;
+  getPopularInstitutions(limit?: number): Promise<Institution[]>;
+  getPortfolioSummary(): Promise<PortfolioSummary>;
+  getHoldings(): Promise<HoldingDetail[]>;
+}
+
 export interface StrataClientOptions {
   baseUrl: string;
   clerkUserId?: string;
 }
 
-export class StrataClient {
+export class StrataClient implements StrataClientInterface {
   private baseUrl: string;
   private clerkUserId: string | null;
 
