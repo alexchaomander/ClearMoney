@@ -1,69 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { InstitutionSearch } from "@/components/connect/InstitutionSearch";
 import { InstitutionCard } from "@/components/connect/InstitutionCard";
 import { ConnectionProgress } from "@/components/connect/ConnectionProgress";
 import { SecurityBadges } from "@/components/connect/SecurityBadges";
 import { ConnectedAccountCard } from "@/components/connect/ConnectedAccountCard";
+import { ApiErrorState } from "@/components/shared/ApiErrorState";
 import { formatCurrency } from "@/lib/shared/formatters";
-
-// Mock institutions by category (in production, these would come from the API)
-const mockInstitutions = {
-  investments: [
-    { id: "fidelity", name: "Fidelity", logo_url: null },
-    { id: "vanguard", name: "Vanguard", logo_url: null },
-    { id: "schwab", name: "Charles Schwab", logo_url: null },
-    { id: "robinhood", name: "Robinhood", logo_url: null },
-    { id: "etrade", name: "E*TRADE", logo_url: null },
-    { id: "td-ameritrade", name: "TD Ameritrade", logo_url: null },
-    { id: "merrill", name: "Merrill Edge", logo_url: null },
-    { id: "interactive-brokers", name: "Interactive Brokers", logo_url: null },
-  ],
-  retirement: [
-    { id: "401k-fidelity", name: "401(k) - Fidelity", logo_url: null },
-    { id: "401k-vanguard", name: "401(k) - Vanguard", logo_url: null },
-    { id: "ira-schwab", name: "IRA - Schwab", logo_url: null },
-    { id: "roth-ira-fidelity", name: "Roth IRA - Fidelity", logo_url: null },
-  ],
-  banking: [
-    { id: "chase", name: "Chase", logo_url: null },
-    { id: "bofa", name: "Bank of America", logo_url: null },
-    { id: "wells", name: "Wells Fargo", logo_url: null },
-    { id: "citi", name: "Citi", logo_url: null },
-  ],
-  credit: [
-    { id: "amex", name: "American Express", logo_url: null },
-    { id: "chase-card", name: "Chase Credit Cards", logo_url: null },
-    { id: "discover", name: "Discover", logo_url: null },
-    { id: "capital-one", name: "Capital One", logo_url: null },
-  ],
-  liabilities: [
-    { id: "mortgage", name: "Mortgage Lender", logo_url: null },
-    { id: "student-loans", name: "Student Loan Servicer", logo_url: null },
-    { id: "auto-loans", name: "Auto Loan", logo_url: null },
-  ],
-};
-
-// Category metadata
-const categoryMeta: Record<string, { name: string; description: string }> = {
-  investments: { name: "Investments", description: "Brokerage Accounts" },
-  retirement: { name: "Retirement", description: "401(k) & IRA" },
-  banking: { name: "Banking", description: "Checking & Savings" },
-  credit: { name: "Credit", description: "Credit Cards" },
-  liabilities: { name: "Liabilities", description: "Loans & Mortgages" },
-};
-
-// Mock connected accounts
-const mockConnectedAccounts = [
-  { id: "acc-1", name: "Fidelity Brokerage", balance: 67000, account_type: "brokerage", is_tax_advantaged: false },
-  { id: "acc-2", name: "401(k) - Fidelity", balance: 125000, account_type: "401k", is_tax_advantaged: true },
-  { id: "acc-3", name: "Roth IRA", balance: 45000, account_type: "roth_ira", is_tax_advantaged: true },
-];
+import { useStrataClient } from "@/lib/strata/client";
+import {
+  usePopularInstitutions,
+  useSearchInstitutions,
+  useAccounts,
+} from "@/lib/strata/hooks";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -78,51 +31,56 @@ const staggerContainer = {
 
 export default function ConnectPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>("investments");
-  const [connectedIds, setConnectedIds] = useState<string[]>([]);
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [connectingId, setConnectingId] = useState<string | null>(null);
-  const [accounts, setAccounts] = useState(mockConnectedAccounts);
 
-  // Calculate totals
-  const totalConnected = accounts.length;
-  const totalValue = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-  const taxAdvantagedValue = accounts
+  const client = useStrataClient();
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const isSearching = debouncedQuery.length > 0;
+
+  const {
+    data: popularInstitutions,
+    isLoading: popularLoading,
+    isError: popularError,
+    refetch: refetchPopular,
+  } = usePopularInstitutions();
+
+  const {
+    data: searchResults,
+    isLoading: searchLoading,
+  } = useSearchInstitutions(isSearching ? debouncedQuery : undefined);
+
+  const {
+    data: allAccounts,
+    isLoading: accountsLoading,
+  } = useAccounts();
+
+  const connectedAccounts = allAccounts?.investment_accounts ?? [];
+  const totalConnected = connectedAccounts.length;
+  const totalValue = connectedAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+  const taxAdvantagedValue = connectedAccounts
     .filter((acc) => acc.is_tax_advantaged)
     .reduce((sum, acc) => sum + acc.balance, 0);
 
+  const institutions = isSearching ? (searchResults ?? []) : (popularInstitutions ?? []);
+  const isLoadingInstitutions = isSearching ? searchLoading : popularLoading;
+
   const handleConnect = async (institutionId: string) => {
     setConnectingId(institutionId);
-
-    // In production, this would:
-    // 1. Call strataClient.createLinkSession()
-    // 2. Redirect user to the returned URL
-    // For demo, we simulate a connection
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Simulate adding a new account
-    const institution = Object.values(mockInstitutions)
-      .flat()
-      .find((i) => i.id === institutionId);
-
-    if (institution) {
-      const newAccount = {
-        id: `acc-${Date.now()}`,
-        name: institution.name,
-        balance: Math.floor(Math.random() * 50000) + 10000,
-        account_type: selectedCategory === "retirement" ? "401k" : "brokerage",
-        is_tax_advantaged: selectedCategory === "retirement",
-      };
-      setAccounts((prev) => [...prev, newAccount]);
+    try {
+      const { redirect_url } = await client.createLinkSession({
+        institution_id: institutionId,
+      });
+      window.location.href = redirect_url;
+    } catch {
+      setConnectingId(null);
     }
-
-    setConnectedIds((prev) => [...prev, institutionId]);
-    setConnectingId(null);
   };
-
-  // Filter institutions based on search and category
-  const filteredInstitutions = selectedCategory
-    ? { [selectedCategory]: mockInstitutions[selectedCategory as keyof typeof mockInstitutions] }
-    : mockInstitutions;
 
   return (
     <div className="min-h-screen bg-neutral-950">
@@ -157,20 +115,33 @@ export default function ConnectPage() {
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left column - Account categories and search */}
+          {/* Left column - Institutions search + list */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Search and filters */}
+            {/* Search */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <InstitutionSearch
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                selectedCategory={selectedCategory}
-                onCategoryChange={setSelectedCategory}
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search for your bank or brokerage..."
+                  className="w-full pl-12 pr-4 py-4 rounded-xl text-base outline-none transition-all duration-300 bg-neutral-900 border border-neutral-800 text-neutral-100 focus:border-emerald-500 placeholder:text-neutral-500"
+                />
+                <svg
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+              </div>
             </motion.div>
 
             {/* Progress indicator */}
@@ -182,56 +153,64 @@ export default function ConnectPage() {
               <ConnectionProgress connected={totalConnected} total={10} />
             </motion.div>
 
-            {/* Institution grids by category */}
-            <AnimatePresence mode="wait">
-              {Object.entries(filteredInstitutions).map(([categoryId, categoryInstitutions]) => {
-                const meta = categoryMeta[categoryId];
-                if (!meta) return null;
+            {/* Institutions grid */}
+            {popularError && !isSearching ? (
+              <ApiErrorState
+                message="Could not load institutions. Please check that the API is running."
+                onRetry={refetchPopular}
+              />
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={isSearching ? "search" : "popular"}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.4 }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-serif text-xl text-emerald-100">
+                      {isSearching
+                        ? `Results for "${debouncedQuery}"`
+                        : "Popular Institutions"}
+                    </h2>
+                    {isLoadingInstitutions && (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="w-4 h-4 rounded-full border-2 border-emerald-500 border-t-transparent"
+                      />
+                    )}
+                  </div>
 
-                const filteredBySearch = categoryInstitutions.filter((inst) =>
-                  inst.name.toLowerCase().includes(searchQuery.toLowerCase())
-                );
-
-                if (filteredBySearch.length === 0) return null;
-
-                return (
-                  <motion.div
-                    key={categoryId}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.4 }}
-                    className="space-y-4"
-                  >
-                    <div className="flex items-center gap-2">
-                      <h2 className="font-serif text-xl text-emerald-100">
-                        {meta.name}
-                      </h2>
-                      <span className="text-sm text-neutral-500">
-                        - {meta.description}
-                      </span>
-                    </div>
-
+                  {institutions.length === 0 && !isLoadingInstitutions ? (
+                    <p className="text-neutral-500 py-8 text-center">
+                      {isSearching
+                        ? "No institutions found. Try a different search."
+                        : "No institutions available."}
+                    </p>
+                  ) : (
                     <motion.div
                       variants={staggerContainer}
                       initial="hidden"
                       animate="show"
                       className="grid sm:grid-cols-2 gap-3"
                     >
-                      {filteredBySearch.map((institution) => (
+                      {institutions.map((institution) => (
                         <InstitutionCard
                           key={institution.id}
                           institution={institution}
-                          isConnected={connectedIds.includes(institution.id)}
+                          isConnected={false}
                           isConnecting={connectingId === institution.id}
                           onConnect={() => handleConnect(institution.id)}
                         />
                       ))}
                     </motion.div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            )}
           </div>
 
           {/* Right column - Connected accounts summary */}
@@ -256,16 +235,36 @@ export default function ConnectPage() {
                 </div>
               </div>
 
-              <motion.div
-                variants={staggerContainer}
-                initial="hidden"
-                animate="show"
-                className="space-y-3"
-              >
-                {accounts.map((account) => (
-                  <ConnectedAccountCard key={account.id} account={account} />
-                ))}
-              </motion.div>
+              {accountsLoading ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-16 rounded-xl bg-neutral-800 animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <motion.div
+                  variants={staggerContainer}
+                  initial="hidden"
+                  animate="show"
+                  className="space-y-3"
+                >
+                  {connectedAccounts.map((account) => (
+                    <ConnectedAccountCard
+                      key={account.id}
+                      account={{
+                        id: account.id,
+                        name: account.name,
+                        balance: account.balance,
+                        account_type: account.account_type,
+                        is_tax_advantaged: account.is_tax_advantaged,
+                      }}
+                    />
+                  ))}
+                </motion.div>
+              )}
 
               {/* Summary */}
               <div className="mt-6 pt-6 border-t border-neutral-800">

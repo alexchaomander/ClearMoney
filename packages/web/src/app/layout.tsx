@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { QueryProvider } from "@/lib/strata/query-provider";
+import { DemoModeProvider } from "@/lib/strata/demo-context";
+import { StrataProvider } from "@/lib/strata/client";
+import { DemoBanner } from "@/components/shared/DemoBanner";
 
 const SITE_NAME = "ClearMoney";
 
@@ -65,9 +70,18 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen">
         <ThemeProvider>
-          <div className="flex min-h-screen flex-col">
-            <main className="flex-1">{children}</main>
-          </div>
+          <QueryProvider>
+            <Suspense fallback={null}>
+              <DemoModeProvider>
+                <StrataProvider>
+                  <DemoBanner />
+                  <div className="flex min-h-screen flex-col">
+                    <main className="flex-1">{children}</main>
+                  </div>
+                </StrataProvider>
+              </DemoModeProvider>
+            </Suspense>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>
