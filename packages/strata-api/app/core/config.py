@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     snaptrade_client_id: str = ""
     snaptrade_consumer_key: str = ""
 
+    # Clerk JWT validation (optional — if set, validates Bearer tokens)
+    clerk_secret_key: str = ""
+    clerk_pem_public_key: str = ""
+
     model_config = {"env_prefix": "STRATA_"}
 
 

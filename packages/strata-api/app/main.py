@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.accounts import router as accounts_router
+from app.api.cash_debt import router as cash_debt_router
 from app.api.connections import router as connections_router
 from app.api.health import router as health_router
 from app.api.institutions import router as institutions_router
@@ -43,5 +44,6 @@ app.add_middleware(
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(connections_router, prefix="/api/v1")
 app.include_router(accounts_router, prefix="/api/v1")
+app.include_router(cash_debt_router, prefix="/api/v1")
 app.include_router(institutions_router, prefix="/api/v1")
 app.include_router(portfolio_router, prefix="/api/v1")

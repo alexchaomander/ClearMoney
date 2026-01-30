@@ -45,3 +45,10 @@ class PortfolioSummary(BaseModel):
     allocation_by_account_type: list[AssetAllocation]
     top_holdings: list[TopHolding]
     concentration_alerts: list[ConcentrationAlert]
+
+
+class PortfolioHistoryPoint(BaseModel):
+    """A single point in portfolio history."""
+
+    date: str
+    value: Decimal

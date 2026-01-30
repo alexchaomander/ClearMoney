@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Trash2 } from "lucide-react";
 import { formatCurrency, getInitials } from "@/lib/shared/formatters";
 import { staggerContainer, staggerItemHorizontal } from "@/lib/shared/animations";
 import type { CashAccount, DebtAccount } from "@clearmoney/strata-sdk";
@@ -8,9 +9,11 @@ import type { CashAccount, DebtAccount } from "@clearmoney/strata-sdk";
 interface CashDebtSectionProps {
   cashAccounts: CashAccount[];
   debtAccounts: DebtAccount[];
+  onDeleteCashAccount?: (id: string) => void;
+  onDeleteDebtAccount?: (id: string) => void;
 }
 
-export function CashDebtSection({ cashAccounts, debtAccounts }: CashDebtSectionProps) {
+export function CashDebtSection({ cashAccounts, debtAccounts, onDeleteCashAccount, onDeleteDebtAccount }: CashDebtSectionProps) {
   if (cashAccounts.length === 0 && debtAccounts.length === 0) return null;
 
   return (
@@ -29,7 +32,7 @@ export function CashDebtSection({ cashAccounts, debtAccounts }: CashDebtSectionP
           <motion.div
             key={account.id}
             variants={staggerItemHorizontal}
-            className="flex items-center gap-3 p-3 rounded-xl bg-neutral-900 border border-neutral-800"
+            className="group flex items-center gap-3 p-3 rounded-xl bg-neutral-900 border border-neutral-800"
           >
             <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-neutral-800 text-neutral-300 text-sm font-medium">
               {getInitials(account.name)}
@@ -54,6 +57,15 @@ export function CashDebtSection({ cashAccounts, debtAccounts }: CashDebtSectionP
                 )}
               </div>
             </div>
+            {onDeleteCashAccount && (
+              <button
+                onClick={() => onDeleteCashAccount(account.id)}
+                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
+                title="Delete account"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
           </motion.div>
         ))}
 
@@ -61,7 +73,7 @@ export function CashDebtSection({ cashAccounts, debtAccounts }: CashDebtSectionP
           <motion.div
             key={account.id}
             variants={staggerItemHorizontal}
-            className="flex items-center gap-3 p-3 rounded-xl bg-neutral-900 border border-neutral-800"
+            className="group flex items-center gap-3 p-3 rounded-xl bg-neutral-900 border border-neutral-800"
           >
             <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-neutral-800 text-neutral-300 text-sm font-medium">
               {getInitials(account.name)}
@@ -84,6 +96,15 @@ export function CashDebtSection({ cashAccounts, debtAccounts }: CashDebtSectionP
                 </span>
               </div>
             </div>
+            {onDeleteDebtAccount && (
+              <button
+                onClick={() => onDeleteDebtAccount(account.id)}
+                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
+                title="Delete account"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
           </motion.div>
         ))}
       </motion.div>

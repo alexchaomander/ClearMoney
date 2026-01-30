@@ -8,6 +8,8 @@ import type {
   Institution,
   InvestmentAccount,
   InvestmentAccountWithHoldings,
+  PortfolioHistoryPoint,
+  PortfolioHistoryRange,
   PortfolioSummary,
 } from "@clearmoney/strata-sdk";
 
@@ -163,7 +165,7 @@ export const DEMO_INVESTMENT_ACCOUNTS: InvestmentAccount[] = [
 
 // === Cash Accounts ===
 
-const DEMO_CASH_ACCOUNTS: CashAccount[] = [
+export const DEMO_CASH_ACCOUNTS: CashAccount[] = [
   {
     id: "demo-cash-001",
     user_id: DEMO_USER_ID,
@@ -190,7 +192,7 @@ const DEMO_CASH_ACCOUNTS: CashAccount[] = [
 
 // === Debt Accounts ===
 
-const DEMO_DEBT_ACCOUNTS: DebtAccount[] = [
+export const DEMO_DEBT_ACCOUNTS: DebtAccount[] = [
   {
     id: "demo-debt-001",
     user_id: DEMO_USER_ID,
@@ -455,4 +457,63 @@ export function getDemoHoldings(): HoldingDetail[] {
 
 export function getDemoPortfolioSummary(): PortfolioSummary {
   return DEMO_PORTFOLIO_SUMMARY;
+}
+
+// === Portfolio History ===
+
+function mulberry32(seed: number): () => number {
+  let s = seed | 0;
+  return () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const RANGE_CONFIG: Record<
+  PortfolioHistoryRange,
+  { startValue: number; points: number; intervalDays: number }
+> = {
+  "30d": { startValue: 905000, points: 30, intervalDays: 1 },
+  "90d": { startValue: 880000, points: 90, intervalDays: 1 },
+  "1y": { startValue: 780000, points: 52, intervalDays: 7 },
+  all: { startValue: 200000, points: 66, intervalDays: 30 },
+};
+
+export function getDemoPortfolioHistory(
+  range: PortfolioHistoryRange
+): PortfolioHistoryPoint[] {
+  const endValue = DEMO_PORTFOLIO_SUMMARY.net_worth;
+  const { startValue, points, intervalDays } = RANGE_CONFIG[range];
+  const rng = mulberry32(42 + points);
+
+  const totalDrift = endValue - startValue;
+  const driftPerStep = totalDrift / (points - 1);
+  const noiseScale = Math.abs(totalDrift) * 0.02;
+
+  const now = new Date();
+  const result: PortfolioHistoryPoint[] = [];
+
+  for (let i = 0; i < points; i++) {
+    const daysBack = (points - 1 - i) * intervalDays;
+    const d = new Date(now);
+    d.setDate(d.getDate() - daysBack);
+
+    let value: number;
+    if (i === 0) {
+      value = startValue;
+    } else if (i === points - 1) {
+      value = endValue;
+    } else {
+      value = startValue + driftPerStep * i + (rng() - 0.5) * 2 * noiseScale;
+    }
+
+    result.push({
+      date: d.toISOString().slice(0, 10),
+      value: Math.round(value * 100) / 100,
+    });
+  }
+
+  return result;
 }

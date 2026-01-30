@@ -1,46 +1,103 @@
-from fastapi import Depends, Header, HTTPException
+import logging
+import uuid
+
+from fastapi import Depends, Header, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.db.session import get_async_session
 from app.models.user import User
 
+logger = logging.getLogger(__name__)
+
+
+def _try_decode_jwt(token: str) -> str | None:
+    """Attempt to decode a Clerk JWT and return the subject (user ID).
+
+    Returns None if jose is not installed or the key is not configured.
+    Raises HTTPException on invalid tokens when the key IS configured.
+    """
+    pem_key = settings.clerk_pem_public_key
+    if not pem_key:
+        return None
+
+    try:
+        from jose import JWTError, jwt  # type: ignore[import-untyped]
+    except ImportError:
+        logger.warning("python-jose not installed; skipping JWT validation")
+        return None
+
+    try:
+        payload = jwt.decode(
+            token,
+            pem_key,
+            algorithms=["RS256"],
+            options={"verify_aud": False},
+        )
+        sub = payload.get("sub")
+        if not sub:
+            raise HTTPException(status_code=401, detail="Invalid token: missing sub")
+        return str(sub)
+    except JWTError as exc:
+        raise HTTPException(status_code=401, detail=f"Invalid token: {exc}") from exc
+
+
+def _resolve_clerk_user_id(
+    request: Request,
+    x_clerk_user_id: str | None,
+) -> str | None:
+    """Resolve the Clerk user ID from the request.
+
+    Strategy (in priority order):
+    1. If a Bearer token is present, try JWT validation.
+    2. Only if clerk_pem_public_key is NOT configured, fall back to
+       the X-Clerk-User-Id header (dev mode).
+
+    When the PEM key IS configured the header fallback is blocked to
+    prevent unauthenticated requests bypassing JWT validation.
+    """
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+        clerk_user_id = _try_decode_jwt(token)
+        if clerk_user_id:
+            return clerk_user_id
+
+    # Only allow header fallback when JWT is not configured
+    if not settings.clerk_pem_public_key:
+        return x_clerk_user_id
+
+    return None
+
 
 async def get_current_user(
-    x_clerk_user_id: str = Header(..., description="Clerk user ID"),
+    request: Request,
+    x_clerk_user_id: str | None = Header(None, description="Clerk user ID"),
     session: AsyncSession = Depends(get_async_session),
 ) -> User:
-    """Get or create the current user from Clerk user ID header.
+    """Get or create the current user.
 
-    This dependency extracts the Clerk user ID from the request header
-    and returns the corresponding User model. If the user doesn't exist,
-    it creates a new user record.
-
-    SECURITY WARNING: This implementation trusts the x-clerk-user-id header
-    directly without validation. In production, you MUST:
-    1. Validate the Clerk session JWT token
-    2. Extract the user ID from the validated token
-    3. Never trust client-provided headers for authentication
-
-    Example production implementation:
-        from clerk_backend_api import Clerk
-        clerk = Clerk(api_key=settings.clerk_secret_key)
-        session_token = request.headers.get("Authorization", "").replace("Bearer ", "")
-        claims = clerk.sessions.verify_token(session_token)
-        clerk_user_id = claims.sub
+    Authentication strategy (in priority order):
+    1. If clerk_pem_public_key is configured, validate the Authorization
+       Bearer JWT and extract the user ID from the 'sub' claim.
+    2. Otherwise, fall back to the X-Clerk-User-Id header (dev mode).
     """
+    clerk_user_id = _resolve_clerk_user_id(request, x_clerk_user_id)
+
+    if not clerk_user_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
     # Get or create user by clerk_id
     result = await session.execute(
-        select(User).where(User.clerk_id == x_clerk_user_id)
+        select(User).where(User.clerk_id == clerk_user_id)
     )
     user = result.scalar_one_or_none()
 
     if user is None:
-        # Auto-create user on first API call
-        # In production, you'd want to validate the Clerk token first
         user = User(
-            clerk_id=x_clerk_user_id,
-            email=f"{x_clerk_user_id}@placeholder.local",  # Placeholder until we get real email
+            clerk_id=clerk_user_id,
+            email=f"{clerk_user_id}@placeholder.local",
         )
         session.add(user)
         await session.commit()
@@ -50,6 +107,7 @@ async def get_current_user(
 
 
 async def get_optional_user(
+    request: Request,
     x_clerk_user_id: str | None = Header(None, description="Clerk user ID"),
     session: AsyncSession = Depends(get_async_session),
 ) -> User | None:
@@ -57,10 +115,29 @@ async def get_optional_user(
 
     Returns None if no authentication header is present.
     """
-    if x_clerk_user_id is None:
+    clerk_user_id = _resolve_clerk_user_id(request, x_clerk_user_id)
+
+    if not clerk_user_id:
         return None
 
     result = await session.execute(
-        select(User).where(User.clerk_id == x_clerk_user_id)
+        select(User).where(User.clerk_id == clerk_user_id)
     )
     return result.scalar_one_or_none()
+
+
+async def get_owned_account(
+    model: type,
+    session: AsyncSession,
+    account_id: uuid.UUID,
+    user_id: uuid.UUID,
+    label: str = "Account",
+):
+    """Fetch an account owned by the given user, or raise 404."""
+    result = await session.execute(
+        select(model).where(model.id == account_id, model.user_id == user_id)
+    )
+    account = result.scalar_one_or_none()
+    if not account:
+        raise HTTPException(status_code=404, detail=f"{label} not found")
+    return account
