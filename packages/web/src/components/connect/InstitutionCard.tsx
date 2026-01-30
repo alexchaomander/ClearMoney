@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import { getInitials } from "@/lib/shared/formatters";
-import { staggerItem } from "@/lib/shared/animations";
 
 interface Institution {
   id: string;
@@ -28,7 +27,6 @@ export function InstitutionCard({
 
   return (
     <motion.button
-      variants={staggerItem}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onConnect}
