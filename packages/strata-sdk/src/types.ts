@@ -78,6 +78,7 @@ export interface InvestmentAccount {
   user_id: string;
   connection_id: string | null;
   institution_id: string | null;
+  institution_name: string | null;
   name: string;
   account_type: InvestmentAccountType;
   provider_account_id: string | null;
