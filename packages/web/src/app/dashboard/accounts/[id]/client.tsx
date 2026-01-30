@@ -38,7 +38,7 @@ function mapToAccountData(data: InvestmentAccountWithHoldings) {
     balance: data.balance,
     account_type: data.account_type,
     is_tax_advantaged: data.is_tax_advantaged,
-    institution_name: data.institution_name ?? "Unknown",
+    institution_name: data.institution_name ?? data.institution_id ?? "Unknown",
     provider_account_id: data.provider_account_id ?? "",
     holdings,
     allocation,
