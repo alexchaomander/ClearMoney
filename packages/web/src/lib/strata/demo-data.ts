@@ -11,7 +11,7 @@ import type {
   PortfolioSummary,
 } from "@clearmoney/strata-sdk";
 
-const NOW = "2025-01-15T12:00:00Z";
+const NOW = "2026-01-15T12:00:00Z";
 const DEMO_USER_ID = "demo-user-001";
 
 // === Institutions ===
@@ -119,10 +119,11 @@ export const DEMO_INVESTMENT_ACCOUNTS: InvestmentAccount[] = [
     user_id: DEMO_USER_ID,
     connection_id: "demo-conn-001",
     institution_id: "demo-inst-fidelity",
+    institution_name: "Fidelity Investments",
     name: "Fidelity 401(k)",
     account_type: "401k",
     provider_account_id: "demo-prov-acc-001",
-    balance: 425300.0,
+    balance: 451415.0,
     currency: "USD",
     is_tax_advantaged: true,
     created_at: NOW,
@@ -133,10 +134,11 @@ export const DEMO_INVESTMENT_ACCOUNTS: InvestmentAccount[] = [
     user_id: DEMO_USER_ID,
     connection_id: "demo-conn-002",
     institution_id: "demo-inst-vanguard",
+    institution_name: "Vanguard",
     name: "Vanguard Roth IRA",
     account_type: "roth_ira",
     provider_account_id: "demo-prov-acc-002",
-    balance: 187450.0,
+    balance: 215250.0,
     currency: "USD",
     is_tax_advantaged: true,
     created_at: NOW,
@@ -147,10 +149,11 @@ export const DEMO_INVESTMENT_ACCOUNTS: InvestmentAccount[] = [
     user_id: DEMO_USER_ID,
     connection_id: "demo-conn-003",
     institution_id: "demo-inst-schwab",
+    institution_name: "Charles Schwab",
     name: "Schwab Individual Brokerage",
     account_type: "brokerage",
     provider_account_id: "demo-prov-acc-003",
-    balance: 238120.0,
+    balance: 197365.0,
     currency: "USD",
     is_tax_advantaged: false,
     created_at: NOW,
@@ -178,7 +181,7 @@ const DEMO_CASH_ACCOUNTS: CashAccount[] = [
     name: "Marcus Online Savings",
     account_type: "savings",
     balance: 45000.0,
-    apy: 4.4,
+    apy: 4.1,
     institution_name: "Goldman Sachs",
     created_at: NOW,
     updated_at: NOW,
@@ -249,76 +252,76 @@ function makeHolding(
 // Fidelity 401(k) holdings
 const FIDELITY_HOLDINGS: HoldingWithSecurity[] = [
   {
-    ...makeHolding("demo-h-001", "demo-acc-001", "demo-sec-vti", 420, 78540, 112560),
-    security: makeSecurity("demo-sec-vti", "VTI", "Vanguard Total Stock Market ETF", "etf", 268.0),
+    ...makeHolding("demo-h-001", "demo-acc-001", "demo-sec-vti", 420, 78540, 119700),
+    security: makeSecurity("demo-sec-vti", "VTI", "Vanguard Total Stock Market ETF", "etf", 285.0),
   },
   {
-    ...makeHolding("demo-h-002", "demo-acc-001", "demo-sec-vxus", 580, 28420, 31320),
-    security: makeSecurity("demo-sec-vxus", "VXUS", "Vanguard Total International Stock ETF", "etf", 54.0),
+    ...makeHolding("demo-h-002", "demo-acc-001", "demo-sec-vxus", 580, 28420, 33640),
+    security: makeSecurity("demo-sec-vxus", "VXUS", "Vanguard Total International Stock ETF", "etf", 58.0),
   },
   {
-    ...makeHolding("demo-h-003", "demo-acc-001", "demo-sec-bnd", 310, 22940, 22630),
-    security: makeSecurity("demo-sec-bnd", "BND", "Vanguard Total Bond Market ETF", "bond", 73.0),
+    ...makeHolding("demo-h-003", "demo-acc-001", "demo-sec-bnd", 310, 22940, 22475),
+    security: makeSecurity("demo-sec-bnd", "BND", "Vanguard Total Bond Market ETF", "bond", 72.5),
   },
   {
-    ...makeHolding("demo-h-004", "demo-acc-001", "demo-sec-voo", 520, 178360, 258790),
-    security: makeSecurity("demo-sec-voo", "VOO", "Vanguard S&P 500 ETF", "etf", 497.67),
+    ...makeHolding("demo-h-004", "demo-acc-001", "demo-sec-voo", 520, 178360, 275600),
+    security: makeSecurity("demo-sec-voo", "VOO", "Vanguard S&P 500 ETF", "etf", 530.0),
   },
 ];
 
 // Vanguard Roth IRA holdings
 const VANGUARD_HOLDINGS: HoldingWithSecurity[] = [
   {
-    ...makeHolding("demo-h-005", "demo-acc-002", "demo-sec-qqq", 145, 38640, 58000),
-    security: makeSecurity("demo-sec-qqq", "QQQ", "Invesco QQQ Trust", "etf", 400.0),
+    ...makeHolding("demo-h-005", "demo-acc-002", "demo-sec-qqq", 145, 38640, 76850),
+    security: makeSecurity("demo-sec-qqq", "QQQ", "Invesco QQQ Trust", "etf", 530.0),
   },
   {
-    ...makeHolding("demo-h-006", "demo-acc-002", "demo-sec-aapl", 180, 21600, 43200),
-    security: makeSecurity("demo-sec-aapl", "AAPL", "Apple Inc.", "stock", 240.0),
+    ...makeHolding("demo-h-006", "demo-acc-002", "demo-sec-aapl", 180, 21600, 45900),
+    security: makeSecurity("demo-sec-aapl", "AAPL", "Apple Inc.", "stock", 255.0),
   },
   {
-    ...makeHolding("demo-h-007", "demo-acc-002", "demo-sec-msft", 110, 24200, 46200),
-    security: makeSecurity("demo-sec-msft", "MSFT", "Microsoft Corporation", "stock", 420.0),
+    ...makeHolding("demo-h-007", "demo-acc-002", "demo-sec-msft", 110, 24200, 50600),
+    security: makeSecurity("demo-sec-msft", "MSFT", "Microsoft Corporation", "stock", 460.0),
   },
   {
-    ...makeHolding("demo-h-008", "demo-acc-002", "demo-sec-googl", 140, 16800, 25200),
-    security: makeSecurity("demo-sec-googl", "GOOGL", "Alphabet Inc.", "stock", 180.0),
+    ...makeHolding("demo-h-008", "demo-acc-002", "demo-sec-googl", 140, 16800, 27300),
+    security: makeSecurity("demo-sec-googl", "GOOGL", "Alphabet Inc.", "stock", 195.0),
   },
   {
-    ...makeHolding("demo-h-009", "demo-acc-002", "demo-sec-vgit", 200, 10400, 14850),
-    security: makeSecurity("demo-sec-vgit", "VGIT", "Vanguard Intermediate-Term Treasury ETF", "bond", 74.25),
+    ...makeHolding("demo-h-009", "demo-acc-002", "demo-sec-vgit", 200, 10400, 14600),
+    security: makeSecurity("demo-sec-vgit", "VGIT", "Vanguard Intermediate-Term Treasury ETF", "bond", 73.0),
   },
 ];
 
 // Schwab Brokerage holdings
 const SCHWAB_HOLDINGS: HoldingWithSecurity[] = [
   {
-    ...makeHolding("demo-h-010", "demo-acc-003", "demo-sec-amzn", 120, 14400, 26400),
-    security: makeSecurity("demo-sec-amzn", "AMZN", "Amazon.com Inc.", "stock", 220.0),
+    ...makeHolding("demo-h-010", "demo-acc-003", "demo-sec-amzn", 120, 14400, 28200),
+    security: makeSecurity("demo-sec-amzn", "AMZN", "Amazon.com Inc.", "stock", 235.0),
   },
   {
-    ...makeHolding("demo-h-011", "demo-acc-003", "demo-sec-nvda", 85, 10200, 59500),
-    security: makeSecurity("demo-sec-nvda", "NVDA", "NVIDIA Corporation", "stock", 700.0),
+    ...makeHolding("demo-h-011", "demo-acc-003", "demo-sec-nvda", 85, 10200, 14025),
+    security: makeSecurity("demo-sec-nvda", "NVDA", "NVIDIA Corporation", "stock", 165.0),
   },
   {
-    ...makeHolding("demo-h-012", "demo-acc-003", "demo-sec-tsla", 60, 12000, 14700),
-    security: makeSecurity("demo-sec-tsla", "TSLA", "Tesla Inc.", "stock", 245.0),
+    ...makeHolding("demo-h-012", "demo-acc-003", "demo-sec-tsla", 60, 12000, 16800),
+    security: makeSecurity("demo-sec-tsla", "TSLA", "Tesla Inc.", "stock", 280.0),
   },
   {
-    ...makeHolding("demo-h-013", "demo-acc-003", "demo-sec-schd", 340, 23800, 27200),
-    security: makeSecurity("demo-sec-schd", "SCHD", "Schwab U.S. Dividend Equity ETF", "etf", 80.0),
+    ...makeHolding("demo-h-013", "demo-acc-003", "demo-sec-schd", 340, 23800, 29240),
+    security: makeSecurity("demo-sec-schd", "SCHD", "Schwab U.S. Dividend Equity ETF", "etf", 86.0),
   },
   {
-    ...makeHolding("demo-h-014", "demo-acc-003", "demo-sec-vti", 200, 42000, 53600),
-    security: makeSecurity("demo-sec-vti", "VTI", "Vanguard Total Stock Market ETF", "etf", 268.0),
+    ...makeHolding("demo-h-014", "demo-acc-003", "demo-sec-vti", 200, 42000, 57000),
+    security: makeSecurity("demo-sec-vti", "VTI", "Vanguard Total Stock Market ETF", "etf", 285.0),
   },
   {
-    ...makeHolding("demo-h-015", "demo-acc-003", "demo-sec-jpst", 700, 35000, 35700),
-    security: makeSecurity("demo-sec-jpst", "JPST", "JPMorgan Ultra-Short Income ETF", "bond", 51.0),
+    ...makeHolding("demo-h-015", "demo-acc-003", "demo-sec-jpst", 700, 35000, 35350),
+    security: makeSecurity("demo-sec-jpst", "JPST", "JPMorgan Ultra-Short Income ETF", "bond", 50.5),
   },
   {
-    ...makeHolding("demo-h-016", "demo-acc-003", "demo-sec-schx", 250, 14250, 15500),
-    security: makeSecurity("demo-sec-schx", "SCHX", "Schwab U.S. Large-Cap ETF", "etf", 62.0),
+    ...makeHolding("demo-h-016", "demo-acc-003", "demo-sec-schx", 250, 14250, 16750),
+    security: makeSecurity("demo-sec-schx", "SCHX", "Schwab U.S. Large-Cap ETF", "etf", 67.0),
   },
 ];
 
