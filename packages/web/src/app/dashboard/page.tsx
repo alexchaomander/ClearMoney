@@ -1,16 +1,18 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Link2, PenLine } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { NetWorthCard } from "@/components/dashboard/NetWorthCard";
 import { AccountsList } from "@/components/dashboard/AccountsList";
 import { AllocationChart } from "@/components/dashboard/AllocationChart";
 import { HoldingsTable } from "@/components/dashboard/HoldingsTable";
 import { ConcentrationAlert } from "@/components/dashboard/ConcentrationAlert";
+import { PortfolioHistoryChart } from "@/components/dashboard/PortfolioHistoryChart";
 import { CashDebtSection } from "@/components/dashboard/CashDebtSection";
+import { AddAccountModal } from "@/components/dashboard/AddAccountModal";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { DashboardLoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ApiErrorState } from "@/components/shared/ApiErrorState";
@@ -20,6 +22,8 @@ import {
   useHoldings,
   useAccounts,
   useConnections,
+  useCashAccountMutations,
+  useDebtAccountMutations,
 } from "@/lib/strata/hooks";
 import type { HoldingDetail } from "@clearmoney/strata-sdk";
 
@@ -38,6 +42,25 @@ function mapHoldings(details: HoldingDetail[]) {
 }
 
 export default function DashboardPage() {
+  const [showAddDropdown, setShowAddDropdown] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const cashMutations = useCashAccountMutations();
+  const debtMutations = useDebtAccountMutations();
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowAddDropdown(false);
+      }
+    }
+    if (showAddDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showAddDropdown]);
+
   const {
     data: portfolio,
     isLoading: portfolioLoading,
@@ -131,13 +154,42 @@ export default function DashboardPage() {
               </p>
             )}
           </div>
-          <Link
-            href="/connect"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add Account
-          </Link>
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowAddDropdown((p) => !p)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Account
+            </button>
+            <AnimatePresence>
+              {showAddDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 mt-2 w-52 rounded-xl bg-neutral-900 border border-neutral-800 shadow-xl overflow-hidden z-20"
+                >
+                  <Link
+                    href="/connect"
+                    onClick={() => setShowAddDropdown(false)}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 transition-colors"
+                  >
+                    <Link2 className="w-4 h-4 text-emerald-400" />
+                    Link Brokerage
+                  </Link>
+                  <button
+                    onClick={() => { setShowAddDropdown(false); setShowAddModal(true); }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 transition-colors"
+                  >
+                    <PenLine className="w-4 h-4 text-emerald-400" />
+                    Add Manually
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </motion.div>
 
         {/* Main Grid */}
@@ -153,6 +205,8 @@ export default function DashboardPage() {
                 taxableValue={portfolio.taxable_value}
               />
             )}
+
+            <PortfolioHistoryChart />
 
             {portfolio && portfolio.concentration_alerts.length > 0 && (
               <ConcentrationAlert alerts={portfolio.concentration_alerts} />
@@ -186,6 +240,8 @@ export default function DashboardPage() {
               <CashDebtSection
                 cashAccounts={allAccountsData.cash_accounts}
                 debtAccounts={allAccountsData.debt_accounts}
+                onDeleteCashAccount={(id) => cashMutations.remove.mutate(id)}
+                onDeleteDebtAccount={(id) => debtMutations.remove.mutate(id)}
               />
             )}
 
@@ -239,6 +295,8 @@ export default function DashboardPage() {
       <main className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-8">
         {renderContent()}
       </main>
+
+      <AddAccountModal open={showAddModal} onOpenChange={setShowAddModal} />
     </div>
   );
 }

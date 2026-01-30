@@ -2,7 +2,16 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useStrataClient } from "./client";
-import type { ConnectionCallbackRequest, LinkSessionRequest } from "@clearmoney/strata-sdk";
+import type {
+  CashAccountCreate,
+  CashAccountUpdate,
+  ConnectionCallbackRequest,
+  DebtAccountCreate,
+  DebtAccountUpdate,
+  InvestmentAccountCreate,
+  LinkSessionRequest,
+  PortfolioHistoryRange,
+} from "@clearmoney/strata-sdk";
 
 export const queryKeys = {
   portfolioSummary: ["portfolio", "summary"] as const,
@@ -14,6 +23,8 @@ export const queryKeys = {
   searchInstitutions: (query?: string) =>
     ["institutions", "search", query ?? ""] as const,
   popularInstitutions: ["institutions", "popular"] as const,
+  portfolioHistory: (range: PortfolioHistoryRange) =>
+    ["portfolio", "history", range] as const,
 };
 
 export function usePortfolioSummary() {
@@ -98,6 +109,12 @@ function invalidatePortfolioQueries(queryClient: ReturnType<typeof useQueryClien
   }
 }
 
+/** Invalidate portfolio queries and history after account data changes. */
+function invalidateAllPortfolioData(queryClient: ReturnType<typeof useQueryClient>): void {
+  invalidatePortfolioQueries(queryClient);
+  queryClient.invalidateQueries({ queryKey: ["portfolio", "history"] });
+}
+
 export function useCreateLinkSession() {
   const client = useStrataClient();
   return useMutation({
@@ -134,5 +151,76 @@ export function useDeleteConnection() {
   return useMutation({
     mutationFn: (connectionId: string) => client.deleteConnection(connectionId),
     onSuccess: () => invalidatePortfolioQueries(queryClient),
+  });
+}
+
+// === Portfolio History ===
+
+export function usePortfolioHistory(range: PortfolioHistoryRange) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.portfolioHistory(range),
+    queryFn: () => client.getPortfolioHistory(range),
+  });
+}
+
+// === Cash/Debt Account Mutations ===
+
+export function useCashAccountMutations() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+  const onSuccess = () => invalidateAllPortfolioData(queryClient);
+
+  const create = useMutation({
+    mutationFn: (data: CashAccountCreate) => client.createCashAccount(data),
+    onSuccess,
+  });
+
+  const update = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: CashAccountUpdate }) =>
+      client.updateCashAccount(id, data),
+    onSuccess,
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => client.deleteCashAccount(id),
+    onSuccess,
+  });
+
+  return { create, update, remove };
+}
+
+export function useDebtAccountMutations() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+  const onSuccess = () => invalidateAllPortfolioData(queryClient);
+
+  const create = useMutation({
+    mutationFn: (data: DebtAccountCreate) => client.createDebtAccount(data),
+    onSuccess,
+  });
+
+  const update = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: DebtAccountUpdate }) =>
+      client.updateDebtAccount(id, data),
+    onSuccess,
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => client.deleteDebtAccount(id),
+    onSuccess,
+  });
+
+  return { create, update, remove };
+}
+
+export function useCreateInvestmentAccount() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: InvestmentAccountCreate) =>
+      client.createInvestmentAccount(data),
+    onSuccess: () => invalidateAllPortfolioData(queryClient),
   });
 }

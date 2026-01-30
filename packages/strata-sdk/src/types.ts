@@ -219,3 +219,50 @@ export interface PortfolioSummary {
   top_holdings: TopHolding[];
   concentration_alerts: ConcentrationAlert[];
 }
+
+// Cash/Debt CRUD
+export interface CashAccountCreate {
+  name: string;
+  account_type: CashAccountType;
+  balance?: number;
+  apy?: number | null;
+  institution_name?: string | null;
+}
+export interface CashAccountUpdate {
+  name?: string;
+  account_type?: CashAccountType;
+  balance?: number;
+  apy?: number | null;
+  institution_name?: string | null;
+}
+export interface DebtAccountCreate {
+  name: string;
+  debt_type: DebtType;
+  balance?: number;
+  interest_rate: number;
+  minimum_payment?: number;
+  institution_name?: string | null;
+}
+export interface DebtAccountUpdate {
+  name?: string;
+  debt_type?: DebtType;
+  balance?: number;
+  interest_rate?: number;
+  minimum_payment?: number;
+  institution_name?: string | null;
+}
+
+// Investment Account CRUD
+export interface InvestmentAccountCreate {
+  name: string;
+  account_type: InvestmentAccountType;
+  balance?: number;
+  is_tax_advantaged?: boolean;
+}
+
+// Portfolio history
+export type PortfolioHistoryRange = '30d' | '90d' | '1y' | 'all';
+export interface PortfolioHistoryPoint {
+  date: string;
+  value: number;
+}

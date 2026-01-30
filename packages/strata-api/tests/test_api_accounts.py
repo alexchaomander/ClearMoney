@@ -138,7 +138,7 @@ async def test_list_accounts_unauthorized() -> None:
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
         response = await client.get("/api/v1/accounts")
-        assert response.status_code == 422  # Missing header
+        assert response.status_code == 401  # Missing authentication
 
 
 @pytest.mark.asyncio
