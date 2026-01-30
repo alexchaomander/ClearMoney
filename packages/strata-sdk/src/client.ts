@@ -1,7 +1,13 @@
 import type {
   AllAccountsResponse,
+  CashAccount,
+  CashAccountCreate,
+  CashAccountUpdate,
   Connection,
   ConnectionCallbackRequest,
+  DebtAccount,
+  DebtAccountCreate,
+  DebtAccountUpdate,
   HealthResponse,
   HoldingDetail,
   Institution,
@@ -9,6 +15,8 @@ import type {
   InvestmentAccountWithHoldings,
   LinkSessionRequest,
   LinkSessionResponse,
+  PortfolioHistoryPoint,
+  PortfolioHistoryRange,
   PortfolioSummary,
 } from './types';
 
@@ -27,6 +35,13 @@ export interface StrataClientInterface {
   getPopularInstitutions(limit?: number): Promise<Institution[]>;
   getPortfolioSummary(): Promise<PortfolioSummary>;
   getHoldings(): Promise<HoldingDetail[]>;
+  createCashAccount(data: CashAccountCreate): Promise<CashAccount>;
+  updateCashAccount(id: string, data: CashAccountUpdate): Promise<CashAccount>;
+  deleteCashAccount(id: string): Promise<void>;
+  createDebtAccount(data: DebtAccountCreate): Promise<DebtAccount>;
+  updateDebtAccount(id: string, data: DebtAccountUpdate): Promise<DebtAccount>;
+  deleteDebtAccount(id: string): Promise<void>;
+  getPortfolioHistory(range: PortfolioHistoryRange): Promise<PortfolioHistoryPoint[]>;
 }
 
 export interface StrataClientOptions {
@@ -215,5 +230,57 @@ export class StrataClient implements StrataClientInterface {
    */
   async getHoldings(): Promise<HoldingDetail[]> {
     return this.request<HoldingDetail[]>('/api/v1/portfolio/holdings');
+  }
+
+  // === Cash Account CRUD ===
+
+  async createCashAccount(data: CashAccountCreate): Promise<CashAccount> {
+    return this.request<CashAccount>('/api/v1/accounts/cash', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCashAccount(id: string, data: CashAccountUpdate): Promise<CashAccount> {
+    return this.request<CashAccount>(`/api/v1/accounts/cash/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCashAccount(id: string): Promise<void> {
+    await this.request<{ status: string }>(`/api/v1/accounts/cash/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // === Debt Account CRUD ===
+
+  async createDebtAccount(data: DebtAccountCreate): Promise<DebtAccount> {
+    return this.request<DebtAccount>('/api/v1/accounts/debt', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateDebtAccount(id: string, data: DebtAccountUpdate): Promise<DebtAccount> {
+    return this.request<DebtAccount>(`/api/v1/accounts/debt/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteDebtAccount(id: string): Promise<void> {
+    await this.request<{ status: string }>(`/api/v1/accounts/debt/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // === Portfolio History ===
+
+  async getPortfolioHistory(range: PortfolioHistoryRange): Promise<PortfolioHistoryPoint[]> {
+    return this.request<PortfolioHistoryPoint[]>(
+      this.buildUrl('/api/v1/portfolio/history', { range })
+    );
   }
 }

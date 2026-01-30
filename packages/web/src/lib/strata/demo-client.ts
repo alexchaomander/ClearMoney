@@ -1,7 +1,13 @@
 import type {
   AllAccountsResponse,
+  CashAccount,
+  CashAccountCreate,
+  CashAccountUpdate,
   Connection,
   ConnectionCallbackRequest,
+  DebtAccount,
+  DebtAccountCreate,
+  DebtAccountUpdate,
   HealthResponse,
   HoldingDetail,
   Institution,
@@ -9,6 +15,8 @@ import type {
   InvestmentAccountWithHoldings,
   LinkSessionRequest,
   LinkSessionResponse,
+  PortfolioHistoryPoint,
+  PortfolioHistoryRange,
   PortfolioSummary,
   StrataClientInterface,
 } from "@clearmoney/strata-sdk";
@@ -20,6 +28,7 @@ import {
   getDemoAccountsResponse,
   getDemoHoldings,
   getDemoInvestmentAccountWithHoldings,
+  getDemoPortfolioHistory,
   getDemoPortfolioSummary,
 } from "./demo-data";
 
@@ -120,5 +129,90 @@ export class DemoStrataClient implements StrataClientInterface {
   async getHoldings(): Promise<HoldingDetail[]> {
     await delay(300);
     return getDemoHoldings();
+  }
+
+  // === Cash Account CRUD ===
+
+  async createCashAccount(data: CashAccountCreate): Promise<CashAccount> {
+    await delay(300);
+    const now = new Date().toISOString();
+    return {
+      id: crypto.randomUUID(),
+      user_id: "demo-user-001",
+      name: data.name,
+      account_type: data.account_type,
+      balance: data.balance ?? 0,
+      apy: data.apy ?? null,
+      institution_name: data.institution_name ?? null,
+      created_at: now,
+      updated_at: now,
+    };
+  }
+
+  async updateCashAccount(id: string, data: CashAccountUpdate): Promise<CashAccount> {
+    await delay(300);
+    const now = new Date().toISOString();
+    return {
+      id,
+      user_id: "demo-user-001",
+      name: data.name ?? "Updated Account",
+      account_type: data.account_type ?? "checking",
+      balance: data.balance ?? 0,
+      apy: data.apy ?? null,
+      institution_name: data.institution_name ?? null,
+      created_at: now,
+      updated_at: now,
+    };
+  }
+
+  async deleteCashAccount(_id: string): Promise<void> {
+    await delay(300);
+  }
+
+  // === Debt Account CRUD ===
+
+  async createDebtAccount(data: DebtAccountCreate): Promise<DebtAccount> {
+    await delay(300);
+    const now = new Date().toISOString();
+    return {
+      id: crypto.randomUUID(),
+      user_id: "demo-user-001",
+      name: data.name,
+      debt_type: data.debt_type,
+      balance: data.balance ?? 0,
+      interest_rate: data.interest_rate,
+      minimum_payment: data.minimum_payment ?? 0,
+      institution_name: data.institution_name ?? null,
+      created_at: now,
+      updated_at: now,
+    };
+  }
+
+  async updateDebtAccount(id: string, data: DebtAccountUpdate): Promise<DebtAccount> {
+    await delay(300);
+    const now = new Date().toISOString();
+    return {
+      id,
+      user_id: "demo-user-001",
+      name: data.name ?? "Updated Debt",
+      debt_type: data.debt_type ?? "credit_card",
+      balance: data.balance ?? 0,
+      interest_rate: data.interest_rate ?? 0,
+      minimum_payment: data.minimum_payment ?? 0,
+      institution_name: data.institution_name ?? null,
+      created_at: now,
+      updated_at: now,
+    };
+  }
+
+  async deleteDebtAccount(_id: string): Promise<void> {
+    await delay(300);
+  }
+
+  // === Portfolio History ===
+
+  async getPortfolioHistory(range: PortfolioHistoryRange): Promise<PortfolioHistoryPoint[]> {
+    await delay(300);
+    return getDemoPortfolioHistory(range);
   }
 }

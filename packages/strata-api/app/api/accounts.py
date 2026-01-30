@@ -12,13 +12,13 @@ from app.models.cash_account import CashAccount
 from app.models.debt_account import DebtAccount
 from app.models.holding import Holding
 from app.models.investment_account import InvestmentAccount
-from app.models.security import Security
 from app.models.user import User
 from app.schemas.cash_account import CashAccountResponse
 from app.schemas.debt_account import DebtAccountResponse
-from app.schemas.holding import HoldingWithSecurityResponse
 from app.schemas.investment_account import (
+    InvestmentAccountCreate,
     InvestmentAccountResponse,
+    InvestmentAccountUpdate,
     InvestmentAccountWithHoldingsResponse,
 )
 from app.schemas.security import SecurityResponse
@@ -126,3 +126,82 @@ async def get_investment_account(
     response_data["holdings"] = holdings_data
 
     return InvestmentAccountWithHoldingsResponse(**response_data)
+
+
+@router.post("/investment", response_model=InvestmentAccountResponse, status_code=201)
+async def create_investment_account(
+    data: InvestmentAccountCreate,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> InvestmentAccountResponse:
+    """Create a manual investment account (no connection)."""
+    account = InvestmentAccount(
+        user_id=user.id,
+        connection_id=None,
+        institution_id=data.institution_id,
+        name=data.name,
+        account_type=data.account_type,
+        provider_account_id=None,
+        balance=data.balance,
+        currency=data.currency,
+        is_tax_advantaged=data.is_tax_advantaged,
+    )
+    session.add(account)
+    await session.commit()
+    await session.refresh(account)
+    return InvestmentAccountResponse.model_validate(account)
+
+
+@router.put(
+    "/investment/{account_id}", response_model=InvestmentAccountResponse
+)
+async def update_investment_account(
+    account_id: uuid.UUID,
+    data: InvestmentAccountUpdate,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> InvestmentAccountResponse:
+    """Update an investment account."""
+    result = await session.execute(
+        select(InvestmentAccount).where(
+            InvestmentAccount.id == account_id,
+            InvestmentAccount.user_id == user.id,
+        )
+    )
+    account = result.scalar_one_or_none()
+    if not account:
+        raise HTTPException(
+            status_code=404, detail="Investment account not found"
+        )
+
+    update_data = data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(account, field, value)
+
+    await session.commit()
+    await session.refresh(account)
+    return InvestmentAccountResponse.model_validate(account)
+
+
+@router.delete("/investment/{account_id}")
+async def delete_investment_account(
+    account_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> dict:
+    """Delete an investment account and all its holdings."""
+    result = await session.execute(
+        select(InvestmentAccount).where(
+            InvestmentAccount.id == account_id,
+            InvestmentAccount.user_id == user.id,
+        )
+    )
+    account = result.scalar_one_or_none()
+    if not account:
+        raise HTTPException(
+            status_code=404, detail="Investment account not found"
+        )
+
+    await session.delete(account)
+    await session.commit()
+    return {"status": "deleted"}

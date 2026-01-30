@@ -1,7 +1,9 @@
 from collections import defaultdict
+from datetime import date
 from decimal import Decimal
+from typing import Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -11,17 +13,15 @@ from app.db.session import get_async_session
 from app.models.cash_account import CashAccount
 from app.models.debt_account import DebtAccount
 from app.models.holding import Holding
-from app.models.investment_account import InvestmentAccount, InvestmentAccountType
-from app.models.security import Security
+from app.models.investment_account import InvestmentAccount
 from app.models.user import User
-from app.schemas.holding import HoldingWithSecurityResponse
 from app.schemas.portfolio import (
     AssetAllocation,
     ConcentrationAlert,
+    PortfolioHistoryPoint,
     PortfolioSummary,
     TopHolding,
 )
-from app.schemas.security import SecurityResponse
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 
@@ -228,3 +228,43 @@ async def get_all_holdings(
         key=lambda x: x["market_value"] or 0,
         reverse=True,
     )
+
+
+@router.get("/history", response_model=list[PortfolioHistoryPoint])
+async def get_portfolio_history(
+    range: Literal["30d", "90d", "1y", "all"] = Query("1y"),
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> list[PortfolioHistoryPoint]:
+    """Get portfolio value history.
+
+    Returns a single data point with the current portfolio value.
+    Future: daily snapshots table for historical data.
+    """
+    # Calculate current portfolio value
+    cash_result = await session.execute(
+        select(CashAccount).where(CashAccount.user_id == user.id)
+    )
+    cash_accounts = cash_result.scalars().all()
+    total_cash = sum(a.balance for a in cash_accounts)
+
+    debt_result = await session.execute(
+        select(DebtAccount).where(DebtAccount.user_id == user.id)
+    )
+    debt_accounts = debt_result.scalars().all()
+    total_debt = sum(a.balance for a in debt_accounts)
+
+    investment_result = await session.execute(
+        select(InvestmentAccount).where(InvestmentAccount.user_id == user.id)
+    )
+    investment_accounts = investment_result.scalars().all()
+    total_investment = sum(a.balance for a in investment_accounts)
+
+    current_value = total_cash + total_investment - total_debt
+
+    return [
+        PortfolioHistoryPoint(
+            date=date.today().isoformat(),
+            value=current_value,
+        )
+    ]
