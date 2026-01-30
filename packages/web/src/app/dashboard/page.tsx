@@ -9,6 +9,7 @@ import { AccountsList } from "@/components/dashboard/AccountsList";
 import { AllocationChart } from "@/components/dashboard/AllocationChart";
 import { HoldingsTable } from "@/components/dashboard/HoldingsTable";
 import { ConcentrationAlert } from "@/components/dashboard/ConcentrationAlert";
+import { CashDebtSection } from "@/components/dashboard/CashDebtSection";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { DashboardLoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ApiErrorState } from "@/components/shared/ApiErrorState";
@@ -16,6 +17,8 @@ import {
   usePortfolioSummary,
   useInvestmentAccounts,
   useHoldings,
+  useAccounts,
+  useConnections,
 } from "@/lib/strata/hooks";
 import type { HoldingDetail } from "@clearmoney/strata-sdk";
 
@@ -55,13 +58,22 @@ export default function DashboardPage() {
     refetch: refetchHoldings,
   } = useHoldings();
 
-  const isLoading = portfolioLoading || accountsLoading || holdingsLoading;
+  const {
+    data: allAccountsData,
+    isLoading: allAccountsLoading,
+    refetch: refetchAllAccounts,
+  } = useAccounts();
+
+  const { data: connections } = useConnections();
+
+  const isLoading = portfolioLoading || accountsLoading || holdingsLoading || allAccountsLoading;
   const isError = portfolioError || accountsError || holdingsError;
 
   function handleRefresh() {
     refetchPortfolio();
     refetchAccounts();
     refetchHoldings();
+    refetchAllAccounts();
   }
 
   const hasAccounts = accounts && accounts.length > 0;
@@ -101,6 +113,11 @@ export default function DashboardPage() {
             <p className="text-neutral-400">
               Your complete investment overview
             </p>
+            {connections && connections.length > 0 && connections[0].last_synced_at && (
+              <p className="text-xs text-neutral-500 mt-1">
+                Last synced: {new Date(connections[0].last_synced_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              </p>
+            )}
           </div>
           <Link
             href="/connect"
@@ -150,6 +167,13 @@ export default function DashboardPage() {
               <AllocationChart
                 allocations={portfolio.allocation_by_account_type}
                 title="By Account Type"
+              />
+            )}
+
+            {allAccountsData && (
+              <CashDebtSection
+                cashAccounts={allAccountsData.cash_accounts}
+                debtAccounts={allAccountsData.debt_accounts}
               />
             )}
 
