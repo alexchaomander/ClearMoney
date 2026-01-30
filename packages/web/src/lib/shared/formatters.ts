@@ -173,12 +173,38 @@ export function formatYears(years: number): string {
 }
 
 /**
- * Format a snake_case or kebab-case string to Title Case
+ * Known financial term mappings for display.
+ * Keys are the raw/snake_case form; values are the display form.
+ */
+const FINANCIAL_TERMS: Record<string, string> = {
+  etf: "ETF",
+  ira: "IRA",
+  ipo: "IPO",
+  hsa: "HSA",
+  "401k": "401(k)",
+  "403b": "403(b)",
+  roth_ira: "Roth IRA",
+  sep_ira: "SEP IRA",
+  simple_ira: "SIMPLE IRA",
+  mutual_fund: "Mutual Fund",
+  money_market: "Money Market",
+  credit_card: "Credit Card",
+  student_loan: "Student Loan",
+  auto_loan: "Auto Loan",
+  personal_loan: "Personal Loan",
+  cd: "CD",
+};
+
+/**
+ * Format a snake_case or kebab-case string to Title Case,
+ * with special handling for financial acronyms and terms.
  *
- * @param value - The string to format (e.g., "roth_ira", "mutual-fund")
- * @returns Title case string (e.g., "Roth Ira", "Mutual Fund")
+ * @param value - The string to format (e.g., "roth_ira", "etf", "401k")
+ * @returns Properly formatted string (e.g., "Roth IRA", "ETF", "401(k)")
  */
 export function formatTitleCase(value: string): string {
+  const lower = value.toLowerCase();
+  if (FINANCIAL_TERMS[lower]) return FINANCIAL_TERMS[lower];
   return value
     .replace(/[_-]/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
