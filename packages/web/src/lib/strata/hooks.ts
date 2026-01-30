@@ -8,6 +8,7 @@ import type {
   ConnectionCallbackRequest,
   DebtAccountCreate,
   DebtAccountUpdate,
+  InvestmentAccountCreate,
   LinkSessionRequest,
   PortfolioHistoryRange,
 } from "@clearmoney/strata-sdk";
@@ -211,4 +212,15 @@ export function useDebtAccountMutations() {
   });
 
   return { create, update, remove };
+}
+
+export function useCreateInvestmentAccount() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: InvestmentAccountCreate) =>
+      client.createInvestmentAccount(data),
+    onSuccess: () => invalidateAllPortfolioData(queryClient),
+  });
 }

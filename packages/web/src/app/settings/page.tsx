@@ -6,22 +6,27 @@ import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import {
   useConnections,
   useAccounts,
+  usePopularInstitutions,
   useSyncConnection,
   useDeleteConnection,
   useCashAccountMutations,
   useDebtAccountMutations,
 } from "@/lib/strata/hooks";
 import { formatTitleCase, getInitials } from "@/lib/shared/formatters";
-import { DEMO_INSTITUTIONS } from "@/lib/strata/demo-data";
+import type { Institution } from "@clearmoney/strata-sdk";
 
-function getInstitutionName(institutionId: string | null): string {
+function getInstitutionName(
+  institutionId: string | null,
+  institutions: Institution[] | undefined,
+): string {
   if (!institutionId) return "Unknown";
-  const inst = DEMO_INSTITUTIONS.find((i) => i.id === institutionId);
+  const inst = institutions?.find((i) => i.id === institutionId);
   return inst?.name ?? "Unknown";
 }
 
 export default function SettingsPage() {
   const { data: connections, isLoading: connectionsLoading } = useConnections();
+  const { data: institutions } = usePopularInstitutions();
   const { data: allAccounts, isLoading: accountsLoading } = useAccounts();
   const syncConnection = useSyncConnection();
   const deleteConnection = useDeleteConnection();
@@ -81,11 +86,11 @@ export default function SettingsPage() {
                 {connections.map((conn) => (
                   <div key={conn.id} className={rowClass}>
                     <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-neutral-800 text-neutral-300 text-sm font-medium">
-                      {getInitials(getInstitutionName(conn.institution_id))}
+                      {getInitials(getInstitutionName(conn.institution_id, institutions))}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm text-neutral-100 truncate">
-                        {getInstitutionName(conn.institution_id)}
+                        {getInstitutionName(conn.institution_id, institutions)}
                       </p>
                       <p className="text-xs text-neutral-500">
                         Status: {conn.status} &middot; Provider: {conn.provider}

@@ -12,6 +12,7 @@ import type {
   HoldingDetail,
   Institution,
   InvestmentAccount,
+  InvestmentAccountCreate,
   InvestmentAccountWithHoldings,
   LinkSessionRequest,
   LinkSessionResponse,
@@ -35,6 +36,7 @@ export interface StrataClientInterface {
   getPopularInstitutions(limit?: number): Promise<Institution[]>;
   getPortfolioSummary(): Promise<PortfolioSummary>;
   getHoldings(): Promise<HoldingDetail[]>;
+  createInvestmentAccount(data: InvestmentAccountCreate): Promise<InvestmentAccount>;
   createCashAccount(data: CashAccountCreate): Promise<CashAccount>;
   updateCashAccount(id: string, data: CashAccountUpdate): Promise<CashAccount>;
   deleteCashAccount(id: string): Promise<void>;
@@ -230,6 +232,15 @@ export class StrataClient implements StrataClientInterface {
    */
   async getHoldings(): Promise<HoldingDetail[]> {
     return this.request<HoldingDetail[]>('/api/v1/portfolio/holdings');
+  }
+
+  // === Investment Account CRUD ===
+
+  async createInvestmentAccount(data: InvestmentAccountCreate): Promise<InvestmentAccount> {
+    return this.request<InvestmentAccount>('/api/v1/accounts/investment', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   }
 
   // === Cash Account CRUD ===

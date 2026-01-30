@@ -1,10 +1,10 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_owned_account
 from app.db.session import get_async_session
 from app.models.cash_account import CashAccount
 from app.models.debt_account import DebtAccount
@@ -70,15 +70,9 @@ async def update_cash_account(
     session: AsyncSession = Depends(get_async_session),
 ) -> CashAccountResponse:
     """Update a cash account."""
-    result = await session.execute(
-        select(CashAccount).where(
-            CashAccount.id == account_id,
-            CashAccount.user_id == user.id,
-        )
+    account = await get_owned_account(
+        CashAccount, session, account_id, user.id, "Cash account"
     )
-    account = result.scalar_one_or_none()
-    if not account:
-        raise HTTPException(status_code=404, detail="Cash account not found")
 
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -96,15 +90,9 @@ async def delete_cash_account(
     session: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Delete a cash account."""
-    result = await session.execute(
-        select(CashAccount).where(
-            CashAccount.id == account_id,
-            CashAccount.user_id == user.id,
-        )
+    account = await get_owned_account(
+        CashAccount, session, account_id, user.id, "Cash account"
     )
-    account = result.scalar_one_or_none()
-    if not account:
-        raise HTTPException(status_code=404, detail="Cash account not found")
 
     await session.delete(account)
     await session.commit()
@@ -159,15 +147,9 @@ async def update_debt_account(
     session: AsyncSession = Depends(get_async_session),
 ) -> DebtAccountResponse:
     """Update a debt account."""
-    result = await session.execute(
-        select(DebtAccount).where(
-            DebtAccount.id == account_id,
-            DebtAccount.user_id == user.id,
-        )
+    account = await get_owned_account(
+        DebtAccount, session, account_id, user.id, "Debt account"
     )
-    account = result.scalar_one_or_none()
-    if not account:
-        raise HTTPException(status_code=404, detail="Debt account not found")
 
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -185,15 +167,9 @@ async def delete_debt_account(
     session: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Delete a debt account."""
-    result = await session.execute(
-        select(DebtAccount).where(
-            DebtAccount.id == account_id,
-            DebtAccount.user_id == user.id,
-        )
+    account = await get_owned_account(
+        DebtAccount, session, account_id, user.id, "Debt account"
     )
-    account = result.scalar_one_or_none()
-    if not account:
-        raise HTTPException(status_code=404, detail="Debt account not found")
 
     await session.delete(account)
     await session.commit()

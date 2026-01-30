@@ -12,6 +12,7 @@ import type {
   HoldingDetail,
   Institution,
   InvestmentAccount,
+  InvestmentAccountCreate,
   InvestmentAccountWithHoldings,
   LinkSessionRequest,
   LinkSessionResponse,
@@ -129,6 +130,28 @@ export class DemoStrataClient implements StrataClientInterface {
   async getHoldings(): Promise<HoldingDetail[]> {
     await delay(300);
     return getDemoHoldings();
+  }
+
+  // === Investment Account CRUD ===
+
+  async createInvestmentAccount(data: InvestmentAccountCreate): Promise<InvestmentAccount> {
+    await delay(300);
+    const now = new Date().toISOString();
+    return {
+      id: crypto.randomUUID(),
+      user_id: "demo-user-001",
+      connection_id: null,
+      institution_id: null,
+      institution_name: null,
+      name: data.name,
+      account_type: data.account_type,
+      provider_account_id: null,
+      balance: data.balance ?? 0,
+      currency: "USD",
+      is_tax_advantaged: data.is_tax_advantaged ?? false,
+      created_at: now,
+      updated_at: now,
+    };
   }
 
   // === Cash Account CRUD ===

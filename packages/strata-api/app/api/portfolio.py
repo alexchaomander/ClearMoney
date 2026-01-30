@@ -29,6 +29,23 @@ router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 CONCENTRATION_THRESHOLD = Decimal("10.0")
 
 
+async def _get_cash_and_debt_totals(
+    session: AsyncSession, user_id,
+) -> tuple[Decimal, Decimal]:
+    """Return (total_cash, total_debt) for a user."""
+    cash_result = await session.execute(
+        select(CashAccount).where(CashAccount.user_id == user_id)
+    )
+    total_cash = sum(a.balance for a in cash_result.scalars().all())
+
+    debt_result = await session.execute(
+        select(DebtAccount).where(DebtAccount.user_id == user_id)
+    )
+    total_debt = sum(a.balance for a in debt_result.scalars().all())
+
+    return total_cash, total_debt
+
+
 @router.get("/summary", response_model=PortfolioSummary)
 async def get_portfolio_summary(
     user: User = Depends(get_current_user),
@@ -38,19 +55,7 @@ async def get_portfolio_summary(
 
     Includes net worth calculation, asset allocation, and concentration alerts.
     """
-    # Get cash accounts
-    cash_result = await session.execute(
-        select(CashAccount).where(CashAccount.user_id == user.id)
-    )
-    cash_accounts = cash_result.scalars().all()
-    total_cash = sum(a.balance for a in cash_accounts)
-
-    # Get debt accounts
-    debt_result = await session.execute(
-        select(DebtAccount).where(DebtAccount.user_id == user.id)
-    )
-    debt_accounts = debt_result.scalars().all()
-    total_debt = sum(a.balance for a in debt_accounts)
+    total_cash, total_debt = await _get_cash_and_debt_totals(session, user.id)
 
     # Get investment accounts with holdings
     investment_result = await session.execute(
@@ -239,20 +244,12 @@ async def get_portfolio_history(
     """Get portfolio value history.
 
     Returns a single data point with the current portfolio value.
-    Future: daily snapshots table for historical data.
+    The ``range`` parameter is accepted for API compatibility but not yet
+    used — a future daily-snapshots table will filter by range.
     """
-    # Calculate current portfolio value
-    cash_result = await session.execute(
-        select(CashAccount).where(CashAccount.user_id == user.id)
-    )
-    cash_accounts = cash_result.scalars().all()
-    total_cash = sum(a.balance for a in cash_accounts)
+    _ = range  # reserved for future daily-snapshots query
 
-    debt_result = await session.execute(
-        select(DebtAccount).where(DebtAccount.user_id == user.id)
-    )
-    debt_accounts = debt_result.scalars().all()
-    total_debt = sum(a.balance for a in debt_accounts)
+    total_cash, total_debt = await _get_cash_and_debt_totals(session, user.id)
 
     investment_result = await session.execute(
         select(InvestmentAccount).where(InvestmentAccount.user_id == user.id)

@@ -9,7 +9,7 @@ import type {
   DebtType,
   InvestmentAccountType,
 } from "@clearmoney/strata-sdk";
-import { useCashAccountMutations, useDebtAccountMutations } from "@/lib/strata/hooks";
+import { useCashAccountMutations, useDebtAccountMutations, useCreateInvestmentAccount } from "@/lib/strata/hooks";
 
 type TabKey = "cash" | "debt" | "investment";
 
@@ -62,6 +62,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
   const [tab, setTab] = useState<TabKey>("cash");
   const cashMutations = useCashAccountMutations();
   const debtMutations = useDebtAccountMutations();
+  const createInvestment = useCreateInvestmentAccount();
 
   // Cash form
   const [cashName, setCashName] = useState("");
@@ -128,13 +129,18 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
         minimum_payment: debtMinPayment ? parseFloat(debtMinPayment) : 0,
         institution_name: debtInstitution || null,
       });
+    } else if (tab === "investment") {
+      await createInvestment.mutateAsync({
+        name: investName,
+        account_type: investType,
+        balance: investBalance ? parseFloat(investBalance) : 0,
+        is_tax_advantaged: investTaxAdvantaged,
+      });
     }
-    // Investment tab is a placeholder — manual investment accounts
-    // can be added in a future iteration via the backend
     handleClose();
   }
 
-  const isPending = cashMutations.create.isPending || debtMutations.create.isPending;
+  const isPending = cashMutations.create.isPending || debtMutations.create.isPending || createInvestment.isPending;
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>

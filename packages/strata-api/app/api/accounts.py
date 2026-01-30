@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_owned_account
 from app.db.session import get_async_session
 from app.models.cash_account import CashAccount
 from app.models.debt_account import DebtAccount
@@ -162,17 +162,9 @@ async def update_investment_account(
     session: AsyncSession = Depends(get_async_session),
 ) -> InvestmentAccountResponse:
     """Update an investment account."""
-    result = await session.execute(
-        select(InvestmentAccount).where(
-            InvestmentAccount.id == account_id,
-            InvestmentAccount.user_id == user.id,
-        )
+    account = await get_owned_account(
+        InvestmentAccount, session, account_id, user.id, "Investment account"
     )
-    account = result.scalar_one_or_none()
-    if not account:
-        raise HTTPException(
-            status_code=404, detail="Investment account not found"
-        )
 
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -190,17 +182,9 @@ async def delete_investment_account(
     session: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Delete an investment account and all its holdings."""
-    result = await session.execute(
-        select(InvestmentAccount).where(
-            InvestmentAccount.id == account_id,
-            InvestmentAccount.user_id == user.id,
-        )
+    account = await get_owned_account(
+        InvestmentAccount, session, account_id, user.id, "Investment account"
     )
-    account = result.scalar_one_or_none()
-    if not account:
-        raise HTTPException(
-            status_code=404, detail="Investment account not found"
-        )
 
     await session.delete(account)
     await session.commit()

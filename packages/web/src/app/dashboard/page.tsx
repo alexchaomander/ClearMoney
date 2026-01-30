@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Link2, PenLine } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
@@ -43,7 +42,6 @@ function mapHoldings(details: HoldingDetail[]) {
 }
 
 export default function DashboardPage() {
-  const router = useRouter();
   const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -173,13 +171,14 @@ export default function DashboardPage() {
                   transition={{ duration: 0.15 }}
                   className="absolute right-0 mt-2 w-52 rounded-xl bg-neutral-900 border border-neutral-800 shadow-xl overflow-hidden z-20"
                 >
-                  <button
-                    onClick={() => { setShowAddDropdown(false); router.push("/connect"); }}
+                  <Link
+                    href="/connect"
+                    onClick={() => setShowAddDropdown(false)}
                     className="flex items-center gap-3 w-full px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 transition-colors"
                   >
                     <Link2 className="w-4 h-4 text-emerald-400" />
                     Link Brokerage
-                  </button>
+                  </Link>
                   <button
                     onClick={() => { setShowAddDropdown(false); setShowAddModal(true); }}
                     className="flex items-center gap-3 w-full px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 transition-colors"

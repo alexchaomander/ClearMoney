@@ -252,6 +252,14 @@ export interface DebtAccountUpdate {
   institution_name?: string | null;
 }
 
+// Investment Account CRUD
+export interface InvestmentAccountCreate {
+  name: string;
+  account_type: InvestmentAccountType;
+  balance?: number;
+  is_tax_advantaged?: boolean;
+}
+
 // Portfolio history
 export type PortfolioHistoryRange = '30d' | '90d' | '1y' | 'all';
 export interface PortfolioHistoryPoint {
