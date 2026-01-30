@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
@@ -61,13 +62,14 @@ export default function DashboardPage() {
   const {
     data: allAccountsData,
     isLoading: allAccountsLoading,
+    isError: allAccountsError,
     refetch: refetchAllAccounts,
   } = useAccounts();
 
   const { data: connections } = useConnections();
 
   const isLoading = portfolioLoading || accountsLoading || holdingsLoading || allAccountsLoading;
-  const isError = portfolioError || accountsError || holdingsError;
+  const isError = portfolioError || accountsError || holdingsError || allAccountsError;
 
   function handleRefresh() {
     refetchPortfolio();
@@ -78,6 +80,16 @@ export default function DashboardPage() {
 
   const hasAccounts = accounts && accounts.length > 0;
   const holdings = holdingsData ? mapHoldings(holdingsData) : [];
+
+  const lastSyncedAt = useMemo(() => {
+    if (!connections?.length) return null;
+    const syncDates = connections
+      .map((c) => c.last_synced_at)
+      .filter((d): d is string => !!d)
+      .map((d) => new Date(d).getTime());
+    if (!syncDates.length) return null;
+    return new Date(Math.max(...syncDates));
+  }, [connections]);
 
   function renderContent() {
     if (isLoading) {
@@ -113,9 +125,9 @@ export default function DashboardPage() {
             <p className="text-neutral-400">
               Your complete investment overview
             </p>
-            {connections && connections.length > 0 && connections[0].last_synced_at && (
+            {lastSyncedAt && (
               <p className="text-xs text-neutral-500 mt-1">
-                Last synced: {new Date(connections[0].last_synced_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                Last synced: {lastSyncedAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
               </p>
             )}
           </div>
