@@ -11,23 +11,13 @@ import { SecurityBadges } from "@/components/connect/SecurityBadges";
 import { ConnectedAccountCard } from "@/components/connect/ConnectedAccountCard";
 import { ApiErrorState } from "@/components/shared/ApiErrorState";
 import { formatCurrency } from "@/lib/shared/formatters";
+import { staggerContainer } from "@/lib/shared/animations";
 import { useStrataClient } from "@/lib/strata/client";
 import {
   usePopularInstitutions,
   useSearchInstitutions,
   useAccounts,
 } from "@/lib/strata/hooks";
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.2,
-    },
-  },
-};
 
 export default function ConnectPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -191,22 +181,27 @@ export default function ConnectPage() {
                         : "No institutions available."}
                     </p>
                   ) : (
-                    <motion.div
-                      variants={staggerContainer}
-                      initial="hidden"
-                      animate="show"
-                      className="grid sm:grid-cols-2 gap-3"
-                    >
-                      {institutions.map((institution) => (
-                        <InstitutionCard
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {institutions.map((institution, index) => (
+                        <motion.div
                           key={institution.id}
-                          institution={institution}
-                          isConnected={false}
-                          isConnecting={connectingId === institution.id}
-                          onConnect={() => handleConnect(institution.id)}
-                        />
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{
+                            duration: 0.5,
+                            delay: 0.2 + index * 0.08,
+                            ease: "easeOut",
+                          }}
+                        >
+                          <InstitutionCard
+                            institution={institution}
+                            isConnected={false}
+                            isConnecting={connectingId === institution.id}
+                            onConnect={() => handleConnect(institution.id)}
+                          />
+                        </motion.div>
                       ))}
-                    </motion.div>
+                    </div>
                   )}
                 </motion.div>
               </AnimatePresence>

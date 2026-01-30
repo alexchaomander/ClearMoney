@@ -49,53 +49,49 @@ export function AccountsList({ accounts, onSync }: AccountsListProps) {
           >
             <Link
               href={`/dashboard/accounts/${account.id}`}
-              className="group flex items-center gap-4 p-4 rounded-xl bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-all duration-200"
+              className="group flex items-center gap-3 p-3 rounded-xl bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-all duration-200"
             >
               {/* Logo/Initials */}
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-800 text-neutral-300 font-medium">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-neutral-800 text-neutral-300 text-sm font-medium">
                 {getInitials(account.name)}
               </div>
 
-              {/* Account Info */}
+              {/* Account Info + Balance stacked */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-medium text-neutral-100 truncate">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium text-sm text-neutral-100 truncate">
                     {account.name}
                   </p>
-                  {account.status === "error" && (
-                    <AlertCircle className="w-4 h-4 text-red-400" />
+                  <p className="font-medium text-sm text-emerald-300 shrink-0">
+                    {formatCurrency(account.balance)}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-neutral-500">
+                    {formatTitleCase(account.account_type)}
+                    {account.status === "error" && (
+                      <AlertCircle className="inline w-3 h-3 text-red-400 ml-1" />
+                    )}
+                  </p>
+                  {account.last_synced_at && (
+                    <p className="text-xs text-neutral-500 shrink-0">
+                      {new Date(account.last_synced_at).toLocaleDateString()}
+                    </p>
                   )}
                 </div>
-                <p className="text-xs text-neutral-500">
-                  {formatTitleCase(account.account_type)}
-                </p>
               </div>
 
-              {/* Balance */}
-              <div className="text-right">
-                <p className="font-serif text-lg font-medium text-emerald-300">
-                  {formatCurrency(account.balance)}
-                </p>
-                {account.last_synced_at && (
-                  <p className="text-xs text-neutral-500">
-                    Updated {new Date(account.last_synced_at).toLocaleDateString()}
-                  </p>
-                )}
-              </div>
-
-              {/* Sync/Arrow */}
-              <div className="flex items-center gap-2">
-                {account.status === "syncing" ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  >
-                    <RefreshCw className="w-4 h-4 text-neutral-500" />
-                  </motion.div>
-                ) : (
-                  <ChevronRight className="w-5 h-5 text-neutral-500 group-hover:text-neutral-300 group-hover:translate-x-1 transition-all duration-200" />
-                )}
-              </div>
+              {/* Arrow */}
+              {account.status === "syncing" ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <RefreshCw className="w-4 h-4 text-neutral-500" />
+                </motion.div>
+              ) : (
+                <ChevronRight className="w-4 h-4 shrink-0 text-neutral-500 group-hover:text-neutral-300 group-hover:translate-x-0.5 transition-all duration-200" />
+              )}
             </Link>
           </motion.div>
         ))}
