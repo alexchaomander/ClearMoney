@@ -6,6 +6,9 @@ FastAPI-based backend for the Strata financial data platform. Provides investmen
 
 - **Investment Account Connectivity**: Connect brokerage accounts via SnapTrade
 - **Portfolio Management**: Track holdings, balances, and allocations across accounts
+- **Transaction History**: Investment transaction tracking with pagination and filtering
+- **Portfolio Snapshots**: Daily net worth snapshots for historical tracking
+- **Background Jobs**: Automatic connection syncing and snapshot creation
 - **Multi-Provider Architecture**: Extensible provider system for future integrations
 - **Async PostgreSQL**: High-performance async database operations with SQLAlchemy 2.0
 
@@ -46,6 +49,10 @@ uvicorn app.main:app --reload --port 8000
 | `STRATA_CREDENTIALS_ENCRYPTION_KEY` | Fernet key for encrypting credentials | Yes |
 | `STRATA_SNAPTRADE_CLIENT_ID` | SnapTrade API client ID | For SnapTrade |
 | `STRATA_SNAPTRADE_CONSUMER_KEY` | SnapTrade API consumer key | For SnapTrade |
+| `STRATA_ENABLE_BACKGROUND_JOBS` | Enable background sync/snapshot jobs (default: `true`) | No |
+| `STRATA_SYNC_INTERVAL_SECONDS` | Seconds between connection sync runs (default: `3600`) | No |
+| `STRATA_SYNC_STALE_MINUTES` | Minutes before a connection is considered stale (default: `60`) | No |
+| `STRATA_SNAPSHOT_INTERVAL_SECONDS` | Seconds between snapshot runs (default: `86400`) | No |
 
 Generate an encryption key:
 ```bash
@@ -73,9 +80,15 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 - `GET /api/v1/accounts/investment` - List investment accounts
 - `GET /api/v1/accounts/investment/{id}` - Get account with holdings
 
+### Transactions
+- `GET /api/v1/transactions` - List investment transactions (paginated)
+  - Query params: `account_id`, `start_date`, `end_date`, `limit` (1-500, default 100), `offset` (default 0)
+
 ### Portfolio
 - `GET /api/v1/portfolio/summary` - Portfolio summary with allocations
 - `GET /api/v1/portfolio/holdings` - All holdings across accounts
+- `GET /api/v1/portfolio/history` - Historical net worth from snapshots
+  - Query params: `range` (`1M`, `3M`, `6M`, `1Y`, `ALL`; default `3M`)
 
 ## Data Models
 
@@ -89,6 +102,10 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 | `InvestmentAccount` | Investment account (401k, IRA, brokerage, etc.) |
 | `Security` | Security/asset (stock, ETF, bond, crypto) |
 | `Holding` | Position in a security within an account |
+| `Transaction` | Investment transaction (buy, sell, dividend, etc.) |
+| `PortfolioSnapshot` | Daily point-in-time net worth snapshot |
+| `CashAccount` | Manual cash/checking/savings account |
+| `DebtAccount` | Manual debt account (credit card, loan) |
 
 ### Account Types
 
@@ -115,6 +132,29 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 - `option` - Options contract
 - `other` - Other security type
 
+### Transaction Types
+
+- `buy` - Purchase of a security
+- `sell` - Sale of a security
+- `dividend` - Dividend payment
+- `interest` - Interest payment
+- `fee` - Fee charge
+- `transfer` - Transfer between accounts
+- `other` - Other transaction type
+
+## Background Jobs
+
+The API runs periodic background jobs when `STRATA_ENABLE_BACKGROUND_JOBS` is `true` (the default). Jobs are managed via the FastAPI lifespan and use `asyncio` tasks.
+
+| Job | Default Interval | Description |
+|-----|-----------------|-------------|
+| `connection_sync` | Every 60 minutes | Syncs account data for connections that haven't been updated within `STRATA_SYNC_STALE_MINUTES` |
+| `portfolio_snapshots` | Every 24 hours | Creates one `PortfolioSnapshot` per user per day recording net worth, investment, cash, and debt totals |
+
+Each connection is synced in an isolated database session so that a failure for one connection does not affect others. Errors are recorded on the connection (`error_code`, `error_message`) and the connection status is set to `error`.
+
+Set `STRATA_ENABLE_BACKGROUND_JOBS=false` to disable all background jobs (useful for testing or when running multiple instances).
+
 ## Provider Integration
 
 The API uses an extensible provider system. Currently supported:
@@ -130,11 +170,12 @@ SnapTrade provides connectivity to 100+ brokerages including:
 - Robinhood
 - Interactive Brokers
 
-To add SnapTrade support, configure the environment variables and the provider will automatically handle:
-- OAuth link session creation
+To add SnapTrade support, set `STRATA_SNAPTRADE_CLIENT_ID` and `STRATA_SNAPTRADE_CONSUMER_KEY` in your environment. The provider automatically handles:
+- OAuth link session creation and callback
 - Account discovery and sync
-- Holdings retrieval
-- Credential management
+- Holdings and transaction retrieval
+- Credential management (encrypted at rest)
+- Transaction normalization (SnapTrade types mapped to standard `TransactionType` enum)
 
 ## Testing
 
@@ -159,7 +200,8 @@ app/
 │   ├── deps.py          # Dependency injection
 │   ├── health.py        # Health check
 │   ├── institutions.py  # Institution search
-│   └── portfolio.py     # Portfolio aggregation
+│   ├── portfolio.py     # Portfolio aggregation & history
+│   └── transactions.py  # Transaction listing with pagination
 ├── core/
 │   └── config.py        # Settings management
 ├── db/
@@ -171,7 +213,9 @@ app/
 │   ├── holding.py
 │   ├── institution.py
 │   ├── investment_account.py
+│   ├── portfolio_snapshot.py
 │   ├── security.py
+│   ├── transaction.py
 │   └── user.py
 ├── schemas/             # Pydantic schemas
 │   ├── connection.py
@@ -179,11 +223,17 @@ app/
 │   ├── institution.py
 │   ├── investment_account.py
 │   ├── portfolio.py
-│   └── security.py
+│   ├── security.py
+│   └── transaction.py
 ├── services/
-│   └── providers/       # Data provider adapters
-│       ├── base.py      # Abstract base provider
-│       └── snaptrade.py # SnapTrade implementation
+│   ├── connection_sync.py      # Account/holdings/transaction sync
+│   ├── portfolio_metrics.py    # Shared portfolio calculation helpers
+│   ├── portfolio_snapshots.py  # Daily snapshot creation
+│   ├── jobs/
+│   │   └── background.py       # Periodic background job runner
+│   └── providers/              # Data provider adapters
+│       ├── base.py             # Abstract base provider
+│       └── snaptrade.py        # SnapTrade implementation
 └── main.py              # FastAPI application
 ```
 

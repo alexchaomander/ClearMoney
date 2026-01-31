@@ -153,6 +153,41 @@ for (const holding of holdings) {
 }
 ```
 
+### Transaction Methods
+
+#### Get Transactions
+List investment transactions with optional filtering and pagination.
+
+```typescript
+// Get recent transactions (default: 100 most recent)
+const transactions = await client.getTransactions();
+
+// Filter by account
+const accountTxns = await client.getTransactions({
+  accountId: 'account_id',
+});
+
+// Filter by date range
+const dateFiltered = await client.getTransactions({
+  startDate: '2026-01-01',
+  endDate: '2026-01-31',
+});
+
+for (const txn of transactions) {
+  console.log(`${txn.type}: ${txn.description}`);
+  console.log(`  Amount: $${txn.amount}`);
+  console.log(`  Date: ${txn.trade_date}`);
+}
+```
+
+**Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `accountId` | `string` | Filter by investment account ID |
+| `startDate` | `string` | Filter transactions on or after this date (YYYY-MM-DD) |
+| `endDate` | `string` | Filter transactions on or before this date (YYYY-MM-DD) |
+
 ### Institution Methods
 
 #### Search Institutions
@@ -196,8 +231,14 @@ import type {
   HoldingWithSecurity,
   HoldingDetail,
 
+  // Transactions
+  Transaction,
+  TransactionType,
+
   // Portfolio
   PortfolioSummary,
+  PortfolioHistoryPoint,
+  PortfolioHistoryRange,
   AssetAllocation,
   TopHolding,
   ConcentrationAlert,
@@ -269,6 +310,13 @@ function useInvestmentAccounts() {
   return useQuery({
     queryKey: ['investment-accounts'],
     queryFn: () => client.getInvestmentAccounts(),
+  });
+}
+
+function useTransactions(accountId?: string) {
+  return useQuery({
+    queryKey: ['transactions', accountId],
+    queryFn: () => client.getTransactions({ accountId }),
   });
 }
 ```

@@ -1,7 +1,7 @@
 # Strata API - Data Model
 
 Version: 1.0.0
-Last Updated: 2026-01-24
+Last Updated: 2026-01-30
 
 ## Overview
 
@@ -62,6 +62,7 @@ erDiagram
 
     users ||--o{ consents : "grants"
     users ||--o{ connections : "creates"
+    users ||--o{ portfolio_snapshots : "tracked for"
     users ||--o{ decision_traces : "generates"
 
     institutions ||--o{ connections : "linked via"
@@ -76,6 +77,19 @@ erDiagram
     accounts ||--o{ liabilities : "owes"
 
     securities ||--o{ holdings : "held as"
+    securities ||--o{ transactions : "referenced in"
+
+    portfolio_snapshots {
+        uuid id PK
+        uuid user_id FK
+        date snapshot_date
+        numeric net_worth
+        numeric total_investment_value
+        numeric total_cash_value
+        numeric total_debt_value
+        timestamptz created_at
+        timestamptz updated_at
+    }
 
     apps {
         uuid id PK
@@ -228,13 +242,17 @@ erDiagram
     transactions {
         uuid id PK
         uuid account_id FK
+        uuid security_id FK
+        text provider_transaction_id
+        transaction_type type
+        numeric quantity
+        numeric price
         numeric amount
+        date trade_date
+        date settlement_date
         text currency
-        date date
-        text name
-        text merchant_name
-        text[] category
-        boolean pending
+        text description
+        text source
     }
 
     holdings {
@@ -379,19 +397,38 @@ Point-in-time balance snapshots. New row created on each sync.
 | `as_of` | TIMESTAMPTZ | When balance was accurate |
 
 #### `transactions`
-Transaction records synced from financial accounts.
+Investment transaction records synced from brokerage accounts. Each transaction is uniquely identified by the combination of `(account_id, provider_transaction_id)`.
 
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | UUID | Primary key |
-| `account_id` | UUID | FK to accounts |
-| `amount` | NUMERIC(19,4) | Amount (negative = debit) |
-| `currency` | TEXT | Currency code |
-| `date` | DATE | Transaction date |
-| `name` | TEXT | Raw description |
-| `merchant_name` | TEXT | Cleaned merchant name |
-| `category` | TEXT[] | Category array |
-| `pending` | BOOLEAN | Whether transaction is pending |
+| `account_id` | UUID | FK to investment accounts |
+| `security_id` | UUID | FK to securities (nullable) |
+| `provider_transaction_id` | TEXT | Provider's transaction identifier |
+| `type` | transaction_type | Transaction type enum (see below) |
+| `quantity` | NUMERIC(18,8) | Number of shares/units |
+| `price` | NUMERIC(14,4) | Price per share at execution |
+| `amount` | NUMERIC(14,2) | Total transaction amount |
+| `trade_date` | DATE | Date the trade was executed |
+| `settlement_date` | DATE | Date the trade settled |
+| `currency` | TEXT | Currency code (default: "USD") |
+| `description` | TEXT | Transaction description |
+| `source` | TEXT | Data source (e.g., "snaptrade") |
+
+#### `portfolio_snapshots`
+Daily point-in-time portfolio snapshots per user. One snapshot per user per day, created by the background snapshot job. Used to drive the portfolio history chart.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `user_id` | UUID | FK to users |
+| `snapshot_date` | DATE | Date of the snapshot (unique per user) |
+| `net_worth` | NUMERIC(14,2) | Net worth (investment + cash - debt) |
+| `total_investment_value` | NUMERIC(14,2) | Total investment account balances |
+| `total_cash_value` | NUMERIC(14,2) | Total cash account balances |
+| `total_debt_value` | NUMERIC(14,2) | Total debt account balances |
+| `created_at` | TIMESTAMPTZ | Creation timestamp |
+| `updated_at` | TIMESTAMPTZ | Last update timestamp |
 
 #### `securities`
 Security master data (stocks, funds, etc.). **Shared across all apps.**
@@ -523,6 +560,11 @@ Encrypted storage for provider OAuth tokens. Access restricted to token service.
 '401k' | 'ira' | 'credit' | 'loan' | 'mortgage' | 'other'
 ```
 
+### `transaction_type`
+```sql
+'buy' | 'sell' | 'dividend' | 'interest' | 'fee' | 'transfer' | 'other'
+```
+
 ### `consent_status`
 ```sql
 'active' | 'revoked' | 'expired'
@@ -588,6 +630,9 @@ CREATE INDEX idx_transactions_date ON transactions(date DESC);
 
 -- Balance history
 CREATE INDEX idx_balances_account_id_as_of ON balances(account_id, as_of DESC);
+
+-- Portfolio snapshot history
+CREATE UNIQUE INDEX idx_snapshots_user_date ON portfolio_snapshots(user_id, snapshot_date);
 
 -- Sync job processing
 CREATE INDEX idx_sync_jobs_pending ON sync_jobs(priority, created_at)

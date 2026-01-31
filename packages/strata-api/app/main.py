@@ -1,3 +1,5 @@
+import asyncio
+import contextlib
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -10,13 +12,27 @@ from app.api.connections import router as connections_router
 from app.api.health import router as health_router
 from app.api.institutions import router as institutions_router
 from app.api.portfolio import router as portfolio_router
+from app.api.transactions import router as transactions_router
 from app.core.config import settings
 from app.db.session import close_db
+from app.services.jobs.background import start_background_tasks
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    stop_event = None
+    tasks = []
+    if settings.enable_background_jobs:
+        stop_event, tasks = await start_background_tasks()
+
     yield
+
+    if stop_event:
+        stop_event.set()
+    for task in tasks:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
     await close_db()
 
 
@@ -47,3 +63,4 @@ app.include_router(accounts_router, prefix="/api/v1")
 app.include_router(cash_debt_router, prefix="/api/v1")
 app.include_router(institutions_router, prefix="/api/v1")
 app.include_router(portfolio_router, prefix="/api/v1")
+app.include_router(transactions_router, prefix="/api/v1")

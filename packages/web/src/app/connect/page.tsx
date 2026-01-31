@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
@@ -23,6 +24,9 @@ export default function ConnectPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [connectingId, setConnectingId] = useState<string | null>(null);
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
+
+  const router = useRouter();
 
   const client = useStrataClient();
 
@@ -30,6 +34,15 @@ export default function ConnectPage() {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  useEffect(() => {
+    const complete = window.localStorage.getItem("clearmoney_onboarding_complete") === "true";
+    if (!complete) {
+      router.replace("/onboarding");
+      return;
+    }
+    setIsOnboardingComplete(true);
+  }, [router]);
 
   const isSearching = debouncedQuery.length > 0;
 
@@ -71,6 +84,14 @@ export default function ConnectPage() {
       setConnectingId(null);
     }
   };
+
+  if (!isOnboardingComplete) {
+    return (
+      <div className="min-h-screen bg-neutral-950 flex items-center justify-center text-neutral-400">
+        Redirecting to onboarding...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-neutral-950">

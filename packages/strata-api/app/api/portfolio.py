@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Literal
 
@@ -10,10 +10,9 @@ from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_current_user
 from app.db.session import get_async_session
-from app.models.cash_account import CashAccount
-from app.models.debt_account import DebtAccount
 from app.models.holding import Holding
 from app.models.investment_account import InvestmentAccount
+from app.models.portfolio_snapshot import PortfolioSnapshot
 from app.models.user import User
 from app.schemas.portfolio import (
     AssetAllocation,
@@ -22,28 +21,12 @@ from app.schemas.portfolio import (
     PortfolioSummary,
     TopHolding,
 )
+from app.services.portfolio_metrics import get_cash_and_debt_totals, get_investment_total
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 
 # Concentration threshold for alerts (percentage)
 CONCENTRATION_THRESHOLD = Decimal("10.0")
-
-
-async def _get_cash_and_debt_totals(
-    session: AsyncSession, user_id,
-) -> tuple[Decimal, Decimal]:
-    """Return (total_cash, total_debt) for a user."""
-    cash_result = await session.execute(
-        select(CashAccount).where(CashAccount.user_id == user_id)
-    )
-    total_cash = sum(a.balance for a in cash_result.scalars().all())
-
-    debt_result = await session.execute(
-        select(DebtAccount).where(DebtAccount.user_id == user_id)
-    )
-    total_debt = sum(a.balance for a in debt_result.scalars().all())
-
-    return total_cash, total_debt
 
 
 @router.get("/summary", response_model=PortfolioSummary)
@@ -55,7 +38,7 @@ async def get_portfolio_summary(
 
     Includes net worth calculation, asset allocation, and concentration alerts.
     """
-    total_cash, total_debt = await _get_cash_and_debt_totals(session, user.id)
+    total_cash, total_debt = await get_cash_and_debt_totals(session, user.id)
 
     # Get investment accounts with holdings
     investment_result = await session.execute(
@@ -243,25 +226,46 @@ async def get_portfolio_history(
 ) -> list[PortfolioHistoryPoint]:
     """Get portfolio value history.
 
-    Returns a single data point with the current portfolio value.
-    The ``range`` parameter is accepted for API compatibility but not yet
-    used — a future daily-snapshots table will filter by range.
+    Returns daily snapshot points for the requested range, falling back
+    to a single current value if no snapshots exist yet.
     """
-    _ = range  # reserved for future daily-snapshots query
+    today = date.today()
+    if range == "30d":
+        start_date = today - timedelta(days=30)
+    elif range == "90d":
+        start_date = today - timedelta(days=90)
+    elif range == "1y":
+        start_date = today - timedelta(days=365)
+    else:
+        start_date = None
 
-    total_cash, total_debt = await _get_cash_and_debt_totals(session, user.id)
-
-    investment_result = await session.execute(
-        select(InvestmentAccount).where(InvestmentAccount.user_id == user.id)
+    query = (
+        select(PortfolioSnapshot)
+        .where(PortfolioSnapshot.user_id == user.id)
+        .order_by(PortfolioSnapshot.snapshot_date.asc())
     )
-    investment_accounts = investment_result.scalars().all()
-    total_investment = sum(a.balance for a in investment_accounts)
+    if start_date:
+        query = query.where(PortfolioSnapshot.snapshot_date >= start_date)
 
-    current_value = total_cash + total_investment - total_debt
+    result = await session.execute(query)
+    snapshots = result.scalars().all()
+
+    if not snapshots:
+        total_cash, total_debt = await get_cash_and_debt_totals(session, user.id)
+        total_investment = await get_investment_total(session, user.id)
+        current_value = total_cash + total_investment - total_debt
+
+        return [
+            PortfolioHistoryPoint(
+                date=today.isoformat(),
+                value=current_value,
+            )
+        ]
 
     return [
         PortfolioHistoryPoint(
-            date=date.today().isoformat(),
-            value=current_value,
+            date=snapshot.snapshot_date.isoformat(),
+            value=snapshot.net_worth,
         )
+        for snapshot in snapshots
     ]
