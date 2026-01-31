@@ -111,4 +111,6 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_portfolio_snapshots_user_id"), table_name="portfolio_snapshots")
     op.drop_index(op.f("ix_portfolio_snapshots_snapshot_date"), table_name="portfolio_snapshots")
     op.drop_table("portfolio_snapshots")
-    op.execute("DROP TYPE transactiontype")
+    bind = op.get_bind()
+    if bind.dialect.name == "postgresql":
+        op.execute("DROP TYPE IF EXISTS transactiontype")

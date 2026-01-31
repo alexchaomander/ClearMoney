@@ -1,3 +1,4 @@
+import uuid
 from datetime import date
 from decimal import Decimal
 
@@ -14,7 +15,7 @@ from app.services.portfolio_metrics import (
 
 async def create_snapshot_for_user(
     session: AsyncSession,
-    user_id,
+    user_id: uuid.UUID,
     snapshot_date: date | None = None,
 ) -> tuple[PortfolioSnapshot, bool]:
     snapshot_date = snapshot_date or date.today()
@@ -42,8 +43,7 @@ async def create_snapshot_for_user(
         total_debt_value=total_debt,
     )
     session.add(snapshot)
-    await session.commit()
-    await session.refresh(snapshot)
+    await session.flush()
     return snapshot, True
 
 
@@ -56,4 +56,6 @@ async def create_daily_snapshots(session: AsyncSession) -> int:
         _, was_created = await create_snapshot_for_user(session, user.id)
         if was_created:
             created += 1
+
+    await session.commit()
     return created

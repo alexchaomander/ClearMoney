@@ -298,7 +298,7 @@ class SnapTradeProvider(BaseProvider):
             security_type = self._map_security_type(self._extract_security_type_code(symbol))
 
             security = None
-            if symbol is not None or ticker:
+            if ticker:
                 security = NormalizedSecurity(
                     ticker=ticker,
                     name=security_name,
@@ -312,22 +312,26 @@ class SnapTradeProvider(BaseProvider):
                 _safe_getattr(transaction, "settlement_date")
             )
 
+            txn_id = _safe_getattr(transaction, "id")
+            txn_units = _safe_getattr(transaction, "units")
+            txn_price = _safe_getattr(transaction, "price")
+
             normalized_transactions.append(
                 NormalizedTransaction(
-                    provider_transaction_id=str(_safe_getattr(transaction, "id"))
-                    if _safe_getattr(transaction, "id") is not None
+                    provider_transaction_id=str(txn_id)
+                    if txn_id is not None
                     else None,
                     transaction_type=self._map_transaction_type(
                         _safe_getattr(transaction, "type")
                     ),
                     quantity=(
-                        Decimal(str(_safe_getattr(transaction, "units")))
-                        if _safe_getattr(transaction, "units") is not None
+                        Decimal(str(txn_units))
+                        if txn_units is not None
                         else None
                     ),
                     price=(
-                        Decimal(str(_safe_getattr(transaction, "price")))
-                        if _safe_getattr(transaction, "price") is not None
+                        Decimal(str(txn_price))
+                        if txn_price is not None
                         else None
                     ),
                     amount=self._normalize_transaction_amount(

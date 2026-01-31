@@ -20,6 +20,8 @@ async def list_transactions(
     account_id: uuid.UUID | None = Query(default=None),
     start_date: date | None = Query(default=None),
     end_date: date | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> list[TransactionResponse]:
@@ -36,6 +38,8 @@ async def list_transactions(
         query = query.where(Transaction.trade_date >= start_date)
     if end_date:
         query = query.where(Transaction.trade_date <= end_date)
+
+    query = query.offset(offset).limit(limit)
 
     result = await session.execute(query)
     transactions = result.scalars().all()

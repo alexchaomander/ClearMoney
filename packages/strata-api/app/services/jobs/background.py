@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 def _get_provider_for_connection(connection: Connection) -> SnapTradeProvider:
     if connection.provider == SnapTradeProvider.provider_name:
         return SnapTradeProvider()
-    return SnapTradeProvider()
+    raise ValueError(f"Unknown provider: {connection.provider}")
 
 
 async def run_connection_sync() -> None:
@@ -25,30 +25,37 @@ async def run_connection_sync() -> None:
         minutes=settings.sync_stale_minutes
     )
 
+    # Fetch stale connections in a read-only session
     async with async_session_factory() as session:
         result = await session.execute(
-            select(Connection).where(
+            select(Connection.id, Connection.provider).where(
                 Connection.status == ConnectionStatus.active,
                 or_(Connection.last_synced_at.is_(None), Connection.last_synced_at < cutoff),
             )
         )
-        connections = result.scalars().all()
+        stale = result.all()
 
-        for connection in connections:
-            provider = _get_provider_for_connection(connection)
+    # Process each connection in its own session so a failure in one
+    # does not corrupt the session state for subsequent connections.
+    for conn_id, provider_name in stale:
+        async with async_session_factory() as session:
+            connection = await session.get(Connection, conn_id)
+            if connection is None:
+                continue
             try:
+                provider = _get_provider_for_connection(connection)
                 await sync_connection_accounts(session, connection, provider)
                 connection.status = ConnectionStatus.active
                 connection.last_synced_at = datetime.now(timezone.utc)
                 connection.error_code = None
                 connection.error_message = None
             except Exception as exc:
-                logger.warning("Sync failed for connection %s: %s", connection.id, exc)
+                logger.warning("Sync failed for connection %s: %s", conn_id, exc)
                 connection.status = ConnectionStatus.error
                 connection.error_code = "SYNC_FAILED"
                 connection.error_message = str(exc)[:1000]
 
-        await session.commit()
+            await session.commit()
 
 
 async def run_daily_snapshots() -> None:

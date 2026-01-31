@@ -1,3 +1,4 @@
+import uuid
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -7,9 +8,9 @@ from app.models.transaction import TransactionType
 
 
 class TransactionResponse(BaseModel):
-    id: str
-    account_id: str
-    security_id: str | None
+    id: uuid.UUID
+    account_id: uuid.UUID
+    security_id: uuid.UUID | None
     provider_transaction_id: str | None
     type: TransactionType
     quantity: Decimal | None

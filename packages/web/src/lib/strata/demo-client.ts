@@ -20,6 +20,7 @@ import type {
   PortfolioHistoryRange,
   PortfolioSummary,
   StrataClientInterface,
+  Transaction,
 } from "@clearmoney/strata-sdk";
 
 import {
@@ -130,6 +131,13 @@ export class DemoStrataClient implements StrataClientInterface {
   async getHoldings(): Promise<HoldingDetail[]> {
     await delay(300);
     return getDemoHoldings();
+  }
+
+  async getTransactions(
+    _params?: { accountId?: string; startDate?: string; endDate?: string }
+  ): Promise<Transaction[]> {
+    await delay(300);
+    return [];
   }
 
   // === Investment Account CRUD ===

@@ -4,6 +4,7 @@ from decimal import Decimal
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.connection import Connection
 from app.models.holding import Holding
 from app.models.investment_account import InvestmentAccount
 from app.models.security import Security
@@ -13,7 +14,7 @@ from app.services.providers.base import BaseProvider
 
 async def sync_connection_accounts(
     session: AsyncSession,
-    connection,
+    connection: Connection,
     provider: BaseProvider,
 ) -> None:
     """Sync accounts, holdings, and transactions for a connection."""
@@ -80,7 +81,7 @@ async def sync_connection_accounts(
             provider,
         )
 
-    await session.commit()
+    await session.flush()
 
 
 async def get_or_create_security(
@@ -130,15 +131,9 @@ async def get_or_create_security(
     return security
 
 
-def _normalize_transaction_amount(amount: Decimal | None) -> Decimal | None:
-    if amount is None:
-        return None
-    return amount
-
-
 async def sync_account_transactions(
     session: AsyncSession,
-    connection,
+    connection: Connection,
     account: InvestmentAccount,
     provider: BaseProvider,
 ) -> None:
@@ -164,7 +159,7 @@ async def sync_account_transactions(
             type=normalized.transaction_type or TransactionType.other,
             quantity=normalized.quantity,
             price=normalized.price,
-            amount=_normalize_transaction_amount(normalized.amount),
+            amount=normalized.amount,
             trade_date=normalized.trade_date,
             settlement_date=normalized.settlement_date,
             currency=normalized.currency or "USD",
