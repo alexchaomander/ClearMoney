@@ -12,7 +12,6 @@ from app.db.session import get_async_session
 from app.models.connection import Connection, ConnectionStatus
 from app.models.holding import Holding
 from app.models.investment_account import InvestmentAccount
-from app.models.security import Security
 from app.models.user import User
 from app.schemas.connection import (
     ConnectionCallbackRequest,
@@ -20,6 +19,7 @@ from app.schemas.connection import (
     LinkSessionRequest,
     LinkSessionResponse,
 )
+from app.services.connection_sync import sync_connection_accounts
 from app.services.providers.snaptrade import SnapTradeProvider
 
 logger = logging.getLogger(__name__)
@@ -162,7 +162,7 @@ async def handle_callback(
 
     # Sync accounts in the background (or trigger a sync job)
     # For MVP, we'll sync inline
-    await _sync_connection_accounts(session, connection, provider)
+    await sync_connection_accounts(session, connection, provider)
 
     return ConnectionResponse.model_validate(connection)
 
@@ -232,7 +232,7 @@ async def sync_connection(
     connection = await _get_user_connection(session, connection_id, user.id)
 
     try:
-        await _sync_connection_accounts(session, connection, provider)
+        await sync_connection_accounts(session, connection, provider)
         connection.status = ConnectionStatus.active
         connection.last_synced_at = datetime.now(timezone.utc)
         connection.error_code = None
@@ -246,125 +246,3 @@ async def sync_connection(
     await session.refresh(connection)
 
     return ConnectionResponse.model_validate(connection)
-
-
-async def _sync_connection_accounts(
-    session: AsyncSession,
-    connection: Connection,
-    provider: SnapTradeProvider,
-) -> None:
-    """Sync accounts and holdings for a connection."""
-    # Get accounts from provider
-    normalized_accounts = await provider.get_accounts(connection)
-
-    for normalized_account in normalized_accounts:
-        # Find or create investment account
-        result = await session.execute(
-            select(InvestmentAccount).where(
-                InvestmentAccount.connection_id == connection.id,
-                InvestmentAccount.provider_account_id == normalized_account.provider_account_id,
-            )
-        )
-        account = result.scalar_one_or_none()
-
-        if account is None:
-            account = InvestmentAccount(
-                user_id=connection.user_id,
-                connection_id=connection.id,
-                provider_account_id=normalized_account.provider_account_id,
-                name=normalized_account.name,
-                account_type=normalized_account.account_type,
-                balance=normalized_account.balance,
-                currency=normalized_account.currency,
-                is_tax_advantaged=normalized_account.is_tax_advantaged,
-            )
-            session.add(account)
-        else:
-            # Update existing account
-            account.name = normalized_account.name
-            account.balance = normalized_account.balance
-            account.account_type = normalized_account.account_type
-            account.is_tax_advantaged = normalized_account.is_tax_advantaged
-
-        await session.flush()
-
-        # Get holdings for this account
-        normalized_holdings = await provider.get_holdings(
-            connection,
-            normalized_account.provider_account_id,
-        )
-
-        # Delete existing holdings before recreating
-        await session.execute(
-            delete(Holding).where(Holding.account_id == account.id)
-        )
-
-        # Create new holdings
-        for normalized_holding in normalized_holdings:
-            # Find or create security
-            security = await _get_or_create_security(
-                session,
-                normalized_holding.security,
-            )
-
-            holding = Holding(
-                account_id=account.id,
-                security_id=security.id,
-                quantity=normalized_holding.quantity,
-                cost_basis=normalized_holding.cost_basis,
-                market_value=normalized_holding.market_value,
-                as_of=normalized_holding.as_of,
-            )
-            session.add(holding)
-
-    await session.commit()
-
-
-async def _get_or_create_security(
-    session: AsyncSession,
-    normalized_security,
-) -> Security:
-    """Get or create a security from normalized data."""
-    # Try to find by ticker first
-    if normalized_security.ticker:
-        result = await session.execute(
-            select(Security).where(Security.ticker == normalized_security.ticker)
-        )
-        security = result.scalar_one_or_none()
-        if security:
-            # Update price only if we have newer data
-            new_price_date = (
-                normalized_security.close_price_as_of.date()
-                if normalized_security.close_price_as_of
-                else None
-            )
-            should_update = (
-                normalized_security.close_price is not None
-                and (
-                    security.close_price_as_of is None
-                    or (new_price_date and new_price_date > security.close_price_as_of)
-                )
-            )
-            if should_update:
-                security.close_price = normalized_security.close_price
-                security.close_price_as_of = new_price_date
-            return security
-
-    # Create new security
-    security = Security(
-        ticker=normalized_security.ticker,
-        name=normalized_security.name,
-        security_type=normalized_security.security_type,
-        cusip=normalized_security.cusip,
-        isin=normalized_security.isin,
-        close_price=normalized_security.close_price,
-        close_price_as_of=(
-            normalized_security.close_price_as_of.date()
-            if normalized_security.close_price_as_of
-            else None
-        ),
-    )
-    session.add(security)
-    await session.flush()
-
-    return security

@@ -183,6 +183,34 @@ export interface HoldingDetail {
   as_of: string | null;
 }
 
+// Transaction types
+export type TransactionType =
+  | 'buy'
+  | 'sell'
+  | 'dividend'
+  | 'interest'
+  | 'fee'
+  | 'transfer'
+  | 'other';
+
+export interface Transaction {
+  id: string;
+  account_id: string;
+  security_id: string | null;
+  provider_transaction_id: string | null;
+  type: TransactionType;
+  quantity: number | null;
+  price: number | null;
+  amount: number | null;
+  trade_date: string | null;
+  settlement_date: string | null;
+  currency: string;
+  description: string | null;
+  source: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // Portfolio types
 export interface AssetAllocation {
   category: string;

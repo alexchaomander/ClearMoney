@@ -5,7 +5,9 @@ from app.models.holding import Holding
 from app.models.income_source import IncomeFrequency, IncomeSource, IncomeSourceType
 from app.models.institution import Institution
 from app.models.investment_account import InvestmentAccount, InvestmentAccountType
+from app.models.portfolio_snapshot import PortfolioSnapshot
 from app.models.security import Security, SecurityType
+from app.models.transaction import Transaction, TransactionType
 from app.models.user import User
 
 __all__ = [
@@ -22,7 +24,10 @@ __all__ = [
     "Institution",
     "InvestmentAccount",
     "InvestmentAccountType",
+    "PortfolioSnapshot",
     "Security",
     "SecurityType",
+    "Transaction",
+    "TransactionType",
     "User",
 ]

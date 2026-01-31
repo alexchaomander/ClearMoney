@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.models.connection import Connection
     from app.models.holding import Holding
     from app.models.institution import Institution
+    from app.models.transaction import Transaction
     from app.models.user import User
 
 
@@ -60,5 +61,8 @@ class InvestmentAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="investment_accounts"
     )
     holdings: Mapped[list["Holding"]] = relationship(
+        back_populates="account", cascade="all, delete-orphan"
+    )
+    transactions: Mapped[list["Transaction"]] = relationship(
         back_populates="account", cascade="all, delete-orphan"
     )

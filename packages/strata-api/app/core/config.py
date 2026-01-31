@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     snaptrade_client_id: str = ""
     snaptrade_consumer_key: str = ""
 
+    # Background jobs
+    enable_background_jobs: bool = True
+    sync_interval_seconds: int = 3600
+    sync_stale_minutes: int = 60
+    snapshot_interval_seconds: int = 86400
+
     # Clerk JWT validation (optional — if set, validates Bearer tokens)
     clerk_secret_key: str = ""
     clerk_pem_public_key: str = ""

@@ -6,6 +6,7 @@ os.environ.setdefault(
     "STRATA_CREDENTIALS_ENCRYPTION_KEY",
     "mkAPXR0pVobXiUOdyOROwMx-Cn_o17eqzjjHUBWUURM=",  # test-only key
 )
+os.environ.setdefault("STRATA_ENABLE_BACKGROUND_JOBS", "false")
 
 import pytest  # noqa: E402
 from sqlalchemy.ext.asyncio import (
@@ -26,7 +27,9 @@ from app.models import (  # noqa: F401
     IncomeSource,
     Institution,
     InvestmentAccount,
+    PortfolioSnapshot,
     Security,
+    Transaction,
     User,
 )
 from app.main import app

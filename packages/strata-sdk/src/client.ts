@@ -19,6 +19,7 @@ import type {
   PortfolioHistoryPoint,
   PortfolioHistoryRange,
   PortfolioSummary,
+  Transaction,
 } from './types';
 
 export interface StrataClientInterface {
@@ -36,6 +37,11 @@ export interface StrataClientInterface {
   getPopularInstitutions(limit?: number): Promise<Institution[]>;
   getPortfolioSummary(): Promise<PortfolioSummary>;
   getHoldings(): Promise<HoldingDetail[]>;
+  getTransactions(params?: {
+    accountId?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<Transaction[]>;
   createInvestmentAccount(data: InvestmentAccountCreate): Promise<InvestmentAccount>;
   createCashAccount(data: CashAccountCreate): Promise<CashAccount>;
   updateCashAccount(id: string, data: CashAccountUpdate): Promise<CashAccount>;
@@ -232,6 +238,23 @@ export class StrataClient implements StrataClientInterface {
    */
   async getHoldings(): Promise<HoldingDetail[]> {
     return this.request<HoldingDetail[]>('/api/v1/portfolio/holdings');
+  }
+
+  /**
+   * Get transactions for the current user.
+   */
+  async getTransactions(params?: {
+    accountId?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<Transaction[]> {
+    return this.request<Transaction[]>(
+      this.buildUrl('/api/v1/transactions', {
+        account_id: params?.accountId,
+        start_date: params?.startDate,
+        end_date: params?.endDate,
+      })
+    );
   }
 
   // === Investment Account CRUD ===

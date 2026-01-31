@@ -18,7 +18,9 @@ from app.services.providers.base import (
     NormalizedAccount,
     NormalizedHolding,
     NormalizedSecurity,
+    NormalizedTransaction,
 )
+from app.models.transaction import TransactionType
 
 
 def _safe_getattr(obj: Any, *attrs: str, default: Any = None) -> Any:
@@ -66,6 +68,15 @@ class SnapTradeProvider(BaseProvider):
         "CRYPTO": SecurityType.crypto,
         "CASH": SecurityType.cash,
         "OPTION": SecurityType.option,
+    }
+
+    _TRANSACTION_TYPE_MAP = {
+        "BUY": TransactionType.buy,
+        "SELL": TransactionType.sell,
+        "DIVIDEND": TransactionType.dividend,
+        "INTEREST": TransactionType.interest,
+        "FEE": TransactionType.fee,
+        "TRANSFER": TransactionType.transfer,
     }
 
     # Tax-advantaged account types
@@ -244,6 +255,94 @@ class SnapTradeProvider(BaseProvider):
             )
 
         return normalized_holdings
+
+    def _map_transaction_type(self, snaptrade_type: str | None) -> TransactionType:
+        if not snaptrade_type:
+            return TransactionType.other
+        return self._TRANSACTION_TYPE_MAP.get(snaptrade_type.upper(), TransactionType.other)
+
+    def _normalize_transaction_amount(self, value: Any) -> Decimal | None:
+        if value is None:
+            return None
+        return Decimal(str(value))
+
+    def _extract_transaction_date(self, value: Any) -> datetime | None:
+        if isinstance(value, datetime):
+            return value
+        if isinstance(value, str):
+            try:
+                return datetime.fromisoformat(value)
+            except ValueError:
+                return None
+        return None
+
+    async def get_transactions(
+        self,
+        connection: Connection,
+        provider_account_id: str,
+    ) -> list[NormalizedTransaction]:
+        """Get transactions for a specific SnapTrade account."""
+        snaptrade_user_id, user_secret = self._get_credentials(connection)
+
+        transactions_response = self.client.account_information.get_user_account_transactions(
+            user_id=snaptrade_user_id,
+            user_secret=user_secret,
+            account_id=provider_account_id,
+        )
+
+        normalized_transactions: list[NormalizedTransaction] = []
+        for transaction in transactions_response:
+            symbol = _safe_getattr(transaction, "symbol")
+            ticker = _safe_getattr(symbol, "symbol")
+            security_name = _safe_getattr(symbol, "description") or ticker or "Unknown"
+            security_type = self._map_security_type(self._extract_security_type_code(symbol))
+
+            security = None
+            if symbol is not None or ticker:
+                security = NormalizedSecurity(
+                    ticker=ticker,
+                    name=security_name,
+                    security_type=security_type,
+                )
+
+            trade_date = self._extract_transaction_date(
+                _safe_getattr(transaction, "trade_date")
+            )
+            settlement_date = self._extract_transaction_date(
+                _safe_getattr(transaction, "settlement_date")
+            )
+
+            normalized_transactions.append(
+                NormalizedTransaction(
+                    provider_transaction_id=str(_safe_getattr(transaction, "id"))
+                    if _safe_getattr(transaction, "id") is not None
+                    else None,
+                    transaction_type=self._map_transaction_type(
+                        _safe_getattr(transaction, "type")
+                    ),
+                    quantity=(
+                        Decimal(str(_safe_getattr(transaction, "units")))
+                        if _safe_getattr(transaction, "units") is not None
+                        else None
+                    ),
+                    price=(
+                        Decimal(str(_safe_getattr(transaction, "price")))
+                        if _safe_getattr(transaction, "price") is not None
+                        else None
+                    ),
+                    amount=self._normalize_transaction_amount(
+                        _safe_getattr(transaction, "amount")
+                    ),
+                    trade_date=trade_date.date() if trade_date else None,
+                    settlement_date=settlement_date.date() if settlement_date else None,
+                    currency=_safe_getattr(transaction, "currency"),
+                    description=_safe_getattr(transaction, "description"),
+                    security=security,
+                    source="snaptrade",
+                )
+            )
+
+        return normalized_transactions
 
     async def delete_connection(
         self,
