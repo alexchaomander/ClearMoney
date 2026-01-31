@@ -10,6 +10,7 @@ from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from app.models.holding import Holding
+    from app.models.transaction import Transaction
 
 
 class SecurityType(str, enum.Enum):
@@ -37,3 +38,4 @@ class Security(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     close_price_as_of: Mapped[date | None] = mapped_column(Date)
 
     holdings: Mapped[list["Holding"]] = relationship(back_populates="security")
+    transactions: Mapped[list["Transaction"]] = relationship(back_populates="security")

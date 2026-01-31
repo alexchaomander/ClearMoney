@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from app.models.connection import Connection
 from app.models.investment_account import InvestmentAccountType
 from app.models.security import SecurityType
+from app.models.transaction import TransactionType
 
 
 @dataclass
@@ -55,6 +56,23 @@ class NormalizedAccount:
     is_tax_advantaged: bool = False
     institution_name: str | None = None
     institution_id: str | None = None
+
+
+@dataclass
+class NormalizedTransaction:
+    """Normalized transaction data from any provider."""
+
+    provider_transaction_id: str | None
+    transaction_type: TransactionType | None
+    quantity: Decimal | None
+    price: Decimal | None
+    amount: Decimal | None
+    trade_date: date | None
+    settlement_date: date | None
+    currency: str | None
+    description: str | None
+    security: NormalizedSecurity | None = None
+    source: str | None = None
 
 
 class BaseProvider(ABC):
@@ -127,6 +145,23 @@ class BaseProvider(ABC):
 
         Returns:
             List of normalized holding data.
+        """
+        ...
+
+    @abstractmethod
+    async def get_transactions(
+        self,
+        connection: Connection,
+        provider_account_id: str,
+    ) -> list[NormalizedTransaction]:
+        """Get transactions for a specific account.
+
+        Args:
+            connection: The connection object with credentials.
+            provider_account_id: Provider's account identifier.
+
+        Returns:
+            List of normalized transaction data.
         """
         ...
 

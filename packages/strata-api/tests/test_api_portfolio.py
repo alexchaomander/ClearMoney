@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -10,6 +11,7 @@ from app.models import (
     Institution,
     InvestmentAccount,
     InvestmentAccountType,
+    PortfolioSnapshot,
     Security,
     SecurityType,
     User,
@@ -215,3 +217,45 @@ async def test_portfolio_holdings_empty(portfolio_user: User) -> None:
         assert response.status_code == 200
         data = response.json()
         assert data == []
+
+
+@pytest.mark.asyncio
+async def test_portfolio_history_uses_snapshots(
+    portfolio_user: User,
+    session: AsyncSession,
+) -> None:
+    today = date.today()
+    snapshots = [
+        PortfolioSnapshot(
+            user_id=portfolio_user.id,
+            snapshot_date=today - timedelta(days=10),
+            net_worth=Decimal("1000.00"),
+            total_investment_value=Decimal("1200.00"),
+            total_cash_value=Decimal("100.00"),
+            total_debt_value=Decimal("300.00"),
+        ),
+        PortfolioSnapshot(
+            user_id=portfolio_user.id,
+            snapshot_date=today - timedelta(days=5),
+            net_worth=Decimal("1500.00"),
+            total_investment_value=Decimal("1700.00"),
+            total_cash_value=Decimal("200.00"),
+            total_debt_value=Decimal("400.00"),
+        ),
+    ]
+    session.add_all(snapshots)
+    await session.commit()
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get(
+            "/api/v1/portfolio/history?range=30d",
+            headers={"x-clerk-user-id": portfolio_user.clerk_id},
+        )
+        assert response.status_code == 200
+        data = response.json()
+
+        assert len(data) == 2
+        assert data[0]["date"] == (today - timedelta(days=10)).isoformat()
+        assert float(data[0]["value"]) == 1000.0
