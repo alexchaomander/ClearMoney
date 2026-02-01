@@ -1,181 +1,235 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { SliderInput } from "@/components/shared/SliderInput";
-import { formatCurrency, formatNumber, formatPercent } from "@/lib/shared/formatters";
-import { calculate } from "@/lib/calculators/debt-destroyer/calculations";
-import type {
-  CalculatorInputs,
-  Debt,
-  MethodResult,
-  PayoffEvent,
-} from "@/lib/calculators/debt-destroyer/types";
+import { useEffect, useMemo, useState } from "react";
+import { Plus, Trash2, TrendingDown, TrendingUp, Trophy } from "lucide-react";
+import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
+import { formatCurrency, formatYears } from "@/lib/shared/formatters";
+import { useAccounts } from "@/lib/strata/hooks";
+import { calculateDebtPayoff } from "@/lib/calculators/debt-destroyer/calculations";
+import type { CalculatorInputs, DebtItem } from "@/lib/calculators/debt-destroyer/types";
 
-const DEFAULT_DEBTS: Debt[] = [
+// Default debts if no connected accounts
+const DEFAULT_DEBTS: DebtItem[] = [
   {
-    id: "debt-1",
-    name: "Credit Card",
-    balance: 5200,
+    id: "demo-cc-1",
+    name: "Credit Card 1",
+    balance: 5000,
     interestRate: 22.9,
-    minimumPayment: 145,
+    minimumPayment: 150,
   },
   {
-    id: "debt-2",
-    name: "Car Loan",
-    balance: 14000,
-    interestRate: 6.2,
-    minimumPayment: 275,
+    id: "demo-cc-2",
+    name: "Personal Loan",
+    balance: 12000,
+    interestRate: 9.5,
+    minimumPayment: 300,
+  },
+  {
+    id: "demo-car",
+    name: "Auto Loan",
+    balance: 18000,
+    interestRate: 6.5,
+    minimumPayment: 450,
   },
 ];
 
-const DEFAULT_INPUTS: CalculatorInputs = {
-  debts: DEFAULT_DEBTS,
-  extraPayment: 500,
-};
-
-const DEBT_LIMITS = {
-  min: 2,
-  max: 10,
-};
-
-const FIELD_LIMITS = {
-  balance: { min: 1, max: 500000 },
-  interestRate: { min: 0, max: 30 },
-  minimumPayment: { min: 10, max: 50000 },
-};
+function MethodCard({
+  title,
+  subtitle,
+  interest,
+  time,
+  isRecommended,
+  colorClass,
+}: {
+  title: string;
+  subtitle: string;
+  interest: number;
+  time: number;
+  isRecommended?: boolean;
+  colorClass: string;
+}) {
+  return (
+    <div
+      className={`relative overflow-hidden rounded-2xl border bg-neutral-900 p-6 ${
+        isRecommended ? "border-emerald-500/50 ring-1 ring-emerald-500/20" : "border-neutral-800"
+      }`}
+    >
+      {isRecommended && (
+        <div className="absolute right-0 top-0 rounded-bl-xl bg-emerald-500/20 px-3 py-1 text-xs font-medium text-emerald-300">
+          Mathematically Optimal
+        </div>
+      )}
+      <div className="mb-4">
+        <h3 className={`text-lg font-bold ${colorClass}`}>{title}</h3>
+        <p className="text-sm text-neutral-400">{subtitle}</p>
+      </div>
+      <div className="space-y-3">
+        <div className="flex justify-between">
+          <span className="text-sm text-neutral-400">Total Interest</span>
+          <span className="font-semibold text-white">{formatCurrency(interest)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-sm text-neutral-400">Debt-Free In</span>
+          <span className="font-semibold text-white">
+            {Math.floor(time / 12)}y {time % 12}m
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function Calculator() {
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
-
-  const totalMinimums = useMemo(
-    () => inputs.debts.reduce((sum, debt) => sum + debt.minimumPayment, 0),
-    [inputs.debts]
-  );
-
-  const results = useMemo(() => calculate(inputs), [inputs]);
-  const maxMonths = Math.max(
-    results.snowball.totalMonths,
-    results.avalanche.totalMonths
-  );
-
-  const handleDebtChange = <K extends keyof Debt>(
-    id: string,
-    key: K,
-    value: Debt[K]
-  ) => {
-    setInputs((prev) => ({
-      ...prev,
-      debts: prev.debts.map((debt) =>
-        debt.id === id ? { ...debt, [key]: value } : debt
-      ),
+  const { data: accountsData } = useAccounts();
+  
+  // Transform connected debt accounts into calculator format
+  const connectedDebts: DebtItem[] = useMemo(() => {
+    if (!accountsData?.debt_accounts) return [];
+    return accountsData.debt_accounts.map(acc => ({
+      id: acc.id,
+      name: acc.name,
+      balance: Number(acc.balance),
+      interestRate: Number(acc.interest_rate) * 100, // API returns decimal (0.22), calculator uses percentage (22)
+      minimumPayment: Number(acc.minimum_payment),
     }));
-  };
+  }, [accountsData]);
+
+  const [debts, setDebts] = useState<DebtItem[]>(DEFAULT_DEBTS);
+  const [monthlyExtra, setMonthlyExtra] = useState(500);
+
+  // Initialize with connected debts if available
+  useEffect(() => {
+    if (connectedDebts.length > 0) {
+      setDebts(connectedDebts);
+    }
+  }, [connectedDebts]);
+
+  const results = useMemo(() => {
+    return calculateDebtPayoff({ debts, monthlyExtraPayment: monthlyExtra });
+  }, [debts, monthlyExtra]);
 
   const addDebt = () => {
-    if (inputs.debts.length >= DEBT_LIMITS.max) {
-      return;
-    }
-
-    const nextId = `debt-${Date.now()}`;
-    setInputs((prev) => ({
-      ...prev,
-      debts: [
-        ...prev.debts,
-        {
-          id: nextId,
-          name: "New Debt",
-          balance: 2500,
-          interestRate: 12.5,
-          minimumPayment: 75,
-        },
-      ],
-    }));
+    setDebts([
+      ...debts,
+      {
+        id: `manual-${Date.now()}`,
+        name: "New Debt",
+        balance: 1000,
+        interestRate: 15,
+        minimumPayment: 25,
+      },
+    ]);
   };
 
-  const removeDebt = (id: string) => {
-    if (inputs.debts.length <= DEBT_LIMITS.min) {
-      return;
-    }
-
-    setInputs((prev) => ({
-      ...prev,
-      debts: prev.debts.filter((debt) => debt.id !== id),
-    }));
+  const updateDebt = (index: number, field: keyof DebtItem, value: string | number) => {
+    const newDebts = [...debts];
+    newDebts[index] = { ...newDebts[index], [field]: value };
+    setDebts(newDebts);
   };
+
+  const removeDebt = (index: number) => {
+    setDebts(debts.filter((_, i) => i !== index));
+  };
+
+  const motivationCost = results.motivationCost;
+  const timeDiff = Math.abs(results.timeSaved);
 
   return (
-    <div className="min-h-screen bg-neutral-950">
+    <AppShell>
       <section className="px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm uppercase tracking-[0.3em] text-red-400">
-            Debt Strategy Showdown
+          <p className="text-sm uppercase tracking-[0.3em] text-orange-400">
+            Debt Destroyer
           </p>
           <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">
-            Debt Destroyer
+            Snowball or Avalanche?
           </h1>
           <p className="mt-4 text-lg text-neutral-400">
-            Snowball vs Avalanche—see which strategy wins for YOUR debts.
+            See the math behind the two most popular debt payoff strategies. 
+            Choose between psychological wins (Snowball) or mathematical optimization (Avalanche).
           </p>
         </div>
       </section>
 
       <section className="px-4 pb-16">
-        <div className="mx-auto flex max-w-4xl flex-col gap-8">
-          <div className="rounded-2xl bg-neutral-900 p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold text-white">Your Debts</h2>
-                <p className="mt-1 text-sm text-neutral-400">
-                  Add between {DEBT_LIMITS.min} and {DEBT_LIMITS.max} debts to
-                  compare strategies.
-                </p>
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_1fr]">
+          {/* Input Column */}
+          <div className="space-y-6">
+            <div className="rounded-2xl bg-neutral-900 p-6">
+              <h2 className="text-xl font-semibold text-white mb-6">Your Debts</h2>
+              <div className="space-y-4">
+                {debts.map((debt, index) => (
+                  <div key={debt.id} className="relative rounded-xl border border-neutral-800 bg-neutral-950/50 p-4 transition-all hover:border-neutral-700">
+                    <div className="mb-3 flex items-center justify-between">
+                      <input
+                        type="text"
+                        value={debt.name}
+                        onChange={(e) => updateDebt(index, "name", e.target.value)}
+                        className="bg-transparent font-medium text-white focus:outline-none"
+                      />
+                      <button
+                        onClick={() => removeDebt(index)}
+                        className="text-neutral-500 hover:text-red-400"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="text-xs text-neutral-500">Balance</label>
+                        <div className="flex items-center text-neutral-300">
+                          <span className="mr-1">$</span>
+                          <input
+                            type="number"
+                            value={debt.balance}
+                            onChange={(e) => updateDebt(index, "balance", Number(e.target.value))}
+                            className="w-full bg-transparent focus:outline-none focus:text-white"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs text-neutral-500">Rate (%)</label>
+                        <input
+                          type="number"
+                          value={debt.interestRate}
+                          onChange={(e) => updateDebt(index, "interestRate", Number(e.target.value))}
+                          className="w-full bg-transparent text-neutral-300 focus:outline-none focus:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-neutral-500">Min Pay</label>
+                        <div className="flex items-center text-neutral-300">
+                          <span className="mr-1">$</span>
+                          <input
+                            type="number"
+                            value={debt.minimumPayment}
+                            onChange={(e) => updateDebt(index, "minimumPayment", Number(e.target.value))}
+                            className="w-full bg-transparent focus:outline-none focus:text-white"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  onClick={addDebt}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-neutral-700 p-4 text-sm text-neutral-400 hover:border-neutral-600 hover:bg-neutral-800/50 hover:text-white"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add another debt
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={addDebt}
-                className="rounded-lg border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-200 transition hover:border-red-400 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={inputs.debts.length >= DEBT_LIMITS.max}
-              >
-                + Add Debt
-              </button>
             </div>
 
-            <div className="mt-6 space-y-4">
-              {inputs.debts.map((debt) => (
-                <DebtCard
-                  key={debt.id}
-                  debt={debt}
-                  onChange={handleDebtChange}
-                  onRemove={removeDebt}
-                  canRemove={inputs.debts.length > DEBT_LIMITS.min}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl bg-neutral-900 p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-white">
-                  Extra Monthly Payment
-                </h2>
-                <p className="mt-1 text-sm text-neutral-400">
-                  Total monthly payment: {formatCurrency(totalMinimums)} minimums
-                  + {formatCurrency(inputs.extraPayment)} extra.
-                </p>
-              </div>
-              <div className="rounded-full bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-200">
-                {formatCurrency(totalMinimums + inputs.extraPayment, 0)} / month
-              </div>
-            </div>
-
-            <div className="mt-6">
+            <div className="rounded-2xl bg-neutral-900 p-6">
+              <h2 className="text-xl font-semibold text-white mb-2">Monthly Budget</h2>
+              <p className="text-sm text-neutral-400 mb-6">
+                How much extra can you pay towards debt each month (above minimums)?
+              </p>
               <SliderInput
                 label="Extra Monthly Payment"
-                value={inputs.extraPayment}
-                onChange={(value) =>
-                  setInputs((prev) => ({ ...prev, extraPayment: value }))
-                }
+                value={monthlyExtra}
+                onChange={setMonthlyExtra}
                 min={0}
                 max={5000}
                 step={50}
@@ -184,338 +238,74 @@ export function Calculator() {
             </div>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <ComparisonCard
-              title="Snowball"
-              accent="red"
-              icon="❄️"
-              result={results.snowball}
-              firstPayoff={results.firstPayoffSnowball}
-              maxMonths={maxMonths}
-            />
-            <ComparisonCard
-              title="Avalanche"
-              accent="amber"
-              icon="🏔️"
-              result={results.avalanche}
-              firstPayoff={results.firstPayoffAvalanche}
-              maxMonths={maxMonths}
-            />
-          </div>
-
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
-            <h3 className="text-lg font-semibold text-white">
-              Strategy Comparison
-            </h3>
-            <div className="mt-4 grid gap-4 text-sm text-neutral-300 sm:grid-cols-2">
-              <div className="rounded-xl bg-neutral-950/60 p-4">
-                <p className="text-neutral-400">Interest saved with avalanche</p>
-                <p className="mt-2 text-2xl font-semibold text-white">
-                  {formatCurrency(results.interestSaved, 0)}
-                </p>
-              </div>
-              <div className="rounded-xl bg-neutral-950/60 p-4">
-                <p className="text-neutral-400">Snowball first win advantage</p>
-                <p className="mt-2 text-2xl font-semibold text-white">
-                  {results.monthsDifference > 0
-                    ? `${results.monthsDifference} months sooner`
-                    : results.monthsDifference === 0
-                      ? "Same month"
-                      : `${Math.abs(results.monthsDifference)} months later`}
-                </p>
-              </div>
-            </div>
-            <p className="mt-4 text-base text-neutral-300">
-              {results.recommendation}
-            </p>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <PayoffTimeline
-              title="Snowball Payoff Timeline"
-              accent="red"
-              events={results.snowball.payoffOrder}
-              totalMonths={results.snowball.totalMonths}
-            />
-            <PayoffTimeline
-              title="Avalanche Payoff Timeline"
-              accent="amber"
-              events={results.avalanche.payoffOrder}
-              totalMonths={results.avalanche.totalMonths}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="px-4 pb-16">
-        <div className="mx-auto max-w-3xl">
-          <details className="rounded-2xl bg-neutral-900/60 p-6">
-            <summary className="cursor-pointer text-lg font-semibold text-white">
-              How we calculate the payoff strategies
-            </summary>
-            <div className="mt-4 space-y-3 text-sm text-neutral-400">
-              <p>
-                The debt snowball method focuses your extra payment on the
-                smallest balance first. It delivers quick wins that build
-                momentum, even if it costs more interest over time.
-              </p>
-              <p>
-                The debt avalanche method applies extra payments to the highest
-                interest rate first. It minimizes total interest and usually
-                saves money, but it can take longer to see the first payoff.
-              </p>
-              <p>
-                Personal finance is 80% behavior. Pick the method that keeps you
-                consistent—and use this calculator to see the trade-offs.
-              </p>
-            </div>
-          </details>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-type DebtCardProps = {
-  debt: Debt;
-  onChange: <K extends keyof Debt>(id: string, key: K, value: Debt[K]) => void;
-  onRemove: (id: string) => void;
-  canRemove: boolean;
-};
-
-function DebtCard({ debt, onChange, onRemove, canRemove }: DebtCardProps) {
-  const handleNumberChange = (
-    key: "balance" | "interestRate" | "minimumPayment",
-    rawValue: string
-  ) => {
-    const value = Number(rawValue);
-    const safeValue = Number.isNaN(value) ? 0 : value;
-    const limits = FIELD_LIMITS[key];
-    const clamped = Math.min(limits.max, Math.max(limits.min, safeValue));
-    onChange(debt.id, key, clamped);
-  };
-
-  return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <input
-          type="text"
-          value={debt.name}
-          onChange={(event) => onChange(debt.id, "name", event.target.value)}
-          maxLength={30}
-          className="w-full flex-1 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-white outline-none transition focus:border-red-400"
-          aria-label="Debt name"
-        />
-        <button
-          type="button"
-          onClick={() => onRemove(debt.id)}
-          className="rounded-lg border border-neutral-800 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-400 transition hover:border-red-400 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={!canRemove}
-        >
-          Remove
-        </button>
-      </div>
-
-      <div className="mt-4 grid gap-4 sm:grid-cols-3">
-        <label className="flex flex-col gap-2 text-xs uppercase tracking-wide text-neutral-400">
-          Balance
-          <div className="flex items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-white">
-            <span className="text-neutral-500">$</span>
-            <input
-              type="number"
-              inputMode="decimal"
-              min={FIELD_LIMITS.balance.min}
-              max={FIELD_LIMITS.balance.max}
-              value={debt.balance}
-              onChange={(event) =>
-                handleNumberChange("balance", event.target.value)
-              }
-              className="w-full bg-transparent outline-none"
-            />
-          </div>
-        </label>
-        <label className="flex flex-col gap-2 text-xs uppercase tracking-wide text-neutral-400">
-          Interest rate
-          <div className="flex items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-white">
-            <input
-              type="number"
-              inputMode="decimal"
-              min={FIELD_LIMITS.interestRate.min}
-              max={FIELD_LIMITS.interestRate.max}
-              step={0.1}
-              value={debt.interestRate}
-              onChange={(event) =>
-                handleNumberChange("interestRate", event.target.value)
-              }
-              className="w-full bg-transparent outline-none"
-            />
-            <span className="text-neutral-500">%</span>
-          </div>
-        </label>
-        <label className="flex flex-col gap-2 text-xs uppercase tracking-wide text-neutral-400">
-          Minimum payment
-          <div className="flex items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-white">
-            <span className="text-neutral-500">$</span>
-            <input
-              type="number"
-              inputMode="decimal"
-              min={FIELD_LIMITS.minimumPayment.min}
-              max={FIELD_LIMITS.minimumPayment.max}
-              value={debt.minimumPayment}
-              onChange={(event) =>
-                handleNumberChange("minimumPayment", event.target.value)
-              }
-              className="w-full bg-transparent outline-none"
-            />
-          </div>
-        </label>
-      </div>
-
-      <div className="mt-3 text-xs text-neutral-500">
-        Balance: {formatCurrency(debt.balance)} · Rate: {" "}
-        {formatPercent(debt.interestRate / 100)} · Minimum: {" "}
-        {formatCurrency(debt.minimumPayment)}
-      </div>
-    </div>
-  );
-}
-
-type ComparisonCardProps = {
-  title: string;
-  icon: string;
-  accent: "red" | "amber";
-  result: MethodResult;
-  firstPayoff: PayoffEvent;
-  maxMonths: number;
-};
-
-function ComparisonCard({
-  title,
-  icon,
-  accent,
-  result,
-  firstPayoff,
-  maxMonths,
-}: ComparisonCardProps) {
-  const segments = result.payoffOrder.map((event, index) => {
-    const previousMonth =
-      index === 0 ? 0 : result.payoffOrder[index - 1].month;
-    return {
-      name: event.debtName,
-      months: event.month - previousMonth,
-    };
-  });
-
-  const accentStyles =
-    accent === "red"
-      ? {
-          border: "border-red-400/50",
-          text: "text-red-200",
-          bar: "bg-red-500",
-          chip: "bg-red-500/10 text-red-200",
-        }
-      : {
-          border: "border-amber-400/50",
-          text: "text-amber-200",
-          bar: "bg-amber-400",
-          chip: "bg-amber-400/10 text-amber-200",
-        };
-
-  return (
-    <div className={`rounded-2xl border ${accentStyles.border} bg-neutral-900 p-6`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">{icon}</span>
-          <h3 className="text-lg font-semibold text-white">{title}</h3>
-        </div>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${accentStyles.chip}`}
-        >
-          {result.totalMonths ? `${result.totalMonths} months` : "N/A"}
-        </span>
-      </div>
-
-      <div className="mt-5 space-y-3 text-sm text-neutral-300">
-        <p className="text-2xl font-semibold text-white">
-          Debt-free in {formatNumber(result.totalMonths)} months
-        </p>
-        <p>Total interest: {formatCurrency(result.totalInterest, 0)}</p>
-        <p>
-          First win: {firstPayoff.debtName || "N/A"} in {" "}
-          {firstPayoff.month} months
-        </p>
-      </div>
-
-      <div className="mt-6">
-        <div className="flex items-center justify-between text-xs uppercase tracking-wide text-neutral-500">
-          <span>Payoff momentum</span>
-          <span>{maxMonths ? formatNumber(result.totalMonths) : "0"} mo</span>
-        </div>
-        <div className="mt-2 flex h-2 overflow-hidden rounded-full bg-neutral-800">
-          {segments.length === 0 ? (
-            <div className={`h-full ${accentStyles.bar}`} style={{ width: "0%" }} />
-          ) : (
-            segments.map((segment) => (
-              <div
-                key={segment.name}
-                className={`${accentStyles.bar} opacity-80`}
-                style={{
-                  width: maxMonths
-                    ? `${(segment.months / result.totalMonths) * 100}%`
-                    : "0%",
-                }}
+          {/* Results Column */}
+          <div className="space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <MethodCard
+                title="Snowball"
+                subtitle="Smallest balance first"
+                interest={results.snowball.totalInterest}
+                time={results.snowball.monthsToPayoff}
+                colorClass="text-blue-400"
               />
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+              <MethodCard
+                title="Avalanche"
+                subtitle="Highest interest first"
+                interest={results.avalanche.totalInterest}
+                time={results.avalanche.monthsToPayoff}
+                isRecommended={true}
+                colorClass="text-orange-400"
+              />
+            </div>
 
-type PayoffTimelineProps = {
-  title: string;
-  accent: "red" | "amber";
-  events: PayoffEvent[];
-  totalMonths: number;
-};
-
-function PayoffTimeline({ title, accent, events, totalMonths }: PayoffTimelineProps) {
-  const accentClass = accent === "red" ? "bg-red-500/70" : "bg-amber-400/70";
-
-  return (
-    <div className="rounded-2xl bg-neutral-900 p-6">
-      <h3 className="text-lg font-semibold text-white">{title}</h3>
-      <p className="mt-1 text-sm text-neutral-400">
-        {totalMonths ? `All debts cleared in ${totalMonths} months.` : "Add debts to see the timeline."}
-      </p>
-
-      <div className="mt-4 space-y-4">
-        {events.length === 0 ? (
-          <div className="rounded-lg border border-neutral-800 bg-neutral-950/60 p-4 text-sm text-neutral-500">
-            No payoff events yet.
-          </div>
-        ) : (
-          events.map((event) => (
-            <div key={`${event.debtName}-${event.month}`}>
-              <div className="flex items-center justify-between text-sm text-neutral-300">
-                <span>{event.debtName}</span>
-                <span>Month {event.month}</span>
+            <div className="rounded-2xl bg-neutral-900 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="rounded-full bg-orange-500/10 p-2">
+                  <Trophy className="h-5 w-5 text-orange-400" />
+                </div>
+                <h3 className="text-lg font-bold text-white">The Verdict</h3>
               </div>
-              <div className="mt-2 h-2 w-full rounded-full bg-neutral-800">
-                <div
-                  className={`h-full rounded-full ${accentClass}`}
-                  style={{
-                    width: totalMonths
-                      ? `${Math.min(100, (event.month / totalMonths) * 100)}%`
-                      : "0%",
-                  }}
-                />
+              
+              <div className="space-y-4">
+                {motivationCost > 100 ? (
+                  <p className="text-neutral-300">
+                    The <strong>Avalanche method</strong> will save you <span className="font-bold text-emerald-400">{formatCurrency(motivationCost)}</span> in interest compared to Snowball.
+                    {timeDiff > 0 && <span> It will also get you out of debt {timeDiff} months faster.</span>}
+                  </p>
+                ) : (
+                  <p className="text-neutral-300">
+                    The difference is negligible (<span className="text-neutral-400">{formatCurrency(motivationCost)}</span>). 
+                    You should choose the <strong>Snowball method</strong> for the psychological wins of eliminating small debts quickly.
+                  </p>
+                )}
+
+                <div className="rounded-xl bg-neutral-950 p-4 text-sm">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-neutral-400">Avalanche Payoff Date</span>
+                    <span className="text-white">{results.avalanche.payoffDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-400">Snowball Payoff Date</span>
+                    <span className="text-white">{results.snowball.payoffDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</span>
+                  </div>
+                </div>
               </div>
             </div>
-          ))
-        )}
-      </div>
-    </div>
+
+            <MethodologySection>
+              <p>
+                <strong>Debt Snowball:</strong> Prioritizes paying off the smallest balances first. This provides "quick wins" which can improve motivation and adherence to the plan, even if it costs slightly more in interest.
+              </p>
+              <p>
+                <strong>Debt Avalanche:</strong> Prioritizes paying off the highest interest rate debts first. This is mathematically optimal as it minimizes the total interest paid over the life of the loans.
+              </p>
+              <p>
+                Calculations assume minimum payments are made on all debts every month, with the "Extra Payment" applied entirely to the highest priority debt according to the chosen strategy.
+              </p>
+            </MethodologySection>
+          </div>
+        </div>
+      </section>
+    </AppShell>
   );
 }

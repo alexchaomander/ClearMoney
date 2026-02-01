@@ -1,42 +1,36 @@
-export interface Debt {
+export interface DebtItem {
   id: string;
   name: string;
   balance: number;
-  interestRate: number;
+  interestRate: number; // Annual rate as percentage (e.g., 18.5)
   minimumPayment: number;
 }
 
 export interface CalculatorInputs {
-  debts: Debt[];
-  extraPayment: number;
-}
-
-export interface PayoffEvent {
-  month: number;
-  debtName: string;
-  totalPaidToDate: number;
-}
-
-export interface MethodResult {
-  totalMonths: number;
-  totalInterest: number;
-  totalPaid: number;
-  payoffOrder: PayoffEvent[];
-  monthlySchedule: MonthlySnapshot[];
+  debts: DebtItem[];
+  monthlyExtraPayment: number;
 }
 
 export interface MonthlySnapshot {
   month: number;
-  debts: { id: string; balance: number; payment: number }[];
+  debts: { id: string; balance: number; paid: number }[];
   totalBalance: number;
+  totalInterestPaid: number;
 }
 
-export interface CalculatorResults {
-  snowball: MethodResult;
-  avalanche: MethodResult;
-  interestSaved: number;
-  monthsDifference: number;
-  firstPayoffSnowball: PayoffEvent;
-  firstPayoffAvalanche: PayoffEvent;
-  recommendation: string;
+export interface PayoffResult {
+  method: "snowball" | "avalanche";
+  totalInterest: number;
+  monthsToPayoff: number;
+  payoffDate: Date;
+  timeline: MonthlySnapshot[];
+  debtsPaidOrder: string[]; // IDs of debts in order of payoff
+}
+
+export interface ComparisonResult {
+  snowball: PayoffResult;
+  avalanche: PayoffResult;
+  interestSaved: number; // Difference between methods
+  timeSaved: number; // Difference in months
+  motivationCost: number; // Extra interest paid by choosing snowball
 }
