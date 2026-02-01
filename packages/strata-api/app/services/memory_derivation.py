@@ -93,21 +93,17 @@ async def _derive_mortgage_details(
         )
         
         # Weighted average interest rate
-        # Only consider balances that have a valid interest rate for the denominator
-        accounts_with_rates = [a for a in mortgage_accounts if a.interest_rate is not None]
-        
-        weighted_rate_sum = sum(
-            (a.interest_rate * a.balance for a in accounts_with_rates),
-            Decimal("0.00")
-        )
-        total_balance_with_rates = sum(
-            (a.balance for a in accounts_with_rates),
-            Decimal("0.00")
-        )
+        weighted_rate_sum = Decimal("0.00")
+        total_balance_with_rates = Decimal("0.00")
+
+        for a in mortgage_accounts:
+            if a.interest_rate is not None:
+                weighted_rate_sum += a.interest_rate * a.balance
+                total_balance_with_rates += a.balance
 
         avg_rate = (
-            (weighted_rate_sum / total_balance_with_rates) 
-            if total_balance_with_rates > 0 
+            (weighted_rate_sum / total_balance_with_rates)
+            if total_balance_with_rates > 0
             else None
         )
         
