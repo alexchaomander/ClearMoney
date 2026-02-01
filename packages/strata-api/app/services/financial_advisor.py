@@ -142,6 +142,52 @@ ADVISOR_TOOLS = [
             "required": ["title", "summary"],
         },
     },
+    {
+        "name": "get_portfolio_metrics",
+        "description": "Get the user's current portfolio allocation percentages, top holdings, and performance metrics.",
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "calculate",
+        "description": "Run a financial calculation. Supported calculators: compound_growth, loan_payment, retirement_gap, savings_goal.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "calculator": {
+                    "type": "string",
+                    "description": "Which calculator to run: compound_growth, loan_payment, retirement_gap, savings_goal",
+                },
+                "inputs": {
+                    "type": "object",
+                    "description": "Calculator-specific inputs as key-value pairs",
+                },
+            },
+            "required": ["calculator", "inputs"],
+        },
+    },
+    {
+        "name": "ask_user",
+        "description": "Ask the user a clarifying question. Use when you need more information before making a recommendation.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "question": {
+                    "type": "string",
+                    "description": "The question to ask the user",
+                },
+                "options": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Optional list of suggested answers",
+                },
+            },
+            "required": ["question"],
+        },
+    },
 ]
 
 
@@ -344,6 +390,15 @@ class FinancialAdvisor:
                 user_id, session_id, tool_input
             )
 
+        elif tool_name == "get_portfolio_metrics":
+            return await self._handle_get_portfolio_metrics(user_id)
+
+        elif tool_name == "calculate":
+            return self._handle_calculate(tool_input)
+
+        elif tool_name == "ask_user":
+            return self._handle_ask_user(tool_input)
+
         return {"error": f"Unknown tool: {tool_name}"}
 
     async def _handle_update_memory(
@@ -422,4 +477,152 @@ class FinancialAdvisor:
             "status": "created",
             "recommendation_id": str(rec.id),
             "title": rec.title,
+        }
+
+    async def _handle_get_portfolio_metrics(self, user_id: uuid.UUID) -> dict:
+        """Return portfolio allocation and top holdings."""
+        context = await build_financial_context(user_id, self._session)
+        holdings = context.get("holdings", [])
+        metrics = context.get("portfolio_metrics", {})
+
+        # Compute allocation by asset type if holdings exist
+        allocation: dict[str, float] = {}
+        total_value = sum(float(h.get("market_value", 0)) for h in holdings)
+        if total_value > 0:
+            for h in holdings:
+                asset_type = h.get("security_type", "other")
+                allocation[asset_type] = allocation.get(asset_type, 0) + float(
+                    h.get("market_value", 0)
+                )
+            allocation = {k: round(v / total_value * 100, 1) for k, v in allocation.items()}
+
+        return {
+            "net_worth": metrics.get("net_worth"),
+            "total_investment_value": metrics.get("total_investment_value"),
+            "total_cash": metrics.get("total_cash"),
+            "total_debt": metrics.get("total_debt"),
+            "allocation_pct": allocation,
+            "top_holdings": holdings[:10],
+            "holding_count": len(holdings),
+        }
+
+    @staticmethod
+    def _handle_calculate(tool_input: dict) -> dict:
+        """Run a built-in financial calculation."""
+        calculator = tool_input.get("calculator", "")
+        inputs = tool_input.get("inputs", {})
+
+        try:
+            if calculator == "compound_growth":
+                principal = float(inputs.get("principal", 0))
+                monthly_contribution = float(inputs.get("monthly_contribution", 0))
+                annual_rate = float(inputs.get("annual_rate", 7)) / 100
+                years = int(inputs.get("years", 10))
+
+                monthly_rate = annual_rate / 12
+                months = years * 12
+                balance = principal
+                for _ in range(months):
+                    balance = balance * (1 + monthly_rate) + monthly_contribution
+
+                total_contributions = principal + monthly_contribution * months
+                return {
+                    "calculator": "compound_growth",
+                    "final_balance": round(balance, 2),
+                    "total_contributions": round(total_contributions, 2),
+                    "total_growth": round(balance - total_contributions, 2),
+                }
+
+            elif calculator == "loan_payment":
+                principal = float(inputs.get("principal", 0))
+                annual_rate = float(inputs.get("annual_rate", 5)) / 100
+                years = int(inputs.get("years", 30))
+
+                monthly_rate = annual_rate / 12
+                months = years * 12
+                if monthly_rate == 0:
+                    payment = principal / months
+                else:
+                    payment = principal * (monthly_rate * (1 + monthly_rate) ** months) / (
+                        (1 + monthly_rate) ** months - 1
+                    )
+
+                total_paid = payment * months
+                return {
+                    "calculator": "loan_payment",
+                    "monthly_payment": round(payment, 2),
+                    "total_paid": round(total_paid, 2),
+                    "total_interest": round(total_paid - principal, 2),
+                }
+
+            elif calculator == "retirement_gap":
+                current_savings = float(inputs.get("current_savings", 0))
+                monthly_contribution = float(inputs.get("monthly_contribution", 0))
+                years_to_retirement = int(inputs.get("years_to_retirement", 30))
+                annual_return = float(inputs.get("annual_return", 7)) / 100
+                desired_annual_income = float(inputs.get("desired_annual_income", 60000))
+                withdrawal_rate = float(inputs.get("withdrawal_rate", 4)) / 100
+
+                monthly_rate = annual_return / 12
+                months = years_to_retirement * 12
+                balance = current_savings
+                for _ in range(months):
+                    balance = balance * (1 + monthly_rate) + monthly_contribution
+
+                needed = desired_annual_income / withdrawal_rate if withdrawal_rate > 0 else 0
+                gap = needed - balance
+
+                return {
+                    "calculator": "retirement_gap",
+                    "projected_savings": round(balance, 2),
+                    "needed_for_goal": round(needed, 2),
+                    "gap": round(gap, 2),
+                    "on_track": gap <= 0,
+                }
+
+            elif calculator == "savings_goal":
+                goal = float(inputs.get("goal", 10000))
+                current = float(inputs.get("current", 0))
+                monthly = float(inputs.get("monthly_contribution", 500))
+                annual_rate = float(inputs.get("annual_rate", 5)) / 100
+
+                if monthly <= 0:
+                    return {"calculator": "savings_goal", "months": -1, "error": "Monthly contribution must be positive"}
+
+                monthly_rate = annual_rate / 12
+                balance = current
+                months = 0
+                max_months = 600  # 50 years cap
+
+                while balance < goal and months < max_months:
+                    balance = balance * (1 + monthly_rate) + monthly
+                    months += 1
+
+                return {
+                    "calculator": "savings_goal",
+                    "months_to_goal": months,
+                    "years_to_goal": round(months / 12, 1),
+                    "final_balance": round(balance, 2),
+                    "total_contributed": round(current + monthly * months, 2),
+                }
+
+            else:
+                return {"error": f"Unknown calculator: {calculator}. Supported: compound_growth, loan_payment, retirement_gap, savings_goal"}
+
+        except (ValueError, TypeError, ZeroDivisionError) as e:
+            return {"error": f"Calculation error: {e}"}
+
+    @staticmethod
+    def _handle_ask_user(tool_input: dict) -> dict:
+        """Format a clarifying question to present to the user.
+
+        The question is returned as a tool result so the frontend can render it
+        as a structured prompt rather than inline text.
+        """
+        question = tool_input.get("question", "")
+        options = tool_input.get("options", [])
+        return {
+            "type": "question",
+            "question": question,
+            "options": options,
         }

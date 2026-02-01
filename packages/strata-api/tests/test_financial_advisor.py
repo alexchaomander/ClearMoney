@@ -387,3 +387,203 @@ async def test_advisor_handle_tool_get_context(
     )
     assert "profile" in result
     assert result["profile"]["age"] == 30
+
+
+# --- get_portfolio_metrics tool ---
+
+
+@pytest.mark.asyncio
+async def test_advisor_handle_tool_get_portfolio_metrics(
+    session: AsyncSession, test_user: User, memory: FinancialMemory
+) -> None:
+    """Test the get_portfolio_metrics tool handler."""
+    advisor = FinancialAdvisor(session)
+    agent_session = await advisor.start_session(test_user.id)
+
+    result = await advisor._handle_tool_call(
+        test_user.id, agent_session.id, "get_portfolio_metrics", {}
+    )
+    assert "net_worth" in result
+    assert "allocation_pct" in result
+    assert "top_holdings" in result
+    assert "holding_count" in result
+    assert isinstance(result["allocation_pct"], dict)
+    assert isinstance(result["top_holdings"], list)
+
+
+# --- calculate tool ---
+
+
+@pytest.mark.asyncio
+async def test_advisor_handle_tool_calculate_compound_growth(
+    session: AsyncSession, test_user: User
+) -> None:
+    """Test compound_growth calculator via tool handler."""
+    advisor = FinancialAdvisor(session)
+    agent_session = await advisor.start_session(test_user.id)
+
+    result = await advisor._handle_tool_call(
+        test_user.id,
+        agent_session.id,
+        "calculate",
+        {
+            "calculator": "compound_growth",
+            "inputs": {
+                "principal": 10000,
+                "monthly_contribution": 500,
+                "annual_rate": 7,
+                "years": 10,
+            },
+        },
+    )
+    assert result["calculator"] == "compound_growth"
+    assert result["final_balance"] > 10000
+    assert result["total_contributions"] == 10000 + 500 * 120
+    assert result["total_growth"] > 0
+
+
+@pytest.mark.asyncio
+async def test_advisor_handle_tool_calculate_loan_payment(
+    session: AsyncSession, test_user: User
+) -> None:
+    """Test loan_payment calculator via tool handler."""
+    advisor = FinancialAdvisor(session)
+    agent_session = await advisor.start_session(test_user.id)
+
+    result = await advisor._handle_tool_call(
+        test_user.id,
+        agent_session.id,
+        "calculate",
+        {
+            "calculator": "loan_payment",
+            "inputs": {
+                "principal": 300000,
+                "annual_rate": 6.5,
+                "years": 30,
+            },
+        },
+    )
+    assert result["calculator"] == "loan_payment"
+    assert result["monthly_payment"] > 0
+    assert result["total_paid"] > 300000
+    assert result["total_interest"] > 0
+
+
+@pytest.mark.asyncio
+async def test_advisor_handle_tool_calculate_retirement_gap(
+    session: AsyncSession, test_user: User
+) -> None:
+    """Test retirement_gap calculator via tool handler."""
+    advisor = FinancialAdvisor(session)
+    agent_session = await advisor.start_session(test_user.id)
+
+    result = await advisor._handle_tool_call(
+        test_user.id,
+        agent_session.id,
+        "calculate",
+        {
+            "calculator": "retirement_gap",
+            "inputs": {
+                "current_savings": 100000,
+                "monthly_contribution": 1000,
+                "years_to_retirement": 30,
+                "annual_return": 7,
+                "desired_annual_income": 60000,
+                "withdrawal_rate": 4,
+            },
+        },
+    )
+    assert result["calculator"] == "retirement_gap"
+    assert "projected_savings" in result
+    assert "needed_for_goal" in result
+    assert "gap" in result
+    assert isinstance(result["on_track"], bool)
+
+
+@pytest.mark.asyncio
+async def test_advisor_handle_tool_calculate_savings_goal(
+    session: AsyncSession, test_user: User
+) -> None:
+    """Test savings_goal calculator via tool handler."""
+    advisor = FinancialAdvisor(session)
+    agent_session = await advisor.start_session(test_user.id)
+
+    result = await advisor._handle_tool_call(
+        test_user.id,
+        agent_session.id,
+        "calculate",
+        {
+            "calculator": "savings_goal",
+            "inputs": {
+                "goal": 50000,
+                "current": 5000,
+                "monthly_contribution": 1000,
+                "annual_rate": 5,
+            },
+        },
+    )
+    assert result["calculator"] == "savings_goal"
+    assert result["months_to_goal"] > 0
+    assert result["years_to_goal"] > 0
+    assert result["final_balance"] >= 50000
+
+
+@pytest.mark.asyncio
+async def test_advisor_handle_tool_calculate_unknown(
+    session: AsyncSession, test_user: User
+) -> None:
+    """Unknown calculator should return an error."""
+    advisor = FinancialAdvisor(session)
+    agent_session = await advisor.start_session(test_user.id)
+
+    result = await advisor._handle_tool_call(
+        test_user.id,
+        agent_session.id,
+        "calculate",
+        {"calculator": "nonexistent", "inputs": {}},
+    )
+    assert "error" in result
+
+
+# --- ask_user tool ---
+
+
+@pytest.mark.asyncio
+async def test_advisor_handle_tool_ask_user(
+    session: AsyncSession, test_user: User
+) -> None:
+    """Test the ask_user tool handler."""
+    advisor = FinancialAdvisor(session)
+    agent_session = await advisor.start_session(test_user.id)
+
+    result = await advisor._handle_tool_call(
+        test_user.id,
+        agent_session.id,
+        "ask_user",
+        {
+            "question": "What is your target retirement age?",
+            "options": ["55", "60", "65", "70"],
+        },
+    )
+    assert result["type"] == "question"
+    assert result["question"] == "What is your target retirement age?"
+    assert len(result["options"]) == 4
+
+
+@pytest.mark.asyncio
+async def test_advisor_handle_tool_ask_user_no_options(
+    session: AsyncSession, test_user: User
+) -> None:
+    """ask_user without options should return empty list."""
+    advisor = FinancialAdvisor(session)
+    agent_session = await advisor.start_session(test_user.id)
+
+    result = await advisor._handle_tool_call(
+        test_user.id,
+        agent_session.id,
+        "ask_user",
+        {"question": "Tell me about your financial goals."},
+    )
+    assert result["type"] == "question"
+    assert result["question"] == "Tell me about your financial goals."
+    assert result["options"] == []
