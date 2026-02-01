@@ -344,6 +344,7 @@ export interface FinancialMemory {
   risk_tolerance: RiskTolerance | null;
   investment_horizon_years: number | null;
   monthly_savings_target: number | null;
+  average_monthly_expenses: number | null;
   emergency_fund_target_months: number | null;
 
   // Freeform
@@ -388,6 +389,7 @@ export interface FinancialMemoryUpdate {
   risk_tolerance?: RiskTolerance | null;
   investment_horizon_years?: number | null;
   monthly_savings_target?: number | null;
+  average_monthly_expenses?: number | null;
   emergency_fund_target_months?: number | null;
 
   // Freeform

@@ -280,6 +280,34 @@ erDiagram
         numeric interest_rate
         date next_payment_due_date
     }
+
+    financial_memories {
+        uuid id PK
+        uuid user_id FK
+        integer age
+        text state
+        filing_status filing_status
+        numeric annual_income
+        numeric monthly_income
+        numeric average_monthly_expenses
+        numeric current_retirement_savings
+        numeric monthly_savings_target
+        numeric mortgage_balance
+        numeric mortgage_rate
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    memory_events {
+        uuid id PK
+        uuid user_id FK
+        text field_name
+        text old_value
+        text new_value
+        text source
+        text context
+        timestamptz created_at
+    }
 ```
 
 ## Table Descriptions
@@ -469,6 +497,26 @@ Detailed liability information for loans and credit accounts.
 | `next_payment_due_date` | DATE | Next payment date |
 | `next_payment_amount` | NUMERIC(19,4) | Next payment amount |
 
+#### `financial_memories`
+User-specific financial profile and goals, serving as the "long-term memory" for the AI Advisor. Can be updated by the user or derived from connected accounts.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `user_id` | UUID | FK to users |
+| `age` | INTEGER | User's age |
+| `state` | TEXT | State of residence (2-letter code) |
+| `filing_status` | filing_status | Tax filing status |
+| `annual_income` | NUMERIC(14,2) | Total annual income |
+| `monthly_income` | NUMERIC(14,2) | Average monthly income |
+| `average_monthly_expenses` | NUMERIC(14,2) | Average monthly expenses (derived or manual) |
+| `current_retirement_savings` | NUMERIC(14,2) | Total retirement savings |
+| `monthly_savings_target` | NUMERIC(14,2) | Target monthly savings amount |
+| `mortgage_balance` | NUMERIC(14,2) | Outstanding mortgage balance (derived) |
+| `mortgage_rate` | NUMERIC(6,4) | Weighted average mortgage rate (derived) |
+| `investment_horizon_years` | INTEGER | Investment time horizon |
+| `risk_tolerance` | risk_tolerance | Risk profile enum |
+
 ### Operational Tables
 
 #### `sync_jobs`
@@ -484,6 +532,20 @@ Tracks background data sync jobs.
 | `priority` | INTEGER | Priority (1=highest, 10=lowest) |
 | `items_synced` | JSONB | Sync results |
 | `error_message` | TEXT | Error details if failed |
+
+#### `memory_events`
+Audit log of changes to the `financial_memories` profile. Tracks who changed what and why (e.g., "User updated age" or "System derived mortgage balance").
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `user_id` | UUID | FK to users |
+| `field_name` | TEXT | The field that changed (e.g., "age") |
+| `old_value` | TEXT | Previous value |
+| `new_value` | TEXT | New value |
+| `source` | TEXT | Source of change: 'user_input', 'calculator', 'account_sync', 'agent' |
+| `context` | TEXT | Optional context or reason for the change |
+| `created_at` | TIMESTAMPTZ | Timestamp of the event |
 
 #### `webhook_subscriptions`
 App webhook subscriptions for outbound events.
