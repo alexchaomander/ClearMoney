@@ -530,3 +530,37 @@ export interface FinancialContext {
   portfolio_metrics: PortfolioMetrics;
   data_freshness: DataFreshness;
 }
+
+// Credit Card types
+export interface CardCredit {
+  id: string;
+  card_id: string;
+  name: string;
+  value: number;
+  period: string;
+  description: string | null;
+  category: string | null;
+}
+
+export interface CardBenefit {
+  id: string;
+  card_id: string;
+  name: string;
+  description: string | null;
+  valuation_method: string | null;
+  default_value: number | null;
+  // user_valuation? No, that's UI state.
+}
+
+export interface CreditCard {
+  id: string;
+  name: string;
+  issuer: string;
+  annual_fee: number;
+  image_url: string | null;
+  apply_url: string | null;
+  credits: CardCredit[];
+  benefits: CardBenefit[];
+  created_at: string;
+  updated_at: string;
+}

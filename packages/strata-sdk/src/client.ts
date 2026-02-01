@@ -29,6 +29,7 @@ import type {
   PortfolioHistoryRange,
   PortfolioSummary,
   Transaction,
+  CreditCard,
 } from './types';
 
 export interface StrataClientInterface {
@@ -75,6 +76,10 @@ export interface StrataClientInterface {
   getAdvisorSession(sessionId: string): Promise<AdvisorSession>;
   sendAdvisorMessage(sessionId: string, content: string): Promise<ReadableStream<Uint8Array>>;
   getRecommendations(): Promise<AdvisorRecommendation[]>;
+  // Credit Cards
+  getCreditCards(): Promise<CreditCard[]>;
+  getCreditCard(id: string): Promise<CreditCard>;
+  seedAmexPlatinum(): Promise<CreditCard>;
 }
 
 export interface StrataClientOptions {
@@ -440,5 +445,21 @@ export class StrataClient implements StrataClientInterface {
 
   async getRecommendations(): Promise<AdvisorRecommendation[]> {
     return this.request<AdvisorRecommendation[]>('/api/v1/advisor/recommendations');
+  }
+
+  // === Credit Cards ===
+
+  async getCreditCards(): Promise<CreditCard[]> {
+    return this.request<CreditCard[]>('/api/v1/credit-cards');
+  }
+
+  async getCreditCard(id: string): Promise<CreditCard> {
+    return this.request<CreditCard>(`/api/v1/credit-cards/${id}`);
+  }
+
+  async seedAmexPlatinum(): Promise<CreditCard> {
+    return this.request<CreditCard>('/api/v1/credit-cards/seed', {
+      method: 'POST',
+    });
   }
 }
