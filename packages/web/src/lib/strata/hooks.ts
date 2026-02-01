@@ -8,6 +8,7 @@ import type {
   ConnectionCallbackRequest,
   DebtAccountCreate,
   DebtAccountUpdate,
+  FinancialMemoryUpdate,
   InvestmentAccountCreate,
   LinkSessionRequest,
   PortfolioHistoryRange,
@@ -25,6 +26,15 @@ export const queryKeys = {
   popularInstitutions: ["institutions", "popular"] as const,
   portfolioHistory: (range: PortfolioHistoryRange) =>
     ["portfolio", "history", range] as const,
+  financialMemory: ["memory"] as const,
+  memoryEvents: ["memory", "events"] as const,
+  financialContext: (format: 'json' | 'markdown') =>
+    ["memory", "context", format] as const,
+  skills: ["skills"] as const,
+  availableSkills: ["skills", "available"] as const,
+  advisorSessions: ["advisor", "sessions"] as const,
+  advisorSession: (id: string) => ["advisor", "sessions", id] as const,
+  recommendations: ["advisor", "recommendations"] as const,
 };
 
 export function usePortfolioSummary() {
@@ -222,5 +232,123 @@ export function useCreateInvestmentAccount() {
     mutationFn: (data: InvestmentAccountCreate) =>
       client.createInvestmentAccount(data),
     onSuccess: () => invalidateAllPortfolioData(queryClient),
+  });
+}
+
+// === Financial Memory ===
+
+export function useFinancialMemory() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.financialMemory,
+    queryFn: () => client.getFinancialMemory(),
+  });
+}
+
+export function useUpdateMemory() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: FinancialMemoryUpdate) =>
+      client.updateFinancialMemory(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.financialMemory });
+      queryClient.invalidateQueries({ queryKey: queryKeys.memoryEvents });
+    },
+  });
+}
+
+export function useDeriveMemory() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => client.deriveMemory(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.financialMemory });
+      queryClient.invalidateQueries({ queryKey: queryKeys.memoryEvents });
+    },
+  });
+}
+
+export function useMemoryEvents() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.memoryEvents,
+    queryFn: () => client.getMemoryEvents(),
+  });
+}
+
+export function useFinancialContext(format: 'json' | 'markdown' = 'json') {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.financialContext(format),
+    queryFn: () => client.getFinancialContext(format),
+  });
+}
+
+// === Skills ===
+
+export function useSkills() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.skills,
+    queryFn: () => client.getSkills(),
+  });
+}
+
+export function useAvailableSkills() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.availableSkills,
+    queryFn: () => client.getAvailableSkills(),
+  });
+}
+
+// === Advisor ===
+
+export function useAdvisorSessions() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.advisorSessions,
+    queryFn: () => client.getAdvisorSessions(),
+  });
+}
+
+export function useAdvisorSession(id: string) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.advisorSession(id),
+    queryFn: () => client.getAdvisorSession(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateAdvisorSession() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (skillName?: string) => client.createAdvisorSession(skillName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.advisorSessions });
+    },
+  });
+}
+
+export function useSendAdvisorMessage() {
+  const client = useStrataClient();
+  return useMutation({
+    mutationFn: ({ sessionId, content }: { sessionId: string; content: string }) =>
+      client.sendAdvisorMessage(sessionId, content),
+  });
+}
+
+export function useRecommendations() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.recommendations,
+    queryFn: () => client.getRecommendations(),
   });
 }

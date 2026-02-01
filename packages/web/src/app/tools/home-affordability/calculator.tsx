@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { AppShell, MethodologySection, VerdictCard } from "@/components/shared/AppShell";
@@ -14,6 +14,9 @@ import {
 } from "@/lib/calculators/home-affordability/constants";
 import type { CalculatorInputs } from "@/lib/calculators/home-affordability/types";
 import { cn } from "@/lib/utils";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { useMemoryWriteBack } from "@/hooks/useMemoryWriteBack";
+import { MemoryBadge } from "@/components/tools/MemoryBadge";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   annualIncome: 100000,
@@ -33,9 +36,24 @@ const selectStyles =
   "mt-2 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 text-sm text-white focus:border-teal-400 focus:outline-none";
 
 export function Calculator() {
+  const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
+    annualIncome: "annual_income",
+    currentRent: "monthly_rent",
+    mortgageRate: ["mortgage_rate", (v: unknown) => Number(v) * 100],
+    state: "state",
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
 
+  useEffect(() => {
+    if (memoryLoaded) {
+      setInputs(prev => ({ ...prev, ...memoryDefaults }));
+    }
+  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const results = useMemo(() => calculate(inputs), [inputs]);
+
+  const writeBack = useMemoryWriteBack();
 
   const dtiTone =
     results.dtiAnalysis.status === "comfortable"
@@ -88,6 +106,11 @@ export function Calculator() {
                   format="currency"
                   description="Income before taxes and deductions."
                 />
+                {preFilledFields.has("annualIncome") && (
+                  <div className="-mt-4 mb-2 ml-1">
+                    <MemoryBadge field="annualIncome" preFilledFields={preFilledFields} />
+                  </div>
+                )}
                 <SliderInput
                   label="Monthly Debt Payments"
                   value={inputs.monthlyDebt}
@@ -220,6 +243,11 @@ export function Calculator() {
                   format="currency"
                   description="Used for rent vs buy comparison."
                 />
+                {preFilledFields.has("currentRent") && (
+                  <div className="-mt-4 mb-2 ml-1">
+                    <MemoryBadge field="currentRent" preFilledFields={preFilledFields} />
+                  </div>
+                )}
                 <SliderInput
                   label="Mortgage Rate"
                   value={inputs.mortgageRate}
@@ -232,6 +260,11 @@ export function Calculator() {
                   format="percent"
                   description="Estimated 30-year fixed rate."
                 />
+                {preFilledFields.has("mortgageRate") && (
+                  <div className="-mt-4 mb-2 ml-1">
+                    <MemoryBadge field="mortgageRate" preFilledFields={preFilledFields} />
+                  </div>
+                )}
                 <SliderInput
                   label="Property Tax Rate"
                   value={inputs.propertyTaxRate}

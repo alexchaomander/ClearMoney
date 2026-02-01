@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { SliderInput } from "@/components/shared/SliderInput";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { formatCurrency, formatPercent } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/conscious-spending/calculations";
@@ -213,7 +215,17 @@ function CategoryCard({ category }: { category: CategoryAnalysis }) {
 }
 
 export function Calculator() {
+  const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
+    monthlyIncome: "monthly_income",
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+
+  useEffect(() => {
+    if (memoryLoaded) {
+      setInputs(prev => ({ ...prev, ...memoryDefaults }));
+    }
+  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const allocationPercent = results.categories.reduce(
@@ -275,6 +287,7 @@ export function Calculator() {
                 step={100}
                 format="currency"
               />
+              <MemoryBadge field="monthlyIncome" preFilledFields={preFilledFields} />
             </div>
           </div>
 

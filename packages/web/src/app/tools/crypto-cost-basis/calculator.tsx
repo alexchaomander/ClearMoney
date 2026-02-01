@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import { ResultCard } from "@/components/shared/ResultCard";
 import {
   AppShell,
@@ -40,7 +42,25 @@ const DEFAULT_INPUTS: CalculatorInputs = {
 const METHOD_ORDER = ["fifo", "lifo", "hifo", "specificId"] as const;
 
 export function Calculator() {
+  const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
+    ordinaryIncome: "annual_income",
+    filingStatus: ["filing_status", (v: unknown) => {
+      const s = String(v);
+      if (s === "married_filing_jointly") return "married";
+      if (s === "head_of_household") return "head_of_household";
+      return "single";
+    }],
+    state: "state",
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+
+  useEffect(() => {
+    if (memoryLoaded) {
+      setInputs(prev => ({ ...prev, ...memoryDefaults }));
+    }
+  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const results = useMemo(() => calculate(inputs), [inputs]);
 
   const fifoTax = results.methodComparison.fifo.estimatedTax;
@@ -223,6 +243,7 @@ export function Calculator() {
                         </option>
                       ))}
                     </select>
+                    <MemoryBadge field="filingStatus" preFilledFields={preFilledFields} />
                   </div>
                   <SliderInput
                     label="Ordinary income"
@@ -236,6 +257,7 @@ export function Calculator() {
                     format="currency"
                     description="Used to estimate your marginal tax bracket"
                   />
+                  <MemoryBadge field="ordinaryIncome" preFilledFields={preFilledFields} />
                   <div>
                     <label className="block text-sm text-neutral-400 mb-2">
                       State
@@ -256,6 +278,7 @@ export function Calculator() {
                         </option>
                       ))}
                     </select>
+                    <MemoryBadge field="state" preFilledFields={preFilledFields} />
                   </div>
                 </div>
               </div>

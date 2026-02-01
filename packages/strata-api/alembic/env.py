@@ -16,12 +16,16 @@ from app.db.base import Base  # noqa: E402
 
 # Import all models so their tables are registered on Base.metadata
 from app.models import (  # noqa: E402, F401
+    AgentSession,
     CashAccount,
     DebtAccount,
+    FinancialMemory,
     Holding,
     IncomeSource,
     Institution,
     InvestmentAccount,
+    MemoryEvent,
+    Recommendation,
     Security,
     User,
 )

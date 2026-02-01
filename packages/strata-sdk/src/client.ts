@@ -1,4 +1,7 @@
 import type {
+  AdvisorRecommendation,
+  AdvisorSession,
+  AdvisorSessionSummary,
   AllAccountsResponse,
   CashAccount,
   CashAccountCreate,
@@ -8,6 +11,8 @@ import type {
   DebtAccount,
   DebtAccountCreate,
   DebtAccountUpdate,
+  FinancialMemory,
+  FinancialMemoryUpdate,
   HealthResponse,
   HoldingDetail,
   Institution,
@@ -16,7 +21,11 @@ import type {
   InvestmentAccountWithHoldings,
   LinkSessionRequest,
   LinkSessionResponse,
+  FinancialContext,
+  MemoryEvent,
   PortfolioHistoryPoint,
+  SkillDetail,
+  SkillSummary,
   PortfolioHistoryRange,
   PortfolioSummary,
   Transaction,
@@ -50,6 +59,22 @@ export interface StrataClientInterface {
   updateDebtAccount(id: string, data: DebtAccountUpdate): Promise<DebtAccount>;
   deleteDebtAccount(id: string): Promise<void>;
   getPortfolioHistory(range: PortfolioHistoryRange): Promise<PortfolioHistoryPoint[]>;
+  // Financial Memory
+  getFinancialMemory(): Promise<FinancialMemory>;
+  updateFinancialMemory(data: FinancialMemoryUpdate): Promise<FinancialMemory>;
+  getMemoryEvents(): Promise<MemoryEvent[]>;
+  deriveMemory(): Promise<FinancialMemory>;
+  getFinancialContext(format?: 'json' | 'markdown'): Promise<FinancialContext | string>;
+  // Skills
+  getSkills(): Promise<SkillSummary[]>;
+  getAvailableSkills(): Promise<SkillSummary[]>;
+  getSkill(name: string): Promise<SkillDetail>;
+  // Advisor
+  createAdvisorSession(skillName?: string): Promise<AdvisorSession>;
+  getAdvisorSessions(): Promise<AdvisorSessionSummary[]>;
+  getAdvisorSession(sessionId: string): Promise<AdvisorSession>;
+  sendAdvisorMessage(sessionId: string, content: string): Promise<ReadableStream<Uint8Array>>;
+  getRecommendations(): Promise<AdvisorRecommendation[]>;
 }
 
 export interface StrataClientOptions {
@@ -316,5 +341,104 @@ export class StrataClient implements StrataClientInterface {
     return this.request<PortfolioHistoryPoint[]>(
       this.buildUrl('/api/v1/portfolio/history', { range })
     );
+  }
+
+  // === Financial Memory ===
+
+  async getFinancialMemory(): Promise<FinancialMemory> {
+    return this.request<FinancialMemory>('/api/v1/memory');
+  }
+
+  async updateFinancialMemory(data: FinancialMemoryUpdate): Promise<FinancialMemory> {
+    return this.request<FinancialMemory>('/api/v1/memory', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getMemoryEvents(): Promise<MemoryEvent[]> {
+    return this.request<MemoryEvent[]>('/api/v1/memory/events');
+  }
+
+  async deriveMemory(): Promise<FinancialMemory> {
+    return this.request<FinancialMemory>('/api/v1/memory/derive', {
+      method: 'POST',
+    });
+  }
+
+  async getFinancialContext(format: 'json' | 'markdown' = 'json'): Promise<FinancialContext | string> {
+    if (format === 'markdown') {
+      const response = await fetch(
+        `${this.baseUrl}/api/v1/memory/context?format=markdown`,
+        {
+          headers: {
+            ...(this.clerkUserId ? { 'X-Clerk-User-Id': this.clerkUserId } : {}),
+          },
+        }
+      );
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+      return response.text();
+    }
+    return this.request<FinancialContext>('/api/v1/memory/context');
+  }
+
+  // === Skills ===
+
+  async getSkills(): Promise<SkillSummary[]> {
+    return this.request<SkillSummary[]>('/api/v1/skills');
+  }
+
+  async getAvailableSkills(): Promise<SkillSummary[]> {
+    return this.request<SkillSummary[]>('/api/v1/skills/available');
+  }
+
+  async getSkill(name: string): Promise<SkillDetail> {
+    return this.request<SkillDetail>(`/api/v1/skills/${name}`);
+  }
+
+  // === Advisor ===
+
+  async createAdvisorSession(skillName?: string): Promise<AdvisorSession> {
+    return this.request<AdvisorSession>('/api/v1/advisor/sessions', {
+      method: 'POST',
+      body: JSON.stringify({ skill_name: skillName ?? null }),
+    });
+  }
+
+  async getAdvisorSessions(): Promise<AdvisorSessionSummary[]> {
+    return this.request<AdvisorSessionSummary[]>('/api/v1/advisor/sessions');
+  }
+
+  async getAdvisorSession(sessionId: string): Promise<AdvisorSession> {
+    return this.request<AdvisorSession>(`/api/v1/advisor/sessions/${sessionId}`);
+  }
+
+  async sendAdvisorMessage(sessionId: string, content: string): Promise<ReadableStream<Uint8Array>> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (this.clerkUserId) {
+      headers['X-Clerk-User-Id'] = this.clerkUserId;
+    }
+
+    const response = await fetch(`${this.baseUrl}/api/v1/advisor/sessions/${sessionId}/messages`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ content }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Request failed: ${response.status}`);
+    }
+
+    if (!response.body) {
+      throw new Error('No response body');
+    }
+
+    return response.body;
+  }
+
+  async getRecommendations(): Promise<AdvisorRecommendation[]> {
+    return this.request<AdvisorRecommendation[]>('/api/v1/advisor/recommendations');
   }
 }

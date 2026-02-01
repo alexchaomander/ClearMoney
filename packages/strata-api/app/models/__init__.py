@@ -1,22 +1,28 @@
+from app.models.agent_session import AgentSession, Recommendation, RecommendationStatus, SessionStatus
 from app.models.cash_account import CashAccount, CashAccountType
 from app.models.connection import Connection, ConnectionStatus
 from app.models.debt_account import DebtAccount, DebtType
+from app.models.financial_memory import FilingStatus, FinancialMemory, RiskTolerance
 from app.models.holding import Holding
 from app.models.income_source import IncomeFrequency, IncomeSource, IncomeSourceType
 from app.models.institution import Institution
 from app.models.investment_account import InvestmentAccount, InvestmentAccountType
+from app.models.memory_event import MemoryEvent, MemoryEventSource
 from app.models.portfolio_snapshot import PortfolioSnapshot
 from app.models.security import Security, SecurityType
 from app.models.transaction import Transaction, TransactionType
 from app.models.user import User
 
 __all__ = [
+    "AgentSession",
     "CashAccount",
     "CashAccountType",
     "Connection",
     "ConnectionStatus",
     "DebtAccount",
     "DebtType",
+    "FilingStatus",
+    "FinancialMemory",
     "Holding",
     "IncomeFrequency",
     "IncomeSource",
@@ -24,7 +30,13 @@ __all__ = [
     "Institution",
     "InvestmentAccount",
     "InvestmentAccountType",
+    "MemoryEvent",
+    "MemoryEventSource",
     "PortfolioSnapshot",
+    "Recommendation",
+    "RecommendationStatus",
+    "RiskTolerance",
+    "SessionStatus",
     "Security",
     "SecurityType",
     "Transaction",

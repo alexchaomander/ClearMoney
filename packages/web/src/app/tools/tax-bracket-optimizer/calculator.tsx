@@ -1,8 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { AppShell, MethodologySection, ComparisonCard } from "@/components/shared";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { useMemoryWriteBack } from "@/hooks/useMemoryWriteBack";
+import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import {
   formatCurrency,
   formatPercent,
@@ -159,9 +162,34 @@ function ThresholdRow({ threshold }: { threshold: ThresholdAnalysis }) {
 }
 
 export function Calculator() {
+  const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
+    filingStatus: ["filing_status", (v: unknown) => {
+      const s = String(v);
+      if (s === "married_filing_jointly") return "married";
+      if (s === "head_of_household") return "head_of_household";
+      return "single";
+    }],
+    "income.wagesIncome": "annual_income",
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
 
+  useEffect(() => {
+    if (memoryLoaded && Object.keys(memoryDefaults).length > 0) {
+      setInputs(prev => ({
+        ...prev,
+        ...(memoryDefaults.filingStatus != null ? { filingStatus: memoryDefaults.filingStatus } : {}),
+        income: {
+          ...prev.income,
+          ...((memoryDefaults as Record<string, unknown>).income as Record<string, unknown> ?? {}),
+        },
+      }));
+    }
+  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const results = useMemo(() => calculate(inputs), [inputs]);
+
+  const writeBack = useMemoryWriteBack();
 
   const updateIncome = <K extends keyof CalculatorInputs["income"]>(
     key: K,
@@ -273,6 +301,11 @@ export function Calculator() {
                       </option>
                     ))}
                   </select>
+                  {preFilledFields.has("filingStatus") && (
+                    <div className="-mt-4 mb-2 ml-1">
+                      <MemoryBadge field="filingStatus" preFilledFields={preFilledFields} />
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-5">
@@ -288,6 +321,11 @@ export function Calculator() {
                     step={5000}
                     format="currency"
                   />
+                  {preFilledFields.has("income.wagesIncome") && (
+                    <div className="-mt-4 mb-2 ml-1">
+                      <MemoryBadge field="income.wagesIncome" preFilledFields={preFilledFields} />
+                    </div>
+                  )}
                   <SliderInput
                     label="Self-Employment Income"
                     value={inputs.income.selfEmploymentIncome}
