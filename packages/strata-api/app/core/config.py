@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     clerk_secret_key: str = ""
     clerk_pem_public_key: str = ""
 
+    # Anthropic API (for Financial Advisor)
+    anthropic_api_key: str = ""
+    advisor_model: str = "claude-sonnet-4-20250514"
+    advisor_max_tokens: int = 4096
+
     model_config = {"env_prefix": "STRATA_"}
 
 

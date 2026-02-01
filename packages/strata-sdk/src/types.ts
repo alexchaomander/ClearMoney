@@ -294,3 +294,237 @@ export interface PortfolioHistoryPoint {
   date: string;
   value: number;
 }
+
+// Financial Memory types
+export type FilingStatus =
+  | 'single'
+  | 'married_filing_jointly'
+  | 'married_filing_separately'
+  | 'head_of_household';
+
+export type RiskTolerance = 'conservative' | 'moderate' | 'aggressive';
+
+export type MemoryEventSource = 'user_input' | 'calculator' | 'account_sync' | 'agent';
+
+export interface FinancialMemory {
+  id: string;
+  user_id: string;
+
+  // Demographics
+  age: number | null;
+  state: string | null;
+  filing_status: FilingStatus | null;
+  num_dependents: number | null;
+
+  // Income
+  annual_income: number | null;
+  monthly_income: number | null;
+  income_growth_rate: number | null;
+
+  // Tax
+  federal_tax_rate: number | null;
+  state_tax_rate: number | null;
+  capital_gains_rate: number | null;
+
+  // Retirement
+  retirement_age: number | null;
+  current_retirement_savings: number | null;
+  monthly_retirement_contribution: number | null;
+  employer_match_pct: number | null;
+  expected_social_security: number | null;
+  desired_retirement_income: number | null;
+
+  // Housing
+  home_value: number | null;
+  mortgage_balance: number | null;
+  mortgage_rate: number | null;
+  monthly_rent: number | null;
+
+  // Goals & Preferences
+  risk_tolerance: RiskTolerance | null;
+  investment_horizon_years: number | null;
+  monthly_savings_target: number | null;
+  emergency_fund_target_months: number | null;
+
+  // Freeform
+  notes: Record<string, unknown> | null;
+
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FinancialMemoryUpdate {
+  // Demographics
+  age?: number | null;
+  state?: string | null;
+  filing_status?: FilingStatus | null;
+  num_dependents?: number | null;
+
+  // Income
+  annual_income?: number | null;
+  monthly_income?: number | null;
+  income_growth_rate?: number | null;
+
+  // Tax
+  federal_tax_rate?: number | null;
+  state_tax_rate?: number | null;
+  capital_gains_rate?: number | null;
+
+  // Retirement
+  retirement_age?: number | null;
+  current_retirement_savings?: number | null;
+  monthly_retirement_contribution?: number | null;
+  employer_match_pct?: number | null;
+  expected_social_security?: number | null;
+  desired_retirement_income?: number | null;
+
+  // Housing
+  home_value?: number | null;
+  mortgage_balance?: number | null;
+  mortgage_rate?: number | null;
+  monthly_rent?: number | null;
+
+  // Goals & Preferences
+  risk_tolerance?: RiskTolerance | null;
+  investment_horizon_years?: number | null;
+  monthly_savings_target?: number | null;
+  emergency_fund_target_months?: number | null;
+
+  // Freeform
+  notes?: Record<string, unknown> | null;
+
+  // Source tracking
+  source?: MemoryEventSource;
+  source_context?: string | null;
+}
+
+export interface MemoryEvent {
+  id: string;
+  user_id: string;
+  field_name: string;
+  old_value: string | null;
+  new_value: string | null;
+  source: MemoryEventSource;
+  context: string | null;
+  created_at: string;
+}
+
+// Financial Context types
+export interface FinancialContextAccount {
+  name: string;
+  type: string;
+  balance: number | null;
+  is_tax_advantaged?: boolean;
+  interest_rate?: number | null;
+  minimum_payment?: number | null;
+}
+
+export interface FinancialContextHolding {
+  ticker: string | null;
+  name: string;
+  security_type: string;
+  quantity: number;
+  market_value: number | null;
+  cost_basis: number | null;
+  account: string;
+}
+
+export interface PortfolioMetrics {
+  net_worth: number;
+  total_investment_value: number;
+  total_cash_value: number;
+  total_debt_value: number;
+  tax_advantaged_value: number;
+  taxable_value: number;
+}
+
+export interface DataFreshness {
+  last_sync: string | null;
+  profile_updated: string | null;
+  accounts_count: number;
+  connections_count: number;
+}
+
+// Skill types
+export interface SkillSummary {
+  name: string;
+  display_name: string;
+  description: string;
+  required_context: string[];
+  output_format: string;
+}
+
+export interface SkillDetail extends SkillSummary {
+  optional_context: string[];
+  tools: string[];
+  content: string;
+}
+
+// Advisor types
+export type SessionStatus = 'active' | 'completed' | 'paused';
+export type RecommendationStatus = 'pending' | 'accepted' | 'dismissed';
+
+export interface AdvisorSession {
+  id: string;
+  user_id: string;
+  skill_name: string | null;
+  status: SessionStatus;
+  messages: AdvisorMessage[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdvisorSessionSummary {
+  id: string;
+  skill_name: string | null;
+  status: SessionStatus;
+  message_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdvisorMessage {
+  role: 'user' | 'assistant';
+  content: string | AdvisorContentBlock[];
+}
+
+export interface AdvisorContentBlock {
+  type: 'text' | 'tool_use' | 'tool_result';
+  text?: string;
+  id?: string;
+  name?: string;
+  input?: Record<string, unknown>;
+  tool_use_id?: string;
+  content?: string;
+}
+
+export interface AdvisorRecommendation {
+  id: string;
+  user_id: string;
+  session_id: string;
+  skill_name: string;
+  title: string;
+  summary: string;
+  details: Record<string, unknown>;
+  status: RecommendationStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FinancialContext {
+  profile: Record<string, unknown>;
+  accounts: {
+    investment: FinancialContextAccount[];
+    cash: FinancialContextAccount[];
+    debt: FinancialContextAccount[];
+  };
+  holdings: FinancialContextHolding[];
+  recent_transactions: {
+    type: string;
+    amount: number | null;
+    description: string | null;
+    trade_date: string | null;
+  }[];
+  portfolio_metrics: PortfolioMetrics;
+  data_freshness: DataFreshness;
+}

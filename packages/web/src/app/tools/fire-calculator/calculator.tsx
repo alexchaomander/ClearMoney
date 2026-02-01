@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { MethodologySection, AppShell } from "@/components/shared";
 import {
@@ -17,6 +17,9 @@ import type {
   CalculatorInputs,
   YearlySnapshot,
 } from "@/lib/calculators/fire-calculator/types";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { useMemoryWriteBack } from "@/hooks/useMemoryWriteBack";
+import { MemoryBadge } from "@/components/tools/MemoryBadge";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   annualIncome: 75000,
@@ -199,11 +202,24 @@ function FireVariantsCard({
 }
 
 export function Calculator() {
+  const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
+    annualIncome: "annual_income",
+    currentSavings: "current_retirement_savings",
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
 
+  useEffect(() => {
+    if (memoryLoaded) {
+      setInputs(prev => ({ ...prev, ...memoryDefaults }));
+    }
+  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const results = useMemo(() => calculate(inputs), [inputs]);
+
+  const writeBack = useMemoryWriteBack();
   const returnRate = inputs.expectedReturn / 100;
 
   const leanYears = useMemo(
@@ -291,6 +307,11 @@ export function Calculator() {
                 step={1000}
                 format="currency"
               />
+              {preFilledFields.has("annualIncome") && (
+                <div className="-mt-4 mb-2 ml-1">
+                  <MemoryBadge field="annualIncome" preFilledFields={preFilledFields} />
+                </div>
+              )}
               <SliderInput
                 label="Annual Expenses"
                 value={inputs.annualExpenses}
@@ -313,6 +334,11 @@ export function Calculator() {
                 step={5000}
                 format="currency"
               />
+              {preFilledFields.has("currentSavings") && (
+                <div className="-mt-4 mb-2 ml-1">
+                  <MemoryBadge field="currentSavings" preFilledFields={preFilledFields} />
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => setShowAdvanced((prev) => !prev)}
