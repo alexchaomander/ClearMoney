@@ -33,21 +33,23 @@ function simulatePayoff(
   let totalInterestPaid = 0;
   let months = 0;
 
-  // Sort debts based on method
-  // Snowball: Smallest balance first
-  // Avalanche: Highest interest rate first
-  debts.sort((a, b) => {
-    if (method === "snowball") {
-      return a.balance - b.balance;
-    } else {
-      return b.interestRate - a.interestRate;
-    }
-  });
-
   let activeDebts = debts.filter((d) => d.balance > 0);
 
   while (activeDebts.length > 0 && months < 1200) { // Cap at 100 years to prevent infinite loops
     months++;
+    
+    // Sort active debts each month to ensure strategy is followed dynamically
+    // (e.g. if balances cross, Snowball priority should switch)
+    activeDebts.sort((a, b) => {
+      if (method === "snowball") {
+        return a.balance - b.balance;
+      } else {
+        return b.interestRate - a.interestRate;
+      }
+    });
+
+    // Standard Snowball/Avalanche behavior: The total monthly commitment remains constant.
+    // As debts are paid off, their minimum payments are "rolled over" into the extra payment pool.
     let monthlyBudget =
       inputs.monthlyExtraPayment +
       inputs.debts.reduce((sum, d) => sum + d.minimumPayment, 0);
