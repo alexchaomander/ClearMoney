@@ -6,12 +6,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.advisor import router as advisor_router
 from app.api.accounts import router as accounts_router
 from app.api.cash_debt import router as cash_debt_router
 from app.api.connections import router as connections_router
 from app.api.health import router as health_router
 from app.api.institutions import router as institutions_router
+from app.api.memory import router as memory_router
 from app.api.portfolio import router as portfolio_router
+from app.api.skills import router as skills_router
 from app.api.transactions import router as transactions_router
 from app.core.config import settings
 from app.db.session import close_db
@@ -64,3 +67,6 @@ app.include_router(cash_debt_router, prefix="/api/v1")
 app.include_router(institutions_router, prefix="/api/v1")
 app.include_router(portfolio_router, prefix="/api/v1")
 app.include_router(transactions_router, prefix="/api/v1")
+app.include_router(memory_router, prefix="/api/v1")
+app.include_router(skills_router, prefix="/api/v1")
+app.include_router(advisor_router, prefix="/api/v1")

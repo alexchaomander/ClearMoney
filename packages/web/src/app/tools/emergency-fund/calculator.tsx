@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/shared/formatters";
 import {
   calculate,
@@ -227,8 +229,18 @@ function RiskBreakdown({ factors }: { factors: RiskFactor[] }) {
 }
 
 export function Calculator() {
+  const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
+    monthlyExpenses: "monthly_income",
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
   const [currentSavings, setCurrentSavings] = useState<number>(8000);
+
+  useEffect(() => {
+    if (memoryLoaded) {
+      setInputs(prev => ({ ...prev, ...memoryDefaults }));
+    }
+  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -278,6 +290,7 @@ export function Calculator() {
                 step={100}
                 format="currency"
               />
+              <MemoryBadge field="monthlyExpenses" preFilledFields={preFilledFields} />
             </div>
 
             <div className="rounded-2xl bg-neutral-900 p-6 space-y-8">

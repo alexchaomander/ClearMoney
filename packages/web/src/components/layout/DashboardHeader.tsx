@@ -22,6 +22,8 @@ export function DashboardHeader({
     { label: "Tools", href: "/#tools" },
     { label: "Dashboard", href: "/dashboard" },
     { label: "Connect", href: "/connect" },
+    { label: "Advisor", href: "/advisor" },
+    { label: "Profile", href: "/profile" },
     { label: "Settings", href: "/settings" },
   ];
 
@@ -44,7 +46,8 @@ export function DashboardHeader({
                 const isActive = pathname === item.href ||
                   (item.href === "/dashboard" && pathname.startsWith("/dashboard")) ||
                   (item.href === "/connect" && pathname.startsWith("/connect")) ||
-                  (item.href === "/settings" && pathname.startsWith("/settings"));
+                  (item.href === "/settings" && pathname.startsWith("/settings")) ||
+                  (item.href === "/profile" && pathname.startsWith("/profile"));
 
                 return (
                   <Link
