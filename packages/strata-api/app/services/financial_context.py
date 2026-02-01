@@ -91,7 +91,7 @@ async def build_financial_context(
             "expected_social_security", "desired_retirement_income",
             "home_value", "mortgage_balance", "mortgage_rate", "monthly_rent",
             "risk_tolerance", "investment_horizon_years",
-            "monthly_savings_target", "emergency_fund_target_months",
+            "monthly_savings_target", "average_monthly_expenses", "emergency_fund_target_months",
         ]:
             val = getattr(memory, field)
             if val is not None:
@@ -164,6 +164,10 @@ async def build_financial_context(
     )
     taxable = total_investment - tax_advantaged
 
+    runway_months = None
+    if memory and memory.average_monthly_expenses and memory.average_monthly_expenses > 0:
+        runway_months = total_cash / float(memory.average_monthly_expenses)
+
     portfolio_metrics = {
         "net_worth": round(net_worth, 2),
         "total_investment_value": round(total_investment, 2),
@@ -171,6 +175,7 @@ async def build_financial_context(
         "total_debt_value": round(total_debt, 2),
         "tax_advantaged_value": round(tax_advantaged, 2),
         "taxable_value": round(taxable, 2),
+        "runway_months": round(runway_months, 1) if runway_months is not None else None,
     }
 
     # -- Transactions --

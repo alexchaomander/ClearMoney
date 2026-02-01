@@ -205,6 +205,7 @@ export function Calculator() {
   const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
     annualIncome: "annual_income",
     currentSavings: "current_retirement_savings",
+    annualExpenses: ["average_monthly_expenses", (v) => (Number(v) || 0) * 12],
   });
 
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);

@@ -381,6 +381,15 @@ export default function ProfilePage() {
                 step={100}
               />
               <NumberField
+                label="Average Monthly Expenses"
+                memoryKey="average_monthly_expenses"
+                memory={memory}
+                onSave={onSave}
+                prefix="$"
+                min={0}
+                step={100}
+              />
+              <NumberField
                 label="Income Growth Rate"
                 memoryKey="income_growth_rate"
                 memory={memory}

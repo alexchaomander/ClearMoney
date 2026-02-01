@@ -230,7 +230,7 @@ function RiskBreakdown({ factors }: { factors: RiskFactor[] }) {
 
 export function Calculator() {
   const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
-    monthlyExpenses: "monthly_income",
+    monthlyExpenses: "average_monthly_expenses",
   });
 
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);

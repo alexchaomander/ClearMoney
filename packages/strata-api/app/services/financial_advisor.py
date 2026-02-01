@@ -49,6 +49,7 @@ _UPDATABLE_MEMORY_FIELDS = {
     "risk_tolerance",
     "investment_horizon_years",
     "monthly_savings_target",
+    "average_monthly_expenses",
     "emergency_fund_target_months",
     "notes",
 }
@@ -61,7 +62,7 @@ _DECIMAL_FIELDS = {
     "current_retirement_savings", "monthly_retirement_contribution",
     "employer_match_pct", "expected_social_security", "desired_retirement_income",
     "home_value", "mortgage_balance", "mortgage_rate", "monthly_rent",
-    "monthly_savings_target",
+    "monthly_savings_target", "average_monthly_expenses",
 }
 _ENUM_FIELDS: dict[str, type] = {
     "filing_status": FilingStatus,
@@ -347,6 +348,7 @@ class FinancialAdvisor:
             "- Be concise and actionable in your responses",
             "- Use the user's actual data whenever possible",
             "- Flag when data is missing or stale",
+            "- Monitor 'Emergency Fund Runway' and suggest building cash reserves if < 3 months",
         ]
 
         # Add skill-specific instructions
