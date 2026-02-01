@@ -15,13 +15,77 @@ from app.models.agent_session import (
     RecommendationStatus,
     SessionStatus,
 )
-from app.models.financial_memory import FinancialMemory
+from app.models.financial_memory import FinancialMemory, FilingStatus, RiskTolerance
 from app.models.memory_event import MemoryEvent, MemoryEventSource
 from app.services.context_renderer import render_context_as_markdown
 from app.services.financial_context import build_financial_context
 from app.services.skill_registry import get_skill_registry
 
 logger = logging.getLogger(__name__)
+
+# Allowlist of fields the advisor can update on FinancialMemory.
+# Excludes id, user_id, created_at, updated_at and other internal columns.
+_UPDATABLE_MEMORY_FIELDS = {
+    "age",
+    "state",
+    "filing_status",
+    "num_dependents",
+    "annual_income",
+    "monthly_income",
+    "income_growth_rate",
+    "federal_tax_rate",
+    "state_tax_rate",
+    "capital_gains_rate",
+    "retirement_age",
+    "current_retirement_savings",
+    "monthly_retirement_contribution",
+    "employer_match_pct",
+    "expected_social_security",
+    "desired_retirement_income",
+    "home_value",
+    "mortgage_balance",
+    "mortgage_rate",
+    "monthly_rent",
+    "risk_tolerance",
+    "investment_horizon_years",
+    "monthly_savings_target",
+    "emergency_fund_target_months",
+    "notes",
+}
+
+# Type mapping for coercing string values from the LLM into correct Python types.
+_INT_FIELDS = {"age", "num_dependents", "retirement_age", "investment_horizon_years", "emergency_fund_target_months"}
+_DECIMAL_FIELDS = {
+    "annual_income", "monthly_income", "income_growth_rate",
+    "federal_tax_rate", "state_tax_rate", "capital_gains_rate",
+    "current_retirement_savings", "monthly_retirement_contribution",
+    "employer_match_pct", "expected_social_security", "desired_retirement_income",
+    "home_value", "mortgage_balance", "mortgage_rate", "monthly_rent",
+    "monthly_savings_target",
+}
+_ENUM_FIELDS: dict[str, type] = {
+    "filing_status": FilingStatus,
+    "risk_tolerance": RiskTolerance,
+}
+
+
+def _coerce_memory_value(field_name: str, value: str) -> object:
+    """Coerce a string value from the LLM to the correct Python type for the field."""
+    if field_name in _INT_FIELDS:
+        return int(value)
+    if field_name in _DECIMAL_FIELDS:
+        from decimal import Decimal
+        return Decimal(value)
+    if field_name in _ENUM_FIELDS:
+        return _ENUM_FIELDS[field_name](value)
+    if field_name == "state":
+        return str(value).upper()[:2]
+    if field_name == "notes":
+        if isinstance(value, dict):
+            return value
+        return {"note": value}
+    return value
+
 
 # Tools available to the advisor during conversation
 ADVISOR_TOOLS = [
@@ -289,19 +353,28 @@ class FinancialAdvisor:
         value = tool_input.get("value", "")
         reason = tool_input.get("reason", "")
 
-        # Load memory
+        # Validate against allowlist
+        if field_name not in _UPDATABLE_MEMORY_FIELDS:
+            return {"error": f"Unknown or protected field: {field_name}"}
+
+        # Load or create memory
         result = await self._session.execute(
             select(FinancialMemory).where(FinancialMemory.user_id == user_id)
         )
         memory = result.scalar_one_or_none()
         if not memory:
-            return {"error": "No financial memory found"}
+            memory = FinancialMemory(user_id=user_id)
+            self._session.add(memory)
+            await self._session.flush()
 
-        if not hasattr(memory, field_name):
-            return {"error": f"Unknown field: {field_name}"}
+        # Coerce the string value to the correct type
+        try:
+            coerced_value = _coerce_memory_value(field_name, value)
+        except (ValueError, TypeError, KeyError) as e:
+            return {"error": f"Invalid value for {field_name}: {e}"}
 
         old_value = getattr(memory, field_name)
-        setattr(memory, field_name, value)
+        setattr(memory, field_name, coerced_value)
 
         # Log event
         self._session.add(
@@ -309,14 +382,14 @@ class FinancialAdvisor:
                 user_id=user_id,
                 field_name=field_name,
                 old_value=str(old_value) if old_value is not None else None,
-                new_value=value,
+                new_value=str(coerced_value),
                 source=MemoryEventSource.agent,
                 context=reason,
             )
         )
 
         await self._session.commit()
-        return {"status": "updated", "field": field_name, "value": value}
+        return {"status": "updated", "field": field_name, "value": str(coerced_value)}
 
     async def _handle_create_recommendation(
         self,
@@ -329,6 +402,8 @@ class FinancialAdvisor:
             select(AgentSession).where(AgentSession.id == session_id)
         )
         agent_session = result.scalar_one_or_none()
+        if not agent_session:
+            return {"error": f"Session {session_id} not found"}
 
         rec = Recommendation(
             user_id=user_id,

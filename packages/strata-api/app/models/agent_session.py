@@ -30,7 +30,7 @@ class AgentSession(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Enum(SessionStatus, values_callable=lambda e: [x.value for x in e]),
         default=SessionStatus.active,
     )
-    messages: Mapped[list] = mapped_column(JSON, default=list)
+    messages: Mapped[list] = mapped_column(JSON, default=lambda: [])
 
 
 class Recommendation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -45,7 +45,7 @@ class Recommendation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     skill_name: Mapped[str] = mapped_column(String(100))
     title: Mapped[str] = mapped_column(String(500))
     summary: Mapped[str] = mapped_column(Text)
-    details: Mapped[dict] = mapped_column(JSON, default=dict)
+    details: Mapped[dict] = mapped_column(JSON, default=lambda: {})
     status: Mapped[RecommendationStatus] = mapped_column(
         Enum(RecommendationStatus, values_callable=lambda e: [x.value for x in e]),
         default=RecommendationStatus.pending,

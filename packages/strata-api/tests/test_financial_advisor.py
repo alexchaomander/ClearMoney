@@ -314,7 +314,7 @@ async def test_advisor_handle_tool_update_memory(
 async def test_advisor_handle_tool_update_memory_no_memory(
     session: AsyncSession, test_user: User
 ) -> None:
-    """Updating memory when none exists should return an error."""
+    """Updating memory when none exists should auto-create it."""
     advisor = FinancialAdvisor(session)
     agent_session = await advisor.start_session(test_user.id)
 
@@ -323,6 +323,41 @@ async def test_advisor_handle_tool_update_memory_no_memory(
         agent_session.id,
         "update_memory",
         {"field_name": "age", "value": "30", "reason": "test"},
+    )
+    assert result["status"] == "updated"
+    assert result["field"] == "age"
+
+
+@pytest.mark.asyncio
+async def test_advisor_handle_tool_update_memory_blocked_field(
+    session: AsyncSession, test_user: User
+) -> None:
+    """Updating protected fields like user_id should be rejected."""
+    advisor = FinancialAdvisor(session)
+    agent_session = await advisor.start_session(test_user.id)
+
+    result = await advisor._handle_tool_call(
+        test_user.id,
+        agent_session.id,
+        "update_memory",
+        {"field_name": "user_id", "value": "abc", "reason": "test"},
+    )
+    assert "error" in result
+
+
+@pytest.mark.asyncio
+async def test_advisor_handle_tool_update_memory_bad_value(
+    session: AsyncSession, test_user: User, memory: FinancialMemory
+) -> None:
+    """Non-numeric value for an integer field should return an error."""
+    advisor = FinancialAdvisor(session)
+    agent_session = await advisor.start_session(test_user.id)
+
+    result = await advisor._handle_tool_call(
+        test_user.id,
+        agent_session.id,
+        "update_memory",
+        {"field_name": "age", "value": "sixty-five", "reason": "test"},
     )
     assert "error" in result
 
