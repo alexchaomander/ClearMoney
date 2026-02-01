@@ -100,6 +100,9 @@ class FinancialMemory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     monthly_savings_target: Mapped[Decimal | None] = mapped_column(
         Numeric(14, 2), default=None
     )
+    average_monthly_expenses: Mapped[Decimal | None] = mapped_column(
+        Numeric(14, 2), default=None
+    )
     emergency_fund_target_months: Mapped[int | None] = mapped_column(default=None)
 
     # Freeform (for agent observations)

@@ -284,6 +284,7 @@ export class DemoStrataClient implements StrataClientInterface {
     risk_tolerance: "moderate",
     investment_horizon_years: 33,
     monthly_savings_target: 2000,
+    average_monthly_expenses: 6000,
     emergency_fund_target_months: 6,
     notes: null,
     created_at: new Date().toISOString(),

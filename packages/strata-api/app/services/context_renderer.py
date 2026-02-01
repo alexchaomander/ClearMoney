@@ -33,13 +33,14 @@ def render_context_as_markdown(context: dict) -> str:
             "risk_tolerance": "Risk Tolerance",
             "investment_horizon_years": "Investment Horizon (years)",
             "monthly_savings_target": "Monthly Savings Target",
+            "average_monthly_expenses": "Average Monthly Expenses",
             "emergency_fund_target_months": "Emergency Fund Target (months)",
         }
         currency_fields = {
             "annual_income", "monthly_income", "current_retirement_savings",
             "monthly_retirement_contribution", "expected_social_security",
             "desired_retirement_income", "home_value", "mortgage_balance",
-            "monthly_rent", "monthly_savings_target",
+            "monthly_rent", "monthly_savings_target", "average_monthly_expenses",
         }
         rate_fields = {
             "income_growth_rate", "federal_tax_rate", "state_tax_rate",
@@ -106,17 +107,31 @@ def render_context_as_markdown(context: dict) -> str:
     metrics = context.get("portfolio_metrics", {})
     if metrics:
         lines = ["## Portfolio Summary"]
-        for key, label in [
-            ("net_worth", "Net Worth"),
-            ("total_investment_value", "Total Investments"),
-            ("total_cash_value", "Total Cash"),
-            ("total_debt_value", "Total Debt"),
-            ("tax_advantaged_value", "Tax-Advantaged"),
-            ("taxable_value", "Taxable"),
-        ]:
+        metric_labels = {
+            "net_worth": "Net Worth",
+            "total_investment_value": "Total Investments",
+            "total_cash_value": "Total Cash",
+            "total_debt_value": "Total Debt",
+            "tax_advantaged_value": "Tax-Advantaged",
+            "taxable_value": "Taxable",
+            "runway_months": "Runway (Months)",
+        }
+        currency_metrics = {
+            "net_worth",
+            "total_investment_value",
+            "total_cash_value",
+            "total_debt_value",
+            "tax_advantaged_value",
+            "taxable_value",
+        }
+
+        for key, label in metric_labels.items():
             val = metrics.get(key)
             if val is not None:
-                lines.append(f"- **{label}**: ${val:,.2f}")
+                if key in currency_metrics:
+                    lines.append(f"- **{label}**: ${val:,.2f}")
+                else:
+                    lines.append(f"- **{label}**: {val}")
         sections.append("\n".join(lines))
 
     # Data freshness

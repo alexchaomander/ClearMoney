@@ -8,6 +8,7 @@ FastAPI-based backend for the Strata financial data platform. Provides investmen
 - **Portfolio Management**: Track holdings, balances, and allocations across accounts
 - **Transaction History**: Investment transaction tracking with pagination and filtering
 - **Portfolio Snapshots**: Daily net worth snapshots for historical tracking
+- **Financial Advisor**: AI-powered financial advice with memory and personalized context
 - **Background Jobs**: Automatic connection syncing and snapshot creation
 - **Multi-Provider Architecture**: Extensible provider system for future integrations
 - **Async PostgreSQL**: High-performance async database operations with SQLAlchemy 2.0
@@ -84,6 +85,12 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 - `GET /api/v1/transactions` - List investment transactions (paginated)
   - Query params: `account_id`, `start_date`, `end_date`, `limit` (1-500, default 100), `offset` (default 0)
 
+### Financial Memory
+- `GET /api/v1/memory` - Get user's financial profile
+- `PATCH /api/v1/memory` - Update financial profile
+- `GET /api/v1/memory/events` - Get change history
+- `POST /api/v1/memory/derive` - Auto-populate from accounts
+
 ### Portfolio
 - `GET /api/v1/portfolio/summary` - Portfolio summary with allocations
 - `GET /api/v1/portfolio/holdings` - All holdings across accounts
@@ -104,6 +111,8 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 | `Holding` | Position in a security within an account |
 | `Transaction` | Investment transaction (buy, sell, dividend, etc.) |
 | `PortfolioSnapshot` | Daily point-in-time net worth snapshot |
+| `FinancialMemory` | User financial profile and goals (long-term memory) |
+| `MemoryEvent` | Audit log of changes to financial memory |
 | `CashAccount` | Manual cash/checking/savings account |
 | `DebtAccount` | Manual debt account (credit card, loan) |
 

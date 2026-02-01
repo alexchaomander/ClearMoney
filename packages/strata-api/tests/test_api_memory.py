@@ -12,8 +12,10 @@ from app.models import (
     InvestmentAccount,
     Institution,
     User,
+    DebtAccount,
 )
 from app.models.investment_account import InvestmentAccountType
+from app.models.debt_account import DebtType
 
 
 @pytest.fixture
@@ -271,6 +273,34 @@ async def test_derive_memory_creates_event(
             e for e in events if e["source"] == "account_sync"
         ]
         assert len(derive_events) >= 1
+
+
+@pytest.mark.asyncio
+async def test_derive_mortgage(
+    session: AsyncSession, test_user: User, headers: dict
+) -> None:
+    """Derivation should populate mortgage_balance from mortgage accounts."""
+    debt_acct = DebtAccount(
+        user_id=test_user.id,
+        name="Main Mortgage",
+        debt_type=DebtType.mortgage,
+        balance=Decimal("450000.00"),
+        interest_rate=Decimal("0.055"),  # 5.5%
+        minimum_payment=Decimal("2500.00"),
+    )
+    session.add(debt_acct)
+    await session.commit()
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        resp = await client.post("/api/v1/memory/derive", headers=headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        # Should populate balance
+        assert Decimal(data["mortgage_balance"]) == Decimal("450000.00")
+        # Should populate rate
+        assert Decimal(data["mortgage_rate"]) == Decimal("0.055")
 
 
 # --- DELETE /api/v1/memory ---

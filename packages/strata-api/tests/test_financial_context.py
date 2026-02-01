@@ -42,6 +42,7 @@ async def memory(session: AsyncSession, user: User) -> FinancialMemory:
         filing_status=FilingStatus.married_filing_jointly,
         annual_income=Decimal("150000.00"),
         monthly_income=Decimal("10000.00"),
+        average_monthly_expenses=Decimal("5000.00"),
         retirement_age=65,
         current_retirement_savings=Decimal("200000.00"),
     )
@@ -173,6 +174,12 @@ async def test_context_portfolio_metrics(
     metrics = ctx["portfolio_metrics"]
     # Net worth = investments + cash - debt = 100000 + 5000 - 25000 = 80000
     assert metrics["net_worth"] is not None
+    # Runway = 5000 (cash) / 5000 (expenses) = 1.0 month
+    # Note: Using the fixtures defined above
+    assert metrics.get("runway_months") == 1.0
+    
+    profile = ctx["profile"]
+    assert profile.get("average_monthly_expenses") == 5000.00
 
 
 # --- render_context_as_markdown ---
