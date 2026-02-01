@@ -1,170 +1,118 @@
+import { addMonths } from "date-fns";
 import type {
   CalculatorInputs,
-  CalculatorResults,
-  Debt,
-  MethodResult,
+  ComparisonResult,
+  DebtItem,
   MonthlySnapshot,
-  PayoffEvent,
+  PayoffResult,
 } from "./types";
 
-function simulatePayoff(
-  debts: Debt[],
-  extraPayment: number,
-  sortFn: (a: Debt, b: Debt) => number
-): MethodResult {
-  let remaining = debts.map((debt) => ({ ...debt })).sort(sortFn);
-
-  const payoffOrder: PayoffEvent[] = [];
-  const monthlySchedule: MonthlySnapshot[] = [];
-  let month = 0;
-  let totalInterest = 0;
-  let totalPaid = 0;
-
-  while (remaining.length > 0 && month < 360) {
-    month += 1;
-
-    const totalMinimums = remaining.reduce(
-      (sum, debt) => sum + debt.minimumPayment,
-      0
-    );
-    const availableExtra = extraPayment;
-
-    const monthSnapshot: MonthlySnapshot = {
-      month,
-      debts: [],
-      totalBalance: 0,
-    };
-
-    for (let i = 0; i < remaining.length; i += 1) {
-      const debt = remaining[i];
-
-      const monthlyRate = debt.interestRate / 100 / 12;
-      const interestCharge = debt.balance * monthlyRate;
-      debt.balance += interestCharge;
-      totalInterest += interestCharge;
-
-      let payment = debt.minimumPayment;
-      if (i === 0 && availableExtra > 0) {
-        payment += availableExtra;
-      }
-
-      if (totalMinimums + extraPayment > 0) {
-        payment = Math.min(payment, debt.balance);
-      }
-
-      debt.balance -= payment;
-      totalPaid += payment;
-
-      monthSnapshot.debts.push({
-        id: debt.id,
-        balance: Math.max(0, debt.balance),
-        payment,
-      });
-    }
-
-    remaining = remaining.filter((debt) => {
-      if (debt.balance <= 0.01) {
-        payoffOrder.push({
-          month,
-          debtName: debt.name,
-          totalPaidToDate: totalPaid,
-        });
-        return false;
-      }
-      return true;
-    });
-
-    remaining.sort(sortFn);
-
-    monthSnapshot.totalBalance = remaining.reduce(
-      (sum, debt) => sum + debt.balance,
-      0
-    );
-    monthlySchedule.push(monthSnapshot);
-  }
-
-  return {
-    totalMonths: month,
-    totalInterest: Math.round(totalInterest * 100) / 100,
-    totalPaid: Math.round(totalPaid * 100) / 100,
-    payoffOrder,
-    monthlySchedule,
-  };
-}
-
-export function calculate(inputs: CalculatorInputs): CalculatorResults {
-  const { debts, extraPayment } = inputs;
-
-  if (debts.length === 0) {
-    return {
-      snowball: {
-        totalMonths: 0,
-        totalInterest: 0,
-        totalPaid: 0,
-        payoffOrder: [],
-        monthlySchedule: [],
-      },
-      avalanche: {
-        totalMonths: 0,
-        totalInterest: 0,
-        totalPaid: 0,
-        payoffOrder: [],
-        monthlySchedule: [],
-      },
-      interestSaved: 0,
-      monthsDifference: 0,
-      firstPayoffSnowball: { month: 0, debtName: "", totalPaidToDate: 0 },
-      firstPayoffAvalanche: { month: 0, debtName: "", totalPaidToDate: 0 },
-      recommendation: "Add some debts to get started",
-    };
-  }
-
-  const snowball = simulatePayoff(
-    debts,
-    extraPayment,
-    (a, b) => a.balance - b.balance
-  );
-  const avalanche = simulatePayoff(
-    debts,
-    extraPayment,
-    (a, b) => b.interestRate - a.interestRate
-  );
-
-  const interestSaved = snowball.totalInterest - avalanche.totalInterest;
-  const firstPayoffSnowball =
-    snowball.payoffOrder[0] || { month: 0, debtName: "", totalPaidToDate: 0 };
-  const firstPayoffAvalanche =
-    avalanche.payoffOrder[0] || { month: 0, debtName: "", totalPaidToDate: 0 };
-  const monthsDifference = firstPayoffAvalanche.month - firstPayoffSnowball.month;
-
-  let recommendation: string;
-  if (interestSaved < 100) {
-    recommendation = "Either method works—choose what keeps you motivated!";
-  } else if (interestSaved < 500) {
-    recommendation = `Avalanche saves ${formatCurrency(
-      interestSaved
-    )}, but snowball gives faster wins. Your call!`;
-  } else {
-    recommendation = `Avalanche saves ${formatCurrency(
-      interestSaved
-    )}—that's significant! Consider the math.`;
-  }
+export function calculateDebtPayoff(
+  inputs: CalculatorInputs
+): ComparisonResult {
+  const snowball = simulatePayoff(inputs, "snowball");
+  const avalanche = simulatePayoff(inputs, "avalanche");
 
   return {
     snowball,
     avalanche,
-    interestSaved,
-    monthsDifference,
-    firstPayoffSnowball,
-    firstPayoffAvalanche,
-    recommendation,
+    interestSaved: snowball.totalInterest - avalanche.totalInterest,
+    timeSaved: snowball.monthsToPayoff - avalanche.monthsToPayoff,
+    motivationCost: Math.max(0, snowball.totalInterest - avalanche.totalInterest),
   };
 }
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
+function simulatePayoff(
+  inputs: CalculatorInputs,
+  method: "snowball" | "avalanche"
+): PayoffResult {
+  // Deep copy debts to avoid mutating inputs
+  let debts = inputs.debts.map((d) => ({ ...d }));
+  const timeline: MonthlySnapshot[] = [];
+  const debtsPaidOrder: string[] = [];
+  let totalInterestPaid = 0;
+  let months = 0;
+
+  let activeDebts = debts.filter((d) => d.balance > 0);
+
+  while (activeDebts.length > 0 && months < 1200) { // Cap at 100 years to prevent infinite loops
+    months++;
+    
+    // Sort active debts each month to ensure strategy is followed dynamically
+    // (e.g. if balances cross, Snowball priority should switch)
+    activeDebts.sort((a, b) => {
+      if (method === "snowball") {
+        return a.balance - b.balance;
+      } else {
+        return b.interestRate - a.interestRate;
+      }
+    });
+
+    // Standard Snowball/Avalanche behavior: The total monthly commitment remains constant.
+    // As debts are paid off, their minimum payments are "rolled over" into the extra payment pool.
+    let monthlyBudget =
+      inputs.monthlyExtraPayment +
+      inputs.debts.reduce((sum, d) => sum + d.minimumPayment, 0);
+
+    let monthInterest = 0;
+    const debtSnapshots: { id: string; balance: number; paid: number }[] = [];
+
+    // 1. Accrue Interest
+    for (const debt of activeDebts) {
+      const interest = debt.balance * (debt.interestRate / 100 / 12);
+      debt.balance += interest;
+      monthInterest += interest;
+      totalInterestPaid += interest;
+    }
+
+    // 2. Pay Minimums
+    for (const debt of activeDebts) {
+      const payment = Math.min(debt.balance, debt.minimumPayment);
+      debt.balance -= payment;
+      monthlyBudget -= payment;
+      
+      // Store draft snapshot (will update with extra payments)
+      debtSnapshots.push({ id: debt.id, balance: debt.balance, paid: payment });
+    }
+
+    // 3. Apply Extra Payment (Snowball/Avalanche ordering is already set)
+    for (const debt of activeDebts) {
+      if (monthlyBudget <= 0.01) break;
+      if (debt.balance > 0) {
+        const extra = Math.min(debt.balance, monthlyBudget);
+        debt.balance -= extra;
+        monthlyBudget -= extra;
+        
+        // Update snapshot
+        const snap = debtSnapshots.find(s => s.id === debt.id);
+        if (snap) snap.paid += extra;
+        else debtSnapshots.push({ id: debt.id, balance: debt.balance, paid: extra }); // Should already exist
+      }
+    }
+
+    // 4. Check for paid off debts
+    const paidOffThisMonth = activeDebts.filter(d => d.balance <= 0.01);
+    for (const debt of paidOffThisMonth) {
+        debtsPaidOrder.push(debt.id);
+    }
+    
+    // Filter out paid debts for next iteration
+    activeDebts = activeDebts.filter((d) => d.balance > 0.01);
+
+    timeline.push({
+      month: months,
+      debts: debtSnapshots.map(d => ({ ...d, balance: Math.max(0, d.balance) })),
+      totalBalance: Math.max(0, activeDebts.reduce((sum, d) => sum + d.balance, 0)),
+      totalInterestPaid: totalInterestPaid,
+    });
+  }
+
+  return {
+    method,
+    totalInterest: totalInterestPaid,
+    monthsToPayoff: months,
+    payoffDate: addMonths(new Date(), months),
+    timeline,
+    debtsPaidOrder,
+  };
 }
