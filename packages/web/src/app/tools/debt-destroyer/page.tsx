@@ -5,6 +5,12 @@ export const metadata: Metadata = {
   title: "Debt Destroyer | ClearMoney",
   description:
     "Compare Debt Snowball vs. Debt Avalanche strategies to find your optimal path to debt freedom.",
+  openGraph: {
+    title: "Debt Destroyer | ClearMoney",
+    description:
+      "Compare Debt Snowball vs. Debt Avalanche strategies to find your optimal path to debt freedom.",
+    type: "website",
+  },
 };
 
 export default function DebtDestroyerPage() {

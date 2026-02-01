@@ -181,8 +181,9 @@ export function Calculator() {
                           <span className="mr-1">$</span>
                           <input
                             type="number"
+                            min={0}
                             value={debt.balance}
-                            onChange={(e) => updateDebt(index, "balance", Number(e.target.value))}
+                            onChange={(e) => updateDebt(index, "balance", Math.max(0, Number(e.target.value)))}
                             className="w-full bg-transparent focus:outline-none focus:text-white"
                           />
                         </div>
@@ -191,8 +192,10 @@ export function Calculator() {
                         <label className="text-xs text-neutral-500">Rate (%)</label>
                         <input
                           type="number"
+                          min={0}
+                          max={100}
                           value={debt.interestRate}
-                          onChange={(e) => updateDebt(index, "interestRate", Number(e.target.value))}
+                          onChange={(e) => updateDebt(index, "interestRate", Math.min(100, Math.max(0, Number(e.target.value))))}
                           className="w-full bg-transparent text-neutral-300 focus:outline-none focus:text-white"
                         />
                       </div>
@@ -202,8 +205,9 @@ export function Calculator() {
                           <span className="mr-1">$</span>
                           <input
                             type="number"
+                            min={0}
                             value={debt.minimumPayment}
-                            onChange={(e) => updateDebt(index, "minimumPayment", Number(e.target.value))}
+                            onChange={(e) => updateDebt(index, "minimumPayment", Math.max(0, Number(e.target.value)))}
                             className="w-full bg-transparent focus:outline-none focus:text-white"
                           />
                         </div>
