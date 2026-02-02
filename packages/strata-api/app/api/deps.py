@@ -12,6 +12,13 @@ from app.models.user import User
 logger = logging.getLogger(__name__)
 
 
+async def get_db(
+    session: AsyncSession = Depends(get_async_session),
+) -> AsyncSession:
+    """Backwards-compatible DB session dependency."""
+    return session
+
+
 def _try_decode_jwt(token: str) -> str | None:
     """Attempt to decode a Clerk JWT and return the subject (user ID).
 

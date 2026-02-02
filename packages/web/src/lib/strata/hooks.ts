@@ -35,6 +35,8 @@ export const queryKeys = {
   advisorSessions: ["advisor", "sessions"] as const,
   advisorSession: (id: string) => ["advisor", "sessions", id] as const,
   recommendations: ["advisor", "recommendations"] as const,
+  creditCards: ["creditCards"] as const,
+  creditCard: (id: string) => ["creditCards", id] as const,
 };
 
 export function usePortfolioSummary() {
@@ -350,5 +352,35 @@ export function useRecommendations() {
   return useQuery({
     queryKey: queryKeys.recommendations,
     queryFn: () => client.getRecommendations(),
+  });
+}
+
+// === Credit Cards ===
+
+export function useCreditCards() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.creditCards,
+    queryFn: () => client.getCreditCards(),
+  });
+}
+
+export function useCreditCard(id: string) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.creditCard(id),
+    queryFn: () => client.getCreditCard(id),
+    enabled: !!id,
+  });
+}
+
+export function useSeedAmexPlatinum() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => client.seedAmexPlatinum(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.creditCards });
+    },
   });
 }

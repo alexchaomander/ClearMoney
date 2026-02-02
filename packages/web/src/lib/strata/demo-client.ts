@@ -30,6 +30,7 @@ import type {
   PortfolioSummary,
   StrataClientInterface,
   Transaction,
+  CreditCard,
 } from "@clearmoney/strata-sdk";
 
 import {
@@ -484,7 +485,33 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async getRecommendations(): Promise<AdvisorRecommendation[]> {
-    await delay(300);
+    return [
+      {
+        id: "rec-1",
+        user_id: "user-1",
+        session_id: "session-1",
+        skill_name: "tax_optimization",
+        title: "Maximize Roth IRA",
+        summary: "You should contribute $6,500 to your Roth IRA.",
+        details: {},
+        status: "pending",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ];
+  }
+
+  // === Credit Cards ===
+
+  async getCreditCards(): Promise<CreditCard[]> {
     return [];
+  }
+
+  async getCreditCard(id: string): Promise<CreditCard> {
+    throw new Error("Card not found");
+  }
+
+  async seedAmexPlatinum(): Promise<CreditCard> {
+    throw new Error("Not implemented in demo mode");
   }
 }
