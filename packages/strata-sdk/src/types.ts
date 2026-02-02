@@ -536,8 +536,8 @@ export interface CardCredit {
   id: string;
   card_id: string;
   name: string;
-  value: number;
-  period: string;
+  value: string;
+  period: "annual" | "monthly";
   description: string | null;
   category: string | null;
 }
@@ -548,7 +548,7 @@ export interface CardBenefit {
   name: string;
   description: string | null;
   valuation_method: string | null;
-  default_value: number | null;
+  default_value: string | null;
   // user_valuation? No, that's UI state.
 }
 
@@ -556,7 +556,7 @@ export interface CreditCard {
   id: string;
   name: string;
   issuer: string;
-  annual_fee: number;
+  annual_fee: string;
   image_url: string | null;
   apply_url: string | null;
   credits: CardCredit[];

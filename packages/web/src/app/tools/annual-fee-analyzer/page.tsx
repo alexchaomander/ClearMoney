@@ -26,7 +26,8 @@ export default function AnnualFeeAnalyzerPage() {
     if (selectedCard) {
       const initialValuations: Record<string, number> = {};
       selectedCard.credits.forEach(c => {
-        initialValuations[c.id] = Number(c.value);
+        const creditValue = Number(c.value ?? 0);
+        initialValuations[c.id] = c.period === "annual" ? creditValue : creditValue * 12;
       });
       selectedCard.benefits.forEach(b => {
         initialValuations[b.id] = Number(b.default_value ?? 0);

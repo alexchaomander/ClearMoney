@@ -2,13 +2,15 @@ import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface FeeBreakdownProps {
-  annualFee: number;
+  annualFee: number | string;
   creditsValue: number;
   benefitsValue: number;
 }
 
 export function FeeBreakdown({ annualFee, creditsValue, benefitsValue }: FeeBreakdownProps) {
-  const effectiveFee = annualFee - creditsValue - benefitsValue;
+  const annualFeeValue = Number(annualFee);
+  const safeAnnualFee = Number.isFinite(annualFeeValue) ? annualFeeValue : 0;
+  const effectiveFee = safeAnnualFee - creditsValue - benefitsValue;
   const isPositive = effectiveFee > 0;
 
   return (
@@ -19,7 +21,7 @@ export function FeeBreakdown({ annualFee, creditsValue, benefitsValue }: FeeBrea
       <CardContent className="space-y-4">
         <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground">Sticker Price (Annual Fee)</span>
-          <span className="font-mono font-medium">{formatCurrency(annualFee)}</span>
+          <span className="font-mono font-medium">{formatCurrency(safeAnnualFee)}</span>
         </div>
         <div className="flex justify-between items-center text-sm text-green-600">
           <span>Credits Value</span>

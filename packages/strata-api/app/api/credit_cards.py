@@ -6,9 +6,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db
 from app.core.config import settings
 from app.models.credit_cards import CardBenefit, CardCredit, CreditCard
+from app.models.user import User
 from app.schemas.credit_cards import CreditCard as CreditCardSchema
 
 router = APIRouter()
@@ -22,7 +23,12 @@ async def list_credit_cards(
     """
     Retrieve credit cards.
     """
-    query = select(CreditCard).offset(skip).limit(limit)
+    query = (
+        select(CreditCard)
+        .options(selectinload(CreditCard.credits), selectinload(CreditCard.benefits))
+        .offset(skip)
+        .limit(limit)
+    )
     result = await db.execute(query)
     return result.scalars().all()
 
@@ -34,7 +40,11 @@ async def get_credit_card(
     """
     Get credit card by ID.
     """
-    query = select(CreditCard).where(CreditCard.id == card_id)
+    query = (
+        select(CreditCard)
+        .options(selectinload(CreditCard.credits), selectinload(CreditCard.benefits))
+        .where(CreditCard.id == card_id)
+    )
     result = await db.execute(query)
     card = result.scalar_one_or_none()
     if not card:
@@ -44,6 +54,7 @@ async def get_credit_card(
 @router.post("/seed", response_model=CreditCardSchema)
 async def seed_amex_platinum(
     db: AsyncSession = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Seed Amex Platinum card data (dev helper).
@@ -55,7 +66,11 @@ async def seed_amex_platinum(
         )
     
     # Check if exists
-    query = select(CreditCard).where(CreditCard.name == "Platinum Card® from American Express")
+    query = (
+        select(CreditCard)
+        .options(selectinload(CreditCard.credits), selectinload(CreditCard.benefits))
+        .where(CreditCard.name == "Platinum Card® from American Express")
+    )
     result = await db.execute(query)
     existing = result.scalar_one_or_none()
     
@@ -83,8 +98,7 @@ async def seed_amex_platinum(
         CardCredit(card_id=card.id, name="CLEAR® Plus Credit", value=199.00, period="annual", description="Get up to $199 back per calendar year on your CLEAR® Plus Membership.")
     ]
     
-    for c in credits:
-        db.add(c)
+    db.add_all(credits)
         
     benefits = [
         CardBenefit(card_id=card.id, name="Global Lounge Collection", description="Access to Centurion Lounges, Priority Pass, and more.", valuation_method="subjective", default_value=400.00),
@@ -92,8 +106,7 @@ async def seed_amex_platinum(
         CardBenefit(card_id=card.id, name="Travel Insurance", description="Trip Delay, Cancellation, and Interruption Insurance.", valuation_method="subjective", default_value=50.00)
     ]
     
-    for b in benefits:
-        db.add(b)
+    db.add_all(benefits)
 
     await db.commit()
     await db.refresh(card)

@@ -16,18 +16,19 @@ export function CardCreditRow({ credit, onValuationChange, actualMonthlySpend }:
   const [isEnabled, setIsEnabled] = useState(true);
   const [utilization, setUtilization] = useState(100); // Percentage
 
-  useEffect(() => {
-    const value = isEnabled ? (credit.value * utilization) / 100 : 0;
-    onValuationChange(credit.id, value);
-  }, [isEnabled, utilization, credit.value, credit.id, onValuationChange]);
+  const creditValue = Number(credit.value ?? 0);
+  const annualizedValue = credit.period === "annual" ? creditValue : creditValue * 12;
+  const monthlyEquivalentValue = credit.period === "annual" ? creditValue / 12 : creditValue;
+  const valuationValue = isEnabled ? (annualizedValue * utilization) / 100 : 0;
 
-  const valuationValue = (credit.value * utilization) / 100;
-  const monthlyEquivalentValue = credit.period === 'annual' ? credit.value / 12 : credit.value;
+  useEffect(() => {
+    onValuationChange(credit.id, valuationValue);
+  }, [credit.id, onValuationChange, valuationValue]);
   
   const showSpendWarning = useMemo(() => {
     if (!isEnabled || !actualMonthlySpend) return false;
     // Simple heuristic: if it's a transportation credit (Uber) and spend is less than the credit
-    if (credit.category === 'transportation' && actualMonthlySpend < monthlyEquivalentValue) {
+    if (credit.category === "transportation" && actualMonthlySpend < monthlyEquivalentValue) {
         return true;
     }
     return false;
@@ -44,13 +45,13 @@ export function CardCreditRow({ credit, onValuationChange, actualMonthlySpend }:
           </div>
       )}
       
-      <div className={`flex items-center justify-between ${showSpendWarning ? 'pt-4' : ''}`}>
+      <div className={`flex items-center justify-between ${showSpendWarning ? "pt-4" : ""}`}>
         <div className="space-y-1">
           <Label className="text-base font-semibold">{credit.name}</Label>
           <p className="text-sm text-muted-foreground">{credit.description}</p>
         </div>
         <div className="text-right">
-          <div className="font-bold text-lg">{formatCurrency(credit.value)}</div>
+          <div className="font-bold text-lg">{formatCurrency(creditValue)}</div>
           <div className="text-xs text-muted-foreground uppercase">{credit.period}</div>
         </div>
       </div>
@@ -76,7 +77,7 @@ export function CardCreditRow({ credit, onValuationChange, actualMonthlySpend }:
               className="flex-1"
             />
             <span className="font-mono font-medium text-green-600 min-w-[4rem] text-right">
-              {formatCurrency((credit.value * utilization) / 100)}
+              {formatCurrency(valuationValue)}
             </span>
           </div>
         )}

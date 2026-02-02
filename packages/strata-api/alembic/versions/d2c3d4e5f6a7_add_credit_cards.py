@@ -20,6 +20,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
+    period_enum = sa.Enum("annual", "monthly", name="card_credit_period")
+    period_enum.create(op.get_bind(), checkfirst=True)
+
     op.create_table(
         'credit_cards',
         sa.Column('id', sa.Uuid(), nullable=False),
@@ -40,7 +43,7 @@ def upgrade() -> None:
         sa.Column('card_id', sa.Uuid(), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),
         sa.Column('value', sa.Numeric(precision=10, scale=2), nullable=False),
-        sa.Column('period', sa.String(length=50), nullable=False),  # annual, monthly
+        sa.Column('period', period_enum, nullable=False),
         sa.Column('description', sa.Text(), nullable=True),
         sa.Column('category', sa.String(length=100), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
@@ -68,9 +71,11 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
+    period_enum = sa.Enum("annual", "monthly", name="card_credit_period")
     op.drop_index(op.f('ix_card_benefits_card_id'), table_name='card_benefits')
     op.drop_table('card_benefits')
     op.drop_index(op.f('ix_card_credits_card_id'), table_name='card_credits')
     op.drop_table('card_credits')
     op.drop_index(op.f('ix_credit_cards_issuer'), table_name='credit_cards')
     op.drop_table('credit_cards')
+    period_enum.drop(op.get_bind(), checkfirst=True)
