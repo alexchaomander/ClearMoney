@@ -7,8 +7,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.advisor import router as advisor_router
+from app.api.agent import router as agent_router
+from app.api.action_policy import router as action_policy_router
+from app.api.action_approval import router as action_approval_router
 from app.api.accounts import router as accounts_router
 from app.api.cash_debt import router as cash_debt_router
+from app.api.consent import router as consent_router
 from app.api.connections import router as connections_router
 from app.api.credit_cards import router as credit_cards_router
 from app.api.health import router as health_router
@@ -66,9 +70,13 @@ app.include_router(connections_router, prefix="/api/v1")
 app.include_router(credit_cards_router, prefix="/api/v1/credit-cards", tags=["Credit Cards"])
 app.include_router(accounts_router, prefix="/api/v1")
 app.include_router(cash_debt_router, prefix="/api/v1")
+app.include_router(consent_router, prefix="/api/v1")
 app.include_router(institutions_router, prefix="/api/v1")
 app.include_router(portfolio_router, prefix="/api/v1")
 app.include_router(transactions_router, prefix="/api/v1")
 app.include_router(memory_router, prefix="/api/v1")
 app.include_router(skills_router, prefix="/api/v1")
 app.include_router(advisor_router, prefix="/api/v1")
+app.include_router(agent_router, prefix="/api/v1")
+app.include_router(action_policy_router, prefix="/api/v1")
+app.include_router(action_approval_router, prefix="/api/v1")

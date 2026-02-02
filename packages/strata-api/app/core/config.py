@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     advisor_model: str = "claude-sonnet-4-20250514"
     advisor_max_tokens: int = 4096
+    agent_freshness_max_hours: int = 24
+    agent_runtime_mode: str = "in_process"
+    agent_runtime_command: str = "python -m app.services.agent_runner"
+    agent_container_command: str = ""
+    agent_step_up_token: str = ""
 
     model_config = {"env_prefix": "STRATA_"}
 
