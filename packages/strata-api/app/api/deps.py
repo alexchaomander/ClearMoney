@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.db.session import get_async_session
 from app.models.user import User
+from app.services.consent import ConsentService
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +112,30 @@ async def get_current_user(
         await session.refresh(user)
 
     return user
+
+
+def require_scopes(required_scopes: list[str]):
+    async def _dependency(
+        user: User = Depends(get_current_user),
+        session: AsyncSession = Depends(get_async_session),
+    ) -> User:
+        consent = ConsentService(session)
+        await consent.require_scopes(user.id, required_scopes)
+        return user
+
+    return _dependency
+
+
+def require_step_up(
+    x_step_up_token: str | None = Header(None, alias="X-Step-Up-Token"),
+):
+    if not settings.agent_step_up_token:
+        raise HTTPException(
+            status_code=500,
+            detail="Step-up authentication is not configured",
+        )
+    if x_step_up_token != settings.agent_step_up_token:
+        raise HTTPException(status_code=401, detail="Invalid step-up token")
 
 
 async def get_optional_user(

@@ -7,6 +7,7 @@ from collections.abc import AsyncGenerator
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException
 
 from app.core.config import settings
 from app.models.agent_session import (
@@ -15,8 +16,12 @@ from app.models.agent_session import (
     RecommendationStatus,
     SessionStatus,
 )
+from app.models.decision_trace import DecisionTrace, DecisionTraceType
 from app.models.financial_memory import FinancialMemory, FilingStatus, RiskTolerance
 from app.models.memory_event import MemoryEvent, MemoryEventSource
+from app.services.agent_guardrails import evaluate_freshness
+from app.services.agent_runtime import AgentRuntime
+from app.services.action_policy import ActionPolicyService
 from app.services.context_renderer import render_context_as_markdown
 from app.services.financial_context import build_financial_context
 from app.services.skill_registry import get_skill_registry
@@ -139,6 +144,24 @@ ADVISOR_TOOLS = [
                     "type": "object",
                     "description": "Structured details (numbers, timelines, etc.)",
                 },
+                "rationale": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Key reasoning steps used to reach the recommendation.",
+                },
+                "data_used": {
+                    "type": "object",
+                    "description": "Data points or context used in the recommendation.",
+                },
+                "freshness_summary": {
+                    "type": "object",
+                    "description": "Summary of data freshness or known gaps.",
+                },
+                "warnings": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Any risk or confidence warnings to show the user.",
+                },
             },
             "required": ["title", "summary"],
         },
@@ -196,6 +219,7 @@ class FinancialAdvisor:
     def __init__(self, session: AsyncSession):
         self._session = session
         self._client = None
+        self._runtime = AgentRuntime()
 
     def _get_anthropic_client(self):
         if self._client is None:
@@ -254,23 +278,23 @@ class FinancialAdvisor:
             raise ValueError("Session not found")
 
         # Build system prompt
+        self._runtime.ensure_runtime_allowed()
         system_prompt = await self._build_system_prompt(user_id, agent_session.skill_name)
 
         # Append user message
         messages = list(agent_session.messages)
         messages.append({"role": "user", "content": user_message})
 
-        client = self._get_anthropic_client()
-
         # Claude API call with tool use (loop for tool call handling)
         full_response = ""
         max_iterations = 5
         iteration = 0
+        created_recommendation = False
 
         while iteration < max_iterations:
             iteration += 1
 
-            response = await client.messages.create(
+            response = await self._runtime.create_message(
                 model=settings.advisor_model,
                 max_tokens=settings.advisor_max_tokens,
                 system=system_prompt,
@@ -282,31 +306,33 @@ class FinancialAdvisor:
             has_tool_use = False
             assistant_content = []
 
-            for block in response.content:
-                if block.type == "text":
-                    full_response += block.text
+            for block in response["content"]:
+                if block["type"] == "text":
+                    full_response += block["text"]
                     assistant_content.append({
                         "type": "text",
-                        "text": block.text,
+                        "text": block["text"],
                     })
-                    yield block.text
+                    yield block["text"]
 
-                elif block.type == "tool_use":
+                elif block["type"] == "tool_use":
                     has_tool_use = True
                     assistant_content.append({
                         "type": "tool_use",
-                        "id": block.id,
-                        "name": block.name,
-                        "input": block.input,
+                        "id": block["id"],
+                        "name": block["name"],
+                        "input": block["input"],
                     })
 
                     # Handle tool call
                     tool_result = await self._handle_tool_call(
-                        user_id, session_id, block.name, block.input
+                        user_id, session_id, block["name"], block["input"]
                     )
+                    if block["name"] == "create_recommendation":
+                        created_recommendation = True
 
                     # Yield tool call info for frontend visualization
-                    yield f"\n[TOOL:{block.name}:{json.dumps(tool_result)}]\n"
+                    yield f"\n[TOOL:{block['name']}:{json.dumps(tool_result)}]\n"
 
                     # Add assistant message with tool use and tool result
                     messages.append({"role": "assistant", "content": assistant_content})
@@ -314,7 +340,7 @@ class FinancialAdvisor:
                         "role": "user",
                         "content": [{
                             "type": "tool_result",
-                            "tool_use_id": block.id,
+                            "tool_use_id": block["id"],
                             "content": json.dumps(tool_result),
                         }],
                     })
@@ -328,9 +354,28 @@ class FinancialAdvisor:
 
         # Save messages to session
         agent_session.messages = messages
-        if response.stop_reason == "end_turn":
+        if response.get("stop_reason") == "end_turn":
             agent_session.status = SessionStatus.active
         await self._session.commit()
+
+        if not created_recommendation and full_response.strip():
+            context = await build_financial_context(user_id, self._session)
+            freshness_status = evaluate_freshness(context)
+            warning = freshness_status.get("warning")
+            trace = DecisionTrace(
+                user_id=user_id,
+                session_id=session_id,
+                recommendation_id=None,
+                trace_type=DecisionTraceType.analysis,
+                input_data={"user_message": user_message},
+                reasoning_steps=[],
+                outputs={"assistant_response": full_response},
+                data_freshness=context.get("data_freshness", {}),
+                warnings=[warning] if warning else [],
+                source="advisor",
+            )
+            self._session.add(trace)
+            await self._session.commit()
 
     async def _build_system_prompt(
         self, user_id: uuid.UUID, skill_name: str | None
@@ -363,6 +408,13 @@ class FinancialAdvisor:
         # Add financial context
         context = await build_financial_context(user_id, self._session)
         context_md = render_context_as_markdown(context)
+        freshness_status = evaluate_freshness(context)
+        if not freshness_status["is_fresh"]:
+            warning = freshness_status["warning"]
+            if warning:
+                parts.append("")
+                parts.append("## Data Freshness Warning")
+                parts.append(warning)
 
         parts.append("")
         parts.append("## User's Financial Data")
@@ -462,18 +514,54 @@ class FinancialAdvisor:
         if not agent_session:
             return {"error": f"Session {session_id} not found"}
 
+        details = tool_input.get("details", {})
+        action = details.get("action") if isinstance(details, dict) else None
+        if action and isinstance(action, dict):
+            action_type = action.get("type")
+            amount = action.get("amount")
+            if action_type:
+                policy = ActionPolicyService(self._session)
+                try:
+                    await policy.validate_action(
+                        user_id=user_id,
+                        action_type=action_type,
+                        amount=amount,
+                        payload=action,
+                    )
+                except HTTPException as exc:
+                    return {"error": exc.detail}
+
         rec = Recommendation(
             user_id=user_id,
             session_id=session_id,
             skill_name=agent_session.skill_name or "general",
             title=tool_input.get("title", ""),
             summary=tool_input.get("summary", ""),
-            details=tool_input.get("details", {}),
+            details=details,
             status=RecommendationStatus.pending,
         )
         self._session.add(rec)
         await self._session.commit()
         await self._session.refresh(rec)
+
+        trace = DecisionTrace(
+            user_id=user_id,
+            session_id=session_id,
+            recommendation_id=rec.id,
+            trace_type=DecisionTraceType.recommendation,
+            input_data=tool_input.get("data_used", {}),
+            reasoning_steps=tool_input.get("rationale", []),
+            outputs={
+                "title": rec.title,
+                "summary": rec.summary,
+                "details": rec.details,
+            },
+            data_freshness=tool_input.get("freshness_summary", {}),
+            warnings=tool_input.get("warnings", []),
+            source="advisor",
+        )
+        self._session.add(trace)
+        await self._session.commit()
 
         return {
             "status": "created",
