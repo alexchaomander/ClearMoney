@@ -11,6 +11,7 @@ from app.schemas.connection import (
     LinkSessionRequest,
     LinkSessionResponse,
 )
+from app.schemas.consent import ConsentCreateRequest, ConsentResponse
 from app.schemas.debt_account import (
     DebtAccountCreate,
     DebtAccountResponse,
@@ -38,6 +39,9 @@ from app.schemas.investment_account import (
     InvestmentAccountUpdate,
     InvestmentAccountWithHoldingsResponse,
 )
+from app.schemas.agent import AgentContextResponse, DecisionTraceResponse, FreshnessStatus
+from app.schemas.action_approval import ActionApprovalResponse
+from app.schemas.action_policy import ActionPolicyRequest, ActionPolicyResponse
 from app.schemas.portfolio import AssetAllocation, PortfolioSummary
 from app.schemas.security import SecurityCreate, SecurityResponse, SecurityUpdate
 from app.schemas.user import UserCreate, UserResponse
@@ -51,6 +55,8 @@ __all__ = [
     "ConnectionCreate",
     "ConnectionResponse",
     "ConnectionUpdate",
+    "ConsentCreateRequest",
+    "ConsentResponse",
     "DebtAccountCreate",
     "DebtAccountResponse",
     "DebtAccountUpdate",
@@ -70,6 +76,12 @@ __all__ = [
     "InvestmentAccountWithHoldingsResponse",
     "LinkSessionRequest",
     "LinkSessionResponse",
+    "AgentContextResponse",
+    "DecisionTraceResponse",
+    "FreshnessStatus",
+    "ActionPolicyRequest",
+    "ActionPolicyResponse",
+    "ActionApprovalResponse",
     "PortfolioSummary",
     "SecurityCreate",
     "SecurityResponse",

@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_scopes
 from app.db.session import get_async_session
 from app.models.agent_session import AgentSession, Recommendation
 from app.models.user import User
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/advisor", tags=["advisor"])
 @router.post("/sessions", response_model=SessionResponse, status_code=201)
 async def create_session(
     data: SessionCreateRequest,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["agent:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> SessionResponse:
     """Start a new advisor session, optionally with a specific skill."""
@@ -35,7 +35,7 @@ async def create_session(
 
 @router.get("/sessions", response_model=list[SessionSummaryResponse])
 async def list_sessions(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["agent:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> list[SessionSummaryResponse]:
     """List the user's advisor sessions."""
@@ -61,7 +61,7 @@ async def list_sessions(
 @router.get("/sessions/{session_id}", response_model=SessionResponse)
 async def get_session(
     session_id: uuid.UUID,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["agent:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> SessionResponse:
     """Get a specific session with its messages."""
@@ -81,7 +81,7 @@ async def get_session(
 async def send_message(
     session_id: uuid.UUID,
     data: MessageRequest,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["agent:read"])),
     session: AsyncSession = Depends(get_async_session),
 ):
     """Send a message to the advisor and stream the response via SSE."""
@@ -113,7 +113,7 @@ async def send_message(
 
 @router.get("/recommendations", response_model=list[RecommendationResponse])
 async def list_recommendations(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["decision_traces:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> list[RecommendationResponse]:
     """List the user's recommendations from advisor sessions."""
