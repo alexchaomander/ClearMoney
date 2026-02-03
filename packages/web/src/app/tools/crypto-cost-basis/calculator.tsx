@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import { ResultCard } from "@/components/shared/ResultCard";
 import {
@@ -42,7 +43,12 @@ const DEFAULT_INPUTS: CalculatorInputs = {
 const METHOD_ORDER = ["fifo", "lifo", "hifo", "specificId"] as const;
 
 export function Calculator() {
-  const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
     ordinaryIncome: "annual_income",
     filingStatus: ["filing_status", (v: unknown) => {
       const s = String(v);
@@ -54,12 +60,7 @@ export function Calculator() {
   });
 
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
-
-  useEffect(() => {
-    if (memoryLoaded) {
-      setInputs(prev => ({ ...prev, ...memoryDefaults }));
-    }
-  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -104,9 +105,17 @@ export function Calculator() {
       </section>
 
       <section className="px-4 pb-16">
-        <div className="mx-auto max-w-5xl grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="space-y-6">
-            <div className="rounded-2xl bg-neutral-900 p-6 space-y-8">
+        <div className="mx-auto max-w-5xl space-y-6">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
+
+          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="space-y-6">
+              <div className="rounded-2xl bg-neutral-900 p-6 space-y-8">
               <div>
                 <h2 className="text-xl font-semibold text-white mb-6">
                   Portfolio snapshot
@@ -418,6 +427,7 @@ export function Calculator() {
               </div>
             )}
           </div>
+        </div>
         </div>
       </section>
 

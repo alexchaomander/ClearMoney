@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   AppShell,
   MethodologySection,
   VerdictCard,
 } from "@/components/shared";
 import { SliderInput } from "@/components/shared/SliderInput";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { formatCurrency, formatNumber } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/amex-comparison/calculations";
 import type {
@@ -37,6 +39,27 @@ const DEFAULT_INPUTS: CalculatorInputs = {
     flightsPerYear: 6,
     pointsValue: 1.2,
   },
+};
+
+const normalizeNumber = (value: unknown): number | null => {
+  if (typeof value === "number" && !Number.isNaN(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
+
+const getCategoryValue = (value: unknown, keys: string[]): number | null => {
+  if (typeof value !== "object" || value === null) return null;
+  const record = value as Record<string, unknown>;
+  for (const key of keys) {
+    if (record[key] != null) {
+      const parsed = normalizeNumber(record[key]);
+      if (parsed != null) return parsed;
+    }
+  }
+  return null;
 };
 
 const spendingFields: Array<{
@@ -141,7 +164,39 @@ const creditFields: Array<{
 ];
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    "spending.dining": [
+      "spending_categories_monthly",
+      (v: unknown) => getCategoryValue(v, ["dining", "restaurants"]),
+    ],
+    "spending.groceries": [
+      "spending_categories_monthly",
+      (v: unknown) => getCategoryValue(v, ["groceries", "grocery"]),
+    ],
+    "spending.flights": [
+      "spending_categories_monthly",
+      (v: unknown) => getCategoryValue(v, ["flights", "airfare", "travel"]),
+    ],
+    "spending.hotels": [
+      "spending_categories_monthly",
+      (v: unknown) => getCategoryValue(v, ["hotels", "lodging", "travel"]),
+    ],
+    "spending.other": [
+      "spending_categories_monthly",
+      (v: unknown) => getCategoryValue(v, ["other", "misc"]),
+    ],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -285,6 +340,12 @@ export function Calculator() {
 
         <section className="px-4 pb-16">
           <div className="mx-auto max-w-4xl space-y-8">
+            <LoadMyDataBanner
+              isLoaded={memoryLoaded}
+              hasData={memoryHasDefaults}
+              isApplied={preFilledFields.size > 0}
+              onApply={handleLoadData}
+            />
             <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="rounded-2xl bg-neutral-900 p-6">
                 <div className="flex items-center justify-between mb-6">

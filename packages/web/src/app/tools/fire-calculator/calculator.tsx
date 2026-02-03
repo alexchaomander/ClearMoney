@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { MethodologySection, AppShell } from "@/components/shared";
 import {
@@ -18,8 +18,8 @@ import type {
   YearlySnapshot,
 } from "@/lib/calculators/fire-calculator/types";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
-import { useMemoryWriteBack } from "@/hooks/useMemoryWriteBack";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   annualIncome: 75000,
@@ -202,7 +202,12 @@ function FireVariantsCard({
 }
 
 export function Calculator() {
-  const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
     annualIncome: "annual_income",
     currentSavings: "current_retirement_savings",
     annualExpenses: ["average_monthly_expenses", (v) => (Number(v) || 0) * 12],
@@ -211,16 +216,10 @@ export function Calculator() {
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
-
-  useEffect(() => {
-    if (memoryLoaded) {
-      setInputs(prev => ({ ...prev, ...memoryDefaults }));
-    }
-  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
-  const writeBack = useMemoryWriteBack();
   const returnRate = inputs.expectedReturn / 100;
 
   const leanYears = useMemo(
@@ -293,6 +292,12 @@ export function Calculator() {
 
         <section className="px-4 pb-16">
           <div className="mx-auto max-w-3xl space-y-8">
+            <LoadMyDataBanner
+              isLoaded={memoryLoaded}
+              hasData={memoryHasDefaults}
+              isApplied={preFilledFields.size > 0}
+              onApply={handleLoadData}
+            />
             <div className="rounded-2xl bg-neutral-900 p-6 space-y-6">
               <h2 className="text-xl font-semibold text-white">
                 Your Financial Snapshot

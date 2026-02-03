@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,8 +24,6 @@ export default function ConnectPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [connectingId, setConnectingId] = useState<string | null>(null);
-  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
-
   const router = useRouter();
 
   const client = useStrataClient();
@@ -35,14 +33,16 @@ export default function ConnectPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  const isOnboardingComplete = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("clearmoney_onboarding_complete") === "true";
+  }, []);
+
   useEffect(() => {
-    const complete = window.localStorage.getItem("clearmoney_onboarding_complete") === "true";
-    if (!complete) {
+    if (!isOnboardingComplete) {
       router.replace("/onboarding");
-      return;
     }
-    setIsOnboardingComplete(true);
-  }, [router]);
+  }, [isOnboardingComplete, router]);
 
   const isSearching = debouncedQuery.length > 0;
 
@@ -79,7 +79,7 @@ export default function ConnectPage() {
       const { redirect_url } = await client.createLinkSession({
         institution_id: institutionId,
       });
-      window.location.href = redirect_url;
+      window.location.assign(redirect_url);
     } catch {
       setConnectingId(null);
     }

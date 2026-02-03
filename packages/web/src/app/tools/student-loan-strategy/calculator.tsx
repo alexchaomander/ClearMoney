@@ -1,8 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { MemoryBadge } from "@/components/tools/MemoryBadge";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import {
   formatCurrency,
   formatNumber,
@@ -33,8 +36,105 @@ const DEFAULT_INPUTS: CalculatorInputs = {
   hasParentPlus: false,
 };
 
+const normalizeNumber = (value: unknown): number | null => {
+  if (typeof value === "number" && !Number.isNaN(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
+
+const extractDebtProfile = (value: unknown): Record<string, unknown> | null => {
+  if (typeof value === "object" && value !== null) {
+    return value as Record<string, unknown>;
+  }
+  return null;
+};
+
+const extractDebtType = (
+  profile: Record<string, unknown> | null,
+  type: string
+): Record<string, unknown> | null => {
+  if (!profile) return null;
+  const byType = profile.by_type;
+  if (typeof byType !== "object" || byType === null) return null;
+  const entry = (byType as Record<string, unknown>)[type];
+  if (typeof entry !== "object" || entry === null) return null;
+  return entry as Record<string, unknown>;
+};
+
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    loanBalance: [
+      "debt_profile",
+      (value: unknown) => {
+        const profile = extractDebtProfile(value);
+        const studentLoan = extractDebtType(profile, "student_loan");
+        return (
+          normalizeNumber(studentLoan?.balance) ??
+          normalizeNumber(profile?.total_balance) ??
+          null
+        );
+      },
+    ],
+    interestRate: [
+      "debt_profile",
+      (value: unknown) => {
+        const profile = extractDebtProfile(value);
+        const studentLoan = extractDebtType(profile, "student_loan");
+        return (
+          normalizeNumber(studentLoan?.interest_rate) ??
+          normalizeNumber(profile?.weighted_interest_rate) ??
+          null
+        );
+      },
+    ],
+    annualIncome: "annual_income",
+    incomeGrowthRate: "income_growth_rate",
+    filingStatus: [
+      "filing_status",
+      (value: unknown) => {
+        const raw = typeof value === "string" ? value : null;
+        if (!raw) return null;
+        const mapped =
+          raw === "married_filing_jointly" || raw === "married_filing_separately"
+            ? "married"
+            : raw;
+        return FILING_STATUS_OPTIONS.some((option) => option.value === mapped)
+          ? mapped
+          : null;
+      },
+    ],
+    state: [
+      "state",
+      (value: unknown) => {
+        const state = typeof value === "string" ? value : null;
+        return STATE_OPTIONS.some((option) => option.value === state)
+          ? state
+          : null;
+      },
+    ],
+    familySize: [
+      "num_dependents",
+      (value: unknown) => {
+        const dependents = normalizeNumber(value);
+        if (dependents == null) return null;
+        return Math.max(1, Math.round(dependents) + 1);
+      },
+    ],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
   const results = useMemo(() => calculate(inputs), [inputs]);
 
   const planEntries = Object.entries(results.plans);
@@ -60,6 +160,12 @@ export function Calculator() {
       <section className="px-4 pb-16">
         <div className="mx-auto flex max-w-6xl flex-col gap-8 lg:flex-row">
           <div className="flex-1 space-y-6">
+            <LoadMyDataBanner
+              isLoaded={memoryLoaded}
+              hasData={memoryHasDefaults}
+              isApplied={preFilledFields.size > 0}
+              onApply={handleLoadData}
+            />
             <div className="rounded-2xl bg-neutral-900 p-6">
               <h2 className="text-xl font-semibold text-white">Loan Details</h2>
               <p className="mt-1 text-sm text-neutral-400">
@@ -78,6 +184,12 @@ export function Calculator() {
                   max={500000}
                   step={1000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("loanBalance")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Weighted Average Interest Rate"
@@ -89,6 +201,12 @@ export function Calculator() {
                   max={12}
                   step={0.1}
                   format="percent"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("interestRate")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-neutral-300">
@@ -163,6 +281,12 @@ export function Calculator() {
                   max={500000}
                   step={1000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("annualIncome")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Expected Income Growth"
@@ -177,6 +301,12 @@ export function Calculator() {
                   max={10}
                   step={0.5}
                   format="percent"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("incomeGrowthRate")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-neutral-300">
@@ -199,6 +329,12 @@ export function Calculator() {
                       </option>
                     ))}
                   </select>
+                  <div className="mt-2">
+                    <MemoryBadge
+                      isActive={preFilledFields.has("filingStatus")}
+                      label="Memory"
+                    />
+                  </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
@@ -218,6 +354,12 @@ export function Calculator() {
                       }
                       className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-white"
                     />
+                    <div className="mt-2">
+                      <MemoryBadge
+                        isActive={preFilledFields.has("familySize")}
+                        label="Memory"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-neutral-300">
@@ -239,6 +381,12 @@ export function Calculator() {
                         </option>
                       ))}
                     </select>
+                    <div className="mt-2">
+                      <MemoryBadge
+                        isActive={preFilledFields.has("state")}
+                        label="Memory"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ComparisonCard, ResultCard } from "@/components/shared";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import {
   formatCPP,
   formatCurrency,
@@ -70,7 +72,18 @@ const getAverageCpp = (
   currencies.length;
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({});
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const hasHoldings = results.holdings.length > 0;
@@ -100,6 +113,13 @@ export function Calculator() {
 
       <section className="px-4 pb-10">
         <div className="mx-auto max-w-4xl">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+            className="mb-6"
+          />
           <div className="rounded-2xl bg-neutral-900 p-6">
             <h2 className="text-xl font-semibold mb-4">Redemption Style</h2>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

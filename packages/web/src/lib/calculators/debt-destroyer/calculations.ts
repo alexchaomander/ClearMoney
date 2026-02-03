@@ -2,7 +2,6 @@ import { addMonths } from "date-fns";
 import type {
   CalculatorInputs,
   ComparisonResult,
-  DebtItem,
   MonthlySnapshot,
   PayoffResult,
 } from "./types";
@@ -27,7 +26,7 @@ function simulatePayoff(
   method: "snowball" | "avalanche"
 ): PayoffResult {
   // Deep copy debts to avoid mutating inputs
-  let debts = inputs.debts.map((d) => ({ ...d }));
+  const debts = inputs.debts.map((d) => ({ ...d }));
   const timeline: MonthlySnapshot[] = [];
   const debtsPaidOrder: string[] = [];
   let totalInterestPaid = 0;
@@ -54,14 +53,12 @@ function simulatePayoff(
       inputs.monthlyExtraPayment +
       inputs.debts.reduce((sum, d) => sum + d.minimumPayment, 0);
 
-    let monthInterest = 0;
     const debtSnapshots: { id: string; balance: number; paid: number }[] = [];
 
     // 1. Accrue Interest
     for (const debt of activeDebts) {
       const interest = debt.balance * (debt.interestRate / 100 / 12);
       debt.balance += interest;
-      monthInterest += interest;
       totalInterestPaid += interest;
     }
 

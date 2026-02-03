@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import { formatCurrency, formatPercent } from "@/lib/shared/formatters";
 import {
@@ -113,9 +114,10 @@ const STATE_OPTIONS = Object.keys(STATE_NAMES)
 
 export function Calculator() {
   const {
-    defaults: memoryDefaults,
     preFilledFields,
     isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
   } = useMemoryPreFill<CalculatorInputs>({
     annualIncome: "annual_income",
     filingStatus: [
@@ -133,23 +135,16 @@ export function Calculator() {
   });
 
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
-
-  useEffect(() => {
-    if (memoryLoaded && Object.keys(memoryDefaults).length > 0) {
-      setInputs((prev) => ({
+  const handleLoadData = useCallback(
+    () =>
+      applyMemoryDefaults(setInputs, (prev, defaults) => ({
         ...prev,
-        ...(memoryDefaults.annualIncome != null
-          ? { annualIncome: memoryDefaults.annualIncome }
-          : {}),
-        ...(memoryDefaults.filingStatus != null
-          ? { filingStatus: memoryDefaults.filingStatus }
-          : {}),
-        ...(memoryDefaults.state != null
-          ? { state: memoryDefaults.state }
-          : {}),
-      }));
-    }
-  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+        ...(defaults.annualIncome != null ? { annualIncome: defaults.annualIncome } : {}),
+        ...(defaults.filingStatus != null ? { filingStatus: defaults.filingStatus } : {}),
+        ...(defaults.state != null ? { state: defaults.state } : {}),
+      })),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -178,7 +173,14 @@ export function Calculator() {
       </section>
 
       <section className="px-4 pb-16">
-        <div className="mx-auto max-w-5xl grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="mx-auto max-w-5xl space-y-6">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           {/* ---- Inputs column ---- */}
           <div className="space-y-6">
             <div className="rounded-2xl bg-neutral-900 p-6 space-y-8">
@@ -556,6 +558,7 @@ export function Calculator() {
               </p>
             </div>
           </div>
+        </div>
         </div>
       </section>
 

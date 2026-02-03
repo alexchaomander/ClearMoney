@@ -105,5 +105,17 @@ class FinancialMemory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     emergency_fund_target_months: Mapped[int | None] = mapped_column(default=None)
 
+    # Derived summaries & category inputs (JSON)
+    spending_categories_monthly: Mapped[dict | None] = mapped_column(
+        JSON, nullable=True, default=None
+    )
+    debt_profile: Mapped[dict | None] = mapped_column(JSON, nullable=True, default=None)
+    portfolio_summary: Mapped[dict | None] = mapped_column(
+        JSON, nullable=True, default=None
+    )
+    equity_compensation: Mapped[dict | None] = mapped_column(
+        JSON, nullable=True, default=None
+    )
+
     # Freeform (for agent observations)
     notes: Mapped[dict | None] = mapped_column(JSON, nullable=True, default=None)

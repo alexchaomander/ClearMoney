@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { AppShell, MethodologySection } from "@/components/shared/AppShell";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { formatCurrency, formatPercent } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/roth-vs-traditional/calculations";
 import type {
@@ -29,7 +31,31 @@ const TAX_BRACKETS = [
 ];
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    annualContribution: [
+      "monthly_retirement_contribution",
+      (value: unknown) => (typeof value === "number" ? value * 12 : null),
+    ],
+    currentTaxRate: [
+      "federal_tax_rate",
+      (value: unknown) => (typeof value === "number" ? value * 100 : null),
+    ],
+    retirementTaxRate: [
+      "federal_tax_rate",
+      (value: unknown) => (typeof value === "number" ? value * 100 : null),
+    ],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
   const [showRetirementHelp, setShowRetirementHelp] = useState(false);
 
   const results: CalculatorResults = calculate(inputs);
@@ -64,6 +90,12 @@ export function Calculator() {
 
         <section className="px-4 pb-16">
           <div className="mx-auto max-w-2xl space-y-8">
+            <LoadMyDataBanner
+              isLoaded={memoryLoaded}
+              hasData={memoryHasDefaults}
+              isApplied={preFilledFields.size > 0}
+              onApply={handleLoadData}
+            />
             <div className="rounded-2xl bg-neutral-900 p-6">
               <h2 className="text-xl font-semibold text-white mb-6">
                 Your Inputs

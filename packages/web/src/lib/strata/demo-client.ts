@@ -61,6 +61,7 @@ export class DemoStrataClient implements StrataClientInterface {
   async createLinkSession(
     _request?: LinkSessionRequest
   ): Promise<LinkSessionResponse> {
+    void _request;
     await delay(800);
     return {
       redirect_url:
@@ -72,6 +73,7 @@ export class DemoStrataClient implements StrataClientInterface {
   async handleConnectionCallback(
     _request: ConnectionCallbackRequest
   ): Promise<Connection> {
+    void _request;
     await delay(1500);
     return DEMO_CONNECTIONS[0];
   }
@@ -82,11 +84,13 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async deleteConnection(_connectionId: string): Promise<void> {
+    void _connectionId;
     await delay(300);
     // no-op in demo mode
   }
 
   async syncConnection(_connectionId: string): Promise<Connection> {
+    void _connectionId;
     await delay(300);
     return DEMO_CONNECTIONS[0];
   }
@@ -146,6 +150,7 @@ export class DemoStrataClient implements StrataClientInterface {
   async getTransactions(
     _params?: { accountId?: string; startDate?: string; endDate?: string }
   ): Promise<Transaction[]> {
+    void _params;
     await delay(300);
     return [];
   }
@@ -207,6 +212,7 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async deleteCashAccount(_id: string): Promise<void> {
+    void _id;
     await delay(300);
   }
 
@@ -247,6 +253,7 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async deleteDebtAccount(_id: string): Promise<void> {
+    void _id;
     await delay(300);
   }
 
@@ -508,6 +515,7 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async getCreditCard(id: string): Promise<CreditCard> {
+    void id;
     throw new Error("Card not found");
   }
 

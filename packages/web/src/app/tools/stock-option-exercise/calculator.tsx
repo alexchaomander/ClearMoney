@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   AppShell,
   MethodologySection,
@@ -8,6 +8,9 @@ import {
   SliderInput,
   VerdictCard,
 } from "@/components/shared";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { MemoryBadge } from "@/components/tools/MemoryBadge";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import {
   formatCurrency,
   formatNumber,
@@ -43,6 +46,22 @@ const DEFAULT_INPUTS: CalculatorInputs = {
     holdingPeriod: 12,
     expectedFMVAtSale: 75,
   },
+};
+
+const normalizeNumber = (value: unknown): number | null => {
+  if (typeof value === "number" && !Number.isNaN(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
+
+const extractEquityComp = (value: unknown): Record<string, unknown> | null => {
+  if (typeof value === "object" && value !== null) {
+    return value as Record<string, unknown>;
+  }
+  return null;
 };
 
 const optionLabels: Record<OptionType, string> = {
@@ -120,7 +139,74 @@ const formatDateInput = (date: Date) =>
   new Date(date).toISOString().split("T")[0];
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    "option.optionType": [
+      "equity_compensation",
+      (value: unknown) => {
+        const optionType = extractEquityComp(value)?.stock_option_type;
+        return optionType === "iso" || optionType === "nso" ? optionType : null;
+      },
+    ],
+    "option.totalOptions": [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.stock_option_total_options) ??
+        null,
+    ],
+    "option.strikePrice": [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.stock_option_strike_price) ??
+        null,
+    ],
+    "option.currentFMV": [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.stock_option_current_fmv) ??
+        null,
+    ],
+    "option.vestedOptions": [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.stock_option_vested_options) ??
+        null,
+    ],
+    "tax.annualIncome": "annual_income",
+    "tax.filingStatus": [
+      "filing_status",
+      (value: unknown) => {
+        const raw = typeof value === "string" ? value : null;
+        if (!raw) return null;
+        const mapped =
+          raw === "married_filing_jointly" || raw === "married_filing_separately"
+            ? "married"
+            : raw;
+        return mapped === "single" ||
+          mapped === "married" ||
+          mapped === "head_of_household"
+          ? mapped
+          : null;
+      },
+    ],
+    "tax.stateCode": [
+      "state",
+      (value: unknown) => {
+        const state = typeof value === "string" ? value : null;
+        return STATE_CODES.includes(state ?? "") ? state : null;
+      },
+    ],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -157,6 +243,12 @@ export function Calculator() {
 
       <section className="px-4 pb-16">
         <div className="mx-auto max-w-4xl space-y-10">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
           <div className="rounded-2xl bg-neutral-900 p-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
@@ -188,6 +280,12 @@ export function Calculator() {
                   </button>
                 ))}
               </div>
+              <div className="mt-2">
+                <MemoryBadge
+                  isActive={preFilledFields.has("option.optionType")}
+                  label="Memory"
+                />
+              </div>
             </div>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -205,6 +303,12 @@ export function Calculator() {
                   max={1000000}
                   step={100}
                   format="number"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("option.totalOptions")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Vested Options"
@@ -219,6 +323,12 @@ export function Calculator() {
                   max={1000000}
                   step={100}
                   format="number"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("option.vestedOptions")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Strike Price"
@@ -233,6 +343,12 @@ export function Calculator() {
                   max={1000}
                   step={0.01}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("option.strikePrice")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Current FMV"
@@ -247,6 +363,12 @@ export function Calculator() {
                   max={5000}
                   step={0.01}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("option.currentFMV")}
+                      label="Memory"
+                    />
+                  }
                 />
               </div>
 
@@ -342,6 +464,12 @@ export function Calculator() {
                     </option>
                   ))}
                 </select>
+                <div className="mt-2">
+                  <MemoryBadge
+                    isActive={preFilledFields.has("tax.filingStatus")}
+                    label="Memory"
+                  />
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -365,6 +493,12 @@ export function Calculator() {
                     </option>
                   ))}
                 </select>
+                <div className="mt-2">
+                  <MemoryBadge
+                    isActive={preFilledFields.has("tax.stateCode")}
+                    label="Memory"
+                  />
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -391,6 +525,12 @@ export function Calculator() {
                 max={5000000}
                 step={10000}
                 format="currency"
+                rightSlot={
+                  <MemoryBadge
+                    isActive={preFilledFields.has("tax.annualIncome")}
+                    label="Memory"
+                  />
+                }
               />
               {inputs.option.optionType === "iso" && (
                 <SliderInput

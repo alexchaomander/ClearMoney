@@ -18,10 +18,9 @@ interface Account {
 
 interface AccountsListProps {
   accounts: Account[];
-  onSync?: (accountId: string) => void;
 }
 
-export function AccountsList({ accounts, onSync }: AccountsListProps) {
+export function AccountsList({ accounts }: AccountsListProps) {
   // Group accounts by tax status
   const groupedAccounts = accounts.reduce(
     (acc, account) => {
