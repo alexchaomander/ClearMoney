@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { AppShell, MethodologySection, VerdictCard } from "@/components/shared/AppShell";
@@ -15,7 +15,7 @@ import {
 import type { CalculatorInputs } from "@/lib/calculators/home-affordability/types";
 import { cn } from "@/lib/utils";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
-import { useMemoryWriteBack } from "@/hooks/useMemoryWriteBack";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
@@ -36,7 +36,12 @@ const selectStyles =
   "mt-2 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 text-sm text-white focus:border-teal-400 focus:outline-none";
 
 export function Calculator() {
-  const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
     annualIncome: "annual_income",
     currentRent: "monthly_rent",
     mortgageRate: ["mortgage_rate", (v: unknown) => Number(v) * 100],
@@ -44,16 +49,10 @@ export function Calculator() {
   });
 
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
-
-  useEffect(() => {
-    if (memoryLoaded) {
-      setInputs(prev => ({ ...prev, ...memoryDefaults }));
-    }
-  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
-  const writeBack = useMemoryWriteBack();
 
   const dtiTone =
     results.dtiAnalysis.status === "comfortable"
@@ -88,6 +87,12 @@ export function Calculator() {
 
       <section className="px-4 pb-16">
         <div className="mx-auto max-w-2xl space-y-8">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
           <div className="rounded-2xl bg-neutral-900 p-6 space-y-8">
             <div>
               <h2 className="text-xl font-semibold text-white mb-6">

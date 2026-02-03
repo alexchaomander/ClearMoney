@@ -1,19 +1,20 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useFinancialMemory } from "@/lib/strata/hooks";
 import type { FinancialMemory } from "@clearmoney/strata-sdk";
 
 /**
- * Hook that provides default values for calculator fields from Financial Memory.
+ * Hook that provides default values for calculator fields from Financial Memory,
+ * but only applies them when explicitly requested.
  *
  * @param fieldMap - Maps calculator field names to FinancialMemory keys.
  *   Supports dot paths for nested objects (e.g. "income.wagesIncome").
  *   The value can be either a memory key or a tuple [memoryKey, transformFn]
  *   for value transformations.
  *
- * @returns defaults (flat object of calculator field values), preFilledFields,
- *   and isLoaded flag.
+ * @returns defaults (flat object of calculator field values), available fields,
+ *   applied fields, isLoaded flag, and an applyTo helper for state.
  */
 export function useMemoryPreFill<T extends object>(
   fieldMap: Record<
@@ -22,18 +23,25 @@ export function useMemoryPreFill<T extends object>(
   >
 ): {
   defaults: Partial<T>;
+  availableFields: Set<string>;
   preFilledFields: Set<string>;
   isLoaded: boolean;
+  hasDefaults: boolean;
+  applyTo: (
+    setState: Dispatch<SetStateAction<T>>,
+    merge?: (prev: T, defaults: Partial<T>) => T
+  ) => void;
 } {
   const { data: memory, isSuccess } = useFinancialMemory();
+  const [preFilledFields, setPreFilledFields] = useState<Set<string>>(new Set());
 
-  return useMemo(() => {
+  const { defaults, availableFields } = useMemo(() => {
     if (!memory || !isSuccess) {
-      return { defaults: {} as Partial<T>, preFilledFields: new Set<string>(), isLoaded: false };
+      return { defaults: {} as Partial<T>, availableFields: new Set<string>() };
     }
 
     const defaults: Record<string, unknown> = {};
-    const preFilledFields = new Set<string>();
+    const availableFields = new Set<string>();
 
     for (const [formField, mapping] of Object.entries(fieldMap)) {
       const [memoryKey, transform] = Array.isArray(mapping)
@@ -44,6 +52,7 @@ export function useMemoryPreFill<T extends object>(
       if (rawValue == null) continue;
 
       const value = transform ? transform(rawValue) : rawValue;
+      if (value == null) continue;
 
       // Handle dot-path fields (e.g. "income.wagesIncome")
       if (formField.includes(".")) {
@@ -53,9 +62,30 @@ export function useMemoryPreFill<T extends object>(
       } else {
         defaults[formField] = value;
       }
-      preFilledFields.add(formField);
+      availableFields.add(formField);
     }
 
-    return { defaults: defaults as Partial<T>, preFilledFields, isLoaded: true };
+    return { defaults: defaults as Partial<T>, availableFields };
   }, [memory, isSuccess, fieldMap]);
+
+  const applyTo = useCallback(
+    (
+      setState: Dispatch<SetStateAction<T>>,
+      merge?: (prev: T, defaults: Partial<T>) => T
+    ) => {
+      if (!isSuccess || !memory || availableFields.size === 0) return;
+      setState((prev) => (merge ? merge(prev, defaults) : { ...prev, ...defaults }));
+      setPreFilledFields(new Set(availableFields));
+    },
+    [availableFields, defaults, isSuccess, memory]
+  );
+
+  return {
+    defaults,
+    availableFields,
+    preFilledFields,
+    isLoaded: isSuccess,
+    hasDefaults: availableFields.size > 0,
+    applyTo,
+  };
 }

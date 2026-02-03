@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
-import { formatCurrency, formatPercent, formatNumber } from "@/lib/shared/formatters";
+import { formatCurrency, formatPercent } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/mortgage/calculations";
 import type { CalculatorInputs } from "@/lib/calculators/mortgage/types";
 import { cn } from "@/lib/utils";
@@ -22,18 +23,18 @@ const DEFAULT_INPUTS: CalculatorInputs = {
 const LOAN_TERM_OPTIONS = [15, 30] as const;
 
 export function Calculator() {
-  const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
     homePrice: "home_value",
     interestRate: ["mortgage_rate", (v: unknown) => Number(v) * 100],
   });
 
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
-
-  useEffect(() => {
-    if (memoryLoaded) {
-      setInputs(prev => ({ ...prev, ...memoryDefaults }));
-    }
-  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -70,6 +71,12 @@ export function Calculator() {
 
       <section className="px-4 pb-16">
         <div className="mx-auto max-w-2xl space-y-8">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
           {/* ── Inputs Card ── */}
           <div className="rounded-2xl bg-neutral-900 p-6 space-y-8">
             {/* Home & Loan */}
@@ -386,7 +393,7 @@ export function Calculator() {
               rate applied to the outstanding loan balance.
             </p>
             <p>
-              The amortization schedule tracks how each year's payments split
+              The amortization schedule tracks how each year&apos;s payments split
               between principal and interest, showing the remaining balance at each
               milestone. Total cost includes all PITI components (and PMI when
               applicable) over the full loan term.

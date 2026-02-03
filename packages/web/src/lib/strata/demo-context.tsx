@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -26,21 +27,23 @@ function getInitialDemoState(searchParams: URLSearchParams): boolean {
 
 export function DemoModeProvider({ children }: { children: ReactNode }) {
   const searchParams = useSearchParams();
-  const [isDemo, setIsDemo] = useState(() => getInitialDemoState(searchParams));
+  const [isDemoFallback] = useState(() => getInitialDemoState(searchParams));
+
+  const isDemo = useMemo(() => {
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === "true") return true;
+    if (typeof window === "undefined") return isDemoFallback;
+    const param = searchParams.get("demo");
+    if (param === "true") return true;
+    if (param === "false") return false;
+    return sessionStorage.getItem(STORAGE_KEY) === "true";
+  }, [searchParams, isDemoFallback]);
 
   useEffect(() => {
     const param = searchParams.get("demo");
-
     if (param === "true") {
       sessionStorage.setItem(STORAGE_KEY, "true");
-      setIsDemo(true);
     } else if (param === "false") {
       sessionStorage.removeItem(STORAGE_KEY);
-      setIsDemo(false);
-    } else {
-      const envDemo = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
-      const storedDemo = sessionStorage.getItem(STORAGE_KEY) === "true";
-      setIsDemo(envDemo || storedDemo);
     }
   }, [searchParams]);
 

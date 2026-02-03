@@ -346,6 +346,10 @@ export interface FinancialMemory {
   monthly_savings_target: number | null;
   average_monthly_expenses: number | null;
   emergency_fund_target_months: number | null;
+  spending_categories_monthly: Record<string, number> | null;
+  debt_profile: Record<string, unknown> | null;
+  portfolio_summary: Record<string, unknown> | null;
+  equity_compensation: Record<string, unknown> | null;
 
   // Freeform
   notes: Record<string, unknown> | null;
@@ -391,6 +395,10 @@ export interface FinancialMemoryUpdate {
   monthly_savings_target?: number | null;
   average_monthly_expenses?: number | null;
   emergency_fund_target_months?: number | null;
+  spending_categories_monthly?: Record<string, number> | null;
+  debt_profile?: Record<string, unknown> | null;
+  portfolio_summary?: Record<string, unknown> | null;
+  equity_compensation?: Record<string, unknown> | null;
 
   // Freeform
   notes?: Record<string, unknown> | null;

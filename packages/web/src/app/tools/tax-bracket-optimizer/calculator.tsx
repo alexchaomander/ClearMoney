@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { AppShell, MethodologySection, ComparisonCard } from "@/components/shared";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
-import { useMemoryWriteBack } from "@/hooks/useMemoryWriteBack";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import {
   formatCurrency,
@@ -162,7 +162,12 @@ function ThresholdRow({ threshold }: { threshold: ThresholdAnalysis }) {
 }
 
 export function Calculator() {
-  const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
     filingStatus: ["filing_status", (v: unknown) => {
       const s = String(v);
       if (s === "married_filing_jointly") return "married";
@@ -173,23 +178,21 @@ export function Calculator() {
   });
 
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
-
-  useEffect(() => {
-    if (memoryLoaded && Object.keys(memoryDefaults).length > 0) {
-      setInputs(prev => ({
+  const handleLoadData = useCallback(
+    () =>
+      applyMemoryDefaults(setInputs, (prev, defaults) => ({
         ...prev,
-        ...(memoryDefaults.filingStatus != null ? { filingStatus: memoryDefaults.filingStatus } : {}),
+        ...(defaults.filingStatus != null ? { filingStatus: defaults.filingStatus } : {}),
         income: {
           ...prev.income,
-          ...((memoryDefaults as Record<string, unknown>).income as Record<string, unknown> ?? {}),
+          ...((defaults as Record<string, unknown>).income as Record<string, unknown> ?? {}),
         },
-      }));
-    }
-  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+      })),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
-  const writeBack = useMemoryWriteBack();
 
   const updateIncome = <K extends keyof CalculatorInputs["income"]>(
     key: K,
@@ -270,7 +273,14 @@ export function Calculator() {
         </section>
 
         <section className="px-4 pb-16">
-          <div className="mx-auto max-w-6xl grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+          <div className="mx-auto max-w-6xl space-y-6">
+            <LoadMyDataBanner
+              isLoaded={memoryLoaded}
+              hasData={memoryHasDefaults}
+              isApplied={preFilledFields.size > 0}
+              onApply={handleLoadData}
+            />
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
             <div className="space-y-6">
               <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-6 space-y-6">
                 <div>
@@ -670,6 +680,7 @@ export function Calculator() {
               />
             </div>
           </div>
+        </div>
         </section>
 
         <section className="px-4 pb-16">

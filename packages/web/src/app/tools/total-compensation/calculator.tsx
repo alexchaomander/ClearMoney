@@ -4,6 +4,9 @@ import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { AppShell, MethodologySection } from "@/components/shared/AppShell";
 import { ResultCard } from "@/components/shared/ResultCard";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { MemoryBadge } from "@/components/tools/MemoryBadge";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { formatCurrency, formatPercent } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/total-compensation/calculations";
 import type {
@@ -32,6 +35,22 @@ const DEFAULT_INPUTS: CalculatorInputs = {
   hsaContribution: 500,
   annualRefresher: 50000,
   refresherVestingYears: 4,
+};
+
+const normalizeNumber = (value: unknown): number | null => {
+  if (typeof value === "number" && !Number.isNaN(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
+
+const extractEquityComp = (value: unknown): Record<string, unknown> | null => {
+  if (typeof value === "object" && value !== null) {
+    return value as Record<string, unknown>;
+  }
+  return null;
 };
 
 const vestingOptions: Array<{
@@ -202,7 +221,106 @@ function BreakdownTable({ breakdowns }: { breakdowns: YearlyBreakdown[] }) {
 }
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    baseSalary: "annual_income",
+    targetBonus: [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.target_bonus_pct) ?? null,
+    ],
+    expectedBonusMultiplier: [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.expected_bonus_multiplier) ??
+        null,
+    ],
+    "rsuGrant.totalValue": [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.rsu_grant_total_value) ?? null,
+    ],
+    "rsuGrant.vestingSchedule": [
+      "equity_compensation",
+      (value: unknown) => {
+        const schedule = extractEquityComp(value)?.rsu_grant_vesting_schedule;
+        return vestingOptions.some((option) => option.value === schedule)
+          ? (schedule as VestingSchedule)
+          : null;
+      },
+    ],
+    "rsuGrant.vestingYears": [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.rsu_grant_vesting_years) ?? null,
+    ],
+    "rsuGrant.currentPrice": [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.rsu_grant_current_price) ??
+        null,
+    ],
+    "rsuGrant.grantPrice": [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.rsu_grant_price) ?? null,
+    ],
+    signOnBonus: [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.sign_on_bonus) ?? null,
+    ],
+    signOnVestingYears: [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.sign_on_vesting_years) ?? null,
+    ],
+    match401k: [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.match_401k_pct) ?? null,
+    ],
+    match401kLimit: [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.match_401k_limit) ?? null,
+    ],
+    esppDiscount: [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.espp_discount) ?? null,
+    ],
+    esppContribution: [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.espp_contribution) ?? null,
+    ],
+    hsaContribution: [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.hsa_contribution) ?? null,
+    ],
+    annualRefresher: [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.annual_refresher_value) ?? null,
+    ],
+    refresherVestingYears: [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.refresher_vesting_years) ?? null,
+    ],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -353,6 +471,13 @@ export function Calculator() {
             </p>
           </section>
 
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
+
           <section className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
             <div className="space-y-8">
               <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-6 space-y-6">
@@ -370,6 +495,12 @@ export function Calculator() {
                   max={1_000_000}
                   step={5000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("baseSalary")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Target Bonus %"
@@ -379,6 +510,12 @@ export function Calculator() {
                   max={100}
                   step={5}
                   format="percent"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("targetBonus")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Expected Bonus Multiplier"
@@ -389,6 +526,12 @@ export function Calculator() {
                   step={10}
                   format="percent"
                   description="100% means you expect to hit target bonus."
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("expectedBonusMultiplier")}
+                      label="Memory"
+                    />
+                  }
                 />
               </div>
 
@@ -407,6 +550,12 @@ export function Calculator() {
                   max={2_000_000}
                   step={10_000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("rsuGrant.totalValue")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-neutral-300">
@@ -423,6 +572,12 @@ export function Calculator() {
                       </option>
                     ))}
                   </select>
+                  <div className="mt-2">
+                    <MemoryBadge
+                      isActive={preFilledFields.has("rsuGrant.vestingSchedule")}
+                      label="Memory"
+                    />
+                  </div>
                   <p className="text-xs text-neutral-500">
                     {selectedVestingDescription}
                   </p>
@@ -435,6 +590,12 @@ export function Calculator() {
                   max={5}
                   step={1}
                   format="number"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("rsuGrant.vestingYears")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <div className="grid gap-4 sm:grid-cols-2">
                   <SliderInput
@@ -445,6 +606,12 @@ export function Calculator() {
                     max={5000}
                     step={1}
                     format="currency"
+                    rightSlot={
+                      <MemoryBadge
+                        isActive={preFilledFields.has("rsuGrant.currentPrice")}
+                        label="Memory"
+                      />
+                    }
                   />
                   <SliderInput
                     label="Grant Stock Price"
@@ -454,6 +621,12 @@ export function Calculator() {
                     max={5000}
                     step={1}
                     format="currency"
+                    rightSlot={
+                      <MemoryBadge
+                        isActive={preFilledFields.has("rsuGrant.grantPrice")}
+                        label="Memory"
+                      />
+                    }
                   />
                 </div>
               </div>
@@ -473,6 +646,12 @@ export function Calculator() {
                   max={500_000}
                   step={5000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("signOnBonus")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Sign-On Amortization Years"
@@ -482,6 +661,12 @@ export function Calculator() {
                   max={4}
                   step={1}
                   format="number"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("signOnVestingYears")}
+                      label="Memory"
+                    />
+                  }
                 />
               </div>
 
@@ -500,6 +685,12 @@ export function Calculator() {
                   max={10}
                   step={1}
                   format="percent"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("match401k")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="401(k) Match Limit"
@@ -509,6 +700,12 @@ export function Calculator() {
                   max={50_000}
                   step={500}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("match401kLimit")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="ESPP Discount %"
@@ -518,6 +715,12 @@ export function Calculator() {
                   max={15}
                   step={1}
                   format="percent"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("esppDiscount")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Annual ESPP Contribution"
@@ -527,6 +730,12 @@ export function Calculator() {
                   max={25_000}
                   step={500}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("esppContribution")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Employer HSA Contribution"
@@ -536,6 +745,12 @@ export function Calculator() {
                   max={5000}
                   step={100}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("hsaContribution")}
+                      label="Memory"
+                    />
+                  }
                 />
               </div>
 
@@ -555,6 +770,12 @@ export function Calculator() {
                   max={250_000}
                   step={5000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("annualRefresher")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Refresher Vesting Years"
@@ -564,6 +785,12 @@ export function Calculator() {
                   max={4}
                   step={1}
                   format="number"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("refresherVestingYears")}
+                      label="Memory"
+                    />
+                  }
                 />
               </div>
             </div>

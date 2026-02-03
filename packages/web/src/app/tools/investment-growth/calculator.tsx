@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import { formatCurrency, formatPercent, formatNumber } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/investment-growth/calculations";
@@ -16,20 +17,43 @@ const DEFAULT_INPUTS: CalculatorInputs = {
   inflationRate: 3,
 };
 
+const normalizeNumber = (value: unknown): number | null => {
+  if (typeof value === "number" && !Number.isNaN(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
+
+const extractPortfolioSummary = (value: unknown): Record<string, unknown> | null => {
+  if (typeof value === "object" && value !== null) {
+    return value as Record<string, unknown>;
+  }
+  return null;
+};
+
 export function Calculator() {
-  const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    initialInvestment: [
+      "portfolio_summary",
+      (value: unknown) => {
+        const summary = extractPortfolioSummary(value);
+        return normalizeNumber(summary?.total_investment_value) ?? null;
+      },
+    ],
     monthlyContribution: ["annual_income", (v: unknown) => Math.round(Number(v) * 0.15 / 12)],
     investmentHorizon: "investment_horizon_years",
   });
 
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
   const [showTimeline, setShowTimeline] = useState(false);
-
-  useEffect(() => {
-    if (memoryLoaded) {
-      setInputs(prev => ({ ...prev, ...memoryDefaults }));
-    }
-  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -60,7 +84,15 @@ export function Calculator() {
       </section>
 
       <section className="px-4 pb-16">
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
+
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           {/* --- Left column: Inputs --- */}
           <div className="space-y-6">
             <div className="rounded-2xl bg-neutral-900 p-6 space-y-6">
@@ -78,6 +110,12 @@ export function Calculator() {
                 max={500000}
                 step={1000}
                 format="currency"
+                rightSlot={
+                  <MemoryBadge
+                    isActive={preFilledFields.has("initialInvestment")}
+                    label="Memory"
+                  />
+                }
               />
 
               <SliderInput
@@ -288,6 +326,7 @@ export function Calculator() {
             </div>
           </div>
         </div>
+      </div>
       </section>
 
       <section className="px-4 pb-16">

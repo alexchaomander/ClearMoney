@@ -56,6 +56,10 @@ _UPDATABLE_MEMORY_FIELDS = {
     "monthly_savings_target",
     "average_monthly_expenses",
     "emergency_fund_target_months",
+    "spending_categories_monthly",
+    "debt_profile",
+    "portfolio_summary",
+    "equity_compensation",
     "notes",
 }
 
@@ -86,10 +90,23 @@ def _coerce_memory_value(field_name: str, value: str) -> object:
         return _ENUM_FIELDS[field_name](value)
     if field_name == "state":
         return str(value).upper()[:2]
-    if field_name == "notes":
+    if field_name in {
+        "notes",
+        "spending_categories_monthly",
+        "debt_profile",
+        "portfolio_summary",
+        "equity_compensation",
+    }:
         if isinstance(value, dict):
             return value
-        return {"note": value}
+        if isinstance(value, str):
+            import json
+
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                return {"value": value}
+        return {"value": value}
     return value
 
 

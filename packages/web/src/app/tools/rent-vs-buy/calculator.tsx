@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
-import { formatCurrency, formatNumber } from "@/lib/shared/formatters";
+import { formatCurrency } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/rent-vs-buy/calculations";
 import type { CalculatorInputs } from "@/lib/calculators/rent-vs-buy/types";
 
@@ -24,9 +25,10 @@ const DEFAULT_INPUTS: CalculatorInputs = {
 
 export function Calculator() {
   const {
-    defaults: memoryDefaults,
     preFilledFields,
     isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
   } = useMemoryPreFill<CalculatorInputs>({
     monthlyRent: "monthly_rent",
     homePrice: "home_value",
@@ -34,12 +36,7 @@ export function Calculator() {
   });
 
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
-
-  useEffect(() => {
-    if (memoryLoaded) {
-      setInputs((prev) => ({ ...prev, ...memoryDefaults }));
-    }
-  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -49,13 +46,6 @@ export function Calculator() {
       : results.winner === "rent"
         ? "Renting Wins"
         : "It's a Toss-Up";
-
-  const winnerTone =
-    results.winner === "buy"
-      ? "positive"
-      : results.winner === "rent"
-        ? "neutral"
-        : "neutral";
 
   const winnerColor =
     results.winner === "buy"
@@ -92,6 +82,12 @@ export function Calculator() {
       {/* Inputs */}
       <section className="px-4 pb-16">
         <div className="mx-auto max-w-2xl space-y-8">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
           {/* Renting Section */}
           <div className="rounded-2xl bg-neutral-900 p-6 space-y-8">
             <div>

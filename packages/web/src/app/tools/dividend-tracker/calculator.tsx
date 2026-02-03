@@ -1,8 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { SliderInput } from "@/components/shared/SliderInput";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { MemoryBadge } from "@/components/tools/MemoryBadge";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import {
   formatCurrency,
   formatNumber,
@@ -22,6 +25,22 @@ const DEFAULT_INPUTS: CalculatorInputs = {
   reinvestDividends: true,
   monthlyExpenses: 4_000,
   yearsToProject: 20,
+};
+
+const normalizeNumber = (value: unknown): number | null => {
+  if (typeof value === "number" && !Number.isNaN(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
+
+const extractPortfolioSummary = (value: unknown): Record<string, unknown> | null => {
+  if (typeof value === "object" && value !== null) {
+    return value as Record<string, unknown>;
+  }
+  return null;
 };
 
 function buildLinePoints(
@@ -44,7 +63,28 @@ function buildLinePoints(
 }
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    portfolioValue: [
+      "portfolio_summary",
+      (value: unknown) => {
+        const summary = extractPortfolioSummary(value);
+        return normalizeNumber(summary?.total_investment_value) ?? null;
+      },
+    ],
+    monthlyContribution: "monthly_savings_target",
+    monthlyExpenses: "average_monthly_expenses",
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
   const results = calculate(inputs);
   const annualExpenses = inputs.monthlyExpenses * 12;
 
@@ -93,6 +133,12 @@ export function Calculator() {
 
       <section className="px-4 pb-12">
         <div className="mx-auto max-w-4xl space-y-8">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
           <div className="rounded-2xl bg-neutral-900 p-6">
             <h2 className="text-xl font-semibold mb-6">Current Dividend Pulse</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -149,6 +195,12 @@ export function Calculator() {
                   max={10_000_000}
                   step={1_000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("portfolioValue")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <div className="space-y-2">
                   <SliderInput
@@ -176,6 +228,12 @@ export function Calculator() {
                   max={10_000}
                   step={100}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("monthlyContribution")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <div className="rounded-xl border border-neutral-800 bg-neutral-950/60 p-4">
                   <div className="flex items-center justify-between">
@@ -220,6 +278,12 @@ export function Calculator() {
                   max={30_000}
                   step={100}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("monthlyExpenses")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Years to Project"
