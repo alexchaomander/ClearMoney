@@ -140,7 +140,7 @@ export function CategoryPage({ category }: CategoryPageProps) {
             {totalLiveTools} calculators across all categories
           </p>
           <Link
-            href="/#tools"
+            href="/tools"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-medium transition-colors"
           >
             View all tools
