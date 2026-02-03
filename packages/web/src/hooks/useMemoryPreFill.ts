@@ -4,6 +4,23 @@ import { useCallback, useMemo, useState, type Dispatch, type SetStateAction } fr
 import { useFinancialMemory } from "@/lib/strata/hooks";
 import type { FinancialMemory } from "@clearmoney/strata-sdk";
 
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const deepMerge = <V extends object>(target: V, source: Partial<V>): V => {
+  const result: Record<string, unknown> = { ...target };
+  for (const [key, value] of Object.entries(source)) {
+    if (value === undefined) continue;
+    const current = result[key];
+    if (isPlainObject(current) && isPlainObject(value)) {
+      result[key] = deepMerge(current, value);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result as V;
+};
+
 /**
  * Hook that provides default values for calculator fields from Financial Memory,
  * but only applies them when explicitly requested.
@@ -74,7 +91,7 @@ export function useMemoryPreFill<T extends object>(
       merge?: (prev: T, defaults: Partial<T>) => T
     ) => {
       if (!isSuccess || !memory || availableFields.size === 0) return;
-      setState((prev) => (merge ? merge(prev, defaults) : { ...prev, ...defaults }));
+      setState((prev) => (merge ? merge(prev, defaults) : deepMerge(prev, defaults)));
       setPreFilledFields(new Set(availableFields));
     },
     [availableFields, defaults, isSuccess, memory]

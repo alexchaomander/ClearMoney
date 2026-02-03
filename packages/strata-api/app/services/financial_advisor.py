@@ -100,8 +100,6 @@ def _coerce_memory_value(field_name: str, value: str) -> object:
         if isinstance(value, dict):
             return value
         if isinstance(value, str):
-            import json
-
             try:
                 return json.loads(value)
             except json.JSONDecodeError:

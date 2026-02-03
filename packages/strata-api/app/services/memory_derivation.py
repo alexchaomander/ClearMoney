@@ -114,32 +114,39 @@ async def _derive_debt_profile(
         if key not in by_type:
             by_type[key] = {
                 "count": 0,
-                "balance": 0.0,
-                "minimum_payment": 0.0,
-                "weighted_interest_rate": None,
+                "balance": Decimal("0.00"),
+                "minimum_payment": Decimal("0.00"),
+                "rate_weighted_sum": Decimal("0.00"),
+                "rate_balance": Decimal("0.00"),
             }
         by_type[key]["count"] += 1
-        by_type[key]["balance"] += float(account.balance)
-        by_type[key]["minimum_payment"] += float(account.minimum_payment)
+        by_type[key]["balance"] += account.balance
+        by_type[key]["minimum_payment"] += account.minimum_payment
         if account.interest_rate is not None:
-            if by_type[key]["weighted_interest_rate"] is None:
-                by_type[key]["weighted_interest_rate"] = 0.0
-            by_type[key]["weighted_interest_rate"] += float(
-                account.interest_rate * account.balance
-            )
+            by_type[key]["rate_weighted_sum"] += account.interest_rate * account.balance
+            by_type[key]["rate_balance"] += account.balance
 
+    by_type_serialized: dict[str, dict] = {}
     for key, bucket in by_type.items():
         balance = bucket["balance"]
-        if balance > 0 and bucket["weighted_interest_rate"] is not None:
-            bucket["weighted_interest_rate"] = bucket["weighted_interest_rate"] / balance
-        else:
-            bucket["weighted_interest_rate"] = None
+        rate_balance = bucket["rate_balance"]
+        weighted_rate = (
+            bucket["rate_weighted_sum"] / rate_balance
+            if rate_balance > 0
+            else None
+        )
+        by_type_serialized[key] = {
+            "count": bucket["count"],
+            "balance": float(balance),
+            "minimum_payment": float(bucket["minimum_payment"]),
+            "weighted_interest_rate": float(weighted_rate) if weighted_rate is not None else None,
+        }
 
     profile = {
         "total_balance": float(total_balance),
         "total_minimum_payment": float(total_min_payment),
         "weighted_interest_rate": float(weighted_rate) if weighted_rate is not None else None,
-        "by_type": by_type,
+        "by_type": by_type_serialized,
     }
 
     if memory.debt_profile != profile:
@@ -212,13 +219,22 @@ async def _derive_portfolio_summary(
         total_holdings_value += holding.market_value
         key = security.security_type.value
         if key not in allocation:
-            allocation[key] = {"value": 0.0, "percent": 0.0}
-        allocation[key]["value"] += float(holding.market_value)
+            allocation[key] = {"value": Decimal("0.00"), "percent": Decimal("0.00")}
+        allocation[key]["value"] += holding.market_value
 
+    allocation_serialized: dict[str, dict] = {}
     if total_holdings_value > 0:
-        total_value_float = float(total_holdings_value)
         for key, bucket in allocation.items():
-            bucket["percent"] = round((bucket["value"] / total_value_float) * 100, 2)
+            percent = (bucket["value"] / total_holdings_value) * Decimal("100")
+            allocation_serialized[key] = {
+                "value": float(bucket["value"]),
+                "percent": float(percent.quantize(Decimal("0.01"))),
+            }
+    else:
+        allocation_serialized = {
+            key: {"value": float(bucket["value"]), "percent": 0.0}
+            for key, bucket in allocation.items()
+        }
 
     top_holdings = []
     for holding, security in holdings[:5]:
@@ -236,7 +252,7 @@ async def _derive_portfolio_summary(
         "total_cash_value": float(total_cash),
         "total_debt_value": float(total_debt),
         "net_worth": float(net_worth),
-        "allocation_by_security_type": allocation,
+        "allocation_by_security_type": allocation_serialized,
         "top_holdings": top_holdings,
     }
 
