@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import {
   formatCurrency,
   formatNumber,
@@ -35,6 +37,27 @@ const POINTS_PRESETS = [
   { label: "Portal (1.25¢)", value: 1.25 },
   { label: "Transfers (1.75¢)", value: 1.75 },
 ];
+
+const normalizeNumber = (value: unknown): number | null => {
+  if (typeof value === "number" && !Number.isNaN(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
+
+const getCategoryValue = (value: unknown, keys: string[]): number | null => {
+  if (typeof value !== "object" || value === null) return null;
+  const record = value as Record<string, unknown>;
+  for (const key of keys) {
+    if (record[key] != null) {
+      const parsed = normalizeNumber(record[key]);
+      if (parsed != null) return parsed;
+    }
+  }
+  return null;
+};
 
 const SPENDING_INPUTS = [
   { key: "dining", label: "Dining & Restaurants", icon: "🍽️", min: 0, max: 2000, step: 25 },
@@ -74,7 +97,47 @@ const CARD_OPTIONS = [
 ] as const;
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    "spending.dining": [
+      "spending_categories_monthly",
+      (v: unknown) => getCategoryValue(v, ["dining", "restaurants"]),
+    ],
+    "spending.groceries": [
+      "spending_categories_monthly",
+      (v: unknown) => getCategoryValue(v, ["groceries", "grocery"]),
+    ],
+    "spending.gas": [
+      "spending_categories_monthly",
+      (v: unknown) => getCategoryValue(v, ["gas", "gasoline", "fuel"]),
+    ],
+    "spending.travel": [
+      "spending_categories_monthly",
+      (v: unknown) => getCategoryValue(v, ["travel", "flights", "airfare", "hotels"]),
+    ],
+    "spending.streaming": [
+      "spending_categories_monthly",
+      (v: unknown) => getCategoryValue(v, ["streaming"]),
+    ],
+    "spending.drugstores": [
+      "spending_categories_monthly",
+      (v: unknown) => getCategoryValue(v, ["drugstores", "pharmacy"]),
+    ],
+    "spending.other": [
+      "spending_categories_monthly",
+      (v: unknown) => getCategoryValue(v, ["other", "misc"]),
+    ],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
   const [sapphireWarning, setSapphireWarning] = useState("");
 
   const results = useMemo(() => calculate(inputs), [inputs]);
@@ -130,6 +193,12 @@ export function Calculator() {
 
       <section className="px-4 pb-16">
         <div className="mx-auto max-w-4xl space-y-8">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
           <div className="rounded-2xl bg-neutral-900 p-6">
             <h2 className="text-xl font-semibold text-white mb-4">Select your cards</h2>
             <p className="text-sm text-neutral-400 mb-6">

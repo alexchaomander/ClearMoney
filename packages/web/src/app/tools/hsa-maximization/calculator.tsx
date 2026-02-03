@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   LineChart,
   Line,
@@ -14,6 +14,8 @@ import {
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ComparisonCard, ResultCard } from "@/components/shared/ResultCard";
 import { AppShell, MethodologySection } from "@/components/shared/AppShell";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import {
   formatCurrency,
   formatYears,
@@ -156,7 +158,31 @@ function ToggleButton({
 }
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    "eligibility.age": "age",
+    "tax.marginalTaxRate": [
+      "federal_tax_rate",
+      (value: unknown) => (typeof value === "number" ? value * 100 : null),
+    ],
+    "tax.stateCode": [
+      "state",
+      (value: unknown) => {
+        const state = typeof value === "string" ? value : null;
+        return STATES.some((option) => option.code === state) ? state : null;
+      },
+    ],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -187,9 +213,16 @@ export function Calculator() {
       </section>
 
       <section className="px-4 pb-16">
-        <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[1.2fr,1fr]">
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-6">
+        <div className="mx-auto max-w-5xl space-y-6">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
+          <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr]">
+            <div className="space-y-6">
+              <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-6">
               <h2 className="text-xl font-semibold text-white">Eligibility checker</h2>
               <p className="mt-2 text-sm text-neutral-400">
                 Confirm you qualify for HSA contributions and see your 2025 limit.
@@ -683,6 +716,7 @@ export function Calculator() {
             />
           </div>
         </div>
+      </div>
       </section>
 
       <section className="px-4 pb-16">

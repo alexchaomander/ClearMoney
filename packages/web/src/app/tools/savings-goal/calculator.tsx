@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import {
   formatCurrency,
@@ -30,20 +31,16 @@ const milestoneColors = {
 
 export function Calculator() {
   const {
-    defaults: memoryDefaults,
     preFilledFields,
     isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
   } = useMemoryPreFill<CalculatorInputs>({
     monthlyContribution: "monthly_savings_target",
   });
 
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
-
-  useEffect(() => {
-    if (memoryLoaded) {
-      setInputs((prev) => ({ ...prev, ...memoryDefaults }));
-    }
-  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -77,7 +74,14 @@ export function Calculator() {
       </section>
 
       <section className="px-4 pb-16">
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           {/* Left column: Inputs */}
           <div className="space-y-6">
             <div className="rounded-2xl bg-neutral-900 p-6 space-y-6">
@@ -320,6 +324,7 @@ export function Calculator() {
               </div>
             </div>
           </div>
+        </div>
         </div>
       </section>
 

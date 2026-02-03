@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { SliderInput } from "@/components/shared/SliderInput";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { formatCurrency, formatPercent } from "@/lib/shared/formatters";
@@ -215,17 +216,17 @@ function CategoryCard({ category }: { category: CategoryAnalysis }) {
 }
 
 export function Calculator() {
-  const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
     monthlyIncome: "monthly_income",
   });
 
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
-
-  useEffect(() => {
-    if (memoryLoaded) {
-      setInputs(prev => ({ ...prev, ...memoryDefaults }));
-    }
-  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const allocationPercent = results.categories.reduce(
@@ -270,6 +271,12 @@ export function Calculator() {
 
       <section className="px-4 pb-16">
         <div className="mx-auto max-w-3xl space-y-8">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
           <div className="rounded-2xl bg-neutral-900 p-6 shadow-lg shadow-black/20">
             <h2 className="text-xl font-semibold text-white">Monthly income</h2>
             <p className="mt-2 text-sm text-neutral-400">

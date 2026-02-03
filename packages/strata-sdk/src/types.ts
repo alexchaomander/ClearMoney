@@ -306,6 +306,72 @@ export type RiskTolerance = 'conservative' | 'moderate' | 'aggressive';
 
 export type MemoryEventSource = 'user_input' | 'calculator' | 'account_sync' | 'agent';
 
+export interface DebtProfileByType {
+  count: number;
+  balance: number;
+  minimum_payment: number;
+  weighted_interest_rate: number | null;
+}
+
+export interface DebtProfile {
+  total_balance: number;
+  total_minimum_payment: number;
+  weighted_interest_rate: number | null;
+  by_type: Record<string, DebtProfileByType>;
+}
+
+export interface PortfolioSummaryAllocation {
+  value: number;
+  percent: number;
+}
+
+export interface PortfolioSummaryHolding {
+  ticker: string | null;
+  name: string;
+  security_type: string;
+  market_value: number | null;
+}
+
+export interface PortfolioSummary {
+  total_investment_value: number;
+  total_cash_value: number;
+  total_debt_value: number;
+  net_worth: number;
+  allocation_by_security_type: Record<string, PortfolioSummaryAllocation>;
+  top_holdings: PortfolioSummaryHolding[];
+}
+
+export interface EquityCompensationProfile {
+  target_bonus_pct?: number | null;
+  expected_bonus_multiplier?: number | null;
+  rsu_grant_total_value?: number | null;
+  rsu_grant_vesting_schedule?: string | null;
+  rsu_grant_vesting_years?: number | null;
+  rsu_grant_current_price?: number | null;
+  rsu_grant_price?: number | null;
+  rsu_shares_vesting?: number | null;
+  sign_on_bonus?: number | null;
+  sign_on_vesting_years?: number | null;
+  match_401k_pct?: number | null;
+  match_401k_limit?: number | null;
+  espp_discount?: number | null;
+  espp_contribution?: number | null;
+  hsa_contribution?: number | null;
+  annual_refresher_value?: number | null;
+  refresher_vesting_years?: number | null;
+  current_equity_value?: number | null;
+  vested_options_value?: number | null;
+  unvested_equity_value?: number | null;
+  equity_cost_basis?: number | null;
+  annual_equity_grant?: number | null;
+  years_at_company?: number | null;
+  stock_option_type?: 'iso' | 'nso' | null;
+  stock_option_total_options?: number | null;
+  stock_option_strike_price?: number | null;
+  stock_option_current_fmv?: number | null;
+  stock_option_vested_options?: number | null;
+}
+
 export interface FinancialMemory {
   id: string;
   user_id: string;
@@ -346,6 +412,10 @@ export interface FinancialMemory {
   monthly_savings_target: number | null;
   average_monthly_expenses: number | null;
   emergency_fund_target_months: number | null;
+  spending_categories_monthly: Record<string, number> | null;
+  debt_profile: DebtProfile | null;
+  portfolio_summary: PortfolioSummary | null;
+  equity_compensation: EquityCompensationProfile | null;
 
   // Freeform
   notes: Record<string, unknown> | null;
@@ -391,6 +461,10 @@ export interface FinancialMemoryUpdate {
   monthly_savings_target?: number | null;
   average_monthly_expenses?: number | null;
   emergency_fund_target_months?: number | null;
+  spending_categories_monthly?: Record<string, number> | null;
+  debt_profile?: DebtProfile | null;
+  portfolio_summary?: PortfolioSummary | null;
+  equity_compensation?: EquityCompensationProfile | null;
 
   // Freeform
   notes?: Record<string, unknown> | null;

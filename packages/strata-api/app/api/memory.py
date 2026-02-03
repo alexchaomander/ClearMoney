@@ -46,7 +46,12 @@ _MEMORY_FIELDS = {
     "risk_tolerance",
     "investment_horizon_years",
     "monthly_savings_target",
+    "average_monthly_expenses",
     "emergency_fund_target_months",
+    "spending_categories_monthly",
+    "debt_profile",
+    "portfolio_summary",
+    "equity_compensation",
     "notes",
 }
 

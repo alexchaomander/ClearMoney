@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { AppShell, MethodologySection, VerdictCard } from "@/components/shared/AppShell";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { formatCurrency, formatPercent } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/backdoor-roth/calculations";
 import type { CalculatorInputs } from "@/lib/calculators/backdoor-roth/types";
@@ -76,7 +78,32 @@ const FAQS = [
 ];
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    income: "annual_income",
+    age: "age",
+    filingStatus: [
+      "filing_status",
+      (value: unknown) => {
+        const raw = typeof value === "string" ? value : null;
+        if (!raw) return null;
+        if (raw === "married_filing_jointly" || raw === "married_filing_separately") {
+          return "married";
+        }
+        return raw === "head_of_household" ? "head_of_household" : "single";
+      },
+    ],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const actionCopy = ACTION_COPY[results.recommendedAction];
@@ -111,6 +138,12 @@ export function Calculator() {
 
         <section className="px-4 pb-16">
           <div className="mx-auto max-w-2xl space-y-8">
+            <LoadMyDataBanner
+              isLoaded={memoryLoaded}
+              hasData={memoryHasDefaults}
+              isApplied={preFilledFields.size > 0}
+              onApply={handleLoadData}
+            />
             <div className="rounded-2xl bg-neutral-900 p-6">
               <h2 className="text-xl font-semibold text-white mb-6">
                 Eligibility check

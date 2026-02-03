@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Plus, Trash2, TrendingDown, TrendingUp, Trophy } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { Plus, Trash2, Trophy } from "lucide-react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
-import { formatCurrency, formatYears } from "@/lib/shared/formatters";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { formatCurrency } from "@/lib/shared/formatters";
 import { useAccounts } from "@/lib/strata/hooks";
 import { calculateDebtPayoff } from "@/lib/calculators/debt-destroyer/calculations";
-import type { CalculatorInputs, DebtItem } from "@/lib/calculators/debt-destroyer/types";
+import type { DebtItem } from "@/lib/calculators/debt-destroyer/types";
 
 // Default debts if no connected accounts
 const DEFAULT_DEBTS: DebtItem[] = [
@@ -80,7 +81,8 @@ function MethodCard({
 }
 
 export function Calculator() {
-  const { data: accountsData } = useAccounts();
+  const { data: accountsData, isSuccess: accountsLoaded } = useAccounts();
+  const [dataApplied, setDataApplied] = useState(false);
   
   // Transform connected debt accounts into calculator format
   const connectedDebts: DebtItem[] = useMemo(() => {
@@ -97,11 +99,10 @@ export function Calculator() {
   const [debts, setDebts] = useState<DebtItem[]>(DEFAULT_DEBTS);
   const [monthlyExtra, setMonthlyExtra] = useState(500);
 
-  // Initialize with connected debts if available
-  useEffect(() => {
-    if (connectedDebts.length > 0) {
-      setDebts(connectedDebts);
-    }
+  const handleLoadData = useCallback(() => {
+    if (connectedDebts.length === 0) return;
+    setDebts(connectedDebts);
+    setDataApplied(true);
   }, [connectedDebts]);
 
   const results = useMemo(() => {
@@ -155,6 +156,12 @@ export function Calculator() {
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_1fr]">
           {/* Input Column */}
           <div className="space-y-6">
+            <LoadMyDataBanner
+              isLoaded={accountsLoaded}
+              hasData={connectedDebts.length > 0}
+              isApplied={dataApplied}
+              onApply={handleLoadData}
+            />
             <div className="rounded-2xl bg-neutral-900 p-6">
               <h2 className="text-xl font-semibold text-white mb-6">Your Debts</h2>
               <div className="space-y-4">
@@ -298,13 +305,13 @@ export function Calculator() {
 
             <MethodologySection>
               <p>
-                <strong>Debt Snowball:</strong> Prioritizes paying off the smallest balances first. This provides "quick wins" which can improve motivation and adherence to the plan, even if it costs slightly more in interest.
+                <strong>Debt Snowball:</strong> Prioritizes paying off the smallest balances first. This provides &quot;quick wins&quot; which can improve motivation and adherence to the plan, even if it costs slightly more in interest.
               </p>
               <p>
                 <strong>Debt Avalanche:</strong> Prioritizes paying off the highest interest rate debts first. This is mathematically optimal as it minimizes the total interest paid over the life of the loans.
               </p>
               <p>
-                Calculations assume minimum payments are made on all debts every month, with the "Extra Payment" applied entirely to the highest priority debt according to the chosen strategy.
+                Calculations assume minimum payments are made on all debts every month, with the &quot;Extra Payment&quot; applied entirely to the highest priority debt according to the chosen strategy.
               </p>
             </MethodologySection>
           </div>

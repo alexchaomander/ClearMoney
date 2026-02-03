@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ComparisonCard, ResultCard } from "@/components/shared/ResultCard";
 import {
@@ -8,6 +8,9 @@ import {
   MethodologySection,
   VerdictCard,
 } from "@/components/shared/AppShell";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { MemoryBadge } from "@/components/tools/MemoryBadge";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import {
   formatCurrency,
   formatNumber,
@@ -32,6 +35,22 @@ const DEFAULT_INPUTS: CalculatorInputs = {
   otherIncome: 0,
   state: "CA",
   withholdingMethod: "sell_to_cover",
+};
+
+const normalizeNumber = (value: unknown): number | null => {
+  if (typeof value === "number" && !Number.isNaN(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
+
+const extractEquityComp = (value: unknown): Record<string, unknown> | null => {
+  if (typeof value === "object" && value !== null) {
+    return value as Record<string, unknown>;
+  }
+  return null;
 };
 
 const FILING_STATUS_OPTIONS: Array<{ value: FilingStatus; label: string }> = [
@@ -125,7 +144,53 @@ const STATE_OPTIONS = Object.keys(STATE_NAMES)
   .sort((a, b) => a.name.localeCompare(b.name));
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    sharesVesting: [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.rsu_shares_vesting) ?? null,
+    ],
+    stockPrice: [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.rsu_grant_current_price) ?? null,
+    ],
+    annualSalary: "annual_income",
+    filingStatus: [
+      "filing_status",
+      (value: unknown) => {
+        const raw = typeof value === "string" ? value : null;
+        if (!raw) return null;
+        const mapped =
+          raw === "married_filing_jointly" || raw === "married_filing_separately"
+            ? "married"
+            : raw;
+        return FILING_STATUS_OPTIONS.some((option) => option.value === mapped)
+          ? mapped
+          : null;
+      },
+    ],
+    state: [
+      "state",
+      (value: unknown) => {
+        const state = typeof value === "string" ? value : null;
+        return STATE_OPTIONS.some((option) => option.code === state)
+          ? state
+          : null;
+      },
+    ],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const taxRate = results.actualTax.total / results.grossValue;
@@ -178,8 +243,15 @@ export function Calculator() {
       </section>
 
       <section className="px-4 pb-16">
-        <div className="mx-auto max-w-5xl grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-6">
+        <div className="mx-auto max-w-5xl space-y-6">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="space-y-6">
             <div className="rounded-2xl bg-neutral-900 p-6 space-y-8">
               <div>
                 <h2 className="text-xl font-semibold text-white mb-6">
@@ -197,6 +269,12 @@ export function Calculator() {
                     step={1}
                     format="number"
                     description="Total RSUs scheduled to vest in this event"
+                    rightSlot={
+                      <MemoryBadge
+                        isActive={preFilledFields.has("sharesVesting")}
+                        label="Memory"
+                      />
+                    }
                   />
                   <SliderInput
                     label="Stock price at vest"
@@ -209,6 +287,12 @@ export function Calculator() {
                     step={1}
                     format="currency"
                     description="Fair market value per share at vesting"
+                    rightSlot={
+                      <MemoryBadge
+                        isActive={preFilledFields.has("stockPrice")}
+                        label="Memory"
+                      />
+                    }
                   />
                 </div>
               </div>
@@ -238,6 +322,12 @@ export function Calculator() {
                         </option>
                       ))}
                     </select>
+                    <div className="mt-2">
+                      <MemoryBadge
+                        isActive={preFilledFields.has("filingStatus")}
+                        label="Memory"
+                      />
+                    </div>
                   </div>
                   <SliderInput
                     label="Annual base salary"
@@ -250,6 +340,12 @@ export function Calculator() {
                     step={5000}
                     format="currency"
                     description="Used to estimate your marginal federal tax bracket"
+                    rightSlot={
+                      <MemoryBadge
+                        isActive={preFilledFields.has("annualSalary")}
+                        label="Memory"
+                      />
+                    }
                   />
                   <SliderInput
                     label="Other income"
@@ -298,6 +394,12 @@ export function Calculator() {
                         </option>
                       ))}
                     </select>
+                    <div className="mt-2">
+                      <MemoryBadge
+                        isActive={preFilledFields.has("state")}
+                        label="Memory"
+                      />
+                    </div>
                     <p className="text-xs text-neutral-500 mt-2">
                       State taxes are simplified using the top marginal rate.
                     </p>
@@ -419,6 +521,7 @@ export function Calculator() {
             />
           </div>
         </div>
+      </div>
       </section>
 
       <section className="px-4 pb-16">

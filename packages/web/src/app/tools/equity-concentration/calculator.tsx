@@ -1,7 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { MemoryBadge } from "@/components/tools/MemoryBadge";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import {
   formatCurrency,
   formatPercent,
@@ -38,6 +41,29 @@ const DEFAULT_INPUTS: CalculatorInputs = {
     marginalTaxRate: 37,
     stateCode: "CA",
   },
+};
+
+const normalizeNumber = (value: unknown): number | null => {
+  if (typeof value === "number" && !Number.isNaN(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
+
+const extractEquityComp = (value: unknown): Record<string, unknown> | null => {
+  if (typeof value === "object" && value !== null) {
+    return value as Record<string, unknown>;
+  }
+  return null;
+};
+
+const extractPortfolioSummary = (value: unknown): Record<string, unknown> | null => {
+  if (typeof value === "object" && value !== null) {
+    return value as Record<string, unknown>;
+  }
+  return null;
 };
 
 const STATE_OPTIONS = [
@@ -636,7 +662,93 @@ function Recommendations({ results }: { results: CalculatorResults }) {
 }
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    "equity.currentSharesValue": [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.current_equity_value) ?? null,
+    ],
+    "equity.vestedOptionsValue": [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.vested_options_value) ?? null,
+    ],
+    "equity.unvestedEquityValue": [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.unvested_equity_value) ?? null,
+    ],
+    "equity.costBasis": [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.equity_cost_basis) ?? null,
+    ],
+    "assets.cashSavings": [
+      "portfolio_summary",
+      (value: unknown) =>
+        normalizeNumber(extractPortfolioSummary(value)?.total_cash_value) ?? null,
+    ],
+    "assets.retirementAccounts": [
+      "portfolio_summary",
+      (value: unknown) =>
+        normalizeNumber(extractPortfolioSummary(value)?.total_investment_value) ??
+        null,
+    ],
+    "income.annualSalary": "annual_income",
+    "income.annualEquityGrant": [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.annual_equity_grant) ?? null,
+    ],
+    "income.yearsAtCompany": [
+      "equity_compensation",
+      (value: unknown) =>
+        normalizeNumber(extractEquityComp(value)?.years_at_company) ?? null,
+    ],
+    "tax.filingStatus": [
+      "filing_status",
+      (value: unknown) => {
+        const raw = typeof value === "string" ? value : null;
+        if (!raw) return null;
+        const mapped =
+          raw === "married_filing_jointly" || raw === "married_filing_separately"
+            ? "married"
+            : raw;
+        return mapped === "single" ||
+          mapped === "married" ||
+          mapped === "head_of_household"
+          ? mapped
+          : null;
+      },
+    ],
+    "tax.stateCode": [
+      "state",
+      (value: unknown) => {
+        const state = typeof value === "string" ? value : null;
+        return STATE_OPTIONS.some((option) => option.code === state)
+          ? state
+          : null;
+      },
+    ],
+    "tax.marginalTaxRate": [
+      "federal_tax_rate",
+      (value: unknown) => {
+        const rate = normalizeNumber(value);
+        return rate == null ? null : rate * 100;
+      },
+    ],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -658,8 +770,15 @@ export function Calculator() {
       </section>
 
       <section className="px-4 pb-16">
-        <div className="mx-auto max-w-5xl grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-          <div className="space-y-6">
+        <div className="mx-auto max-w-5xl space-y-6">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+            <div className="space-y-6">
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6">
               <h2 className="text-xl font-semibold text-white">Employer equity holdings</h2>
               <div className="mt-6 space-y-6">
@@ -676,6 +795,12 @@ export function Calculator() {
                   max={10000000}
                   step={10000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("equity.currentSharesValue")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Vested Options (Intrinsic Value)"
@@ -690,6 +815,12 @@ export function Calculator() {
                   max={5000000}
                   step={10000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("equity.vestedOptionsValue")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Unvested RSUs/Options Value"
@@ -704,6 +835,12 @@ export function Calculator() {
                   max={5000000}
                   step={10000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("equity.unvestedEquityValue")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Total Cost Basis"
@@ -718,6 +855,12 @@ export function Calculator() {
                   max={5000000}
                   step={5000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("equity.costBasis")}
+                      label="Memory"
+                    />
+                  }
                 />
               </div>
             </div>
@@ -738,6 +881,12 @@ export function Calculator() {
                   max={2000000}
                   step={5000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("assets.cashSavings")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Retirement Accounts (401k, IRA)"
@@ -752,6 +901,12 @@ export function Calculator() {
                   max={5000000}
                   step={10000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("assets.retirementAccounts")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Other Investments (non-employer)"
@@ -816,6 +971,12 @@ export function Calculator() {
                   max={2000000}
                   step={10000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("income.annualSalary")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Annual Equity Grant Value"
@@ -830,6 +991,12 @@ export function Calculator() {
                   max={1000000}
                   step={10000}
                   format="currency"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("income.annualEquityGrant")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <SliderInput
                   label="Years at Company"
@@ -844,6 +1011,12 @@ export function Calculator() {
                   max={30}
                   step={1}
                   format="number"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("income.yearsAtCompany")}
+                      label="Memory"
+                    />
+                  }
                 />
               </div>
             </div>
@@ -879,6 +1052,12 @@ export function Calculator() {
                       </button>
                     ))}
                   </div>
+                  <div className="mt-2">
+                    <MemoryBadge
+                      isActive={preFilledFields.has("tax.filingStatus")}
+                      label="Memory"
+                    />
+                  </div>
                 </div>
                 <SliderInput
                   label="Marginal Tax Rate %"
@@ -893,6 +1072,12 @@ export function Calculator() {
                   max={50}
                   step={1}
                   format="percent"
+                  rightSlot={
+                    <MemoryBadge
+                      isActive={preFilledFields.has("tax.marginalTaxRate")}
+                      label="Memory"
+                    />
+                  }
                 />
                 <div>
                   <label className="text-sm font-semibold text-neutral-300">State</label>
@@ -913,6 +1098,12 @@ export function Calculator() {
                         </option>
                       ))}
                     </select>
+                    <div className="mt-2">
+                      <MemoryBadge
+                        isActive={preFilledFields.has("tax.stateCode")}
+                        label="Memory"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -941,6 +1132,7 @@ export function Calculator() {
             </div>
           </div>
         </div>
+      </div>
       </section>
 
       <ResultsSummary results={results} inputs={inputs} />

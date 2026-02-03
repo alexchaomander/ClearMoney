@@ -131,51 +131,6 @@ function SelectField({
   );
 }
 
-function TextField({
-  label,
-  memoryKey,
-  memory,
-  onSave,
-  maxLength,
-}: {
-  label: string;
-  memoryKey: keyof FinancialMemory;
-  memory: FinancialMemory;
-  onSave: (data: FinancialMemoryUpdate) => void;
-  maxLength?: number;
-}) {
-  const rawValue = memory[memoryKey];
-  const [localValue, setLocalValue] = useState(
-    rawValue != null ? String(rawValue) : ""
-  );
-  const [dirty, setDirty] = useState(false);
-
-  const handleBlur = useCallback(() => {
-    if (!dirty) return;
-    const val = localValue.trim() || null;
-    onSave({ [memoryKey]: val } as unknown as FinancialMemoryUpdate);
-    setDirty(false);
-  }, [dirty, localValue, memoryKey, onSave]);
-
-  return (
-    <div>
-      <label className="block text-sm text-neutral-400 mb-1">{label}</label>
-      <input
-        type="text"
-        value={localValue}
-        maxLength={maxLength}
-        onChange={(e) => {
-          setLocalValue(e.target.value);
-          setDirty(true);
-        }}
-        onBlur={handleBlur}
-        onKeyDown={(e) => e.key === "Enter" && handleBlur()}
-        className="w-full rounded-lg bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50"
-      />
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------

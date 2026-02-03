@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
@@ -9,6 +9,8 @@ import {
   MethodologySection,
   VerdictCard,
 } from "@/components/shared/AppShell";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { formatCurrency } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/annual-fee-analyzer/calculations";
 import type { CalculatorInputs } from "@/lib/calculators/annual-fee-analyzer/types";
@@ -30,7 +32,23 @@ const POINT_VALUE_PRESETS = [
 ];
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    annualSpending: [
+      "average_monthly_expenses",
+      (value: unknown) => (typeof value === "number" ? value * 12 : null),
+    ],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -79,6 +97,12 @@ export function Calculator() {
 
       <section className="px-4 pb-16">
         <div className="mx-auto max-w-2xl space-y-8">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
           <div className="rounded-2xl bg-neutral-900 p-6 space-y-8">
             <div>
               <h2 className="text-xl font-semibold text-white mb-6">

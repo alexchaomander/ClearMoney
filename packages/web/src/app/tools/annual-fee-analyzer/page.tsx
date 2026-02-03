@@ -1,47 +1,59 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useCreditCards, useSeedAmexPlatinum, useFinancialMemory } from "@/lib/strata/hooks";
 import { CardCreditRow } from "@/components/tools/annual-fee-analyzer/CardCreditRow";
 import { CardBenefitRow } from "@/components/tools/annual-fee-analyzer/CardBenefitRow";
 import { FeeBreakdown } from "@/components/tools/annual-fee-analyzer/FeeBreakdown";
 import { Button } from "@/components/ui/button";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { Loader2, AlertCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 export default function AnnualFeeAnalyzerPage() {
   const { data: cards, isLoading } = useCreditCards();
-  const { data: memory } = useFinancialMemory();
+  const { data: memory, isSuccess: memoryLoaded } = useFinancialMemory();
   const seedMutation = useSeedAmexPlatinum();
   
   const [selectedCardId, setSelectedCardId] = useState<string>("");
   const [valuations, setValuations] = useState<Record<string, number>>({});
+  const [useMemoryData, setUseMemoryData] = useState(false);
 
-  const selectedCard = useMemo(() => 
-    cards?.find(c => c.id === selectedCardId), 
-  [cards, selectedCardId]);
+  const selectedCard = useMemo(
+    () => cards?.find((c) => c.id === selectedCardId),
+    [cards, selectedCardId]
+  );
 
-  // Initialize valuations when card changes to avoid "0" flash
-  useEffect(() => {
-    if (selectedCard) {
-      const initialValuations: Record<string, number> = {};
-      selectedCard.credits.forEach(c => {
-        const creditValue = Number(c.value ?? 0);
-        initialValuations[c.id] = c.period === "annual" ? creditValue : creditValue * 12;
-      });
-      selectedCard.benefits.forEach(b => {
-        initialValuations[b.id] = Number(b.default_value ?? 0);
-      });
-      setValuations(initialValuations);
-    }
-  }, [selectedCard]);
+  const buildInitialValuations = useCallback((card: typeof selectedCard) => {
+    if (!card) return {};
+    const initialValuations: Record<string, number> = {};
+    card.credits.forEach((c) => {
+      const creditValue = Number(c.value ?? 0);
+      initialValuations[c.id] = c.period === "annual" ? creditValue : creditValue * 12;
+    });
+    card.benefits.forEach((b) => {
+      initialValuations[b.id] = Number(b.default_value ?? 0);
+    });
+    return initialValuations;
+  }, []);
 
   const handleValuationChange = useCallback((id: string, value: number) => {
-    setValuations(prev => ({
+    setValuations((prev) => ({
       ...prev,
-      [id]: value
+      [id]: value,
     }));
   }, []);
+
+  const handleCardSelect = useCallback(
+    (id: string) => {
+      setSelectedCardId(id);
+      const card = cards?.find((c) => c.id === id);
+      if (card) {
+        setValuations(buildInitialValuations(card));
+      }
+    },
+    [cards, buildInitialValuations]
+  );
 
   const totalCreditsValue = useMemo(() => {
     if (!selectedCard) return 0;
@@ -57,6 +69,9 @@ export default function AnnualFeeAnalyzerPage() {
     return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>;
   }
 
+  const memoryMonthlyExpenses = useMemoryData ? memory?.average_monthly_expenses : undefined;
+  const hasMemoryData = memory?.average_monthly_expenses != null;
+
   return (
     <div className="container max-w-4xl mx-auto py-8 space-y-8">
       <div className="space-y-4">
@@ -66,12 +81,20 @@ export default function AnnualFeeAnalyzerPage() {
         </p>
       </div>
 
-      {memory?.average_monthly_expenses && (
+      <LoadMyDataBanner
+        isLoaded={memoryLoaded}
+        hasData={hasMemoryData}
+        isApplied={useMemoryData}
+        onApply={() => setUseMemoryData(true)}
+        description="Use your average monthly expenses to sanity-check credit valuations."
+      />
+
+      {useMemoryData && memoryMonthlyExpenses != null && (
         <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-4 rounded-lg flex items-start space-x-3">
           <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
           <div className="text-sm">
-            <span className="font-semibold">Contextual Awareness Active:</span> We've detected your average monthly expenses are <span className="font-mono font-bold">{formatCurrency(memory.average_monthly_expenses)}</span>. 
-            We'll use this to help you sanity-check your credit valuations.
+            <span className="font-semibold">Contextual Awareness Active:</span> We&apos;ve detected your average monthly expenses are <span className="font-mono font-bold">{formatCurrency(memoryMonthlyExpenses)}</span>. 
+            We&apos;ll use this to help you sanity-check your credit valuations.
           </div>
         </div>
       )}
@@ -93,7 +116,7 @@ export default function AnnualFeeAnalyzerPage() {
                 <select 
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     value={selectedCardId}
-                    onChange={(e) => setSelectedCardId(e.target.value)}
+                    onChange={(e) => handleCardSelect(e.target.value)}
                 >
                     <option value="" disabled>Select a card to analyze</option>
                     {cards.map((card) => (
@@ -117,7 +140,7 @@ export default function AnnualFeeAnalyzerPage() {
                                 key={credit.id} 
                                 credit={credit} 
                                 onValuationChange={handleValuationChange}
-                                actualMonthlySpend={credit.category === 'transportation' ? (memory?.average_monthly_expenses ?? undefined) : undefined}
+                                actualMonthlySpend={credit.category === 'transportation' ? (memoryMonthlyExpenses ?? undefined) : undefined}
                             />
                         ))}
                     </div>

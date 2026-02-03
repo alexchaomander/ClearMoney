@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   LineChart,
   Line,
@@ -14,6 +14,8 @@ import {
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ComparisonCard, ResultCard } from "@/components/shared/ResultCard";
 import { AppShell, MethodologySection } from "@/components/shared/AppShell";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import {
   formatCurrency,
   formatNumber,
@@ -46,8 +48,36 @@ const FILING_STATUS_OPTIONS = [
   { value: "head_of_household", label: "Head of household" },
 ] as const;
 
+const mapFilingStatus = (
+  value: unknown
+): CalculatorInputs["filingStatus"] | null => {
+  if (value === "married_filing_jointly" || value === "married_filing_separately") {
+    return "married";
+  }
+  if (value === "single" || value === "head_of_household") return value;
+  return null;
+};
+
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    currentAge: "age",
+    annualSalary: "annual_income",
+    currentBalance: "current_retirement_savings",
+    priorYearWages: "annual_income",
+    retirementAge: "retirement_age",
+    filingStatus: ["filing_status", mapFilingStatus],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -147,6 +177,12 @@ export function Calculator() {
       <section className="px-4 pb-16">
         <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[1.2fr,1fr]">
           <div className="space-y-6">
+            <LoadMyDataBanner
+              isLoaded={memoryLoaded}
+              hasData={memoryHasDefaults}
+              isApplied={preFilledFields.size > 0}
+              onApply={handleLoadData}
+            />
             <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-6">
               <h2 className="text-xl font-semibold text-white">Eligibility snapshot</h2>
               <p className="mt-2 text-sm text-neutral-400">

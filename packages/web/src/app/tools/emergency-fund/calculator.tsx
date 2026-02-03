@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/shared/formatters";
 import {
@@ -229,18 +230,18 @@ function RiskBreakdown({ factors }: { factors: RiskFactor[] }) {
 }
 
 export function Calculator() {
-  const { defaults: memoryDefaults, preFilledFields, isLoaded: memoryLoaded } = useMemoryPreFill<CalculatorInputs>({
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
     monthlyExpenses: "average_monthly_expenses",
   });
 
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
   const [currentSavings, setCurrentSavings] = useState<number>(8000);
-
-  useEffect(() => {
-    if (memoryLoaded) {
-      setInputs(prev => ({ ...prev, ...memoryDefaults }));
-    }
-  }, [memoryLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -269,7 +270,14 @@ export function Calculator() {
       </section>
 
       <section className="px-4 pb-16">
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div className="space-y-6">
             <div className="rounded-2xl bg-neutral-900 p-6">
               <h2 className="text-xl font-semibold text-white mb-2">
@@ -469,6 +477,7 @@ export function Calculator() {
 
             <RiskBreakdown factors={results.riskFactors} />
           </div>
+        </div>
         </div>
       </section>
 

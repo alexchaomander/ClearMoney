@@ -1,13 +1,17 @@
 import uuid
+import json
 from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.cash_account import CashAccount
+from app.models.holding import Holding
 from app.models.financial_memory import FinancialMemory
 from app.models.investment_account import InvestmentAccount
 from app.models.debt_account import DebtAccount, DebtType
 from app.models.memory_event import MemoryEvent, MemoryEventSource
+from app.models.security import Security
 
 
 async def derive_memory_from_accounts(
@@ -23,6 +27,8 @@ async def derive_memory_from_accounts(
 
     updated_fields.extend(await _derive_retirement_savings(user_id, memory, session))
     updated_fields.extend(await _derive_mortgage_details(user_id, memory, session))
+    updated_fields.extend(await _derive_debt_profile(user_id, memory, session))
+    updated_fields.extend(await _derive_portfolio_summary(user_id, memory, session))
 
     return updated_fields
 
@@ -66,6 +72,209 @@ async def _derive_retirement_savings(
                 )
             )
             
+    return updated_fields
+
+
+async def _derive_debt_profile(
+    user_id: uuid.UUID,
+    memory: FinancialMemory,
+    session: AsyncSession,
+) -> list[str]:
+    updated_fields = []
+
+    result = await session.execute(
+        select(DebtAccount).where(DebtAccount.user_id == user_id)
+    )
+    debt_accounts = result.scalars().all()
+
+    if not debt_accounts:
+        return updated_fields
+
+    total_balance = sum((a.balance for a in debt_accounts), Decimal("0.00"))
+    total_min_payment = sum(
+        (a.minimum_payment for a in debt_accounts), Decimal("0.00")
+    )
+
+    weighted_rate_sum = Decimal("0.00")
+    balance_with_rates = Decimal("0.00")
+    for account in debt_accounts:
+        if account.interest_rate is not None:
+            weighted_rate_sum += account.interest_rate * account.balance
+            balance_with_rates += account.balance
+
+    weighted_rate = (
+        (weighted_rate_sum / balance_with_rates)
+        if balance_with_rates > 0
+        else None
+    )
+
+    by_type: dict[str, dict] = {}
+    for account in debt_accounts:
+        key = account.debt_type.value
+        if key not in by_type:
+            by_type[key] = {
+                "count": 0,
+                "balance": Decimal("0.00"),
+                "minimum_payment": Decimal("0.00"),
+                "rate_weighted_sum": Decimal("0.00"),
+                "rate_balance": Decimal("0.00"),
+            }
+        by_type[key]["count"] += 1
+        by_type[key]["balance"] += account.balance
+        by_type[key]["minimum_payment"] += account.minimum_payment
+        if account.interest_rate is not None:
+            by_type[key]["rate_weighted_sum"] += account.interest_rate * account.balance
+            by_type[key]["rate_balance"] += account.balance
+
+    by_type_serialized: dict[str, dict] = {}
+    for key, bucket in by_type.items():
+        balance = bucket["balance"]
+        rate_balance = bucket["rate_balance"]
+        weighted_rate = (
+            bucket["rate_weighted_sum"] / rate_balance
+            if rate_balance > 0
+            else None
+        )
+        by_type_serialized[key] = {
+            "count": bucket["count"],
+            "balance": float(balance),
+            "minimum_payment": float(bucket["minimum_payment"]),
+            "weighted_interest_rate": float(weighted_rate) if weighted_rate is not None else None,
+        }
+
+    profile = {
+        "total_balance": float(total_balance),
+        "total_minimum_payment": float(total_min_payment),
+        "weighted_interest_rate": float(weighted_rate) if weighted_rate is not None else None,
+        "by_type": by_type_serialized,
+    }
+
+    if memory.debt_profile != profile:
+        old_value = json.dumps(memory.debt_profile) if memory.debt_profile is not None else None
+        memory.debt_profile = profile
+        updated_fields.append("debt_profile")
+        session.add(
+            MemoryEvent(
+                user_id=user_id,
+                field_name="debt_profile",
+                old_value=old_value,
+                new_value=json.dumps(profile, sort_keys=True),
+                source=MemoryEventSource.account_sync,
+                context="Derived from linked debt accounts",
+            )
+        )
+
+    return updated_fields
+
+
+async def _derive_portfolio_summary(
+    user_id: uuid.UUID,
+    memory: FinancialMemory,
+    session: AsyncSession,
+) -> list[str]:
+    updated_fields = []
+
+    inv_result = await session.execute(
+        select(InvestmentAccount).where(InvestmentAccount.user_id == user_id)
+    )
+    investment_accounts = inv_result.scalars().all()
+
+    cash_result = await session.execute(
+        select(CashAccount).where(CashAccount.user_id == user_id)
+    )
+    cash_accounts = cash_result.scalars().all()
+
+    debt_result = await session.execute(
+        select(DebtAccount).where(DebtAccount.user_id == user_id)
+    )
+    debt_accounts = debt_result.scalars().all()
+
+    account_ids = [a.id for a in investment_accounts]
+    holdings = []
+    if account_ids:
+        holdings_result = await session.execute(
+            select(Holding, Security)
+            .join(Security, Holding.security_id == Security.id)
+            .where(Holding.account_id.in_(account_ids))
+            .order_by(Holding.market_value.desc().nulls_last())
+        )
+        holdings = holdings_result.all()
+
+    total_investment = sum(
+        (a.balance for a in investment_accounts if a.balance), Decimal("0.00")
+    )
+    total_cash = sum(
+        (a.balance for a in cash_accounts if a.balance), Decimal("0.00")
+    )
+    total_debt = sum(
+        (a.balance for a in debt_accounts if a.balance), Decimal("0.00")
+    )
+    net_worth = total_investment + total_cash - total_debt
+
+    allocation: dict[str, dict] = {}
+    total_holdings_value = Decimal("0.00")
+    for holding, security in holdings:
+        if holding.market_value is None:
+            continue
+        total_holdings_value += holding.market_value
+        key = security.security_type.value
+        if key not in allocation:
+            allocation[key] = {"value": Decimal("0.00"), "percent": Decimal("0.00")}
+        allocation[key]["value"] += holding.market_value
+
+    allocation_serialized: dict[str, dict] = {}
+    if total_holdings_value > 0:
+        for key, bucket in allocation.items():
+            percent = (bucket["value"] / total_holdings_value) * Decimal("100")
+            allocation_serialized[key] = {
+                "value": float(bucket["value"]),
+                "percent": float(percent.quantize(Decimal("0.01"))),
+            }
+    else:
+        allocation_serialized = {
+            key: {"value": float(bucket["value"]), "percent": 0.0}
+            for key, bucket in allocation.items()
+        }
+
+    top_holdings = []
+    for holding, security in holdings[:5]:
+        top_holdings.append(
+            {
+                "ticker": security.ticker,
+                "name": security.name,
+                "security_type": security.security_type.value,
+                "market_value": float(holding.market_value) if holding.market_value is not None else None,
+            }
+        )
+
+    summary = {
+        "total_investment_value": float(total_investment),
+        "total_cash_value": float(total_cash),
+        "total_debt_value": float(total_debt),
+        "net_worth": float(net_worth),
+        "allocation_by_security_type": allocation_serialized,
+        "top_holdings": top_holdings,
+    }
+
+    if memory.portfolio_summary != summary:
+        old_value = (
+            json.dumps(memory.portfolio_summary)
+            if memory.portfolio_summary is not None
+            else None
+        )
+        memory.portfolio_summary = summary
+        updated_fields.append("portfolio_summary")
+        session.add(
+            MemoryEvent(
+                user_id=user_id,
+                field_name="portfolio_summary",
+                old_value=old_value,
+                new_value=json.dumps(summary, sort_keys=True),
+                source=MemoryEventSource.account_sync,
+                context="Derived from holdings and account balances",
+            )
+        )
+
     return updated_fields
 
 

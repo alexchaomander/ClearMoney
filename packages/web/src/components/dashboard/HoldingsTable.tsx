@@ -25,6 +25,40 @@ interface HoldingsTableProps {
 type SortKey = "name" | "market_value" | "quantity" | "account_name";
 type SortDirection = "asc" | "desc";
 
+function SortHeader({
+  label,
+  sortKeyValue,
+  sortKey,
+  sortDirection,
+  onSort,
+  className = "",
+}: {
+  label: string;
+  sortKeyValue: SortKey;
+  sortKey: SortKey;
+  sortDirection: SortDirection;
+  onSort: (key: SortKey) => void;
+  className?: string;
+}) {
+  return (
+    <button
+      onClick={() => onSort(sortKeyValue)}
+      className={`flex items-center gap-1 text-xs font-medium text-neutral-400 hover:text-neutral-200 transition-colors ${className}`}
+    >
+      {label}
+      {sortKey === sortKeyValue ? (
+        sortDirection === "asc" ? (
+          <ChevronUp className="w-3 h-3" />
+        ) : (
+          <ChevronDown className="w-3 h-3" />
+        )
+      ) : (
+        <ArrowUpDown className="w-3 h-3 opacity-50" />
+      )}
+    </button>
+  );
+}
+
 export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("market_value");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -75,32 +109,6 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
       : (bValue as number) - (aValue as number);
   });
 
-  const SortHeader = ({
-    label,
-    sortKeyValue,
-    className = "",
-  }: {
-    label: string;
-    sortKeyValue: SortKey;
-    className?: string;
-  }) => (
-    <button
-      onClick={() => handleSort(sortKeyValue)}
-      className={`flex items-center gap-1 text-xs font-medium text-neutral-400 hover:text-neutral-200 transition-colors ${className}`}
-    >
-      {label}
-      {sortKey === sortKeyValue ? (
-        sortDirection === "asc" ? (
-          <ChevronUp className="w-3 h-3" />
-        ) : (
-          <ChevronDown className="w-3 h-3" />
-        )
-      ) : (
-        <ArrowUpDown className="w-3 h-3 opacity-50" />
-      )}
-    </button>
-  );
-
   function formatSecurityType(type: string): string {
     const typeMap: Record<string, string> = {
       stock: "Stock",
@@ -132,19 +140,45 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
       {/* Table Header */}
       <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-neutral-800/50 border-b border-neutral-800">
         <div className="col-span-4">
-          <SortHeader label="Name" sortKeyValue="name" />
+          <SortHeader
+            label="Name"
+            sortKeyValue="name"
+            sortKey={sortKey}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+          />
         </div>
         <div className="col-span-2 text-right">
-          <SortHeader label="Quantity" sortKeyValue="quantity" className="justify-end" />
+          <SortHeader
+            label="Quantity"
+            sortKeyValue="quantity"
+            sortKey={sortKey}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            className="justify-end"
+          />
         </div>
         <div className="col-span-2 text-right">
-          <SortHeader label="Value" sortKeyValue="market_value" className="justify-end" />
+          <SortHeader
+            label="Value"
+            sortKeyValue="market_value"
+            sortKey={sortKey}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            className="justify-end"
+          />
         </div>
         <div className="col-span-2 text-right">
           <span className="text-xs font-medium text-neutral-400">% of Portfolio</span>
         </div>
         <div className="col-span-2">
-          <SortHeader label="Account" sortKeyValue="account_name" />
+          <SortHeader
+            label="Account"
+            sortKeyValue="account_name"
+            sortKey={sortKey}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+          />
         </div>
       </div>
 

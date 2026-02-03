@@ -47,7 +47,12 @@ class FinancialMemoryUpdate(BaseModel):
     risk_tolerance: RiskTolerance | None = None
     investment_horizon_years: int | None = None
     monthly_savings_target: Decimal | None = None
+    average_monthly_expenses: Decimal | None = None
     emergency_fund_target_months: int | None = None
+    spending_categories_monthly: dict | None = None
+    debt_profile: dict | None = None
+    portfolio_summary: dict | None = None
+    equity_compensation: dict | None = None
 
     # Freeform
     notes: dict | None = None
@@ -95,7 +100,12 @@ class FinancialMemoryResponse(BaseModel):
     risk_tolerance: RiskTolerance | None
     investment_horizon_years: int | None
     monthly_savings_target: Decimal | None
+    average_monthly_expenses: Decimal | None
     emergency_fund_target_months: int | None
+    spending_categories_monthly: dict | None
+    debt_profile: dict | None
+    portfolio_summary: dict | None
+    equity_compensation: dict | None
 
     # Freeform
     notes: dict | None

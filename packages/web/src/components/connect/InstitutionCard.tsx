@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { ArrowRight, Check } from "lucide-react";
 import { getInitials } from "@/lib/shared/formatters";
 
@@ -47,10 +48,13 @@ export function InstitutionCard({
           }`}
         >
           {institution.logo_url ? (
-            <img
+            <Image
               src={institution.logo_url}
               alt={institution.name}
+              width={24}
+              height={24}
               className="w-6 h-6 object-contain"
+              unoptimized
             />
           ) : (
             initials

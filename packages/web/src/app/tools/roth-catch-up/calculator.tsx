@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ComparisonCard, ResultCard } from "@/components/shared/ResultCard";
 import { AppShell, MethodologySection, VerdictCard } from "@/components/shared/AppShell";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/roth-catch-up/calculations";
 import {
@@ -26,8 +28,44 @@ const DEFAULT_INPUTS: CalculatorInputs = {
   filingStatus: "single",
 };
 
+const mapFilingStatus = (value: unknown): CalculatorInputs["filingStatus"] | null => {
+  if (value === "married_filing_jointly" || value === "married_filing_separately") {
+    return "married";
+  }
+  if (value === "single" || value === "head_of_household") return "single";
+  return null;
+};
+
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    priorYearW2Wages: "annual_income",
+    currentAge: "age",
+    currentBalance: "current_retirement_savings",
+    currentMarginalRate: [
+      "federal_tax_rate",
+      (value: unknown) => (typeof value === "number" ? value * 100 : null),
+    ],
+    retirementTaxRate: [
+      "federal_tax_rate",
+      (value: unknown) => (typeof value === "number" ? value * 100 : null),
+    ],
+    stateTaxRate: [
+      "state_tax_rate",
+      (value: unknown) => (typeof value === "number" ? value * 100 : null),
+    ],
+    filingStatus: ["filing_status", mapFilingStatus],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
   const results = useMemo(() => calculate(inputs), [inputs]);
 
   const thresholdDelta = inputs.priorYearW2Wages - LIMITS_2026.catchUpThreshold;
@@ -136,6 +174,12 @@ export function Calculator() {
 
         <section className="px-4 pb-16">
           <div className="mx-auto max-w-2xl space-y-8">
+            <LoadMyDataBanner
+              isLoaded={memoryLoaded}
+              hasData={memoryHasDefaults}
+              isApplied={preFilledFields.size > 0}
+              onApply={handleLoadData}
+            />
             <div className="rounded-2xl bg-neutral-900 p-6">
               <h2 className="text-xl font-semibold text-white mb-6">
                 Income & eligibility inputs

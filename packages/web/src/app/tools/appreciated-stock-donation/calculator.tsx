@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import {
   formatCurrency,
   formatPercent,
@@ -103,7 +105,42 @@ const DONATION_TYPE_OPTIONS: { value: DonationType; label: string }[] = [
 ];
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    "tax.filingStatus": [
+      "filing_status",
+      (value: unknown) => {
+        const raw = typeof value === "string" ? value : null;
+        if (!raw) return null;
+        if (raw === "married_filing_jointly" || raw === "married_filing_separately") {
+          return "married";
+        }
+        return raw === "head_of_household" ? "head_of_household" : "single";
+      },
+    ],
+    "tax.adjustedGrossIncome": "annual_income",
+    "tax.marginalTaxRate": [
+      "federal_tax_rate",
+      (value: unknown) => (typeof value === "number" ? value * 100 : null),
+    ],
+    "tax.stateCode": [
+      "state",
+      (value: unknown) => {
+        const state = typeof value === "string" ? value : null;
+        return STATE_OPTIONS.some((option) => option.code === state) ? state : null;
+      },
+    ],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const stateRate = STATE_TAX_RATES[inputs.tax.stateCode] || 0;
@@ -145,6 +182,12 @@ export function Calculator() {
 
       <section className="px-4 pb-12">
         <div className="mx-auto max-w-5xl space-y-8">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="rounded-2xl bg-neutral-900 p-6">
               <h2 className="text-xl font-semibold mb-6">Stock &amp; Donation</h2>
