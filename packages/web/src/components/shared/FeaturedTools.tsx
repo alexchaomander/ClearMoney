@@ -95,7 +95,7 @@ export function FeaturedTools({
         {allLiveTools.length > limit && (
           <div className="mt-12 text-center">
             <Link
-              href="/#tools"
+              href="/tools"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-medium transition-colors"
             >
               View all {allLiveTools.length} tools

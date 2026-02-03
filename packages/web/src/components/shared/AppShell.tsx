@@ -74,7 +74,7 @@ export function AppShell({
 
             {/* Links */}
             <div className="flex flex-wrap justify-center gap-6 text-sm text-neutral-400">
-              <Link href="/" className="hover:text-white transition-colors">
+              <Link href="/tools" className="hover:text-white transition-colors">
                 All Tools
               </Link>
               <Link
