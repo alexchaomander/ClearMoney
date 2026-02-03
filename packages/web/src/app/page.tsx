@@ -142,7 +142,7 @@ export default function HomePage() {
                 </div>
               </Link>
               <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
-                <Link href="/#tools" className="transition-colors hover:text-black">
+                <Link href="/tools" className="transition-colors hover:text-black">
                   Tools
                 </Link>
                 <Link href="/blog" className="transition-colors hover:text-black">
@@ -154,7 +154,7 @@ export default function HomePage() {
               </nav>
               <div className="flex items-center gap-3">
                 <Link
-                  href="/#tools"
+                  href="/tools"
                   className="hidden items-center gap-2 rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-widest transition-all hover:border-black/20 md:flex"
                 >
                   Explore
@@ -286,7 +286,7 @@ export default function HomePage() {
               </p>
             </div>
             <Link
-              href="/#tools"
+              href="/tools"
               className="inline-flex items-center gap-2 text-sm font-semibold"
               style={{ color: palette.accent }}
             >
@@ -345,7 +345,7 @@ export default function HomePage() {
               </p>
             </div>
             <Link
-              href="/#tools"
+              href="/tools"
               className="inline-flex items-center gap-2 text-sm font-semibold"
               style={{ color: palette.accent }}
             >

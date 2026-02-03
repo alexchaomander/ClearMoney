@@ -137,7 +137,7 @@ export function Header() {
                           </p>
                         </div>
                         <Link
-                          href="/#tools"
+                          href="/tools"
                           className="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1"
                         >
                           View all
@@ -210,7 +210,7 @@ export function Header() {
             {/* CTA Buttons */}
             <div className="hidden md:flex items-center gap-3">
               <Link
-                href="/#tools"
+                href="/tools"
                 className="px-4 py-2 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-800/50 rounded-lg transition-colors"
               >
                 Explore Tools
@@ -301,7 +301,7 @@ export function Header() {
                   Dashboard
                 </Link>
                 <Link
-                  href="/#tools"
+                  href="/tools"
                   className="block w-full py-3 text-center text-sm font-medium text-neutral-300 border border-neutral-700 hover:bg-neutral-800 rounded-lg transition-colors"
                 >
                   Explore All Tools

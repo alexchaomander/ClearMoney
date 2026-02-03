@@ -19,7 +19,7 @@ export function DashboardHeader({
   const pathname = usePathname();
 
   const navItems = [
-    { label: "Tools", href: "/#tools" },
+    { label: "Tools", href: "/tools" },
     { label: "Dashboard", href: "/dashboard" },
     { label: "Connect", href: "/connect" },
     { label: "Advisor", href: "/advisor" },
