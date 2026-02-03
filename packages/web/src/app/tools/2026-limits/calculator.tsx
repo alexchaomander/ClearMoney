@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { AppShell, MethodologySection } from "@/components/shared/AppShell";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import {
   formatCurrency,
   formatNumber,
@@ -221,7 +223,32 @@ function ReferenceTable({
 }
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<LimitsInputs>({
+    age: "age",
+    annualIncome: "annual_income",
+    filingStatus: [
+      "filing_status",
+      (value: unknown) => {
+        const raw = typeof value === "string" ? value : null;
+        if (!raw) return null;
+        if (raw === "married_filing_jointly" || raw === "married_filing_separately") {
+          return "married";
+        }
+        return raw === "head_of_household" ? "head_of_household" : "single";
+      },
+    ],
+  });
+
   const [inputs, setInputs] = useState<LimitsInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const totalAccounts =
@@ -258,8 +285,15 @@ export function Calculator() {
       </section>
 
       <section className="px-4 pb-16">
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.2fr,0.8fr]">
-          <div className="space-y-8">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
+          <div className="grid gap-8 lg:grid-cols-[1.2fr,0.8fr]">
+            <div className="space-y-8">
             <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-6">
               <h2 className="text-xl font-semibold text-white">Your profile</h2>
               <p className="mt-2 text-sm text-neutral-400">
@@ -528,6 +562,7 @@ export function Calculator() {
             </div>
           </div>
         </div>
+      </div>
       </section>
 
       <section className="px-4 pb-16">

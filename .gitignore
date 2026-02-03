@@ -16,6 +16,7 @@ node_modules/
 # Python
 **/__pycache__/
 *.egg-info/
+*.db
 
 # Next.js build artifacts
 **/.next/

@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { AppShell, MethodologySection } from "@/components/shared/AppShell";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import {
   formatCurrency,
   formatNumber,
@@ -88,7 +90,21 @@ const formatScheduleRow = (item: RolloverScheduleItem) => (
 );
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    beneficiaryAge: "age",
+    earnedIncome: "annual_income",
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const eligibility = results.eligibility;
@@ -129,6 +145,12 @@ export function Calculator() {
 
         <section className="px-4 pb-16">
           <div className="mx-auto max-w-2xl space-y-8">
+            <LoadMyDataBanner
+              isLoaded={memoryLoaded}
+              hasData={memoryHasDefaults}
+              isApplied={preFilledFields.size > 0}
+              onApply={handleLoadData}
+            />
             <div className="rounded-2xl bg-neutral-900 p-6">
               <h2 className="text-xl font-semibold text-white mb-6">
                 Your Information

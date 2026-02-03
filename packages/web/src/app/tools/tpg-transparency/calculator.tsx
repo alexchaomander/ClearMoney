@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import {
   formatCPP,
   formatCurrency,
@@ -59,6 +61,14 @@ const CARD_BRAND_STYLES: Record<string, { accent: string; logo: string }> = {
   Citi: { accent: "from-indigo-500 to-sky-400", logo: "Citi" },
 };
 
+const normalizeNumber = (value: unknown) =>
+  typeof value === "number" && Number.isFinite(value) ? value : null;
+
+const getCategoryValue = (value: unknown, key: string) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return normalizeNumber((value as Record<string, unknown>)[key]);
+};
+
 const formatComparisonValue = (comparison: ValueComparison): string => {
   if (comparison.label === "Point Valuation") {
     return formatCPP(comparison.tpgValue);
@@ -87,7 +97,35 @@ const getCardBrand = (card: CreditCard) =>
   };
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    "spending.dining": [
+      "spending_categories_monthly",
+      (value: unknown) => getCategoryValue(value, "dining"),
+    ],
+    "spending.travel": [
+      "spending_categories_monthly",
+      (value: unknown) => getCategoryValue(value, "travel"),
+    ],
+    "spending.groceries": [
+      "spending_categories_monthly",
+      (value: unknown) => getCategoryValue(value, "groceries"),
+    ],
+    "spending.other": [
+      "spending_categories_monthly",
+      (value: unknown) => getCategoryValue(value, "other"),
+    ],
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
   const cards = useMemo(() => getCards(), []);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
@@ -151,6 +189,12 @@ export function Calculator() {
 
       <section className="px-4 pb-16">
         <div className="mx-auto max-w-4xl space-y-8">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="rounded-2xl bg-neutral-900 p-6">
               <h2 className="text-xl font-semibold mb-6">Card to Analyze</h2>

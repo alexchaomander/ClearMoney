@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import {
   formatNumber,
   formatPercent,
@@ -196,8 +198,19 @@ function ImpactRange({ min, max }: { min: number; max: number }) {
 }
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CreditProfile>({});
+
   const [profile, setProfile] = useState<CreditProfile>(DEFAULT_PROFILE);
   const [actions, setActions] = useState(DEFAULT_ACTIONS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setProfile),
+    [applyMemoryDefaults]
+  );
 
   const factors = useMemo(() => analyzeProfile(profile), [profile]);
 
@@ -263,6 +276,12 @@ export function Calculator() {
 
       <section className="px-4 pb-16">
         <div className="mx-auto max-w-5xl space-y-8">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
           <div className="grid gap-6 lg:grid-cols-[1.1fr_1.9fr]">
             <ScoreGauge score={profile.estimatedScore} label="Current estimate" />
             <div className="grid gap-4 sm:grid-cols-2">

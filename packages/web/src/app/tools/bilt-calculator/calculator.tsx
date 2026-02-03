@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { BiltCardTier, BiltCardData, CalculationResult, RewardMode } from '@/lib/calculators/bilt/types';
 import { BILT_CARDS, POINT_VALUATION, BILT_CASH_UNLOCK_RATIO, BILT_CASH_EARN_RATE, CARD_BENEFITS_TEXT, ASSUME_MIN_SPEND_MET_TEXT, BASE_RENT_POINTS_MONTHLY } from '@/lib/calculators/bilt/constants';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
+import { LoadMyDataBanner } from '@/components/tools/LoadMyDataBanner';
+import { useMemoryPreFill } from '@/hooks/useMemoryPreFill';
 
 // Updated Slider with tap-to-edit functionality for mobile
 const CompactSlider = ({ label, value, min, max, step = 50, onChange, unit = "$" }: { label: string, value: number, min: number, max: number, step?: number, onChange: (v: number) => void, unit?: string }) => {
@@ -270,6 +272,35 @@ const TOUR_STEPS: TourStep[] = [
   }
 ];
 
+type PrefillInputs = {
+  rent: number;
+  dining: number;
+  grocery: number;
+  travel: number;
+  misc: number;
+};
+
+const normalizeNumber = (value: unknown): number | null => {
+  if (typeof value === 'number' && !Number.isNaN(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
+
+const getCategoryValue = (value: unknown, keys: string[]): number | null => {
+  if (typeof value !== 'object' || value === null) return null;
+  const record = value as Record<string, unknown>;
+  for (const key of keys) {
+    if (record[key] != null) {
+      const parsed = normalizeNumber(record[key]);
+      if (parsed != null) return parsed;
+    }
+  }
+  return null;
+};
+
 export default function BiltCalculator() {
   const [rent, setRent] = useState(3000);
   const [dining, setDining] = useState(500);
@@ -287,6 +318,33 @@ export default function BiltCalculator() {
   const [selectedChartBar, setSelectedChartBar] = useState<string | null>(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showFullScreenChart, setShowFullScreenChart] = useState(false);
+
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<PrefillInputs>({
+    rent: 'monthly_rent',
+    dining: ['spending_categories_monthly', (v: unknown) => getCategoryValue(v, ['dining', 'restaurants'])],
+    grocery: ['spending_categories_monthly', (v: unknown) => getCategoryValue(v, ['groceries', 'grocery'])],
+    travel: ['spending_categories_monthly', (v: unknown) => getCategoryValue(v, ['travel', 'flights', 'airfare'])],
+    misc: ['spending_categories_monthly', (v: unknown) => getCategoryValue(v, ['other', 'misc'])],
+  });
+
+  const applyPrefill = useCallback((next: PrefillInputs | ((prev: PrefillInputs) => PrefillInputs)) => {
+    const prev = { rent, dining, grocery, travel, misc };
+    const resolved = typeof next === 'function' ? next(prev) : next;
+    if (resolved.rent != null) setRent(resolved.rent);
+    if (resolved.dining != null) setDining(resolved.dining);
+    if (resolved.grocery != null) setGrocery(resolved.grocery);
+    if (resolved.travel != null) setTravel(resolved.travel);
+    if (resolved.misc != null) setMisc(resolved.misc);
+  }, [rent, dining, grocery, travel, misc]);
+
+  const handleLoadData = useCallback(() => {
+    applyMemoryDefaults(applyPrefill);
+  }, [applyMemoryDefaults, applyPrefill]);
 
   useEffect(() => {
     const hasSeenTour = localStorage.getItem('bilt_tour_seen');
@@ -1063,6 +1121,15 @@ export default function BiltCalculator() {
             <button onClick={() => setMode(RewardMode.MULTIPLIER)} className={`flex-1 text-xs sm:text-sm py-2.5 rounded-lg font-bold transition-all ${mode === RewardMode.MULTIPLIER ? 'bg-white shadow-sm text-black' : 'text-zinc-400'}`}>Multipliers</button>
             <button onClick={() => setMode(RewardMode.BILT_CASH)} className={`flex-1 text-xs sm:text-sm py-2.5 rounded-lg font-bold transition-all ${mode === RewardMode.BILT_CASH ? 'bg-white shadow-sm text-black' : 'text-zinc-400'}`}>Bilt Cash</button>
           </div>
+      </div>
+
+      <div className="px-4 md:px-6 lg:px-12">
+        <LoadMyDataBanner
+          isLoaded={memoryLoaded}
+          hasData={memoryHasDefaults}
+          isApplied={preFilledFields.size > 0}
+          onApply={handleLoadData}
+        />
       </div>
 
       <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-12 grid grid-cols-1 lg:grid-cols-12 lg:grid-rows-[auto_1fr] gap-6 lg:gap-10 max-w-[2000px] mx-auto w-full">

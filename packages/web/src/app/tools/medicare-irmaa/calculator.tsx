@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   AppShell,
   ComparisonCard,
@@ -8,6 +8,8 @@ import {
   ResultCard,
   SliderInput,
 } from "@/components/shared";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatPercent } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/medicare-irmaa/calculations";
@@ -52,6 +54,13 @@ const lifeChangingEventOptions: Array<{
     label: event.description,
   })),
 ];
+
+const mapFilingStatus = (value: unknown): FilingStatus | null => {
+  if (value === "married_filing_separately") return "married_separate";
+  if (value === "married_filing_jointly") return "married";
+  if (value === "single" || value === "head_of_household") return "single";
+  return null;
+};
 
 function formatRange(min: number, max: number) {
   if (!Number.isFinite(max)) {
@@ -115,7 +124,24 @@ function BracketBar({
 }
 
 export function Calculator() {
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<CalculatorInputs>({
+    filingStatus: ["filing_status", mapFilingStatus],
+    currentAge: "age",
+    magi2024: "annual_income",
+    magi2025: "annual_income",
+    traditionalBalance: "current_retirement_savings",
+  });
+
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const brackets = IRMAA_BRACKETS_2026[inputs.filingStatus];
@@ -149,6 +175,12 @@ export function Calculator() {
 
         <section className="px-4 pb-16">
           <div className="mx-auto max-w-5xl space-y-8">
+            <LoadMyDataBanner
+              isLoaded={memoryLoaded}
+              hasData={memoryHasDefaults}
+              isApplied={preFilledFields.size > 0}
+              onApply={handleLoadData}
+            />
             <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
               <div className="rounded-2xl bg-neutral-900 p-6">
                 <h2 className="text-xl font-semibold text-white mb-6">
