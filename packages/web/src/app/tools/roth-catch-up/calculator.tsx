@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ComparisonCard, ResultCard } from "@/components/shared/ResultCard";
 import { AppShell, MethodologySection, VerdictCard } from "@/components/shared/AppShell";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/shared/formatters";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 import { calculate } from "@/lib/calculators/roth-catch-up/calculations";
 import {
   FILING_STATUS_OPTIONS,
@@ -37,6 +39,7 @@ const mapFilingStatus = (value: unknown): CalculatorInputs["filingStatus"] | nul
 };
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("roth-catch-up");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -61,11 +64,19 @@ export function Calculator() {
     filingStatus: ["filing_status", mapFilingStatus],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
   const results = useMemo(() => calculate(inputs), [inputs]);
 
   const thresholdDelta = inputs.priorYearW2Wages - LIMITS_2026.catchUpThreshold;

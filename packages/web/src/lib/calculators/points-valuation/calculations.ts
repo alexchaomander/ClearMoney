@@ -5,7 +5,7 @@ import type {
   PointsCurrency,
 } from "./types";
 
-export const CURRENCIES: PointsCurrency[] = [
+export const DEFAULT_CURRENCIES: PointsCurrency[] = [
   {
     id: "chase-ur",
     name: "Chase Ultimate Rewards",
@@ -113,12 +113,15 @@ export const CURRENCIES: PointsCurrency[] = [
   },
 ];
 
-export function calculate(inputs: CalculatorInputs): CalculatorResults {
+export function calculate(
+  inputs: CalculatorInputs,
+  currencies: PointsCurrency[] = DEFAULT_CURRENCIES
+): CalculatorResults {
   const { holdings, redemptionStyle } = inputs;
 
   const holdingValuations: HoldingValuation[] = [];
 
-  for (const currency of CURRENCIES) {
+  for (const currency of currencies) {
     const points = holdings[currency.id] || 0;
     if (points > 0) {
       const ourCpp = currency.valuations[redemptionStyle];
@@ -157,6 +160,6 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
   return {
     holdings: holdingValuations,
     totals,
-    currencies: CURRENCIES,
+    currencies,
   };
 }

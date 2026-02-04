@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { AppShell, MethodologySection } from "@/components/shared/AppShell";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
@@ -23,6 +23,8 @@ import type {
   LimitsInputs,
   ReferenceLimit,
 } from "@/lib/calculators/2026-limits/types";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 
 const DEFAULT_INPUTS: LimitsInputs = {
   age: 35,
@@ -223,6 +225,7 @@ function ReferenceTable({
 }
 
 export function Calculator() {
+  const { preset } = useToolPreset<LimitsInputs>("2026-limits");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -244,11 +247,18 @@ export function Calculator() {
     ],
   });
 
-  const [inputs, setInputs] = useState<LimitsInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<LimitsInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const totalAccounts =

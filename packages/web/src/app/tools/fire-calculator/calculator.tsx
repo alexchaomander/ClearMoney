@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { MethodologySection, AppShell } from "@/components/shared";
 import {
@@ -9,6 +9,7 @@ import {
   formatPercent,
   formatYears,
 } from "@/lib/shared/formatters";
+import { mergeDeep } from "@/lib/shared/merge";
 import {
   calculate,
   calculateYearsToTarget,
@@ -20,6 +21,7 @@ import type {
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
+import { useToolPreset } from "@/lib/strata/presets";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   annualIncome: 75000,
@@ -202,6 +204,7 @@ function FireVariantsCard({
 }
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("fire-calculator");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -213,10 +216,17 @@ export function Calculator() {
     annualExpenses: ["average_monthly_expenses", (v) => (Number(v) || 0) * 12],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
   const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

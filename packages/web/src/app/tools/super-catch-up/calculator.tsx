@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import {
   LineChart,
   Line,
@@ -27,6 +27,8 @@ import {
   SUPER_CATCH_UP_AGES,
 } from "@/lib/calculators/super-catch-up/constants";
 import type { CalculatorInputs } from "@/lib/calculators/super-catch-up/types";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   currentAge: 58,
@@ -59,6 +61,7 @@ const mapFilingStatus = (
 };
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("super-catch-up");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -73,11 +76,19 @@ export function Calculator() {
     filingStatus: ["filing_status", mapFilingStatus],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

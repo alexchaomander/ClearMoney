@@ -13,6 +13,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
+import { ConsentGate } from "@/components/shared/ConsentGate";
 import {
   useAvailableSkills,
   useCreateAdvisorSession,
@@ -229,6 +230,11 @@ export default function AdvisorPage() {
       <DashboardHeader />
 
       <main className="relative z-10 flex-1 flex flex-col max-w-4xl w-full mx-auto px-6 lg:px-8">
+        <ConsentGate
+          scopes={["agent:read", "decision_traces:read"]}
+          purpose="Provide personalized advisor sessions and decision traces."
+          className="mt-10"
+        >
         {!activeSession ? (
           /* Skill Picker / Landing */
           <div className="flex-1 flex flex-col justify-center py-12">
@@ -410,6 +416,7 @@ export default function AdvisorPage() {
             </div>
           </>
         )}
+        </ConsentGate>
       </main>
     </div>
   );

@@ -1,0 +1,26 @@
+{
+  "last_updated": "2026-01-15",
+  "insurance_estimates": [
+    {
+      "id": "term-life",
+      "name": "Term Life Insurance",
+      "coverage_multiple_income": 10,
+      "typical_cost_pct_income": 0.005,
+      "notes": "Typical 10x income coverage starting point."
+    },
+    {
+      "id": "disability",
+      "name": "Long-Term Disability",
+      "coverage_multiple_income": 0.6,
+      "typical_cost_pct_income": 0.015,
+      "notes": "Often targets 60% income replacement."
+    },
+    {
+      "id": "umbrella",
+      "name": "Umbrella Liability",
+      "coverage_multiple_income": 1,
+      "typical_cost_pct_income": 0.001,
+      "notes": "Basic umbrella policy benchmark."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { ComparisonCard, ResultCard } from "@/components/shared";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
@@ -10,35 +10,23 @@ import {
   formatNumber,
   formatPercent,
 } from "@/lib/shared/formatters";
-import { calculate, CURRENCIES } from "@/lib/calculators/points-valuation/calculations";
+import { calculate, DEFAULT_CURRENCIES } from "@/lib/calculators/points-valuation/calculations";
 import type {
   CalculatorInputs,
   PointsCurrency,
   RedemptionStyle,
 } from "@/lib/calculators/points-valuation/types";
+import { usePointsPrograms } from "@/lib/strata/hooks";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
-  holdings: {
-    "chase-ur": 0,
-    "amex-mr": 0,
-    "citi-ty": 0,
-    "capital-one": 0,
-    marriott: 0,
-    hilton: 0,
-    hyatt: 0,
-  },
+  holdings: DEFAULT_CURRENCIES.reduce((acc, currency) => {
+    acc[currency.id] = 0;
+    return acc;
+  }, {} as Record<string, number>),
   redemptionStyle: "conservative",
 };
-
-const HOLDING_FIELDS = [
-  { id: "chase-ur", label: "Chase Ultimate Rewards", max: 1_000_000 },
-  { id: "amex-mr", label: "Amex Membership Rewards", max: 1_000_000 },
-  { id: "citi-ty", label: "Citi ThankYou", max: 1_000_000 },
-  { id: "capital-one", label: "Capital One Miles", max: 1_000_000 },
-  { id: "marriott", label: "Marriott Bonvoy", max: 1_000_000 },
-  { id: "hilton", label: "Hilton Honors", max: 1_000_000 },
-  { id: "hyatt", label: "World of Hyatt", max: 500_000 },
-];
 
 const STYLE_DETAILS: Record<
   RedemptionStyle,
@@ -72,6 +60,8 @@ const getAverageCpp = (
   currencies.length;
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("points-valuation");
+  const { data: pointsPrograms } = usePointsPrograms();
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -79,13 +69,56 @@ export function Calculator() {
     applyTo: applyMemoryDefaults,
   } = useMemoryPreFill<CalculatorInputs>({});
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
 
-  const results = useMemo(() => calculate(inputs), [inputs]);
+  const currencies = useMemo<PointsCurrency[]>(() => {
+    if (!pointsPrograms?.length) return DEFAULT_CURRENCIES;
+    return pointsPrograms.map((program) => ({
+      id: program.id,
+      name: program.name,
+      shortName: program.short_name,
+      valuations: program.valuations,
+      methodology: {
+        cashOut: program.methodology.cash_out ?? null,
+        portalValue: program.methodology.portal_value ?? null,
+        transferValue: program.methodology.transfer_value,
+      },
+      bestUses: program.best_uses,
+      worstUses: program.worst_uses,
+    }));
+  }, [pointsPrograms]);
+
+  const holdingFields = useMemo(
+    () =>
+      currencies.map((currency) => ({
+        id: currency.id,
+        label: currency.name,
+        max: currency.id === "hyatt" ? 500_000 : 1_000_000,
+      })),
+    [currencies]
+  );
+
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    if (initialized || !currencies.length) return;
+    setInputs((prev) => ({
+      ...prev,
+      holdings: currencies.reduce((acc, currency) => {
+        acc[currency.id] = prev.holdings[currency.id] ?? 0;
+        return acc;
+      }, {} as Record<string, number>),
+    }));
+    setInitialized(true);
+  }, [currencies, initialized]);
+
+  const results = useMemo(() => calculate(inputs, currencies), [inputs, currencies]);
   const hasHoldings = results.holdings.length > 0;
 
   const averageOurCpp = getAverageCpp(results.currencies, inputs.redemptionStyle);
@@ -310,7 +343,7 @@ export function Calculator() {
               Optional: add your balances to see what your points are worth.
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
-              {HOLDING_FIELDS.map((field) => (
+            {holdingFields.map((field) => (
                 <label key={field.id} className="text-sm text-neutral-300">
                   {field.label}
                   <input
@@ -430,7 +463,7 @@ export function Calculator() {
         <div className="mx-auto max-w-5xl">
           <h2 className="text-xl font-semibold mb-4">Methodology by Currency</h2>
           <div className="space-y-4">
-            {CURRENCIES.map((currency) => (
+            {currencies.map((currency) => (
               <details
                 key={currency.id}
                 className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-5"

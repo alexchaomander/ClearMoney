@@ -4,7 +4,8 @@ import { useParams } from "next/navigation";
 import { AccountDetail } from "@/components/dashboard/AccountDetail";
 import { DashboardLoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ApiErrorState } from "@/components/shared/ApiErrorState";
-import { useInvestmentAccount } from "@/lib/strata/hooks";
+import { useInvestmentAccount, useConsentStatus } from "@/lib/strata/hooks";
+import { ConsentGate } from "@/components/shared/ConsentGate";
 import type { InvestmentAccountWithHoldings } from "@clearmoney/strata-sdk";
 
 function mapToAccountData(data: InvestmentAccountWithHoldings) {
@@ -47,18 +48,29 @@ function mapToAccountData(data: InvestmentAccountWithHoldings) {
 
 export function AccountDetailClient() {
   const { id } = useParams<{ id: string }>();
+  const { hasConsent } = useConsentStatus(["accounts:read"]);
 
   const {
     data: accountData,
     isLoading,
     isError,
     refetch,
-  } = useInvestmentAccount(id);
+  } = useInvestmentAccount(id, { enabled: hasConsent });
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-neutral-950 p-8">
         <div className="max-w-7xl mx-auto">
+          {!hasConsent && (
+            <ConsentGate
+              scopes={["accounts:read"]}
+              purpose="Load account details and holdings."
+            >
+              <div className="text-sm text-neutral-400">
+                Authorize access to view account details.
+              </div>
+            </ConsentGate>
+          )}
           <DashboardLoadingSkeleton />
         </div>
       </div>

@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_current_user
+from app.api.deps import require_scopes
 from app.db.session import get_async_session
 from app.models.holding import Holding
 from app.models.investment_account import InvestmentAccount
@@ -31,7 +31,7 @@ CONCENTRATION_THRESHOLD = Decimal("10.0")
 
 @router.get("/summary", response_model=PortfolioSummary)
 async def get_portfolio_summary(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["portfolio:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> PortfolioSummary:
     """Get a summary of the user's entire portfolio.
@@ -171,7 +171,7 @@ async def get_portfolio_summary(
 
 @router.get("/holdings", response_model=list[dict])
 async def get_all_holdings(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["portfolio:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> list[dict]:
     """Get all holdings across all investment accounts.
@@ -221,7 +221,7 @@ async def get_all_holdings(
 @router.get("/history", response_model=list[PortfolioHistoryPoint])
 async def get_portfolio_history(
     range: Literal["30d", "90d", "1y", "all"] = Query("1y"),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["portfolio:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> list[PortfolioHistoryPoint]:
     """Get portfolio value history.

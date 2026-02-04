@@ -1,13 +1,16 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import { formatCurrency, formatPercent } from "@/lib/shared/formatters";
+import { mergeDeep } from "@/lib/shared/merge";
 import { calculate } from "@/lib/calculators/mortgage/calculations";
 import type { CalculatorInputs } from "@/lib/calculators/mortgage/types";
+import { useToolPreset } from "@/lib/strata/presets";
+import { useRealAssetData } from "@/lib/strata/hooks";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
@@ -23,6 +26,8 @@ const DEFAULT_INPUTS: CalculatorInputs = {
 const LOAN_TERM_OPTIONS = [15, 30] as const;
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("mortgage");
+  const { data: realAssetData } = useRealAssetData();
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -33,8 +38,26 @@ export function Calculator() {
     interestRate: ["mortgage_rate", (v: unknown) => Number(v) * 100],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
+
+  useEffect(() => {
+    if (!realAssetData?.mortgage_rates?.length) return;
+    const match = realAssetData.mortgage_rates.find(
+      (rate) => rate.term_years === inputs.loanTermYears && rate.loan_type === "fixed"
+    );
+    if (!match) return;
+    if (preset?.interestRate || preFilledFields.has("interestRate")) return;
+    const nextRate = Number((match.rate * 100).toFixed(2));
+    setInputs((prev) => ({ ...prev, interestRate: nextRate }));
+  }, [realAssetData, inputs.loanTermYears, preset, preFilledFields]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

@@ -19,6 +19,7 @@ import {
   useUpdateMemory,
   useDeriveMemory,
   useMemoryEvents,
+  useConsentStatus,
 } from "@/lib/strata/hooks";
 import type {
   FinancialMemory,
@@ -26,6 +27,7 @@ import type {
   FilingStatus,
   RiskTolerance,
 } from "@clearmoney/strata-sdk";
+import { ConsentGate } from "@/components/shared/ConsentGate";
 
 // ---------------------------------------------------------------------------
 // Field input components
@@ -161,8 +163,12 @@ const US_STATES = [
 // ---------------------------------------------------------------------------
 
 export default function ProfilePage() {
-  const { data: memory, isLoading } = useFinancialMemory();
-  const { data: events } = useMemoryEvents();
+  const { hasConsent: hasMemoryConsent } = useConsentStatus([
+    "memory:read",
+    "memory:write",
+  ]);
+  const { data: memory, isLoading } = useFinancialMemory({ enabled: hasMemoryConsent });
+  const { data: events } = useMemoryEvents({ enabled: hasMemoryConsent });
   const updateMemory = useUpdateMemory();
   const deriveMemory = useDeriveMemory();
   const [showEvents, setShowEvents] = useState(false);
@@ -182,6 +188,16 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-neutral-950">
         <DashboardHeader />
         <main className="max-w-4xl mx-auto px-6 lg:px-8 py-8">
+          {!hasMemoryConsent && (
+            <ConsentGate
+              scopes={["memory:read", "memory:write"]}
+              purpose="Store and update your financial profile."
+            >
+              <div className="text-sm text-neutral-400">
+                Authorize access to load your profile.
+              </div>
+            </ConsentGate>
+          )}
           <div className="space-y-6">
             {[1, 2, 3, 4].map((i) => (
               <div
@@ -208,6 +224,10 @@ export default function ProfilePage() {
       <DashboardHeader />
 
       <main className="relative z-10 max-w-4xl mx-auto px-6 lg:px-8 py-8">
+        <ConsentGate
+          scopes={["memory:read", "memory:write"]}
+          purpose="Store and update your financial profile."
+        >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -626,6 +646,7 @@ export default function ProfilePage() {
             </motion.div>
           )}
         </div>
+        </ConsentGate>
       </main>
     </div>
   );

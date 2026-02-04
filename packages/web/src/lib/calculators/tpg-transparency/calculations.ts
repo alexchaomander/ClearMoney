@@ -5,7 +5,7 @@ import type {
   ValueComparison,
 } from "./types";
 
-const CARDS: CreditCard[] = [
+export const DEFAULT_CARDS: CreditCard[] = [
   {
     id: "sapphire-preferred",
     name: "Chase Sapphire Preferred",
@@ -87,16 +87,19 @@ const CARDS: CreditCard[] = [
   },
 ];
 
-export function getCards(): CreditCard[] {
-  return CARDS;
+export function getCards(cards?: CreditCard[]): CreditCard[] {
+  return cards && cards.length > 0 ? cards : DEFAULT_CARDS;
 }
 
-export function calculate(inputs: CalculatorInputs): CalculatorResults {
+export function calculate(
+  inputs: CalculatorInputs,
+  cards: CreditCard[] = DEFAULT_CARDS
+): CalculatorResults {
   const { selectedCard, spending, redemptionStyle } = inputs;
 
-  const card = CARDS.find((entry) => entry.id === selectedCard);
+  const card = cards.find((entry) => entry.id === selectedCard) ?? cards[0];
   if (!card) {
-    throw new Error(`Card not found: ${selectedCard}`);
+    throw new Error("No cards available for analysis.");
   }
 
   const annualSpending = {

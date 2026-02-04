@@ -1,0 +1,38 @@
+[
+  {
+    "id": "ally-savings",
+    "name": "Ally Online Savings",
+    "provider": "Ally",
+    "product_type": "savings",
+    "apy": 4.2,
+    "minimum_balance": 0,
+    "monthly_fee": 0,
+    "fdic_insured": true,
+    "last_updated": "2026-01-15",
+    "notes": "High-yield online savings benchmark."
+  },
+  {
+    "id": "marcus-savings",
+    "name": "Marcus Online Savings",
+    "provider": "Goldman Sachs",
+    "product_type": "savings",
+    "apy": 4.1,
+    "minimum_balance": 0,
+    "monthly_fee": 0,
+    "fdic_insured": true,
+    "last_updated": "2026-01-15",
+    "notes": "Common reference rate for HYSA comparisons."
+  },
+  {
+    "id": "chase-checking",
+    "name": "Chase Total Checking",
+    "provider": "Chase",
+    "product_type": "checking",
+    "apy": 0.01,
+    "minimum_balance": 0,
+    "monthly_fee": 12,
+    "fdic_insured": true,
+    "last_updated": "2026-01-15",
+    "notes": "Typical big-bank checking benchmark."
+  }
+]

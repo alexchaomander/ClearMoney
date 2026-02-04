@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { AppShell, MethodologySection } from "@/components/shared/AppShell";
@@ -13,6 +13,8 @@ import {
   formatYears,
 } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/529-roth-rollover/calculations";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 import {
   ACCOUNT_AGE_REQUIREMENT_YEARS,
   CONTRIBUTION_SEASONING_YEARS,
@@ -90,6 +92,15 @@ const formatScheduleRow = (item: RolloverScheduleItem) => (
 );
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("529-roth-rollover");
+  const presetAccountOpenDate = (preset as { accountOpenDate?: unknown })?.accountOpenDate;
+  const normalizedPreset =
+    preset && typeof presetAccountOpenDate === "string"
+      ? {
+          ...preset,
+          accountOpenDate: new Date(presetAccountOpenDate),
+        }
+      : preset;
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -100,11 +111,19 @@ export function Calculator() {
     earnedIncome: "annual_income",
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, normalizedPreset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+
+  useEffect(() => {
+    if (!normalizedPreset) return;
+    setInputs((prev) => mergeDeep(prev, normalizedPreset));
+  }, [normalizedPreset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const eligibility = results.eligibility;

@@ -11,9 +11,26 @@ import {
   useDeleteConnection,
   useCashAccountMutations,
   useDebtAccountMutations,
+  useConsentStatus,
+  useConsents,
+  useRevokeConsent,
 } from "@/lib/strata/hooks";
 import { formatTitleCase, getInitials } from "@/lib/shared/formatters";
 import type { Institution } from "@clearmoney/strata-sdk";
+import { ConsentGate } from "@/components/shared/ConsentGate";
+
+const CONSENT_SCOPES = [
+  "connections:read",
+  "connections:write",
+  "accounts:read",
+  "accounts:write",
+  "portfolio:read",
+  "holdings:read",
+  "transactions:read",
+  "memory:read",
+  "memory:write",
+  "decision_traces:read",
+];
 
 function getInstitutionName(
   institutionId: string | null,
@@ -25,13 +42,21 @@ function getInstitutionName(
 }
 
 export default function SettingsPage() {
-  const { data: connections, isLoading: connectionsLoading } = useConnections();
-  const { data: institutions } = usePopularInstitutions();
-  const { data: allAccounts, isLoading: accountsLoading } = useAccounts();
+  const { hasConsent: hasSettingsConsent } = useConsentStatus([
+    "connections:read",
+    "connections:write",
+    "accounts:read",
+    "accounts:write",
+  ]);
+  const { data: connections, isLoading: connectionsLoading } = useConnections({ enabled: hasSettingsConsent });
+  const { data: institutions } = usePopularInstitutions({ enabled: hasSettingsConsent });
+  const { data: allAccounts, isLoading: accountsLoading } = useAccounts({ enabled: hasSettingsConsent });
   const syncConnection = useSyncConnection();
   const deleteConnection = useDeleteConnection();
   const cashMutations = useCashAccountMutations();
   const debtMutations = useDebtAccountMutations();
+  const { data: consents } = useConsents();
+  const revokeConsent = useRevokeConsent();
 
   const sectionClass = "p-6 rounded-xl bg-neutral-900 border border-neutral-800";
   const rowClass = "flex items-center gap-3 p-3 rounded-xl bg-neutral-900 border border-neutral-800";
@@ -60,6 +85,10 @@ export default function SettingsPage() {
           </p>
         </motion.div>
 
+        <ConsentGate
+          scopes={["connections:read", "connections:write", "accounts:read", "accounts:write"]}
+          purpose="Manage connected accounts and manual entries."
+        >
         <div className="space-y-6">
           {/* Connected Accounts */}
           <motion.div
@@ -197,6 +226,56 @@ export default function SettingsPage() {
                 )}
               </div>
             )}
+          </motion.div>
+        </div>
+        </ConsentGate>
+
+        <div className="space-y-6">
+          {/* Consent Controls */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className={sectionClass}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Info className="w-5 h-5 text-emerald-400" />
+              <h2 className="font-serif text-xl text-neutral-100">
+                Data Access & Consent
+              </h2>
+            </div>
+            <p className="text-sm text-neutral-400 mb-4">
+              You control what data ClearMoney can use. Revoke access at any time.
+            </p>
+            <div className="space-y-3">
+              {CONSENT_SCOPES.map((scope) => {
+                const active = consents?.find(
+                  (c) =>
+                    c.status === "active" && c.scopes.includes(scope)
+                );
+                return (
+                  <div key={scope} className={rowClass}>
+                    <div className="flex-1">
+                      <p className="text-sm text-neutral-100">{scope.replace(/:/g, " ")}</p>
+                      <p className="text-xs text-neutral-500">
+                        {active ? "Active consent" : "Not granted"}
+                      </p>
+                    </div>
+                    {active ? (
+                      <button
+                        onClick={() => revokeConsent.mutate(active.id)}
+                        disabled={revokeConsent.isPending}
+                        className="text-xs rounded-full border border-neutral-700 px-3 py-1 text-neutral-300 hover:border-rose-400 hover:text-rose-300 transition"
+                      >
+                        Revoke
+                      </button>
+                    ) : (
+                      <span className="text-xs text-neutral-500">—</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </motion.div>
 
           {/* Preferences */}

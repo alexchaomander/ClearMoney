@@ -1,13 +1,16 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import { formatCurrency, formatPercent, formatNumber } from "@/lib/shared/formatters";
+import { mergeDeep } from "@/lib/shared/merge";
 import { calculate } from "@/lib/calculators/investment-growth/calculations";
 import type { CalculatorInputs } from "@/lib/calculators/investment-growth/types";
+import { useToolPreset } from "@/lib/strata/presets";
+import { useInvestmentData } from "@/lib/strata/hooks";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   initialInvestment: 10000,
@@ -34,6 +37,8 @@ const extractPortfolioSummary = (value: unknown): Record<string, unknown> | null
 };
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("investment-growth");
+  const { data: investmentData } = useInvestmentData();
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -51,9 +56,28 @@ export function Calculator() {
     investmentHorizon: "investment_horizon_years",
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const [showTimeline, setShowTimeline] = useState(false);
   const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
+
+  useEffect(() => {
+    if (!investmentData?.market_assumptions?.length) return;
+    if (preset?.annualReturnRate) return;
+    const equity = investmentData.market_assumptions.find((m) => m.id === "us_stocks");
+    if (!equity) return;
+    setInputs((prev) => ({
+      ...prev,
+      annualReturnRate: Number((equity.expected_return * 100).toFixed(2)),
+      inflationRate: Number((equity.inflation * 100).toFixed(2)),
+    }));
+  }, [investmentData, preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

@@ -11,8 +11,21 @@ import type {
   AdvisorRecommendation,
   AdvisorSession,
   AdvisorSessionSummary,
+  ConsentCreateRequest,
+  ConsentResponse,
+  DecisionTrace,
   FinancialContext,
   FinancialMemory,
+  PointsProgram,
+  CreditCardData,
+  SavingsProduct,
+  InvestmentData,
+  RealAssetData,
+  LiabilityData,
+  IncomeData,
+  CreditData,
+  ProtectionData,
+  ToolPresetBundle,
   SkillDetail,
   SkillSummary,
   FinancialMemoryUpdate,
@@ -42,6 +55,16 @@ import {
   getDemoInvestmentAccountWithHoldings,
   getDemoPortfolioHistory,
   getDemoPortfolioSummary,
+  DEMO_POINTS_PROGRAMS,
+  DEMO_CREDIT_CARD_DATA,
+  DEMO_LIQUID_ASSETS,
+  DEMO_INVESTMENT_DATA,
+  DEMO_REAL_ASSET_DATA,
+  DEMO_LIABILITY_DATA,
+  DEMO_INCOME_DATA,
+  DEMO_CREDIT_DATA,
+  DEMO_PROTECTION_DATA,
+  DEMO_TOOL_PRESETS,
 } from "./demo-data";
 
 function delay(ms: number): Promise<void> {
@@ -50,6 +73,10 @@ function delay(ms: number): Promise<void> {
 
 export class DemoStrataClient implements StrataClientInterface {
   setClerkUserId(): void {
+    // no-op in demo mode
+  }
+
+  setAuthToken(): void {
     // no-op in demo mode
   }
 
@@ -294,6 +321,10 @@ export class DemoStrataClient implements StrataClientInterface {
     monthly_savings_target: 2000,
     average_monthly_expenses: 6000,
     emergency_fund_target_months: 6,
+    spending_categories_monthly: null,
+    debt_profile: null,
+    portfolio_summary: null,
+    equity_compensation: null,
     notes: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -508,6 +539,55 @@ export class DemoStrataClient implements StrataClientInterface {
     ];
   }
 
+  async getDecisionTraces(): Promise<DecisionTrace[]> {
+    await delay(200);
+    return [];
+  }
+
+  async listConsents(): Promise<ConsentResponse[]> {
+    await delay(200);
+    return [
+      {
+        id: "demo-consent-001",
+        user_id: "demo-user-001",
+        scopes: ["agent:read", "decision_traces:read"],
+        purpose: "Demo consent",
+        status: "active",
+        source: "demo",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ];
+  }
+
+  async createConsent(data: ConsentCreateRequest): Promise<ConsentResponse> {
+    await delay(200);
+    return {
+      id: "demo-consent-001",
+      user_id: "demo-user-001",
+      scopes: data.scopes,
+      purpose: data.purpose,
+      status: "active",
+      source: data.source ?? "demo",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  async revokeConsent(consentId: string): Promise<ConsentResponse> {
+    await delay(200);
+    return {
+      id: consentId,
+      user_id: "demo-user-001",
+      scopes: [],
+      purpose: "Demo consent",
+      status: "revoked",
+      source: "demo",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
   // === Credit Cards ===
 
   async getCreditCards(): Promise<CreditCard[]> {
@@ -521,5 +601,55 @@ export class DemoStrataClient implements StrataClientInterface {
 
   async seedAmexPlatinum(): Promise<CreditCard> {
     throw new Error("Not implemented in demo mode");
+  }
+
+  async getPointsPrograms(): Promise<PointsProgram[]> {
+    await delay(200);
+    return DEMO_POINTS_PROGRAMS;
+  }
+
+  async getCreditCardData(): Promise<CreditCardData[]> {
+    await delay(200);
+    return DEMO_CREDIT_CARD_DATA;
+  }
+
+  async getLiquidAssets(): Promise<SavingsProduct[]> {
+    await delay(200);
+    return DEMO_LIQUID_ASSETS;
+  }
+
+  async getInvestments(): Promise<InvestmentData> {
+    await delay(200);
+    return DEMO_INVESTMENT_DATA;
+  }
+
+  async getRealAssets(): Promise<RealAssetData> {
+    await delay(200);
+    return DEMO_REAL_ASSET_DATA;
+  }
+
+  async getLiabilities(): Promise<LiabilityData> {
+    await delay(200);
+    return DEMO_LIABILITY_DATA;
+  }
+
+  async getIncome(): Promise<IncomeData> {
+    await delay(200);
+    return DEMO_INCOME_DATA;
+  }
+
+  async getCredit(): Promise<CreditData> {
+    await delay(200);
+    return DEMO_CREDIT_DATA;
+  }
+
+  async getProtection(): Promise<ProtectionData> {
+    await delay(200);
+    return DEMO_PROTECTION_DATA;
+  }
+
+  async getToolPresets(): Promise<ToolPresetBundle> {
+    await delay(200);
+    return DEMO_TOOL_PRESETS;
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ComparisonCard, ResultCard } from "@/components/shared/ResultCard";
 import {
@@ -26,6 +26,8 @@ import type {
   WithholdingMethod,
 } from "@/lib/calculators/rsu-tax-calculator/types";
 import { cn } from "@/lib/utils";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   sharesVesting: 100,
@@ -144,6 +146,7 @@ const STATE_OPTIONS = Object.keys(STATE_NAMES)
   .sort((a, b) => a.name.localeCompare(b.name));
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("rsu-tax-calculator");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -186,11 +189,19 @@ export function Calculator() {
     ],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const taxRate = results.actualTax.total / results.grossValue;

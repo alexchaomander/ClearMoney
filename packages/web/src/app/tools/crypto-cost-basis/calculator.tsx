@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
@@ -27,6 +27,8 @@ import type {
   FilingStatus,
 } from "@/lib/calculators/crypto-cost-basis/types";
 import { cn } from "@/lib/utils";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   numberOfWallets: 3,
@@ -43,6 +45,7 @@ const DEFAULT_INPUTS: CalculatorInputs = {
 const METHOD_ORDER = ["fifo", "lifo", "hifo", "specificId"] as const;
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("crypto-cost-basis");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -59,8 +62,16 @@ export function Calculator() {
     state: "state",
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

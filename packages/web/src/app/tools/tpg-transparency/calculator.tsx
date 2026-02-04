@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
@@ -20,6 +20,10 @@ import type {
   RedemptionStyle,
   ValueComparison,
 } from "@/lib/calculators/tpg-transparency/types";
+import { useCreditCardData, usePointsPrograms } from "@/lib/strata/hooks";
+import type { CreditCardData, PointsProgram } from "@clearmoney/strata-sdk";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   selectedCard: "sapphire-preferred",
@@ -96,7 +100,59 @@ const getCardBrand = (card: CreditCard) =>
     logo: card.issuer,
   };
 
+const buildCardsFromData = (
+  cards: CreditCardData[] | undefined,
+  programs: PointsProgram[] | undefined
+): CreditCard[] => {
+  if (!cards?.length) return [];
+  const programMap = new Map(programs?.map((p) => [p.id, p]));
+
+  return cards
+    .filter((card) => card.currency_id)
+    .map((card) => {
+      const program = card.currency_id ? programMap.get(card.currency_id) : undefined;
+      const valuations = program
+        ? {
+            tpg: program.valuations.tpg,
+            conservative: program.valuations.conservative,
+            optimistic: program.valuations.optimistic,
+          }
+        : { tpg: 1.5, conservative: 1.0, optimistic: 1.5 };
+
+      return {
+        id: card.id,
+        name: card.name,
+        issuer: card.issuer,
+        annualFee: card.annual_fee,
+        signUpBonus: card.signup_bonus
+          ? {
+              points: card.signup_bonus.points,
+              spendRequired: card.signup_bonus.spend_required,
+              timeframe: card.signup_bonus.timeframe_months,
+            }
+          : { points: 0, spendRequired: 0, timeframe: 0 },
+        earnRates: {
+          dining: card.earn_rates?.dining ?? 1,
+          travel: card.earn_rates?.travel ?? card.earn_rates?.flights ?? 1,
+          groceries: card.earn_rates?.groceries ?? 1,
+          other: card.earn_rates?.other ?? 1,
+        },
+        credits: card.credits.map((credit) => ({
+          name: credit.name,
+          value: credit.value,
+          usability: credit.default_usable_pct ?? 100,
+        })),
+        valuations,
+        estimatedAffiliatePayout: card.affiliate_payout_estimate ?? 0,
+        tpgRanking: card.tpg_rank ?? undefined,
+      };
+    });
+};
+
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("tpg-transparency");
+  const { data: creditCardData } = useCreditCardData();
+  const { data: pointsPrograms } = usePointsPrograms();
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -121,14 +177,26 @@ export function Calculator() {
     ],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
-  const cards = useMemo(() => getCards(), []);
+  const mappedCards = useMemo(
+    () => buildCardsFromData(creditCardData, pointsPrograms),
+    [creditCardData, pointsPrograms]
+  );
+  const cards = useMemo(() => getCards(mappedCards), [mappedCards]);
 
-  const results = useMemo(() => calculate(inputs), [inputs]);
+  useEffect(() => {
+    if (!cards.length) return;
+    if (cards.find((card) => card.id === inputs.selectedCard)) return;
+    setInputs((prev) => ({ ...prev, selectedCard: cards[0].id }));
+  }, [cards, inputs.selectedCard]);
+
+  const results = useMemo(() => calculate(inputs, cards), [inputs, cards]);
   const selectedCard = results.card;
   const totalMonthlySpend =
     inputs.spending.dining +
