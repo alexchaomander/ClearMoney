@@ -38,12 +38,7 @@ const selectStyles =
 const normalizeNumber = (value: unknown) =>
   typeof value === "number" && Number.isFinite(value) ? value : null;
 
-const extractDebtProfile = (value: unknown): Record<string, unknown> | null => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  return value as Record<string, unknown>;
-};
-
-const extractPortfolioSummary = (value: unknown): Record<string, unknown> | null => {
+const extractObject = (value: unknown): Record<string, unknown> | null => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   return value as Record<string, unknown>;
 };
@@ -59,14 +54,14 @@ export function Calculator() {
     monthlyDebt: [
       "debt_profile",
       (value: unknown) => {
-        const profile = extractDebtProfile(value);
+        const profile = extractObject(value);
         return normalizeNumber(profile?.total_minimum_payment) ?? null;
       },
     ],
     downPaymentSaved: [
       "portfolio_summary",
       (value: unknown) => {
-        const summary = extractPortfolioSummary(value);
+        const summary = extractObject(value);
         return normalizeNumber(summary?.total_cash_value) ?? null;
       },
     ],
