@@ -1123,16 +1123,15 @@ export default function BiltCalculator() {
           </div>
       </div>
 
-      <div className="px-4 md:px-6 lg:px-12">
-        <LoadMyDataBanner
-          isLoaded={memoryLoaded}
-          hasData={memoryHasDefaults}
-          isApplied={preFilledFields.size > 0}
-          onApply={handleLoadData}
-        />
-      </div>
-
       <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-12 grid grid-cols-1 lg:grid-cols-12 lg:grid-rows-[auto_1fr] gap-6 lg:gap-10 max-w-[2000px] mx-auto w-full">
+        <div className="lg:col-span-12">
+          <LoadMyDataBanner
+            isLoaded={memoryLoaded}
+            hasData={memoryHasDefaults}
+            isApplied={preFilledFields.size > 0}
+            onApply={handleLoadData}
+          />
+        </div>
         {/* Housing & Spend Section - First on mobile, top-left on desktop */}
         <section className="order-1 lg:col-span-4 lg:row-start-1 bg-white p-6 md:p-8 lg:p-12 rounded-2xl lg:rounded-[2.5rem] shadow-sm border border-zinc-200">
           <h2 className="text-sm lg:text-base font-black text-zinc-400 mb-4 lg:mb-6 uppercase tracking-widest border-b border-zinc-100 pb-4 lg:pb-6 flex justify-between items-center">

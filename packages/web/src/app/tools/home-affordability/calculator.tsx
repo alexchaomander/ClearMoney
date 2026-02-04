@@ -35,6 +35,19 @@ const DEFAULT_INPUTS: CalculatorInputs = {
 const selectStyles =
   "mt-2 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 text-sm text-white focus:border-teal-400 focus:outline-none";
 
+const normalizeNumber = (value: unknown) =>
+  typeof value === "number" && Number.isFinite(value) ? value : null;
+
+const extractDebtProfile = (value: unknown): Record<string, unknown> | null => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+};
+
+const extractPortfolioSummary = (value: unknown): Record<string, unknown> | null => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+};
+
 export function Calculator() {
   const {
     preFilledFields,
@@ -43,8 +56,23 @@ export function Calculator() {
     applyTo: applyMemoryDefaults,
   } = useMemoryPreFill<CalculatorInputs>({
     annualIncome: "annual_income",
+    monthlyDebt: [
+      "debt_profile",
+      (value: unknown) => {
+        const profile = extractDebtProfile(value);
+        return normalizeNumber(profile?.total_minimum_payment) ?? null;
+      },
+    ],
+    downPaymentSaved: [
+      "portfolio_summary",
+      (value: unknown) => {
+        const summary = extractPortfolioSummary(value);
+        return normalizeNumber(summary?.total_cash_value) ?? null;
+      },
+    ],
     currentRent: "monthly_rent",
     mortgageRate: ["mortgage_rate", (v: unknown) => Number(v) * 100],
+    riskTolerance: "risk_tolerance",
     state: "state",
   });
 

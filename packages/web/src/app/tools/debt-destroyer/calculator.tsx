@@ -153,15 +153,16 @@ export function Calculator() {
       </section>
 
       <section className="px-4 pb-16">
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_1fr]">
-          {/* Input Column */}
-          <div className="space-y-6">
-            <LoadMyDataBanner
-              isLoaded={accountsLoaded}
-              hasData={connectedDebts.length > 0}
-              isApplied={dataApplied}
-              onApply={handleLoadData}
-            />
+        <div className="mx-auto max-w-6xl space-y-6">
+          <LoadMyDataBanner
+            isLoaded={accountsLoaded}
+            hasData={connectedDebts.length > 0}
+            isApplied={dataApplied}
+            onApply={handleLoadData}
+          />
+          <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
+            {/* Input Column */}
+            <div className="space-y-6">
             <div className="rounded-2xl bg-neutral-900 p-6">
               <h2 className="text-xl font-semibold text-white mb-6">Your Debts</h2>
               <div className="space-y-4">
@@ -247,73 +248,99 @@ export function Calculator() {
                 format="currency"
               />
             </div>
-          </div>
-
-          {/* Results Column */}
-          <div className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <MethodCard
-                title="Snowball"
-                subtitle="Smallest balance first"
-                interest={results.snowball.totalInterest}
-                time={results.snowball.monthsToPayoff}
-                colorClass="text-blue-400"
-              />
-              <MethodCard
-                title="Avalanche"
-                subtitle="Highest interest first"
-                interest={results.avalanche.totalInterest}
-                time={results.avalanche.monthsToPayoff}
-                isRecommended={true}
-                colorClass="text-orange-400"
-              />
             </div>
 
-            <div className="rounded-2xl bg-neutral-900 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="rounded-full bg-orange-500/10 p-2">
-                  <Trophy className="h-5 w-5 text-orange-400" />
-                </div>
-                <h3 className="text-lg font-bold text-white">The Verdict</h3>
+            {/* Results Column */}
+            <div className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <MethodCard
+                  title="Snowball"
+                  subtitle="Smallest balance first"
+                  interest={results.snowball.totalInterest}
+                  time={results.snowball.monthsToPayoff}
+                  colorClass="text-blue-400"
+                />
+                <MethodCard
+                  title="Avalanche"
+                  subtitle="Highest interest first"
+                  interest={results.avalanche.totalInterest}
+                  time={results.avalanche.monthsToPayoff}
+                  isRecommended={true}
+                  colorClass="text-orange-400"
+                />
               </div>
-              
-              <div className="space-y-4">
-                {motivationCost > 100 ? (
-                  <p className="text-neutral-300">
-                    The <strong>Avalanche method</strong> will save you <span className="font-bold text-emerald-400">{formatCurrency(motivationCost)}</span> in interest compared to Snowball.
-                    {timeDiff > 0 && <span> It will also get you out of debt {timeDiff} months faster.</span>}
-                  </p>
-                ) : (
-                  <p className="text-neutral-300">
-                    The difference is negligible (<span className="text-neutral-400">{formatCurrency(motivationCost)}</span>). 
-                    You should choose the <strong>Snowball method</strong> for the psychological wins of eliminating small debts quickly.
-                  </p>
-                )}
 
-                <div className="rounded-xl bg-neutral-950 p-4 text-sm">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-neutral-400">Avalanche Payoff Date</span>
-                    <span className="text-white">{results.avalanche.payoffDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</span>
+              <div className="rounded-2xl bg-neutral-900 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="rounded-full bg-orange-500/10 p-2">
+                    <Trophy className="h-5 w-5 text-orange-400" />
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-400">Snowball Payoff Date</span>
-                    <span className="text-white">{results.snowball.payoffDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</span>
+                  <h3 className="text-lg font-bold text-white">The Verdict</h3>
+                </div>
+
+                <div className="space-y-4">
+                  {motivationCost > 100 ? (
+                    <p className="text-neutral-300">
+                      The <strong>Avalanche method</strong> will save you{" "}
+                      <span className="font-bold text-emerald-400">
+                        {formatCurrency(motivationCost)}
+                      </span>{" "}
+                      in interest compared to Snowball.
+                      {timeDiff > 0 && (
+                        <span> It will also get you out of debt {timeDiff} months faster.</span>
+                      )}
+                    </p>
+                  ) : (
+                    <p className="text-neutral-300">
+                      The difference is negligible (
+                      <span className="text-neutral-400">{formatCurrency(motivationCost)}</span>
+                      ). You should choose the <strong>Snowball method</strong> for the
+                      psychological wins of eliminating small debts quickly.
+                    </p>
+                  )}
+
+                  <div className="rounded-xl bg-neutral-950 p-4 text-sm">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-neutral-400">Avalanche Payoff Date</span>
+                      <span className="text-white">
+                        {results.avalanche.payoffDate.toLocaleDateString(undefined, {
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">Snowball Payoff Date</span>
+                      <span className="text-white">
+                        {results.snowball.payoffDate.toLocaleDateString(undefined, {
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              <MethodologySection>
+                <p>
+                  <strong>Debt Snowball:</strong> Prioritizes paying off the smallest
+                  balances first. This provides &quot;quick wins&quot; which can improve
+                  motivation and adherence to the plan, even if it costs slightly more in
+                  interest.
+                </p>
+                <p>
+                  <strong>Debt Avalanche:</strong> Prioritizes paying off the highest
+                  interest rate debts first. This is mathematically optimal as it
+                  minimizes the total interest paid over the life of the loans.
+                </p>
+                <p>
+                  Calculations assume minimum payments are made on all debts every month,
+                  with the &quot;Extra Payment&quot; applied entirely to the highest
+                  priority debt according to the chosen strategy.
+                </p>
+              </MethodologySection>
             </div>
-
-            <MethodologySection>
-              <p>
-                <strong>Debt Snowball:</strong> Prioritizes paying off the smallest balances first. This provides &quot;quick wins&quot; which can improve motivation and adherence to the plan, even if it costs slightly more in interest.
-              </p>
-              <p>
-                <strong>Debt Avalanche:</strong> Prioritizes paying off the highest interest rate debts first. This is mathematically optimal as it minimizes the total interest paid over the life of the loans.
-              </p>
-              <p>
-                Calculations assume minimum payments are made on all debts every month, with the &quot;Extra Payment&quot; applied entirely to the highest priority debt according to the chosen strategy.
-              </p>
-            </MethodologySection>
           </div>
         </div>
       </section>

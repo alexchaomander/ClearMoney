@@ -70,6 +70,10 @@ export function Calculator() {
     currentBalance: "current_retirement_savings",
     priorYearWages: "annual_income",
     retirementAge: "retirement_age",
+    employerMatchPercent: [
+      "employer_match_pct",
+      (value: unknown) => (typeof value === "number" ? value * 100 : null),
+    ],
     filingStatus: ["filing_status", mapFilingStatus],
   });
 
