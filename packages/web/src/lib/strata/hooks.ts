@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useStrataClient } from "./client";
 import type {
+  BankTransactionQuery,
   CashAccountCreate,
   CashAccountUpdate,
   ConnectionCallbackRequest,
@@ -11,6 +12,8 @@ import type {
   FinancialMemoryUpdate,
   InvestmentAccountCreate,
   LinkSessionRequest,
+  PlaidCallbackRequest,
+  PlaidLinkRequest,
   PortfolioHistoryRange,
 } from "@clearmoney/strata-sdk";
 
@@ -52,6 +55,11 @@ export const queryKeys = {
   consents: ["consents"] as const,
   decisionTraces: (filters?: { sessionId?: string; recommendationId?: string }) =>
     ["decisionTraces", filters?.sessionId ?? "", filters?.recommendationId ?? ""] as const,
+  // Banking (Plaid)
+  bankAccounts: ["banking", "accounts"] as const,
+  bankTransactions: (params?: BankTransactionQuery) =>
+    ["banking", "transactions", params ?? {}] as const,
+  spendingSummary: (months?: number) => ["banking", "spending-summary", months ?? 3] as const,
 };
 
 export function usePortfolioSummary(options?: { enabled?: boolean }) {
@@ -560,5 +568,68 @@ export function useSeedAmexPlatinum() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.creditCards });
     },
+  });
+}
+
+// === Banking (Plaid) ===
+
+/** Invalidate all banking-related queries after a connection change. */
+function invalidateBankingQueries(queryClient: ReturnType<typeof useQueryClient>): void {
+  const keys = [
+    queryKeys.bankAccounts,
+    ["banking", "transactions"],
+    ["banking", "spending-summary"],
+    queryKeys.accounts,
+    queryKeys.financialMemory,
+  ];
+  for (const queryKey of keys) {
+    queryClient.invalidateQueries({ queryKey });
+  }
+}
+
+export function useCreatePlaidLinkToken() {
+  const client = useStrataClient();
+  return useMutation({
+    mutationFn: (request?: PlaidLinkRequest) => client.createPlaidLinkToken(request),
+  });
+}
+
+export function useHandlePlaidCallback() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: PlaidCallbackRequest) => client.handlePlaidCallback(request),
+    onSuccess: () => invalidateBankingQueries(queryClient),
+  });
+}
+
+export function useBankAccounts(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.bankAccounts,
+    queryFn: () => client.getBankAccounts(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useBankTransactions(
+  params?: BankTransactionQuery,
+  options?: { enabled?: boolean }
+) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.bankTransactions(params),
+    queryFn: () => client.getBankTransactions(params),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useSpendingSummary(months?: number, options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.spendingSummary(months),
+    queryFn: () => client.getSpendingSummary(months),
+    enabled: options?.enabled ?? true,
   });
 }

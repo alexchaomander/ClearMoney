@@ -10,6 +10,7 @@ from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 from app.db.types import EncryptedJSON
 
 if TYPE_CHECKING:
+    from app.models.cash_account import CashAccount
     from app.models.institution import Institution
     from app.models.investment_account import InvestmentAccount
     from app.models.user import User
@@ -47,5 +48,8 @@ class Connection(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="connections"
     )
     investment_accounts: Mapped[list["InvestmentAccount"]] = relationship(
+        back_populates="connection"
+    )
+    cash_accounts: Mapped[list["CashAccount"]] = relationship(
         back_populates="connection"
     )
