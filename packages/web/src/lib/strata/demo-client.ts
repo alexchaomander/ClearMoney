@@ -72,7 +72,7 @@ function delay(ms: number): Promise<void> {
 }
 
 export class DemoStrataClient implements StrataClientInterface {
-  setClerkUserId(): void {
+  setClerkUserId(_userId: string | null): void {
     // no-op in demo mode
   }
 

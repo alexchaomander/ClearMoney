@@ -46,7 +46,7 @@ import type {
 } from './types';
 
 export interface StrataClientInterface {
-  setClerkUserId(userId: string): void;
+  setClerkUserId(userId: string | null): void;
   setAuthToken(token: string | null): void;
   healthCheck(): Promise<HealthResponse>;
   createLinkSession(request?: LinkSessionRequest): Promise<LinkSessionResponse>;
@@ -135,8 +135,8 @@ export class StrataClient implements StrataClientInterface {
   /**
    * Set the Clerk user ID for authenticated requests.
    */
-  setClerkUserId(userId: string): void {
-    this.clerkUserId = userId;
+  setClerkUserId(userId: string | null): void {
+    this.clerkUserId = userId ?? null;
   }
 
   setAuthToken(token: string | null): void {

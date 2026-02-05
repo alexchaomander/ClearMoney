@@ -13,6 +13,7 @@ export function StrataAuthSync(): null {
     async function sync() {
       if (!isSignedIn || !userId) {
         client.setAuthToken(null);
+        client.setClerkUserId(null);
         return;
       }
       client.setClerkUserId(userId);

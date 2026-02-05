@@ -657,14 +657,6 @@ class FinancialAdvisor:
         metrics = context.get("portfolio_metrics", {}) or {}
         rules: list[dict] = []
 
-        runway = metrics.get("runway_months")
-        if runway is not None:
-            rules.append({
-                "name": "Emergency fund runway >= 3 months",
-                "passed": runway >= 3,
-                "value": runway,
-            })
-
         total_debt = metrics.get("total_debt_value")
         if total_debt is not None:
             rules.append({
