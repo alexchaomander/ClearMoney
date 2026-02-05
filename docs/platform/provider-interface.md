@@ -1,11 +1,16 @@
 # Provider Abstraction Interface
 
-Version: 1.0.0
-Last Updated: 2026-01-24
+Version: 1.1.0
+Last Updated: 2026-02-05
 
 ## Overview
 
-This document defines the internal provider abstraction layer that enables the Strata API to work with multiple financial data providers (Plaid, MX, Finicity, FDX) through a unified interface. The abstraction handles:
+This document defines the internal provider abstraction layer that enables the Strata API to work with multiple financial data providers through unified interfaces. There are two separate provider interfaces:
+
+1. **Investment Providers** (`BaseProvider`) — For brokerage and investment account connectivity (SnapTrade, etc.)
+2. **Banking Providers** (`BaseBankingProvider`) — For bank account and transaction data (Plaid)
+
+The abstraction handles:
 
 - **Normalization**: Converting provider-specific formats to canonical platform formats
 - **Error Handling**: Mapping provider errors to platform error codes with retry guidance
@@ -16,24 +21,32 @@ This document defines the internal provider abstraction layer that enables the S
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        Strata API                             │
-└─────────────────────────────────┬───────────────────────────────────┘
+│                            Strata API                               │
+└─────────────────────────────────────────────────────────────────────┘
                                   │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                    Provider Abstraction Layer                        │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
-│  │ Rate Limiter│  │Circuit Break│  │  Normalizer │  │Error Mapper │ │
-│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘ │
-└─────────────────────────────────┬───────────────────────────────────┘
-                                  │
-        ┌─────────────┬───────────┼───────────┬─────────────┐
-        ▼             ▼           ▼           ▼             ▼
-   ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐
-   │  Plaid  │  │   MX    │  │Finicity │  │   FDX   │  │ Future  │
-   │ Adapter │  │ Adapter │  │ Adapter │  │ Adapter │  │Providers│
-   └─────────┘  └─────────┘  └─────────┘  └─────────┘  └─────────┘
+          ┌───────────────────────┴───────────────────────┐
+          ▼                                               ▼
+┌───────────────────────────────────┐   ┌───────────────────────────────────┐
+│   Investment Provider Layer        │   │     Banking Provider Layer         │
+│         (BaseProvider)             │   │     (BaseBankingProvider)          │
+│  ┌──────────┐  ┌──────────────┐   │   │  ┌──────────┐  ┌──────────────┐   │
+│  │Normalizer│  │ Error Mapper │   │   │  │Normalizer│  │ Error Mapper │   │
+│  └──────────┘  └──────────────┘   │   │  └──────────┘  └──────────────┘   │
+└────────────────┬──────────────────┘   └────────────────┬──────────────────┘
+                 │                                       │
+    ┌────────────┼────────────┐                  ┌───────┴───────┐
+    ▼            ▼            ▼                  ▼               ▼
+┌─────────┐ ┌─────────┐ ┌─────────┐        ┌─────────┐    ┌─────────┐
+│SnapTrade│ │   MX    │ │ Future  │        │  Plaid  │    │ Future  │
+│(invest) │ │(invest) │ │Providers│        │(banking)│    │Providers│
+└─────────┘ └─────────┘ └─────────┘        └─────────┘    └─────────┘
 ```
+
+**Key Design Decision:** Banking and investment providers are separate interfaces because they serve fundamentally different data models:
+- Investment providers handle holdings, securities, and investment transactions
+- Banking providers handle bank accounts, spending transactions, and categorization
+
+This separation avoids forcing banking providers to implement no-op stubs for `get_holdings()` or investment providers to implement `get_transactions()` with spending categories.
 
 ## Interface Definition
 
@@ -367,6 +380,107 @@ interface WebhookVerificationResult {
   itemId: string | null;             // Provider's item/connection ID
 }
 ```
+
+---
+
+## Banking Provider Interface
+
+The `BaseBankingProvider` interface is specifically designed for banking data providers that handle checking/savings accounts and spending transactions. This is separate from the investment `ProviderAdapter` interface.
+
+### Interface Definition
+
+```python
+class BaseBankingProvider(ABC):
+    """Base class for banking data providers (e.g., Plaid)."""
+
+    provider_name: str = "base_banking"
+
+    @abstractmethod
+    async def create_link_token(
+        self,
+        user_id: str,
+        redirect_uri: str | None = None,
+    ) -> LinkSession:
+        """Create a link token for initializing Plaid Link."""
+        ...
+
+    @abstractmethod
+    async def exchange_public_token(
+        self,
+        user_id: str,
+        public_token: str,
+    ) -> dict:
+        """Exchange a public token for an access token."""
+        ...
+
+    @abstractmethod
+    async def get_accounts(
+        self,
+        connection: Connection,
+    ) -> list[NormalizedBankAccount]:
+        """Get all bank accounts for a connection."""
+        ...
+
+    @abstractmethod
+    async def get_transactions(
+        self,
+        connection: Connection,
+        start_date: date,
+        end_date: date,
+    ) -> list[NormalizedBankTransaction]:
+        """Get transactions for all accounts in a connection."""
+        ...
+
+    @abstractmethod
+    async def delete_connection(
+        self,
+        connection: Connection,
+    ) -> None:
+        """Delete a connection from the provider."""
+        ...
+```
+
+### Normalized Data Types
+
+#### `NormalizedBankAccount`
+
+```python
+@dataclass
+class NormalizedBankAccount:
+    provider_account_id: str
+    name: str
+    account_type: CashAccountType  # checking, savings, money_market, cd, other
+    balance: Decimal
+    available_balance: Decimal | None = None
+    currency: str = "USD"
+    institution_name: str | None = None
+    mask: str | None = None  # Last 4 digits
+```
+
+#### `NormalizedBankTransaction`
+
+```python
+@dataclass
+class NormalizedBankTransaction:
+    provider_transaction_id: str
+    amount: Decimal  # Negative=debit, Positive=credit
+    transaction_date: date
+    name: str
+    pending: bool = False
+    posted_date: date | None = None
+    primary_category: str | None = None      # e.g., "FOOD_AND_DRINK"
+    detailed_category: str | None = None     # e.g., "RESTAURANTS"
+    plaid_category: list[str] | None = None  # Raw Plaid category array
+    merchant_name: str | None = None
+    payment_channel: str | None = None       # "online", "in_store", "other"
+    iso_currency_code: str = "USD"
+```
+
+### Current Implementations
+
+| Provider | Status | Description |
+|----------|--------|-------------|
+| Plaid | Implemented | Full banking connectivity with transaction categorization |
 
 ---
 
@@ -939,6 +1053,6 @@ interface ProviderLogEvent {
 ## Related Documents
 
 - [OpenAPI Specification](./openapi.yaml) — Platform API contract
-- [Data Model](./data-model.md) — Database schema
+- [Data Model](./data-model.md) — Database schema (includes `BankTransaction` and `CashAccount` models)
 - [Provider Routing](./provider-routing.md) — Multi-provider routing strategy
 - [Sync and Freshness](./sync-and-freshness.md) — Data sync cadence
