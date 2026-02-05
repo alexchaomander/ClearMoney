@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from math import ceil
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_scopes
@@ -75,10 +75,11 @@ async def _sync_connection_with_error_handling(
         connection.error_code = None
         connection.error_message = None
     except Exception as e:
-        logger.error(f"Failed to sync banking connection: {e}")
+        logger.error(f"Failed to sync banking connection {connection.id}: {e}", exc_info=True)
         connection.status = ConnectionStatus.error
         connection.error_code = "SYNC_FAILED"
-        connection.error_message = str(e)[:1000]
+        # Use generic message to avoid exposing sensitive information
+        connection.error_message = "Failed to sync banking data. Please try again or reconnect."
 
 
 @router.post("/link", response_model=PlaidLinkResponse)
@@ -223,7 +224,15 @@ async def get_spending_summary(
 ) -> SpendingSummaryResponse:
     """Get spending breakdown by category for the specified period."""
     end_date = date.today()
-    start_date = end_date - timedelta(days=months * 30)
+    # Calculate start_date by subtracting months precisely
+    year = end_date.year
+    month = end_date.month - months
+    while month <= 0:
+        month += 12
+        year -= 1
+    # Clamp day to valid range for the target month
+    day = min(end_date.day, 28)  # Safe for all months
+    start_date = date(year, month, day)
 
     # Query spending by category (only debits, amount < 0)
     category_query = (
@@ -328,11 +337,8 @@ async def delete_banking_connection(
     )
     accounts = accounts_result.scalars().all()
 
-    # Delete transactions for each account, then delete the accounts
+    # Delete accounts (cascade will handle associated transactions)
     for account in accounts:
-        await session.execute(
-            delete(BankTransaction).where(BankTransaction.cash_account_id == account.id)
-        )
         await session.delete(account)
 
     # Finally delete the connection

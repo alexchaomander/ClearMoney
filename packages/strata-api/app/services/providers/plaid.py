@@ -15,6 +15,7 @@ from plaid.model.products import Products
 from plaid.model.accounts_get_request import AccountsGetRequest
 from plaid.model.transactions_get_request import TransactionsGetRequest
 from plaid.model.transactions_get_request_options import TransactionsGetRequestOptions
+from plaid.model.institutions_get_by_id_request import InstitutionsGetByIdRequest
 from plaid.model.item_remove_request import ItemRemoveRequest
 
 from app.core.config import settings
@@ -192,10 +193,6 @@ class PlaidProvider(BaseBankingProvider):
             institution_id = _safe_get(response.item, "institution_id")
             if institution_id:
                 try:
-                    from plaid.model.institutions_get_by_id_request import (
-                        InstitutionsGetByIdRequest,
-                    )
-
                     inst_request = InstitutionsGetByIdRequest(
                         institution_id=institution_id,
                         country_codes=[CountryCode("US")],

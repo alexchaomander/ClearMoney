@@ -1,5 +1,6 @@
 """Spending categories derivation from bank transactions."""
 
+import json
 import logging
 import uuid
 from datetime import date, timedelta
@@ -32,7 +33,15 @@ async def derive_spending_categories_from_transactions(
     Returns:
         Dictionary of category -> average monthly spending amount.
     """
-    start_date = date.today() - timedelta(days=months * 30)
+    # Calculate start_date by subtracting months precisely
+    end_date = date.today()
+    year = end_date.year
+    month = end_date.month - months
+    while month <= 0:
+        month += 12
+        year -= 1
+    day = min(end_date.day, 28)  # Safe for all months
+    start_date = date(year, month, day)
 
     # Query spending by category (only debits, amount < 0)
     result = await session.execute(
@@ -123,12 +132,12 @@ async def update_memory_spending_categories(
 
     # Log the derivation event
     event = MemoryEvent(
-        memory_id=memory.id,
+        user_id=user_id,
         field_name="spending_categories_monthly",
-        old_value=old_value,
-        new_value=spending,
-        source=MemoryEventSource.derived,
-        agent_session_id=None,
+        old_value=json.dumps(old_value) if old_value else None,
+        new_value=json.dumps(spending),
+        source=MemoryEventSource.account_sync,
+        context="Derived from linked bank transactions",
     )
     session.add(event)
 
