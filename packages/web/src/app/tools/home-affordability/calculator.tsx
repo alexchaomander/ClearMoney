@@ -14,6 +14,7 @@ import {
 } from "@/lib/calculators/home-affordability/constants";
 import type { CalculatorInputs } from "@/lib/calculators/home-affordability/types";
 import { cn } from "@/lib/utils";
+import { extractObject, normalizeNumber } from "@/lib/memory-utils";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
@@ -35,14 +36,6 @@ const DEFAULT_INPUTS: CalculatorInputs = {
 const selectStyles =
   "mt-2 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 text-sm text-white focus:border-teal-400 focus:outline-none";
 
-const normalizeNumber = (value: unknown) =>
-  typeof value === "number" && Number.isFinite(value) ? value : null;
-
-const extractObject = (value: unknown): Record<string, unknown> | null => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  return value as Record<string, unknown>;
-};
-
 export function Calculator() {
   const {
     preFilledFields,
@@ -55,14 +48,14 @@ export function Calculator() {
       "debt_profile",
       (value: unknown) => {
         const profile = extractObject(value);
-        return normalizeNumber(profile?.total_minimum_payment) ?? null;
+        return normalizeNumber(profile?.total_minimum_payment);
       },
     ],
     downPaymentSaved: [
       "portfolio_summary",
       (value: unknown) => {
         const summary = extractObject(value);
-        return normalizeNumber(summary?.total_cash_value) ?? null;
+        return normalizeNumber(summary?.total_cash_value);
       },
     ],
     currentRent: "monthly_rent",
