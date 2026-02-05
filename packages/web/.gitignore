@@ -1,0 +1,7 @@
+
+# clerk configuration (can include secrets)
+/.clerk/
+
+# playwright artifacts
+/test-results/
+/playwright-report/

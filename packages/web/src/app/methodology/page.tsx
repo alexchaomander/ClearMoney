@@ -86,7 +86,7 @@ const traceFields = [
 export default function MethodologyPage() {
   return (
     <div className={`${body.className} min-h-screen bg-[#f3efe6] text-[#1b1a17]`}>
-      <style jsx global>{`
+      <style>{`
         :root {
           --ink: #1b1a17;
           --ink-soft: #3a342c;
