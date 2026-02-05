@@ -14,6 +14,13 @@ class Settings(BaseSettings):
     snaptrade_client_id: str = ""
     snaptrade_consumer_key: str = ""
 
+    # Plaid configuration
+    plaid_client_id: str = ""
+    plaid_secret: str = ""
+    plaid_environment: str = "sandbox"  # sandbox | development | production
+    banking_sync_interval_seconds: int = 3600
+    banking_history_days: int = 730  # 2 years for initial fetch
+
     # Background jobs
     enable_background_jobs: bool = True
     sync_interval_seconds: int = 3600

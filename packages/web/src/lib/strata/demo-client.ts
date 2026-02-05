@@ -1,5 +1,7 @@
 import type {
   AllAccountsResponse,
+  BankAccount,
+  BankTransactionQuery,
   CashAccount,
   CashAccountCreate,
   CashAccountUpdate,
@@ -16,6 +18,10 @@ import type {
   DecisionTrace,
   FinancialContext,
   FinancialMemory,
+  PaginatedBankTransactions,
+  PlaidCallbackRequest,
+  PlaidLinkRequest,
+  PlaidLinkResponse,
   PointsProgram,
   CreditCardData,
   SavingsProduct,
@@ -28,6 +34,7 @@ import type {
   ToolPresetBundle,
   SkillDetail,
   SkillSummary,
+  SpendingSummary,
   FinancialMemoryUpdate,
   HealthResponse,
   HoldingDetail,
@@ -226,6 +233,11 @@ export class DemoStrataClient implements StrataClientInterface {
       balance: data.balance ?? 0,
       apy: data.apy ?? null,
       institution_name: data.institution_name ?? null,
+      connection_id: null,
+      provider_account_id: null,
+      available_balance: null,
+      mask: null,
+      is_manual: true,
       created_at: now,
       updated_at: now,
     };
@@ -242,6 +254,11 @@ export class DemoStrataClient implements StrataClientInterface {
       balance: data.balance ?? 0,
       apy: data.apy ?? null,
       institution_name: data.institution_name ?? null,
+      connection_id: null,
+      provider_account_id: null,
+      available_balance: null,
+      mask: null,
+      is_manual: true,
       created_at: now,
       updated_at: now,
     };
@@ -673,5 +690,139 @@ export class DemoStrataClient implements StrataClientInterface {
   async getToolPresets(): Promise<ToolPresetBundle> {
     await delay(200);
     return DEMO_TOOL_PRESETS;
+  }
+
+  // === Banking (Plaid) ===
+
+  async createPlaidLinkToken(_request?: PlaidLinkRequest): Promise<PlaidLinkResponse> {
+    void _request;
+    await delay(500);
+    return {
+      link_token: "demo-link-token-" + Date.now(),
+      expiration: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+    };
+  }
+
+  async handlePlaidCallback(request: PlaidCallbackRequest): Promise<Connection> {
+    void request;
+    await delay(1500);
+    return {
+      id: crypto.randomUUID(),
+      user_id: "demo-user-001",
+      institution_id: request.institution_id ?? null,
+      provider: "plaid",
+      provider_user_id: "demo-plaid-user",
+      status: "active",
+      last_synced_at: new Date().toISOString(),
+      error_code: null,
+      error_message: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  async getBankAccounts(): Promise<BankAccount[]> {
+    await delay(300);
+    return [
+      {
+        id: "demo-bank-001",
+        user_id: "demo-user-001",
+        connection_id: "demo-conn-plaid-001",
+        name: "Chase Checking",
+        account_type: "checking",
+        balance: 8500,
+        available_balance: 8450,
+        institution_name: "Chase",
+        mask: "1234",
+        is_manual: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "demo-bank-002",
+        user_id: "demo-user-001",
+        connection_id: "demo-conn-plaid-001",
+        name: "Chase Savings",
+        account_type: "savings",
+        balance: 25000,
+        available_balance: 25000,
+        institution_name: "Chase",
+        mask: "5678",
+        is_manual: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ];
+  }
+
+  async getBankTransactions(_params?: BankTransactionQuery): Promise<PaginatedBankTransactions> {
+    void _params;
+    await delay(300);
+    return {
+      transactions: [
+        {
+          id: "demo-tx-001",
+          cash_account_id: "demo-bank-001",
+          provider_transaction_id: "plaid-tx-001",
+          amount: -45.67,
+          transaction_date: new Date().toISOString().split("T")[0],
+          posted_date: new Date().toISOString().split("T")[0],
+          name: "UBER EATS",
+          primary_category: "FOOD_AND_DRINK",
+          detailed_category: "FOOD_AND_DRINK_RESTAURANTS",
+          merchant_name: "Uber Eats",
+          payment_channel: "online",
+          pending: false,
+          iso_currency_code: "USD",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        {
+          id: "demo-tx-002",
+          cash_account_id: "demo-bank-001",
+          provider_transaction_id: "plaid-tx-002",
+          amount: -125.00,
+          transaction_date: new Date().toISOString().split("T")[0],
+          posted_date: new Date().toISOString().split("T")[0],
+          name: "TRADER JOE'S",
+          primary_category: "FOOD_AND_DRINK",
+          detailed_category: "FOOD_AND_DRINK_GROCERIES",
+          merchant_name: "Trader Joe's",
+          payment_channel: "in_store",
+          pending: false,
+          iso_currency_code: "USD",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 50,
+      total_pages: 1,
+    };
+  }
+
+  async getSpendingSummary(_months?: number): Promise<SpendingSummary> {
+    void _months;
+    await delay(300);
+    const today = new Date();
+    const threeMonthsAgo = new Date(today);
+    threeMonthsAgo.setMonth(today.getMonth() - 3);
+
+    return {
+      total_spending: 5400,
+      monthly_average: 1800,
+      categories: [
+        { category: "FOOD_AND_DRINK", total: 1200, percentage: 22.2, transaction_count: 45 },
+        { category: "TRANSPORTATION", total: 800, percentage: 14.8, transaction_count: 20 },
+        { category: "SHOPPING", total: 600, percentage: 11.1, transaction_count: 15 },
+        { category: "ENTERTAINMENT", total: 400, percentage: 7.4, transaction_count: 12 },
+        { category: "PERSONAL_CARE", total: 200, percentage: 3.7, transaction_count: 8 },
+        { category: "GENERAL_MERCHANDISE", total: 2200, percentage: 40.7, transaction_count: 35 },
+      ],
+      start_date: threeMonthsAgo.toISOString().split("T")[0],
+      end_date: today.toISOString().split("T")[0],
+      months_analyzed: 3,
+    };
   }
 }

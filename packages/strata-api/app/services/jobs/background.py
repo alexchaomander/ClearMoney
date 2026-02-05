@@ -8,16 +8,30 @@ from app.core.config import settings
 from app.db.session import async_session_factory
 from app.models.connection import Connection, ConnectionStatus
 from app.services.connection_sync import sync_connection_accounts
+from app.services.banking_sync import sync_banking_connection
 from app.services.portfolio_snapshots import create_daily_snapshots
+from app.services.providers.base import BaseProvider
+from app.services.providers.base_banking import BaseBankingProvider
+from app.services.providers.plaid import PlaidProvider
 from app.services.providers.snaptrade import SnapTradeProvider
 
 logger = logging.getLogger(__name__)
 
 
-def _get_provider_for_connection(connection: Connection) -> SnapTradeProvider:
+def _get_provider_for_connection(
+    connection: Connection,
+) -> BaseProvider | BaseBankingProvider:
+    """Get the appropriate provider instance for a connection."""
     if connection.provider == SnapTradeProvider.provider_name:
         return SnapTradeProvider()
+    elif connection.provider == PlaidProvider.provider_name:
+        return PlaidProvider()
     raise ValueError(f"Unknown provider: {connection.provider}")
+
+
+def _is_banking_provider(provider: BaseProvider | BaseBankingProvider) -> bool:
+    """Check if a provider is a banking provider."""
+    return isinstance(provider, BaseBankingProvider)
 
 
 async def run_connection_sync() -> None:
@@ -44,7 +58,10 @@ async def run_connection_sync() -> None:
                 continue
             try:
                 provider = _get_provider_for_connection(connection)
-                await sync_connection_accounts(session, connection, provider)
+                if _is_banking_provider(provider):
+                    await sync_banking_connection(session, connection, provider)
+                else:
+                    await sync_connection_accounts(session, connection, provider)
                 connection.status = ConnectionStatus.active
                 connection.last_synced_at = datetime.now(timezone.utc)
                 connection.error_code = None
