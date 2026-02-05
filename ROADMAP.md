@@ -163,6 +163,11 @@ TPG was acquired by Red Ventures (now Bankrate) in 2012. Red Ventures is a **$4 
 - [ ] Design and build landing page
 - [ ] Set up CI/CD pipeline
 
+**Personalization (Memory & Opt-In Data):**
+- [x] Expand financial memory schema (spending, debt, portfolio, equity compensation)
+- [x] Derive memory profiles from connected accounts
+- [x] Add opt-in “Load my data” banner across calculators with prefill mappings
+
 ### 1.2 Core Tools to Build
 
 **Priority 1: Decision Calculators**

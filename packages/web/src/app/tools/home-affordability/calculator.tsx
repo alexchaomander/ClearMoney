@@ -15,6 +15,7 @@ import {
 } from "@/lib/calculators/home-affordability/constants";
 import type { CalculatorInputs } from "@/lib/calculators/home-affordability/types";
 import { cn } from "@/lib/utils";
+import { extractObject, normalizeNumber } from "@/lib/memory-utils";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
@@ -48,8 +49,23 @@ export function Calculator() {
     applyTo: applyMemoryDefaults,
   } = useMemoryPreFill<CalculatorInputs>({
     annualIncome: "annual_income",
+    monthlyDebt: [
+      "debt_profile",
+      (value: unknown) => {
+        const profile = extractObject(value);
+        return normalizeNumber(profile?.total_minimum_payment);
+      },
+    ],
+    downPaymentSaved: [
+      "portfolio_summary",
+      (value: unknown) => {
+        const summary = extractObject(value);
+        return normalizeNumber(summary?.total_cash_value);
+      },
+    ],
     currentRent: "monthly_rent",
     mortgageRate: ["mortgage_rate", (v: unknown) => Number(v) * 100],
+    riskTolerance: "risk_tolerance",
     state: "state",
   });
 
