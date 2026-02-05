@@ -85,9 +85,9 @@ const traceFields = [
 
 export default function MethodologyPage() {
   return (
-    <div className={`${body.className} min-h-screen bg-[#f3efe6] text-[#1b1a17]`}>
+    <div className={`${body.className} cm-methodology-page min-h-screen bg-[#f3efe6] text-[#1b1a17]`}>
       <style>{`
-        :root {
+        .cm-methodology-page {
           --ink: #1b1a17;
           --ink-soft: #3a342c;
           --paper: #f3efe6;
@@ -95,10 +95,10 @@ export default function MethodologyPage() {
           --accent-2: #0e7c7b;
           --ink-line: rgba(27, 26, 23, 0.18);
         }
-        .grain {
+        .cm-methodology-page .grain {
           position: relative;
         }
-        .grain::after {
+        .cm-methodology-page .grain::after {
           content: "";
           pointer-events: none;
           position: absolute;
