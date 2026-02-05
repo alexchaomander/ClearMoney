@@ -136,6 +136,18 @@ export interface StrataClientOptions {
   authToken?: string;
 }
 
+export class StrataApiError extends Error {
+  status: number;
+  detail?: string;
+
+  constructor(status: number, message: string, detail?: string) {
+    super(message);
+    this.name = "StrataApiError";
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
 export class StrataClient implements StrataClientInterface {
   private baseUrl: string;
   private clerkUserId: string | null;
@@ -180,10 +192,10 @@ export class StrataClient implements StrataClientInterface {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(
-        error.detail || `Request failed: ${response.status} ${response.statusText}`
-      );
+      const errorBody = await response.json().catch(() => ({}));
+      const detail = typeof errorBody?.detail === "string" ? errorBody.detail : undefined;
+      const message = detail || `Request failed: ${response.status} ${response.statusText}`;
+      throw new StrataApiError(response.status, message, detail);
     }
 
     return response.json();
