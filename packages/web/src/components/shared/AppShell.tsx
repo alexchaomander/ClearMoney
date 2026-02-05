@@ -77,6 +77,9 @@ export function AppShell({
               <Link href="/tools" className="hover:text-white transition-colors">
                 All Tools
               </Link>
+              <Link href="/transparency" className="hover:text-white transition-colors">
+                Transparency
+              </Link>
               <Link
                 href="/methodology"
                 className="hover:text-white transition-colors"
@@ -84,10 +87,10 @@ export function AppShell({
                 Methodology
               </Link>
               <Link
-                href="/about"
+                href="/methodology"
                 className="hover:text-white transition-colors"
               >
-                About
+                Independence
               </Link>
             </div>
           </div>

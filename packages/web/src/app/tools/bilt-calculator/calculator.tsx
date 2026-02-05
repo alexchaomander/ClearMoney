@@ -6,6 +6,7 @@ import { BILT_CARDS, POINT_VALUATION, BILT_CASH_UNLOCK_RATIO, BILT_CASH_EARN_RAT
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import { LoadMyDataBanner } from '@/components/tools/LoadMyDataBanner';
 import { useMemoryPreFill } from '@/hooks/useMemoryPreFill';
+import { useToolPreset } from '@/lib/strata/presets';
 
 // Updated Slider with tap-to-edit functionality for mobile
 const CompactSlider = ({ label, value, min, max, step = 50, onChange, unit = "$" }: { label: string, value: number, min: number, max: number, step?: number, onChange: (v: number) => void, unit?: string }) => {
@@ -302,6 +303,15 @@ const getCategoryValue = (value: unknown, keys: string[]): number | null => {
 };
 
 export default function BiltCalculator() {
+  const { preset } = useToolPreset<{
+    rent?: number;
+    dining?: number;
+    grocery?: number;
+    travel?: number;
+    misc?: number;
+    mode?: RewardMode;
+    timeframe?: 'year1' | 'year2';
+  }>('bilt-calculator');
   const [rent, setRent] = useState(3000);
   const [dining, setDining] = useState(500);
   const [grocery, setGrocery] = useState(500);
@@ -318,6 +328,17 @@ export default function BiltCalculator() {
   const [selectedChartBar, setSelectedChartBar] = useState<string | null>(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showFullScreenChart, setShowFullScreenChart] = useState(false);
+
+  useEffect(() => {
+    if (!preset) return;
+    if (preset.rent != null) setRent(preset.rent);
+    if (preset.dining != null) setDining(preset.dining);
+    if (preset.grocery != null) setGrocery(preset.grocery);
+    if (preset.travel != null) setTravel(preset.travel);
+    if (preset.misc != null) setMisc(preset.misc);
+    if (preset.mode) setMode(preset.mode);
+    if (preset.timeframe) setTimeframe(preset.timeframe);
+  }, [preset]);
 
   const {
     preFilledFields,

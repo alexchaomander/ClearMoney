@@ -1,0 +1,221 @@
+[
+  {
+    "id": "chase-ur",
+    "name": "Chase Ultimate Rewards",
+    "short_name": "Chase UR",
+    "issuer": "Chase",
+    "category": "bank",
+    "valuations": {
+      "tpg": 2.0,
+      "conservative": 1.25,
+      "moderate": 1.35,
+      "optimistic": 1.5
+    },
+    "methodology": {
+      "cash_out": 1.0,
+      "portal_value": 1.25,
+      "transfer_value": "Hyatt transfers often yield 1.5-2cpp."
+    },
+    "best_uses": [
+      "Hyatt transfers",
+      "Pay Yourself Back",
+      "Travel portal with Sapphire Reserve"
+    ],
+    "worst_uses": [
+      "Amazon checkout (0.8cpp)",
+      "Cash back without Sapphire"
+    ],
+    "last_updated": "2026-01-15"
+  },
+  {
+    "id": "amex-mr",
+    "name": "Amex Membership Rewards",
+    "short_name": "Amex MR",
+    "issuer": "American Express",
+    "category": "bank",
+    "valuations": {
+      "tpg": 2.0,
+      "conservative": 1.1,
+      "moderate": 1.25,
+      "optimistic": 1.5
+    },
+    "methodology": {
+      "cash_out": 0.6,
+      "portal_value": 1.0,
+      "transfer_value": "ANA/Virgin transfers can yield 1.5-2cpp."
+    },
+    "best_uses": [
+      "Transfer to ANA",
+      "Transfer to Virgin Atlantic",
+      "Schwab cash out (1.1cpp)"
+    ],
+    "worst_uses": [
+      "Statement credits",
+      "Amazon (0.7cpp)"
+    ],
+    "last_updated": "2026-01-15"
+  },
+  {
+    "id": "citi-ty",
+    "name": "Citi ThankYou Points",
+    "short_name": "Citi TY",
+    "issuer": "Citi",
+    "category": "bank",
+    "valuations": {
+      "tpg": 1.7,
+      "conservative": 1.0,
+      "moderate": 1.1,
+      "optimistic": 1.25
+    },
+    "methodology": {
+      "cash_out": 1.0,
+      "portal_value": 1.0,
+      "transfer_value": "Limited transfer partners; JetBlue can be solid."
+    },
+    "best_uses": [
+      "Cash back",
+      "JetBlue transfers",
+      "Travel portal"
+    ],
+    "worst_uses": [
+      "Gift cards",
+      "Merchandise"
+    ],
+    "last_updated": "2026-01-15"
+  },
+  {
+    "id": "capital-one",
+    "name": "Capital One Miles",
+    "short_name": "Capital One",
+    "issuer": "Capital One",
+    "category": "bank",
+    "valuations": {
+      "tpg": 1.85,
+      "conservative": 0.85,
+      "moderate": 0.9,
+      "optimistic": 1.0
+    },
+    "methodology": {
+      "cash_out": 0.5,
+      "portal_value": 1.0,
+      "transfer_value": "Some partners are 1:1, but value varies by route."
+    },
+    "best_uses": [
+      "Erase travel purchases",
+      "Select transfer partners at 1:1"
+    ],
+    "worst_uses": [
+      "Cash out",
+      "Gift cards"
+    ],
+    "last_updated": "2026-01-15"
+  },
+  {
+    "id": "bilt",
+    "name": "Bilt Rewards",
+    "short_name": "Bilt",
+    "issuer": "Bilt",
+    "category": "bank",
+    "valuations": {
+      "tpg": 1.8,
+      "conservative": 1.2,
+      "moderate": 1.4,
+      "optimistic": 1.7
+    },
+    "methodology": {
+      "cash_out": 0.55,
+      "portal_value": 1.25,
+      "transfer_value": "Strong airline partners; transfer value varies by route."
+    },
+    "best_uses": [
+      "Hyatt transfers",
+      "Airline transfers",
+      "Rent day bonuses"
+    ],
+    "worst_uses": [
+      "Cash out",
+      "Low-value gift cards"
+    ],
+    "last_updated": "2026-01-15"
+  },
+  {
+    "id": "marriott",
+    "name": "Marriott Bonvoy",
+    "short_name": "Marriott",
+    "issuer": "Marriott",
+    "category": "hotel",
+    "valuations": {
+      "tpg": 0.8,
+      "conservative": 0.6,
+      "moderate": 0.7,
+      "optimistic": 0.8
+    },
+    "methodology": {
+      "cash_out": null,
+      "portal_value": null,
+      "transfer_value": "Transfers to airlines run about 3:1."
+    },
+    "best_uses": [
+      "Off-peak hotel stays",
+      "5th night free on 5-night stays"
+    ],
+    "worst_uses": [
+      "Peak pricing properties",
+      "Airline transfers (3:1)"
+    ],
+    "last_updated": "2026-01-15"
+  },
+  {
+    "id": "hilton",
+    "name": "Hilton Honors",
+    "short_name": "Hilton",
+    "issuer": "Hilton",
+    "category": "hotel",
+    "valuations": {
+      "tpg": 0.5,
+      "conservative": 0.4,
+      "moderate": 0.45,
+      "optimistic": 0.5
+    },
+    "methodology": {
+      "cash_out": null,
+      "portal_value": null,
+      "transfer_value": "Devalued over time, 5th night free helps."
+    },
+    "best_uses": [
+      "Standard room redemptions",
+      "5th night free"
+    ],
+    "worst_uses": [
+      "Premium properties",
+      "Points + Cash"
+    ],
+    "last_updated": "2026-01-15"
+  },
+  {
+    "id": "hyatt",
+    "name": "World of Hyatt",
+    "short_name": "Hyatt",
+    "issuer": "Hyatt",
+    "category": "hotel",
+    "valuations": {
+      "tpg": 1.7,
+      "conservative": 1.5,
+      "moderate": 1.7,
+      "optimistic": 1.9
+    },
+    "methodology": {
+      "cash_out": null,
+      "portal_value": null,
+      "transfer_value": "Best hotel currency with consistent value."
+    },
+    "best_uses": [
+      "Category 1-4 properties",
+      "Suite upgrades"
+    ],
+    "worst_uses": [
+      "All-inclusive resorts (lower cpp)"
+    ],
+    "last_updated": "2026-01-15"
+  }
+]

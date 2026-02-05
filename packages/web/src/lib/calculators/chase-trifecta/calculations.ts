@@ -1,6 +1,12 @@
 import type { CalculatorInputs, CalculatorResults, CategoryResult } from "./types";
 
-const CARD_DATA = {
+export type CardMeta = {
+  name: string;
+  annualFee: number;
+  travelCredit: number;
+};
+
+export const DEFAULT_CARD_DATA: Record<string, CardMeta> = {
   sapphireReserve: {
     name: "Sapphire Reserve",
     annualFee: 550,
@@ -23,7 +29,10 @@ const CARD_DATA = {
   },
 };
 
-export function calculate(inputs: CalculatorInputs): CalculatorResults {
+export function calculate(
+  inputs: CalculatorInputs,
+  cardMeta: Record<string, CardMeta> = DEFAULT_CARD_DATA
+): CalculatorResults {
   const { pointsValue, spending, cards } = inputs;
   const cpp = pointsValue;
 
@@ -44,7 +53,7 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
       const rate = category === "dining" || category === "drugstores" ? 3 : 1.5;
       if (rate > bestRate) {
         bestRate = rate;
-        bestCard = CARD_DATA.freedomUnlimited.name;
+        bestCard = cardMeta.freedomUnlimited.name;
       }
     }
 
@@ -52,7 +61,7 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
       const rate = category === "dining" || category === "drugstores" ? 3 : 1;
       if (rate > bestRate) {
         bestRate = rate;
-        bestCard = CARD_DATA.freedomFlex.name;
+        bestCard = cardMeta.freedomFlex.name;
       }
     }
 
@@ -66,7 +75,7 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
       const rate = rates[category] || 1;
       if (rate > bestRate) {
         bestRate = rate;
-        bestCard = CARD_DATA.sapphirePreferred.name;
+        bestCard = cardMeta.sapphirePreferred.name;
       }
     }
 
@@ -79,7 +88,7 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
       const rate = rates[category] || 1;
       if (rate > bestRate) {
         bestRate = rate;
-        bestCard = CARD_DATA.sapphireReserve.name;
+        bestCard = cardMeta.sapphireReserve.name;
       }
     }
 
@@ -123,11 +132,11 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
   let annualCredits = 0;
 
   if (cards.hasSapphireReserve) {
-    annualFees += CARD_DATA.sapphireReserve.annualFee;
-    annualCredits += CARD_DATA.sapphireReserve.travelCredit;
+    annualFees += cardMeta.sapphireReserve.annualFee;
+    annualCredits += cardMeta.sapphireReserve.travelCredit;
   }
   if (cards.hasSapphirePreferred) {
-    annualFees += CARD_DATA.sapphirePreferred.annualFee;
+    annualFees += cardMeta.sapphirePreferred.annualFee;
   }
 
   const netValue = annualValue + annualCredits - annualFees;

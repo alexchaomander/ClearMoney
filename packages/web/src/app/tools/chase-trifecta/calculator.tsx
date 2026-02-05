@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
@@ -10,8 +10,16 @@ import {
   formatNumber,
   formatPercent,
 } from "@/lib/shared/formatters";
-import { calculate } from "@/lib/calculators/chase-trifecta/calculations";
+import {
+  calculate,
+  DEFAULT_CARD_DATA,
+  type CardMeta,
+} from "@/lib/calculators/chase-trifecta/calculations";
 import type { CalculatorInputs } from "@/lib/calculators/chase-trifecta/types";
+import { useCreditCardData, usePointsPrograms } from "@/lib/strata/hooks";
+import type { CreditCardData, PointsProgram } from "@clearmoney/strata-sdk";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   pointsValue: 1.25,
@@ -32,7 +40,7 @@ const DEFAULT_INPUTS: CalculatorInputs = {
   },
 };
 
-const POINTS_PRESETS = [
+const DEFAULT_POINTS_PRESETS = [
   { label: "Cash (1¢)", value: 1.0 },
   { label: "Portal (1.25¢)", value: 1.25 },
   { label: "Transfers (1.75¢)", value: 1.75 },
@@ -96,7 +104,58 @@ const CARD_OPTIONS = [
   },
 ] as const;
 
+const buildCardMeta = (cards: CreditCardData[] | undefined): Record<string, CardMeta> => {
+  if (!cards?.length) return DEFAULT_CARD_DATA;
+  const find = (id: string) => cards.find((card) => card.id === id);
+
+  const reserve = find("chase-sapphire-reserve");
+  const preferred = find("chase-sapphire-preferred");
+  const flex = find("chase-freedom-flex");
+  const unlimited = find("chase-freedom-unlimited");
+
+  const travelCredit = (card?: CreditCardData) =>
+    card?.credits
+      .filter((credit) => credit.category === "travel")
+      .reduce((sum, credit) => sum + credit.value, 0) ?? 0;
+
+  return {
+    sapphireReserve: {
+      name: reserve?.name ?? DEFAULT_CARD_DATA.sapphireReserve.name,
+      annualFee: reserve?.annual_fee ?? DEFAULT_CARD_DATA.sapphireReserve.annualFee,
+      travelCredit: travelCredit(reserve) || DEFAULT_CARD_DATA.sapphireReserve.travelCredit,
+    },
+    sapphirePreferred: {
+      name: preferred?.name ?? DEFAULT_CARD_DATA.sapphirePreferred.name,
+      annualFee: preferred?.annual_fee ?? DEFAULT_CARD_DATA.sapphirePreferred.annualFee,
+      travelCredit: travelCredit(preferred) || DEFAULT_CARD_DATA.sapphirePreferred.travelCredit,
+    },
+    freedomFlex: {
+      name: flex?.name ?? DEFAULT_CARD_DATA.freedomFlex.name,
+      annualFee: flex?.annual_fee ?? DEFAULT_CARD_DATA.freedomFlex.annualFee,
+      travelCredit: travelCredit(flex) || DEFAULT_CARD_DATA.freedomFlex.travelCredit,
+    },
+    freedomUnlimited: {
+      name: unlimited?.name ?? DEFAULT_CARD_DATA.freedomUnlimited.name,
+      annualFee: unlimited?.annual_fee ?? DEFAULT_CARD_DATA.freedomUnlimited.annualFee,
+      travelCredit: travelCredit(unlimited) || DEFAULT_CARD_DATA.freedomUnlimited.travelCredit,
+    },
+  };
+};
+
+const buildPointsPresets = (programs: PointsProgram[] | undefined) => {
+  const chase = programs?.find((p) => p.id === "chase-ur");
+  if (!chase) return DEFAULT_POINTS_PRESETS;
+  return [
+    { label: "Cash (1¢)", value: 1.0 },
+    { label: `Portal (${chase.valuations.conservative}¢)`, value: chase.valuations.conservative },
+    { label: `Transfers (${chase.valuations.optimistic}¢)`, value: chase.valuations.optimistic },
+  ];
+};
+
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("chase-trifecta");
+  const { data: creditCardData } = useCreditCardData();
+  const { data: pointsPrograms } = usePointsPrograms();
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -133,14 +192,30 @@ export function Calculator() {
     ],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
   const [sapphireWarning, setSapphireWarning] = useState("");
 
-  const results = useMemo(() => calculate(inputs), [inputs]);
+  const cardMeta = useMemo(() => buildCardMeta(creditCardData), [creditCardData]);
+  const pointsPresets = useMemo(
+    () => buildPointsPresets(pointsPrograms),
+    [pointsPrograms]
+  );
+
+  useEffect(() => {
+    if (!pointsPresets.length) return;
+    setInputs((prev) => ({
+      ...prev,
+      pointsValue: prev.pointsValue || pointsPresets[1]?.value || prev.pointsValue,
+    }));
+  }, [pointsPresets]);
+
+  const results = useMemo(() => calculate(inputs, cardMeta), [inputs, cardMeta]);
 
   const handleToggle = (key: (typeof CARD_OPTIONS)[number]["key"]) => {
     setInputs((prev) => {
@@ -249,7 +324,7 @@ export function Calculator() {
               How do you typically redeem? Conservative redemptions start around 1.25¢.
             </p>
             <div className="flex flex-wrap gap-3 mb-6">
-              {POINTS_PRESETS.map((preset) => (
+              {pointsPresets.map((preset) => (
                 <button
                   key={preset.label}
                   type="button"

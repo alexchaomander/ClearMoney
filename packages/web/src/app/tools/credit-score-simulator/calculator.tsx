@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
@@ -9,6 +9,7 @@ import {
   formatPercent,
   formatWithSign,
 } from "@/lib/shared/formatters";
+import { mergeDeep } from "@/lib/shared/merge";
 import {
   analyzeProfile,
   simulate,
@@ -18,6 +19,7 @@ import type {
   SimulationAction,
   FactorStatus,
 } from "@/lib/calculators/credit-score-simulator/types";
+import { useToolPreset } from "@/lib/strata/presets";
 
 const DEFAULT_PROFILE: CreditProfile = {
   estimatedScore: 700,
@@ -198,6 +200,7 @@ function ImpactRange({ min, max }: { min: number; max: number }) {
 }
 
 export function Calculator() {
+  const { preset } = useToolPreset<{ profile: CreditProfile }>("credit-score-simulator");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -205,12 +208,19 @@ export function Calculator() {
     applyTo: applyMemoryDefaults,
   } = useMemoryPreFill<CreditProfile>({});
 
-  const [profile, setProfile] = useState<CreditProfile>(DEFAULT_PROFILE);
+  const [profile, setProfile] = useState<CreditProfile>(() =>
+    mergeDeep(DEFAULT_PROFILE, preset?.profile ?? undefined)
+  );
   const [actions, setActions] = useState(DEFAULT_ACTIONS);
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setProfile),
     [applyMemoryDefaults]
   );
+
+  useEffect(() => {
+    if (!preset?.profile) return;
+    setProfile((prev) => mergeDeep(prev, preset.profile));
+  }, [preset]);
 
   const factors = useMemo(() => analyzeProfile(profile), [profile]);
 

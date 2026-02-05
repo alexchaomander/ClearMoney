@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   LineChart,
   Line,
@@ -22,6 +22,8 @@ import {
 } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/hsa-maximization/calculations";
 import type { CalculatorInputs } from "@/lib/calculators/hsa-maximization/types";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   eligibility: {
@@ -158,6 +160,7 @@ function ToggleButton({
 }
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("hsa-maximization");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -178,11 +181,19 @@ export function Calculator() {
     ],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

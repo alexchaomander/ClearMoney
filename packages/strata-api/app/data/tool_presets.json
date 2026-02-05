@@ -1,0 +1,660 @@
+{
+  "last_updated": "2026-01-15",
+  "presets": [
+    {
+      "tool_id": "annual-fee-analyzer",
+      "defaults": {
+        "annualFee": 550,
+        "annualSpending": 30000,
+        "rewardsRate": 2.0,
+        "totalCredits": 300,
+        "creditUtilization": 50,
+        "pointsValueCpp": 1.0
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "amex-comparison",
+      "defaults": {
+        "spending": {
+          "dining": 500,
+          "groceries": 600,
+          "flights": 200,
+          "hotels": 100,
+          "other": 1000
+        },
+        "creditUsage": {
+          "uberCreditUsage": 80,
+          "diningCreditUsage": 70,
+          "airlineFeeUsage": 50,
+          "hotelCreditUsage": 50,
+          "entertainmentUsage": 60,
+          "saksUsage": 30
+        },
+        "preferences": {
+          "valuesLoungeAccess": false,
+          "flightsPerYear": 6,
+          "pointsValue": 1.2
+        }
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "tpg-transparency",
+      "defaults": {
+        "selectedCard": "sapphire-preferred",
+        "spending": {
+          "dining": 400,
+          "travel": 200,
+          "groceries": 500,
+          "other": 1500
+        },
+        "redemptionStyle": "cashBack"
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "chase-trifecta",
+      "defaults": {
+        "pointsValue": 1.25,
+        "spending": {
+          "dining": 400,
+          "groceries": 600,
+          "gas": 150,
+          "travel": 200,
+          "streaming": 50,
+          "drugstores": 50,
+          "other": 1500
+        },
+        "cards": {
+          "hasSapphirePreferred": false,
+          "hasSapphireReserve": true,
+          "hasFreedomFlex": true,
+          "hasFreedomUnlimited": true
+        }
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "points-valuation",
+      "defaults": {
+        "holdings": {
+          "chase-ur": 0,
+          "amex-mr": 0,
+          "citi-ty": 0,
+          "capital-one": 0,
+          "marriott": 0,
+          "hilton": 0,
+          "hyatt": 0
+        },
+        "redemptionStyle": "conservative"
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "bilt-calculator",
+      "defaults": {
+        "rent": 3000,
+        "dining": 500,
+        "grocery": 500,
+        "travel": 500,
+        "misc": 750,
+        "mode": "Multiplier",
+        "timeframe": "year1"
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "conscious-spending",
+      "defaults": {
+        "monthlyIncome": 5000,
+        "fixedCosts": 2500,
+        "investments": 500,
+        "savings": 300,
+        "guiltFree": 700,
+        "moneyDials": []
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "dividend-tracker",
+      "defaults": {
+        "portfolioValue": 50000,
+        "dividendYield": 3.0,
+        "monthlyContribution": 500,
+        "dividendGrowthRate": 6,
+        "reinvestDividends": true,
+        "monthlyExpenses": 4000,
+        "yearsToProject": 20
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "investment-growth",
+      "defaults": {
+        "initialInvestment": 20000,
+        "monthlyContribution": 600,
+        "investmentHorizon": 25,
+        "annualReturnRate": 7,
+        "inflationRate": 2.5
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "fire-calculator",
+      "defaults": {
+        "annualIncome": 100000,
+        "annualExpenses": 60000,
+        "currentSavings": 85000,
+        "expectedReturn": 6.5,
+        "withdrawalRate": 4
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "savings-goal",
+      "defaults": {
+        "goalAmount": 25000,
+        "currentSavings": 2000,
+        "monthlyContribution": 500,
+        "annualReturnRate": 5
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "debt-destroyer",
+      "defaults": {
+        "debts": [
+          {
+            "id": "preset-cc",
+            "name": "Credit Card",
+            "balance": 6500,
+            "interestRate": 21.9,
+            "minimumPayment": 200
+          },
+          {
+            "id": "preset-auto",
+            "name": "Auto Loan",
+            "balance": 18000,
+            "interestRate": 7.1,
+            "minimumPayment": 375
+          }
+        ],
+        "extraPayment": 250
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "student-loan-strategy",
+      "defaults": {
+        "loanBalance": 28000,
+        "interestRate": 6.2,
+        "loanType": "direct",
+        "annualIncome": 65000,
+        "incomeGrowthRate": 3,
+        "filingStatus": "single",
+        "familySize": 1,
+        "state": "CA",
+        "yearsInRepayment": 0,
+        "pslfEligible": false,
+        "pslfPaymentsMade": 0,
+        "hasParentPlus": false
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "credit-score-simulator",
+      "defaults": {
+        "profile": {
+          "estimatedScore": 700,
+          "totalCreditLimit": 20000,
+          "currentBalance": 3000,
+          "oldestAccountYears": 5,
+          "totalAccounts": 4,
+          "recentInquiries": 1,
+          "missedPayments": 0
+        }
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "mortgage",
+      "defaults": {
+        "homePrice": 600000,
+        "downPaymentPercent": 20,
+        "loanTermYears": 30,
+        "interestRate": 6.8,
+        "propertyTaxRate": 1.1,
+        "homeInsurance": 1800,
+        "pmiRate": 0.5
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "home-affordability",
+      "defaults": {
+        "annualIncome": 120000,
+        "monthlyDebt": 500,
+        "downPaymentSaved": 80000,
+        "targetDownPaymentPercent": 20,
+        "currentRent": 2000,
+        "mortgageRate": 6.8,
+        "propertyTaxRate": 1.1,
+        "hoa": 0,
+        "riskTolerance": "moderate"
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "rent-vs-buy",
+      "defaults": {
+        "monthlyRent": 2000,
+        "annualRentIncrease": 3,
+        "homePrice": 400000,
+        "downPaymentPercent": 20,
+        "mortgageRate": 6.5,
+        "loanTermYears": 30,
+        "propertyTaxRate": 1.2,
+        "homeAppreciationRate": 3,
+        "maintenanceRate": 1,
+        "investmentReturnRate": 7,
+        "timeHorizon": 10
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "capital-gains",
+      "defaults": {
+        "purchasePrice": 15000,
+        "salePrice": 32000,
+        "holdingPeriod": "long",
+        "filingStatus": "single",
+        "annualIncome": 90000,
+        "state": "CA"
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "tax-bracket-optimizer",
+      "defaults": {
+        "filingStatus": "single",
+        "income": {
+          "wagesIncome": 150000
+        },
+        "deductions": {
+          "deductionType": "standard"
+        },
+        "scenario": {
+          "rothConversionAmount": 0,
+          "additionalIncome": 0,
+          "additionalDeduction": 0
+        }
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "obbb-tax-optimizer",
+      "defaults": {
+        "filingStatus": "single",
+        "age": 40,
+        "spouseAge": 40,
+        "modifiedAGI": 75000,
+        "annualTips": 0,
+        "annualOvertime": 0,
+        "carLoanInterest": 0,
+        "saltPaid": 10000,
+        "otherItemized": 0,
+        "marginalRate": 0.22
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "2026-limits",
+      "defaults": {
+        "age": 35,
+        "filingStatus": "single",
+        "annualIncome": 100000,
+        "accounts": {
+          "has401k": true,
+          "hasTraditionalIRA": true,
+          "hasRothIRA": true,
+          "hasHSA": true,
+          "hsaCoverageType": "family",
+          "hasFSA": false,
+          "hasSimpleIRA": false,
+          "has403b": false,
+          "has457b": false,
+          "hasSolo401k": false,
+          "hasSepIRA": false
+        }
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "backdoor-roth",
+      "defaults": {
+        "income": 200000,
+        "filingStatus": "single",
+        "hasWorkplacePlan": true,
+        "traditionalIRABalance": 0,
+        "sepIRABalance": 0,
+        "simpleIRABalance": 0,
+        "contributionAmount": 7000,
+        "age": 35
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "mega-backdoor-roth",
+      "defaults": {
+        "age": 35,
+        "annualIncome": 250000,
+        "plan": {
+          "allowsAfterTax": false,
+          "allowsInPlanConversion": false,
+          "allowsInServiceDistribution": false,
+          "employeeContribution": 23000,
+          "employeeContributionType": "traditional",
+          "employerMatch": 10000,
+          "afterTaxContributionLimit": 0
+        },
+        "currentRothBalance": 50000,
+        "yearsUntilRetirement": 25,
+        "expectedReturn": 7
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "roth-vs-traditional",
+      "defaults": {
+        "annualContribution": 7000,
+        "currentTaxRate": 22,
+        "retirementTaxRate": 22,
+        "yearsUntilRetirement": 30,
+        "expectedReturn": 7
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "roth-catch-up",
+      "defaults": {
+        "priorYearW2Wages": 175000,
+        "currentAge": 55,
+        "currentBalance": 500000,
+        "currentMarginalRate": 32,
+        "retirementTaxRate": 24,
+        "yearsUntilRetirement": 10,
+        "expectedReturn": 7,
+        "stateTaxRate": 5,
+        "employerOffersRoth": true,
+        "filingStatus": "single"
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "super-catch-up",
+      "defaults": {
+        "currentAge": 58,
+        "birthDate": "",
+        "currentBalance": 500000,
+        "annualSalary": 150000,
+        "contributionRate": 15,
+        "employerMatchPercent": 4,
+        "employerMatchCap": 6,
+        "expectedReturn": 7,
+        "retirementAge": 65,
+        "priorYearWages": 150000,
+        "filingStatus": "single"
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "hsa-maximization",
+      "defaults": {
+        "eligibility": {
+          "hasHDHP": true,
+          "coverageType": "individual",
+          "age": 35,
+          "enrolledInMedicare": false,
+          "monthsOfCoverage": 12
+        },
+        "contribution": {
+          "currentContribution": 3000,
+          "employerContribution": 500,
+          "currentHSABalance": 5000
+        },
+        "investment": {
+          "expectedReturn": 7,
+          "yearsToRetirement": 30,
+          "yearsInRetirement": 25
+        },
+        "tax": {
+          "marginalTaxRate": 32,
+          "retirementTaxRate": 24,
+          "stateCode": "CA"
+        },
+        "medical": {
+          "annualMedicalExpenses": 2000,
+          "retirementMedicalExpenses": 10000
+        }
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "i-bond-comparison",
+      "defaults": {
+        "amount": 10000,
+        "years": 3,
+        "hysaRate": 4.5,
+        "federalBracket": 0.22,
+        "stateRate": 5,
+        "needsFullLiquidity": false,
+        "expectedInflation": 2.5,
+        "iBondFixedRate": 0.9,
+        "iBondInflationRate": 3.12
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "529-roth-rollover",
+      "defaults": {
+        "accountBalance": 50000,
+        "accountOpenDate": "2010-01-01",
+        "beneficiaryAge": 22,
+        "earnedIncome": 40000,
+        "otherIRAContributions": 0,
+        "contributionsMade5YearsAgo": 30000,
+        "priorRollovers": 0,
+        "expectedReturn": 7,
+        "yearsUntilRetirement": 40
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "appreciated-stock-donation",
+      "defaults": {
+        "stock": {
+          "stockValue": 10000,
+          "costBasis": 2000,
+          "holdingPeriod": 24
+        },
+        "tax": {
+          "filingStatus": "single",
+          "adjustedGrossIncome": 200000,
+          "marginalTaxRate": 32,
+          "stateCode": "CA",
+          "itemizesDeductions": true
+        },
+        "donation": {
+          "donationAmount": 10000,
+          "donationType": "public_charity"
+        }
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "estate-tax",
+      "defaults": {
+        "assets": {
+          "bankAccounts": 100000,
+          "brokerageAccounts": 500000,
+          "retirementAccounts": 500000,
+          "primaryResidence": 1000000,
+          "otherRealEstate": 0,
+          "lifeInsurance": 1000000,
+          "businessInterests": 0,
+          "otherAssets": 100000
+        },
+        "liabilities": {
+          "mortgages": 400000,
+          "otherDebts": 0
+        },
+        "personal": {
+          "maritalStatus": "single",
+          "stateOfResidence": "CA",
+          "age": 45,
+          "spouseAge": 43
+        },
+        "lifetimeGiftsMade": 0
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "equity-concentration",
+      "defaults": {
+        "equity": {
+          "currentSharesValue": 500000,
+          "vestedOptionsValue": 100000,
+          "unvestedEquityValue": 200000,
+          "costBasis": 50000
+        },
+        "assets": {
+          "cashSavings": 50000,
+          "retirementAccounts": 200000,
+          "otherInvestments": 100000,
+          "realEstate": 300000,
+          "otherAssets": 0
+        },
+        "income": {
+          "annualSalary": 200000,
+          "annualEquityGrant": 100000,
+          "yearsAtCompany": 3
+        },
+        "tax": {
+          "filingStatus": "single",
+          "marginalTaxRate": 37,
+          "stateCode": "CA"
+        }
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "total-compensation",
+      "defaults": {
+        "baseSalary": 180000,
+        "targetBonus": 15,
+        "expectedBonusMultiplier": 100,
+        "rsuGrant": {
+          "totalValue": 200000,
+          "vestingSchedule": "standard",
+          "vestingYears": 4,
+          "currentPrice": 150,
+          "grantPrice": 150
+        },
+        "signOnBonus": 0,
+        "signOnVestingYears": 1,
+        "match401k": 4,
+        "match401kLimit": 11600,
+        "esppDiscount": 15,
+        "esppContribution": 10000,
+        "hsaContribution": 500,
+        "annualRefresher": 50000,
+        "refresherVestingYears": 4
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "rsu-tax-calculator",
+      "defaults": {
+        "sharesVesting": 100,
+        "stockPrice": 150,
+        "filingStatus": "single",
+        "annualSalary": 200000,
+        "otherIncome": 0,
+        "state": "CA",
+        "withholdingMethod": "sell_to_cover"
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "stock-option-exercise",
+      "defaults": {
+        "option": {
+          "optionType": "iso",
+          "totalOptions": 10000,
+          "strikePrice": 5,
+          "currentFMV": 50,
+          "vestedOptions": 2500,
+          "grantDate": "2022-01-01",
+          "vestStartDate": "2022-01-01"
+        },
+        "tax": {
+          "filingStatus": "single",
+          "annualIncome": 200000,
+          "stateCode": "CA",
+          "existingAMTPreference": 0
+        },
+        "scenario": {
+          "optionsToExercise": 2500,
+          "exerciseDate": "2026-01-01",
+          "holdingPeriod": 12,
+          "expectedFMVAtSale": 75
+        }
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "crypto-cost-basis",
+      "defaults": {
+        "numberOfWallets": 3,
+        "totalHoldings": 50000,
+        "totalCostBasis": 30000,
+        "plannedSaleAmount": 10000,
+        "holdingPeriodMix": 50,
+        "ordinaryIncome": 100000,
+        "filingStatus": "single",
+        "state": "CA",
+        "applyTransitionalRelief": true
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "medicare-irmaa",
+      "defaults": {
+        "filingStatus": "married",
+        "currentAge": 63,
+        "magi2024": 200000,
+        "magi2025": 200000,
+        "socialSecurityIncome": 40000,
+        "pensionIncome": 0,
+        "traditionalBalance": 1000000,
+        "plannedRothConversion": 0,
+        "taxExemptInterest": 0,
+        "lifeChangingEvent": "none"
+      },
+      "updated_at": "2026-01-15"
+    },
+    {
+      "tool_id": "emergency-fund",
+      "defaults": {
+        "monthlyExpenses": 4000,
+        "jobStability": "stable",
+        "incomeSource": "single_stable",
+        "dependents": "partner",
+        "healthSituation": "good",
+        "housingSituation": "rent_normal"
+      },
+      "updated_at": "2026-01-15"
+    }
+  ]
+}

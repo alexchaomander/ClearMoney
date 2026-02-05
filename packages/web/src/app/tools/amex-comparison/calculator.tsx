@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import {
   AppShell,
   MethodologySection,
@@ -10,13 +10,22 @@ import { SliderInput } from "@/components/shared/SliderInput";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { formatCurrency, formatNumber } from "@/lib/shared/formatters";
-import { calculate } from "@/lib/calculators/amex-comparison/calculations";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
+import {
+  calculate,
+  DEFAULT_GOLD,
+  DEFAULT_PLATINUM,
+  type CardProfile,
+} from "@/lib/calculators/amex-comparison/calculations";
 import type {
   CalculatorInputs,
   CreditUsage,
   Preferences,
   SpendingInputs,
 } from "@/lib/calculators/amex-comparison/types";
+import { useCreditCardData, usePointsPrograms } from "@/lib/strata/hooks";
+import type { CreditCardData } from "@clearmoney/strata-sdk";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   spending: {
@@ -39,6 +48,45 @@ const DEFAULT_INPUTS: CalculatorInputs = {
     flightsPerYear: 6,
     pointsValue: 1.2,
   },
+};
+
+const buildCardProfile = (
+  card: CreditCardData | undefined,
+  fallback: CardProfile,
+  creditKeyMap: Record<string, string>
+): CardProfile => {
+  if (!card) return fallback;
+  const credits: CardProfile["credits"] = {};
+
+  card.credits.forEach((credit) => {
+    const key = Object.entries(creditKeyMap).find(([label]) =>
+      credit.name.toLowerCase().includes(label)
+    );
+    if (key) {
+      credits[key[1]] = { max: credit.value };
+    }
+  });
+
+  return {
+    name: card.name,
+    fee: card.annual_fee,
+    rates: {
+      dining: card.earn_rates?.dining ?? fallback.rates.dining ?? 1,
+      groceries: card.earn_rates?.groceries ?? fallback.rates.groceries ?? 1,
+      flights:
+        card.earn_rates?.flights ??
+        card.earn_rates?.travel ??
+        fallback.rates.flights ??
+        1,
+      hotels: card.earn_rates?.hotels ?? fallback.rates.hotels ?? 1,
+      other: card.earn_rates?.other ?? fallback.rates.other ?? 1,
+    },
+    credits: {
+      ...fallback.credits,
+      ...credits,
+    },
+    perks: fallback.perks,
+  };
 };
 
 const normalizeNumber = (value: unknown): number | null => {
@@ -164,6 +212,9 @@ const creditFields: Array<{
 ];
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("amex-comparison");
+  const { data: creditCardData } = useCreditCardData();
+  const { data: pointsPrograms } = usePointsPrograms();
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -192,13 +243,59 @@ export function Calculator() {
     ],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
 
-  const results = useMemo(() => calculate(inputs), [inputs]);
+  const goldCard = useMemo(
+    () => creditCardData?.find((card) => card.id === "amex-gold"),
+    [creditCardData]
+  );
+  const platinumCard = useMemo(
+    () => creditCardData?.find((card) => card.id === "amex-platinum"),
+    [creditCardData]
+  );
+
+  const goldProfile = useMemo(
+    () =>
+      buildCardProfile(goldCard, DEFAULT_GOLD, {
+        uber: "uber",
+        dining: "dining",
+      }),
+    [goldCard]
+  );
+  const platinumProfile = useMemo(
+    () =>
+      buildCardProfile(platinumCard, DEFAULT_PLATINUM, {
+        uber: "uber",
+        airline: "airline",
+        hotel: "hotel",
+        entertainment: "entertainment",
+        saks: "saks",
+      }),
+    [platinumCard]
+  );
+
+  useEffect(() => {
+    const program = pointsPrograms?.find((p) => p.id === "amex-mr");
+    if (!program) return;
+    setInputs((prev) => ({
+      ...prev,
+      preferences: {
+        ...prev.preferences,
+        pointsValue: prev.preferences.pointsValue || program.valuations.conservative,
+      },
+    }));
+  }, [pointsPrograms]);
+
+  const results = useMemo(
+    () => calculate(inputs, goldProfile, platinumProfile),
+    [inputs, goldProfile, platinumProfile]
+  );
 
   const annualSpend = useMemo(() => {
     const { spending } = inputs;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import {
   AppShell,
   MethodologySection,
@@ -17,6 +17,8 @@ import {
   formatPercent,
 } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/stock-option-exercise/calculations";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 import type {
   CalculatorInputs,
   ExerciseStrategy,
@@ -139,6 +141,23 @@ const formatDateInput = (date: Date) =>
   new Date(date).toISOString().split("T")[0];
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("stock-option-exercise");
+  const toDate = (value: unknown) =>
+    typeof value === "string" ? new Date(value) : value;
+  const normalizedPreset: Partial<CalculatorInputs> | undefined = preset
+    ? ({
+        ...preset,
+        option: {
+          ...preset.option,
+          grantDate: toDate(preset.option?.grantDate),
+          vestStartDate: toDate(preset.option?.vestStartDate),
+        },
+        scenario: {
+          ...preset.scenario,
+          exerciseDate: toDate(preset.scenario?.exerciseDate),
+        },
+      } as Partial<CalculatorInputs>)
+    : undefined;
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -202,11 +221,19 @@ export function Calculator() {
     ],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, normalizedPreset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+
+  useEffect(() => {
+    if (!normalizedPreset) return;
+    setInputs((prev) => mergeDeep(prev, normalizedPreset));
+  }, [normalizedPreset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

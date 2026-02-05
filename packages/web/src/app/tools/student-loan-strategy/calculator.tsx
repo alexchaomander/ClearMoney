@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
@@ -10,6 +10,7 @@ import {
   formatCurrency,
   formatNumber,
 } from "@/lib/shared/formatters";
+import { mergeDeep } from "@/lib/shared/merge";
 import { calculate } from "@/lib/calculators/student-loan-strategy/calculations";
 import {
   FILING_STATUS_OPTIONS,
@@ -20,6 +21,7 @@ import {
   STATE_OPTIONS,
 } from "@/lib/calculators/student-loan-strategy/constants";
 import type { CalculatorInputs } from "@/lib/calculators/student-loan-strategy/types";
+import { useToolPreset } from "@/lib/strata/presets";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   loanBalance: 50000,
@@ -65,6 +67,7 @@ const extractDebtType = (
 };
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("student-loan-strategy");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -130,11 +133,18 @@ export function Calculator() {
     ],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
   const results = useMemo(() => calculate(inputs), [inputs]);
 
   const planEntries = Object.entries(results.plans);

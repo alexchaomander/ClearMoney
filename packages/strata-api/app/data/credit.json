@@ -1,0 +1,16 @@
+{
+  "last_updated": "2026-01-15",
+  "score_factors": [
+    { "id": "payment_history", "name": "Payment History", "weight": 0.35, "description": "On-time payments and delinquencies." },
+    { "id": "utilization", "name": "Credit Utilization", "weight": 0.30, "description": "Balance-to-limit ratio." },
+    { "id": "age", "name": "Age of Credit", "weight": 0.15, "description": "Average account age." },
+    { "id": "mix", "name": "Credit Mix", "weight": 0.10, "description": "Revolving vs installment mix." },
+    { "id": "inquiries", "name": "New Credit", "weight": 0.10, "description": "Recent hard inquiries." }
+  ],
+  "utilization_guidelines": [
+    { "label": "Excellent", "min": 0, "max": 10, "notes": "Best for top-tier scores." },
+    { "label": "Good", "min": 10, "max": 30, "notes": "Healthy utilization band." },
+    { "label": "Fair", "min": 30, "max": 50, "notes": "Scores often start to dip." },
+    { "label": "Risky", "min": 50, "max": 100, "notes": "Significant score drag." }
+  ]
+}

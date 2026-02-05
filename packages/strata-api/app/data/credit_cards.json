@@ -1,0 +1,370 @@
+[
+  {
+    "id": "chase-sapphire-preferred",
+    "name": "Chase Sapphire Preferred",
+    "issuer": "Chase",
+    "annual_fee": 95,
+    "currency_id": "chase-ur",
+    "image_url": null,
+    "apply_url": null,
+    "affiliate_payout_estimate": 175,
+    "tpg_rank": 1,
+    "default_rewards_rate": 2.1,
+    "credits": [
+      {
+        "name": "$50 Hotel Credit",
+        "value": 50,
+        "period": "annual",
+        "description": "Statement credit for hotel stays booked through Chase Travel.",
+        "category": "travel",
+        "default_usable_pct": 70
+      }
+    ],
+    "benefits": [
+      {
+        "name": "Primary rental car insurance",
+        "description": "Primary coverage for rentals when paid with the card.",
+        "valuation_method": "subjective",
+        "default_value": 50
+      }
+    ],
+    "earn_rates": {
+      "dining": 3,
+      "travel": 2,
+      "online_grocery": 3,
+      "other": 1
+    },
+    "signup_bonus": {
+      "points": 60000,
+      "spend_required": 4000,
+      "timeframe_months": 3
+    }
+  },
+  {
+    "id": "chase-sapphire-reserve",
+    "name": "Chase Sapphire Reserve",
+    "issuer": "Chase",
+    "annual_fee": 550,
+    "currency_id": "chase-ur",
+    "image_url": null,
+    "apply_url": null,
+    "affiliate_payout_estimate": 350,
+    "tpg_rank": 1,
+    "default_rewards_rate": 2.4,
+    "credits": [
+      {
+        "name": "$300 Travel Credit",
+        "value": 300,
+        "period": "annual",
+        "description": "Automatic statement credit on travel purchases.",
+        "category": "travel",
+        "default_usable_pct": 90
+      }
+    ],
+    "benefits": [
+      {
+        "name": "Priority Pass lounge access",
+        "description": "Airport lounge access for cardholders and guests.",
+        "valuation_method": "subjective",
+        "default_value": 120
+      }
+    ],
+    "earn_rates": {
+      "dining": 3,
+      "travel": 3,
+      "other": 1
+    },
+    "signup_bonus": {
+      "points": 60000,
+      "spend_required": 4000,
+      "timeframe_months": 3
+    }
+  },
+  {
+    "id": "chase-freedom-flex",
+    "name": "Chase Freedom Flex",
+    "issuer": "Chase",
+    "annual_fee": 0,
+    "currency_id": "chase-ur",
+    "image_url": null,
+    "apply_url": null,
+    "affiliate_payout_estimate": 150,
+    "tpg_rank": 2,
+    "default_rewards_rate": 1.6,
+    "credits": [],
+    "benefits": [],
+    "earn_rates": {
+      "dining": 3,
+      "drugstores": 3,
+      "travel": 5,
+      "other": 1
+    },
+    "signup_bonus": {
+      "points": 20000,
+      "spend_required": 500,
+      "timeframe_months": 3
+    }
+  },
+  {
+    "id": "chase-freedom-unlimited",
+    "name": "Chase Freedom Unlimited",
+    "issuer": "Chase",
+    "annual_fee": 0,
+    "currency_id": "chase-ur",
+    "image_url": null,
+    "apply_url": null,
+    "affiliate_payout_estimate": 150,
+    "tpg_rank": 2,
+    "default_rewards_rate": 1.5,
+    "credits": [],
+    "benefits": [],
+    "earn_rates": {
+      "dining": 3,
+      "drugstores": 3,
+      "travel": 5,
+      "other": 1.5
+    },
+    "signup_bonus": {
+      "points": 20000,
+      "spend_required": 500,
+      "timeframe_months": 3
+    }
+  },
+  {
+    "id": "amex-gold",
+    "name": "American Express Gold",
+    "issuer": "American Express",
+    "annual_fee": 250,
+    "currency_id": "amex-mr",
+    "image_url": null,
+    "apply_url": null,
+    "affiliate_payout_estimate": 175,
+    "tpg_rank": 1,
+    "default_rewards_rate": 2.6,
+    "credits": [
+      {
+        "name": "$120 Dining Credit",
+        "value": 120,
+        "period": "annual",
+        "description": "Monthly dining credits at select partners.",
+        "category": "dining",
+        "default_usable_pct": 70
+      },
+      {
+        "name": "$120 Uber Cash",
+        "value": 120,
+        "period": "annual",
+        "description": "Monthly Uber Cash for rides or Uber Eats.",
+        "category": "transportation",
+        "default_usable_pct": 80
+      }
+    ],
+    "benefits": [
+      {
+        "name": "Amex Offers",
+        "description": "Targeted merchant offers with statement credits.",
+        "valuation_method": "subjective",
+        "default_value": 60
+      }
+    ],
+    "earn_rates": {
+      "dining": 4,
+      "groceries": 4,
+      "travel": 3,
+      "other": 1
+    },
+    "signup_bonus": {
+      "points": 60000,
+      "spend_required": 6000,
+      "timeframe_months": 6
+    }
+  },
+  {
+    "id": "amex-platinum",
+    "name": "Platinum Card from American Express",
+    "issuer": "American Express",
+    "annual_fee": 695,
+    "currency_id": "amex-mr",
+    "image_url": null,
+    "apply_url": null,
+    "affiliate_payout_estimate": 450,
+    "tpg_rank": 1,
+    "default_rewards_rate": 2.0,
+    "credits": [
+      {
+        "name": "$200 Airline Fee Credit",
+        "value": 200,
+        "period": "annual",
+        "description": "Statement credits for incidental airline fees.",
+        "category": "travel",
+        "default_usable_pct": 50
+      },
+      {
+        "name": "$200 Hotel Credit",
+        "value": 200,
+        "period": "annual",
+        "description": "Statement credits on select prepaid hotel bookings.",
+        "category": "travel",
+        "default_usable_pct": 50
+      },
+      {
+        "name": "$240 Digital Entertainment",
+        "value": 240,
+        "period": "annual",
+        "description": "Monthly statement credits on select subscriptions.",
+        "category": "lifestyle",
+        "default_usable_pct": 60
+      },
+      {
+        "name": "$100 Saks Credit",
+        "value": 100,
+        "period": "annual",
+        "description": "Semi-annual Saks statement credits.",
+        "category": "shopping",
+        "default_usable_pct": 30
+      },
+      {
+        "name": "$200 Uber Cash",
+        "value": 200,
+        "period": "annual",
+        "description": "Monthly Uber Cash for rides or Uber Eats.",
+        "category": "transportation",
+        "default_usable_pct": 80
+      }
+    ],
+    "benefits": [
+      {
+        "name": "Airport lounge collection",
+        "description": "Access to Centurion, Priority Pass, and more.",
+        "valuation_method": "subjective",
+        "default_value": 350
+      }
+    ],
+    "earn_rates": {
+      "travel": 5,
+      "flights": 5,
+      "dining": 1,
+      "groceries": 1,
+      "other": 1
+    },
+    "signup_bonus": {
+      "points": 80000,
+      "spend_required": 8000,
+      "timeframe_months": 6
+    }
+  },
+  {
+    "id": "capital-one-venture-x",
+    "name": "Capital One Venture X",
+    "issuer": "Capital One",
+    "annual_fee": 395,
+    "currency_id": "capital-one",
+    "image_url": null,
+    "apply_url": null,
+    "affiliate_payout_estimate": 350,
+    "tpg_rank": 1,
+    "default_rewards_rate": 2.0,
+    "credits": [
+      {
+        "name": "$300 Travel Credit",
+        "value": 300,
+        "period": "annual",
+        "description": "Annual travel credit through Capital One Travel.",
+        "category": "travel",
+        "default_usable_pct": 85
+      },
+      {
+        "name": "10K Anniversary Bonus",
+        "value": 100,
+        "period": "annual",
+        "description": "10,000 mile anniversary bonus.",
+        "category": "points",
+        "default_usable_pct": 100
+      }
+    ],
+    "benefits": [
+      {
+        "name": "Priority Pass lounge access",
+        "description": "Airport lounge access for cardholders and guests.",
+        "valuation_method": "subjective",
+        "default_value": 150
+      }
+    ],
+    "earn_rates": {
+      "dining": 2,
+      "travel": 2,
+      "groceries": 2,
+      "other": 2
+    },
+    "signup_bonus": {
+      "points": 75000,
+      "spend_required": 4000,
+      "timeframe_months": 3
+    }
+  },
+  {
+    "id": "citi-premier",
+    "name": "Citi Premier",
+    "issuer": "Citi",
+    "annual_fee": 95,
+    "currency_id": "citi-ty",
+    "image_url": null,
+    "apply_url": null,
+    "affiliate_payout_estimate": 150,
+    "tpg_rank": 2,
+    "default_rewards_rate": 2.4,
+    "credits": [],
+    "benefits": [
+      {
+        "name": "Points transfer partners",
+        "description": "Transfer to select airline and hotel partners.",
+        "valuation_method": "subjective",
+        "default_value": 40
+      }
+    ],
+    "earn_rates": {
+      "dining": 3,
+      "travel": 3,
+      "groceries": 3,
+      "gas": 3,
+      "other": 1
+    },
+    "signup_bonus": {
+      "points": 60000,
+      "spend_required": 4000,
+      "timeframe_months": 3
+    }
+  },
+  {
+    "id": "bilt-mastercard",
+    "name": "Bilt Mastercard",
+    "issuer": "Bilt",
+    "annual_fee": 0,
+    "currency_id": "bilt",
+    "image_url": null,
+    "apply_url": null,
+    "affiliate_payout_estimate": 0,
+    "tpg_rank": null,
+    "default_rewards_rate": 1.4,
+    "credits": [],
+    "benefits": [
+      {
+        "name": "Rent points",
+        "description": "Earn points on rent (up to 100k/year).",
+        "valuation_method": "objective",
+        "default_value": 80
+      }
+    ],
+    "earn_rates": {
+      "rent": 1,
+      "dining": 3,
+      "travel": 2,
+      "other": 1
+    },
+    "signup_bonus": {
+      "points": 0,
+      "spend_required": 0,
+      "timeframe_months": 0
+    }
+  }
+]

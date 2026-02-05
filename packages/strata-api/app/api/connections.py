@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import require_scopes
 from app.db.session import get_async_session
 from app.models.connection import Connection, ConnectionStatus
 from app.models.holding import Holding
@@ -59,7 +59,7 @@ async def _get_user_connection(
 @router.post("/link", response_model=LinkSessionResponse)
 async def create_link_session(
     request: LinkSessionRequest,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["connections:write"])),
     provider: SnapTradeProvider = Depends(get_provider),
 ) -> LinkSessionResponse:
     """Create a link session to connect a new investment account.
@@ -105,7 +105,7 @@ def _cleanup_old_sessions() -> None:
 @router.post("/callback", response_model=ConnectionResponse)
 async def handle_callback(
     request: ConnectionCallbackRequest,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["connections:write"])),
     session: AsyncSession = Depends(get_async_session),
     provider: SnapTradeProvider = Depends(get_provider),
 ) -> ConnectionResponse:
@@ -169,7 +169,7 @@ async def handle_callback(
 
 @router.get("", response_model=list[ConnectionResponse])
 async def list_connections(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["connections:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> list[ConnectionResponse]:
     """List all connections for the current user."""
@@ -186,7 +186,7 @@ async def list_connections(
 @router.delete("/{connection_id}")
 async def delete_connection(
     connection_id: uuid.UUID,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["connections:write"])),
     session: AsyncSession = Depends(get_async_session),
     provider: SnapTradeProvider = Depends(get_provider),
 ) -> dict:
@@ -224,7 +224,7 @@ async def delete_connection(
 @router.post("/{connection_id}/sync", response_model=ConnectionResponse)
 async def sync_connection(
     connection_id: uuid.UUID,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["connections:write"])),
     session: AsyncSession = Depends(get_async_session),
     provider: SnapTradeProvider = Depends(get_provider),
 ) -> ConnectionResponse:

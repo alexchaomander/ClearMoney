@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_owned_account
+from app.api.deps import get_owned_account, require_scopes
 from app.db.session import get_async_session
 from app.models.cash_account import CashAccount
 from app.models.debt_account import DebtAccount
@@ -29,7 +29,7 @@ router = APIRouter(prefix="/accounts", tags=["cash_debt"])
 @router.post("/cash", response_model=CashAccountResponse, status_code=201)
 async def create_cash_account(
     data: CashAccountCreate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["accounts:write"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> CashAccountResponse:
     """Create a new cash account."""
@@ -49,7 +49,7 @@ async def create_cash_account(
 
 @router.get("/cash", response_model=list[CashAccountResponse])
 async def list_cash_accounts(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["accounts:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> list[CashAccountResponse]:
     """List all cash accounts for the current user."""
@@ -66,7 +66,7 @@ async def list_cash_accounts(
 async def update_cash_account(
     account_id: uuid.UUID,
     data: CashAccountUpdate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["accounts:write"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> CashAccountResponse:
     """Update a cash account."""
@@ -86,7 +86,7 @@ async def update_cash_account(
 @router.delete("/cash/{account_id}")
 async def delete_cash_account(
     account_id: uuid.UUID,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["accounts:write"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Delete a cash account."""
@@ -105,7 +105,7 @@ async def delete_cash_account(
 @router.post("/debt", response_model=DebtAccountResponse, status_code=201)
 async def create_debt_account(
     data: DebtAccountCreate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["accounts:write"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> DebtAccountResponse:
     """Create a new debt account."""
@@ -126,7 +126,7 @@ async def create_debt_account(
 
 @router.get("/debt", response_model=list[DebtAccountResponse])
 async def list_debt_accounts(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["accounts:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> list[DebtAccountResponse]:
     """List all debt accounts for the current user."""
@@ -143,7 +143,7 @@ async def list_debt_accounts(
 async def update_debt_account(
     account_id: uuid.UUID,
     data: DebtAccountUpdate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["accounts:write"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> DebtAccountResponse:
     """Update a debt account."""
@@ -163,7 +163,7 @@ async def update_debt_account(
 @router.delete("/debt/{account_id}")
 async def delete_debt_account(
     account_id: uuid.UUID,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["accounts:write"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Delete a debt account."""

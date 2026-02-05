@@ -14,6 +14,8 @@ import { PortfolioHistoryChart } from "@/components/dashboard/PortfolioHistoryCh
 import { CashDebtSection } from "@/components/dashboard/CashDebtSection";
 import { AddAccountModal } from "@/components/dashboard/AddAccountModal";
 import { EmptyState } from "@/components/dashboard/EmptyState";
+import { DecisionTracePanel } from "@/components/dashboard/DecisionTracePanel";
+import { ConsentGate } from "@/components/shared/ConsentGate";
 import { DashboardLoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ApiErrorState } from "@/components/shared/ApiErrorState";
 import {
@@ -24,6 +26,7 @@ import {
   useConnections,
   useCashAccountMutations,
   useDebtAccountMutations,
+  useConsentStatus,
 } from "@/lib/strata/hooks";
 import type { HoldingDetail } from "@clearmoney/strata-sdk";
 
@@ -48,6 +51,11 @@ export default function DashboardPage() {
 
   const cashMutations = useCashAccountMutations();
   const debtMutations = useDebtAccountMutations();
+  const { hasConsent: hasPortfolioConsent } = useConsentStatus([
+    "portfolio:read",
+    "accounts:read",
+    "connections:read",
+  ]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -66,30 +74,30 @@ export default function DashboardPage() {
     isLoading: portfolioLoading,
     isError: portfolioError,
     refetch: refetchPortfolio,
-  } = usePortfolioSummary();
+  } = usePortfolioSummary({ enabled: hasPortfolioConsent });
 
   const {
     data: accounts,
     isLoading: accountsLoading,
     isError: accountsError,
     refetch: refetchAccounts,
-  } = useInvestmentAccounts();
+  } = useInvestmentAccounts({ enabled: hasPortfolioConsent });
 
   const {
     data: holdingsData,
     isLoading: holdingsLoading,
     isError: holdingsError,
     refetch: refetchHoldings,
-  } = useHoldings();
+  } = useHoldings({ enabled: hasPortfolioConsent });
 
   const {
     data: allAccountsData,
     isLoading: allAccountsLoading,
     isError: allAccountsError,
     refetch: refetchAllAccounts,
-  } = useAccounts();
+  } = useAccounts({ enabled: hasPortfolioConsent });
 
-  const { data: connections } = useConnections();
+  const { data: connections } = useConnections({ enabled: hasPortfolioConsent });
 
   const isLoading = portfolioLoading || accountsLoading || holdingsLoading || allAccountsLoading;
   const isError = portfolioError || accountsError || holdingsError || allAccountsError;
@@ -196,6 +204,16 @@ export default function DashboardPage() {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left column */}
           <div className="lg:col-span-2 space-y-6">
+            {!hasPortfolioConsent && (
+              <ConsentGate
+                scopes={["portfolio:read", "accounts:read", "connections:read"]}
+                purpose="Load your accounts, balances, and holdings for the dashboard."
+              >
+                <div className="text-sm text-neutral-400">
+                  Authorize access to see your portfolio.
+                </div>
+              </ConsentGate>
+            )}
             {portfolio && (
               <NetWorthCard
                 totalAssets={portfolio.total_investment_value + portfolio.total_cash_value}
@@ -207,6 +225,13 @@ export default function DashboardPage() {
             )}
 
             <PortfolioHistoryChart />
+
+            <ConsentGate
+              scopes={["decision_traces:read"]}
+              purpose="Display decision traces in your dashboard."
+            >
+              <DecisionTracePanel />
+            </ConsentGate>
 
             {portfolio && portfolio.concentration_alerts.length > 0 && (
               <ConcentrationAlert alerts={portfolio.concentration_alerts} />

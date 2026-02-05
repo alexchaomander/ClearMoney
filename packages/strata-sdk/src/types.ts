@@ -320,25 +320,25 @@ export interface DebtProfile {
   by_type: Record<string, DebtProfileByType>;
 }
 
-export interface PortfolioSummaryAllocation {
+export interface MemoryPortfolioSummaryAllocation {
   value: number;
   percent: number;
 }
 
-export interface PortfolioSummaryHolding {
+export interface MemoryPortfolioSummaryHolding {
   ticker: string | null;
   name: string;
   security_type: string;
   market_value: number | null;
 }
 
-export interface PortfolioSummary {
+export interface MemoryPortfolioSummary {
   total_investment_value: number;
   total_cash_value: number;
   total_debt_value: number;
   net_worth: number;
-  allocation_by_security_type: Record<string, PortfolioSummaryAllocation>;
-  top_holdings: PortfolioSummaryHolding[];
+  allocation_by_security_type: Record<string, MemoryPortfolioSummaryAllocation>;
+  top_holdings: MemoryPortfolioSummaryHolding[];
 }
 
 export interface EquityCompensationProfile {
@@ -637,4 +637,252 @@ export interface CreditCard {
   benefits: CardBenefit[];
   created_at: string;
   updated_at: string;
+}
+
+// Consent types
+export interface ConsentCreateRequest {
+  scopes: string[];
+  purpose: string;
+  source?: string | null;
+}
+
+export interface ConsentResponse {
+  id: string;
+  user_id: string;
+  scopes: string[];
+  purpose: string;
+  status: 'active' | 'revoked' | 'expired';
+  source: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Decision trace types
+export interface DecisionTrace {
+  id: string;
+  session_id: string;
+  recommendation_id: string | null;
+  trace_type: 'recommendation' | 'analysis' | 'action';
+  input_data: Record<string, unknown>;
+  reasoning_steps: unknown[];
+  outputs: Record<string, unknown>;
+  data_freshness: Record<string, unknown>;
+  warnings: unknown[];
+  source: string;
+  created_at: string;
+}
+
+// Shared data source types
+export interface PointsValuations {
+  tpg: number;
+  conservative: number;
+  moderate: number;
+  optimistic: number;
+}
+
+export interface PointsMethodology {
+  cash_out: number | null;
+  portal_value: number | null;
+  transfer_value: string;
+}
+
+export interface PointsProgram {
+  id: string;
+  name: string;
+  short_name: string;
+  issuer: string;
+  category: string;
+  valuations: PointsValuations;
+  methodology: PointsMethodology;
+  best_uses: string[];
+  worst_uses: string[];
+  last_updated: string;
+}
+
+export interface CreditCardDataCredit {
+  name: string;
+  value: number;
+  period: string;
+  description: string | null;
+  category: string | null;
+  default_usable_pct: number | null;
+}
+
+export interface CreditCardDataBenefit {
+  name: string;
+  description: string | null;
+  valuation_method: string | null;
+  default_value: number | null;
+}
+
+export interface CreditCardSignupBonus {
+  points: number;
+  spend_required: number;
+  timeframe_months: number;
+}
+
+export interface CreditCardData {
+  id: string;
+  name: string;
+  issuer: string;
+  annual_fee: number;
+  currency_id: string | null;
+  image_url: string | null;
+  apply_url: string | null;
+  affiliate_payout_estimate: number | null;
+  tpg_rank: number | null;
+  default_rewards_rate: number | null;
+  credits: CreditCardDataCredit[];
+  benefits: CreditCardDataBenefit[];
+  earn_rates: Record<string, number> | null;
+  signup_bonus: CreditCardSignupBonus | null;
+}
+
+// Shared data (seven pillars)
+export interface SavingsProduct {
+  id: string;
+  name: string;
+  provider: string;
+  product_type: string;
+  apy: number;
+  minimum_balance: number | null;
+  monthly_fee: number | null;
+  fdic_insured: boolean;
+  last_updated: string | null;
+  notes: string | null;
+}
+
+export interface ContributionLimit {
+  id: string;
+  account_type: string;
+  year: number;
+  base_limit: number;
+  catch_up_50: number | null;
+  catch_up_60_63: number | null;
+  notes: string | null;
+}
+
+export interface MarketAssumption {
+  id: string;
+  name: string;
+  expected_return: number;
+  volatility: number;
+  inflation: number;
+  notes: string | null;
+}
+
+export interface InvestmentData {
+  last_updated: string | null;
+  contribution_limits: ContributionLimit[];
+  market_assumptions: MarketAssumption[];
+}
+
+export interface MortgageRate {
+  id: string;
+  loan_type: string;
+  term_years: number;
+  rate: number;
+  points: number | null;
+  notes: string | null;
+}
+
+export interface HomePriceAssumption {
+  id: string;
+  name: string;
+  appreciation_rate: number;
+  notes: string | null;
+}
+
+export interface RealAssetData {
+  last_updated: string | null;
+  mortgage_rates: MortgageRate[];
+  home_price_assumptions: HomePriceAssumption[];
+}
+
+export interface LoanRate {
+  id: string;
+  loan_type: string;
+  rate: number;
+  term_years: number | null;
+  notes: string | null;
+}
+
+export interface LiabilityData {
+  last_updated: string | null;
+  loan_rates: LoanRate[];
+}
+
+export interface TaxBracket {
+  rate: number;
+  cap: number | null;
+}
+
+export interface IncomeTaxBracket {
+  id: string;
+  year: number;
+  filing_status: string;
+  brackets: TaxBracket[];
+}
+
+export interface StandardDeduction {
+  year: number;
+  filing_status: string;
+  amount: number;
+}
+
+export interface PayrollLimit {
+  year: number;
+  social_security_wage_base: number;
+  medicare_additional_threshold: number;
+}
+
+export interface IncomeData {
+  last_updated: string | null;
+  tax_brackets: IncomeTaxBracket[];
+  standard_deductions: StandardDeduction[];
+  payroll_limits: PayrollLimit[];
+}
+
+export interface CreditScoreFactor {
+  id: string;
+  name: string;
+  weight: number;
+  description: string | null;
+}
+
+export interface UtilizationGuideline {
+  label: string;
+  min: number;
+  max: number;
+  notes: string | null;
+}
+
+export interface CreditData {
+  last_updated: string | null;
+  score_factors: CreditScoreFactor[];
+  utilization_guidelines: UtilizationGuideline[];
+}
+
+export interface InsuranceEstimate {
+  id: string;
+  name: string;
+  coverage_multiple_income: number;
+  typical_cost_pct_income: number;
+  notes: string | null;
+}
+
+export interface ProtectionData {
+  last_updated: string | null;
+  insurance_estimates: InsuranceEstimate[];
+}
+
+export interface ToolPreset {
+  tool_id: string;
+  defaults: Record<string, unknown>;
+  updated_at: string | null;
+}
+
+export interface ToolPresetBundle {
+  last_updated: string | null;
+  presets: ToolPreset[];
 }

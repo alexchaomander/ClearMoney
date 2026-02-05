@@ -6,6 +6,8 @@ import { QueryProvider } from "@/lib/strata/query-provider";
 import { DemoModeProvider } from "@/lib/strata/demo-context";
 import { StrataProvider } from "@/lib/strata/client";
 import { DemoBanner } from "@/components/shared/DemoBanner";
+import { ClerkProvider } from "@clerk/nextjs";
+import { StrataAuthSync } from "@/lib/strata/auth";
 
 const SITE_NAME = "ClearMoney";
 
@@ -70,18 +72,21 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen">
         <ThemeProvider>
-          <QueryProvider>
-            <Suspense fallback={null}>
-              <DemoModeProvider>
-                <StrataProvider>
-                  <DemoBanner />
-                  <div className="flex min-h-screen flex-col">
-                    <main className="flex-1">{children}</main>
-                  </div>
-                </StrataProvider>
-              </DemoModeProvider>
-            </Suspense>
-          </QueryProvider>
+          <ClerkProvider>
+            <QueryProvider>
+              <Suspense fallback={null}>
+                <DemoModeProvider>
+                  <StrataProvider>
+                    <StrataAuthSync />
+                    <DemoBanner />
+                    <div className="flex min-h-screen flex-col">
+                      <main className="flex-1">{children}</main>
+                    </div>
+                  </StrataProvider>
+                </DemoModeProvider>
+              </Suspense>
+            </QueryProvider>
+          </ClerkProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useFinancialMemory, useUpdateMemory } from "@/lib/strata/hooks";
+import { useFinancialMemory, useUpdateMemory, useConsentStatus } from "@/lib/strata/hooks";
 import type { FinancialMemory, FinancialMemoryUpdate, MemoryEventSource } from "@clearmoney/strata-sdk";
 
 /**
@@ -12,7 +12,8 @@ import type { FinancialMemory, FinancialMemoryUpdate, MemoryEventSource } from "
  * actually differ from the current memory.
  */
 export function useMemoryWriteBack() {
-  const { data: memory } = useFinancialMemory();
+  const { hasConsent } = useConsentStatus(["memory:read", "memory:write"]);
+  const { data: memory } = useFinancialMemory({ enabled: hasConsent });
   const updateMemory = useUpdateMemory();
 
   return useCallback(
@@ -38,7 +39,7 @@ export function useMemoryWriteBack() {
         hasChanges = true;
       }
 
-      if (hasChanges) {
+      if (hasChanges && hasConsent) {
         updateMemory.mutate({
           ...changes,
           source,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
@@ -10,6 +10,8 @@ import {
   formatPercent,
 } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/obbb-tax-optimizer/calculations";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 import {
   FILING_STATUS_OPTIONS,
   MARGINAL_RATE_OPTIONS,
@@ -58,6 +60,7 @@ const mapFilingStatus = (value: unknown): FilingStatus | null => {
 };
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("obbb-tax-optimizer");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -73,11 +76,19 @@ export function Calculator() {
     ],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
   const results = useMemo(() => calculate(inputs), [inputs]);
 
   const breakdownItems: BreakdownItem[] = [

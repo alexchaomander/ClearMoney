@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import { formatCurrency } from "@/lib/shared/formatters";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 import { calculate } from "@/lib/calculators/rent-vs-buy/calculations";
 import type { CalculatorInputs } from "@/lib/calculators/rent-vs-buy/types";
 
@@ -24,6 +26,7 @@ const DEFAULT_INPUTS: CalculatorInputs = {
 };
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("rent-vs-buy");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -35,8 +38,16 @@ export function Calculator() {
     mortgageRate: ["mortgage_rate", (v: unknown) => Number(v) * 100],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import { formatCurrency, formatPercent } from "@/lib/shared/formatters";
+import { mergeDeep } from "@/lib/shared/merge";
 import {
   calculate,
   STATE_RATES,
@@ -15,6 +16,7 @@ import type {
   FilingStatus,
   HoldingPeriod,
 } from "@/lib/calculators/capital-gains/types";
+import { useToolPreset } from "@/lib/strata/presets";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
@@ -113,6 +115,7 @@ const STATE_OPTIONS = Object.keys(STATE_NAMES)
   .sort((a, b) => a.name.localeCompare(b.name));
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("capital-gains");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -134,7 +137,9 @@ export function Calculator() {
     state: "state",
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () =>
       applyMemoryDefaults(setInputs, (prev, defaults) => ({
@@ -145,6 +150,11 @@ export function Calculator() {
       })),
     [applyMemoryDefaults]
   );
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

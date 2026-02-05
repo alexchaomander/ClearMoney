@@ -1,19 +1,22 @@
 "use client";
 
 import { useCallback, useMemo, useState, type Dispatch, type SetStateAction } from "react";
-import { useFinancialMemory } from "@/lib/strata/hooks";
+import { useFinancialMemory, useConsentStatus } from "@/lib/strata/hooks";
 import type { FinancialMemory } from "@clearmoney/strata-sdk";
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 const deepMerge = <V extends object>(target: V, source: Partial<V>): V => {
-  const result: Record<string, unknown> = { ...target };
+  const result: Record<string, unknown> = { ...(target as Record<string, unknown>) };
   for (const [key, value] of Object.entries(source)) {
     if (value === undefined) continue;
     const current = result[key];
     if (isPlainObject(current) && isPlainObject(value)) {
-      result[key] = deepMerge(current, value);
+      result[key] = deepMerge(
+        current as Record<string, unknown>,
+        value as Record<string, unknown>
+      );
     } else {
       result[key] = value;
     }
@@ -49,7 +52,8 @@ export function useMemoryPreFill<T extends object>(
     merge?: (prev: T, defaults: Partial<T>) => T
   ) => void;
 } {
-  const { data: memory, isSuccess } = useFinancialMemory();
+  const { hasConsent } = useConsentStatus(["memory:read"]);
+  const { data: memory, isSuccess } = useFinancialMemory({ enabled: hasConsent });
   const [preFilledFields, setPreFilledFields] = useState<Set<string>>(new Set());
 
   const { defaults, availableFields } = useMemo(() => {

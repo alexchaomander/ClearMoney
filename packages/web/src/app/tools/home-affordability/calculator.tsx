@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { AppShell, MethodologySection, VerdictCard } from "@/components/shared/AppShell";
 import { formatCurrency, formatPercent, formatNumber } from "@/lib/shared/formatters";
+import { mergeDeep } from "@/lib/shared/merge";
 import { calculate } from "@/lib/calculators/home-affordability/calculations";
 import {
   CREDIT_SCORE_OPTIONS,
@@ -17,6 +18,8 @@ import { cn } from "@/lib/utils";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
+import { useToolPreset } from "@/lib/strata/presets";
+import { useRealAssetData } from "@/lib/strata/hooks";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   annualIncome: 100000,
@@ -36,6 +39,8 @@ const selectStyles =
   "mt-2 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 text-sm text-white focus:border-teal-400 focus:outline-none";
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("home-affordability");
+  const { data: realAssetData } = useRealAssetData();
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -48,8 +53,25 @@ export function Calculator() {
     state: "state",
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
+
+  useEffect(() => {
+    if (!realAssetData?.mortgage_rates?.length) return;
+    if (preset?.mortgageRate || preFilledFields.has("mortgageRate")) return;
+    const fixed30 = realAssetData.mortgage_rates.find(
+      (rate) => rate.term_years === 30 && rate.loan_type === "fixed"
+    );
+    if (!fixed30) return;
+    setInputs((prev) => ({ ...prev, mortgageRate: Number((fixed30.rate * 100).toFixed(2)) }));
+  }, [realAssetData, preset, preFilledFields]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

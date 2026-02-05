@@ -18,7 +18,9 @@ import {
   usePopularInstitutions,
   useSearchInstitutions,
   useAccounts,
+  useConsentStatus,
 } from "@/lib/strata/hooks";
+import { ConsentGate } from "@/components/shared/ConsentGate";
 
 export default function ConnectPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,6 +29,10 @@ export default function ConnectPage() {
   const router = useRouter();
 
   const client = useStrataClient();
+  const { hasConsent: hasConnectionConsent } = useConsentStatus([
+    "connections:read",
+    "connections:write",
+  ]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
@@ -51,17 +57,17 @@ export default function ConnectPage() {
     isLoading: popularLoading,
     isError: popularError,
     refetch: refetchPopular,
-  } = usePopularInstitutions();
+  } = usePopularInstitutions({ enabled: hasConnectionConsent });
 
   const {
     data: searchResults,
     isLoading: searchLoading,
-  } = useSearchInstitutions(isSearching ? debouncedQuery : undefined);
+  } = useSearchInstitutions(isSearching ? debouncedQuery : undefined, { enabled: hasConnectionConsent });
 
   const {
     data: allAccounts,
     isLoading: accountsLoading,
-  } = useAccounts();
+  } = useAccounts({ enabled: hasConnectionConsent });
 
   const connectedAccounts = allAccounts?.investment_accounts ?? [];
   const totalConnected = connectedAccounts.length;
@@ -125,7 +131,11 @@ export default function ConnectPage() {
           <SecurityBadges />
         </motion.div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <ConsentGate
+          scopes={["connections:read", "connections:write"]}
+          purpose="Search and connect your financial institutions."
+        >
+          <div className="grid lg:grid-cols-3 gap-8">
           {/* Left column - Institutions search + list */}
           <div className="lg:col-span-2 space-y-8">
             {/* Search */}
@@ -313,7 +323,8 @@ export default function ConnectPage() {
               </div>
             </motion.div>
           </div>
-        </div>
+          </div>
+        </ConsentGate>
       </main>
     </div>
   );

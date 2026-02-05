@@ -13,6 +13,7 @@ interface SliderInputProps {
   format?: "currency" | "percent" | "number";
   description?: string;
   className?: string;
+  rightSlot?: React.ReactNode;
 }
 
 /**
@@ -34,6 +35,7 @@ export function SliderInput({
   format = "number",
   description,
   className,
+  rightSlot,
 }: SliderInputProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(value.toString());
@@ -92,11 +94,14 @@ export function SliderInput({
 
   return (
     <div className={cn("space-y-3", className)}>
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start">
         <div>
-          <label className="text-sm font-semibold text-neutral-300">
-            {label}
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-semibold text-neutral-300">
+              {label}
+            </label>
+            {rightSlot}
+          </div>
           {description && (
             <p className="text-xs text-neutral-500 mt-0.5">{description}</p>
           )}

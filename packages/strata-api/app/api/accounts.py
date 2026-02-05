@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_current_user, get_owned_account
+from app.api.deps import get_owned_account, require_scopes
 from app.db.session import get_async_session
 from app.models.cash_account import CashAccount
 from app.models.debt_account import DebtAccount
@@ -28,7 +28,7 @@ router = APIRouter(prefix="/accounts", tags=["accounts"])
 
 @router.get("", response_model=dict)
 async def list_all_accounts(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["accounts:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """List all accounts (cash, debt, investment) for the current user."""
@@ -68,7 +68,7 @@ async def list_all_accounts(
 
 @router.get("/investment", response_model=list[InvestmentAccountResponse])
 async def list_investment_accounts(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["accounts:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> list[InvestmentAccountResponse]:
     """List all investment accounts for the current user."""
@@ -85,7 +85,7 @@ async def list_investment_accounts(
 @router.get("/investment/{account_id}", response_model=InvestmentAccountWithHoldingsResponse)
 async def get_investment_account(
     account_id: uuid.UUID,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["accounts:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> InvestmentAccountWithHoldingsResponse:
     """Get a specific investment account with its holdings."""
@@ -131,7 +131,7 @@ async def get_investment_account(
 @router.post("/investment", response_model=InvestmentAccountResponse, status_code=201)
 async def create_investment_account(
     data: InvestmentAccountCreate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["accounts:write"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> InvestmentAccountResponse:
     """Create a manual investment account (no connection)."""
@@ -158,7 +158,7 @@ async def create_investment_account(
 async def update_investment_account(
     account_id: uuid.UUID,
     data: InvestmentAccountUpdate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["accounts:write"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> InvestmentAccountResponse:
     """Update an investment account."""
@@ -178,7 +178,7 @@ async def update_investment_account(
 @router.delete("/investment/{account_id}")
 async def delete_investment_account(
     account_id: uuid.UUID,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["accounts:write"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Delete an investment account and all its holdings."""

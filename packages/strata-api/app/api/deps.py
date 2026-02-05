@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.db.session import get_async_session
 from app.models.user import User
+from app.models.consent import ConsentGrant, ConsentStatus
 from app.services.consent import ConsentService
 
 logger = logging.getLogger(__name__)
@@ -120,7 +121,21 @@ def require_scopes(required_scopes: list[str]):
         session: AsyncSession = Depends(get_async_session),
     ) -> User:
         consent = ConsentService(session)
-        await consent.require_scopes(user.id, required_scopes)
+        try:
+            await consent.require_scopes(user.id, required_scopes)
+        except HTTPException:
+            if settings.auto_consent_on_missing and required_scopes:
+                grant = ConsentGrant(
+                    user_id=user.id,
+                    scopes=required_scopes,
+                    purpose="Auto-consent for development/testing",
+                    status=ConsentStatus.active,
+                    source="auto",
+                )
+                session.add(grant)
+                await session.commit()
+            else:
+                raise
         return user
 
     return _dependency

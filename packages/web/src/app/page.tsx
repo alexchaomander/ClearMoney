@@ -148,8 +148,11 @@ export default function HomePage() {
                 <Link href="/blog" className="transition-colors hover:text-black">
                   Research
                 </Link>
-                <Link href="/about" className="transition-colors hover:text-black">
-                  Mission
+                <Link href="/transparency" className="transition-colors hover:text-black">
+                  Transparency
+                </Link>
+                <Link href="/methodology" className="transition-colors hover:text-black">
+                  Methodology
                 </Link>
               </nav>
               <div className="flex items-center gap-3">
@@ -201,7 +204,7 @@ export default function HomePage() {
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
-                href="/about"
+                href="/methodology"
                 className="inline-flex items-center gap-2 rounded-full border border-black/10 px-6 py-3 text-sm font-semibold transition-all hover:border-black/20"
               >
                 Our principles
@@ -403,7 +406,7 @@ export default function HomePage() {
                   Read the research
                 </Link>
                 <Link
-                  href="/about"
+                  href="/methodology"
                   className="inline-flex items-center gap-2 text-sm font-semibold"
                   style={{ color: palette.accent }}
                 >
@@ -488,8 +491,8 @@ export default function HomePage() {
                 ClearMoney. Independent finance tools for real decisions.
               </p>
               <div className="flex items-center gap-6 text-sm">
-                <Link href="/about" className="transition-colors hover:text-black" style={{ color: palette.textMuted }}>
-                  About
+                <Link href="/methodology" className="transition-colors hover:text-black" style={{ color: palette.textMuted }}>
+                  Methodology
                 </Link>
                 <Link href="/blog" className="transition-colors hover:text-black" style={{ color: palette.textMuted }}>
                   Blog

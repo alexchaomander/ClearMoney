@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
@@ -11,6 +11,8 @@ import {
   formatPercent,
 } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/i-bond-comparison/calculations";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 import {
   CURRENT_RATES,
   I_BOND_RULES,
@@ -70,6 +72,7 @@ const BarRow = ({ option, maxRate }: { option: InvestmentOption; maxRate: number
 };
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("i-bond-comparison");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -86,11 +89,19 @@ export function Calculator() {
     ],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const bestOption = results.options.find((option) => option.id === results.bestOption);

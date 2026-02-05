@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
@@ -12,6 +12,8 @@ import {
 } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/savings-goal/calculations";
 import type { CalculatorInputs } from "@/lib/calculators/savings-goal/types";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   goalAmount: 25000,
@@ -30,6 +32,7 @@ const milestoneColors = {
 } as const;
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("savings-goal");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -39,8 +42,16 @@ export function Calculator() {
     monthlyContribution: "monthly_savings_target",
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

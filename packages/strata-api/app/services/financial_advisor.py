@@ -23,6 +23,7 @@ from app.services.agent_guardrails import evaluate_freshness
 from app.services.agent_runtime import AgentRuntime
 from app.services.action_policy import ActionPolicyService
 from app.services.context_renderer import render_context_as_markdown
+from app.services.decision_engine import run_deterministic_checks
 from app.services.financial_context import build_financial_context
 from app.services.skill_registry import get_skill_registry
 
@@ -176,6 +177,14 @@ ADVISOR_TOOLS = [
                     "type": "array",
                     "items": {"type": "string"},
                     "description": "Any risk or confidence warnings to show the user.",
+                },
+                "trace": {
+                    "type": "object",
+                    "description": "Structured decision trace payload (inputs, rules, assumptions, confidence).",
+                },
+                "confidence": {
+                    "type": "number",
+                    "description": "Confidence score from 0 to 1 for the recommendation.",
                 },
             },
             "required": ["title", "summary"],
@@ -377,14 +386,25 @@ class FinancialAdvisor:
             context = await build_financial_context(user_id, self._session)
             freshness_status = evaluate_freshness(context)
             warning = freshness_status.get("warning")
+            deterministic = run_deterministic_checks(context)
+            rule_checks = self._build_rule_checks(context, freshness_status) + deterministic["rules_applied"]
+            assumptions = self._build_assumptions(context) + deterministic["assumptions"]
             trace = DecisionTrace(
                 user_id=user_id,
                 session_id=session_id,
                 recommendation_id=None,
                 trace_type=DecisionTraceType.analysis,
-                input_data={"user_message": user_message},
+                input_data={"user_message": user_message, "profile": context.get("profile", {})},
                 reasoning_steps=[],
-                outputs={"assistant_response": full_response},
+                outputs={
+                    "assistant_response": full_response,
+                    "trace": {
+                        "rules_applied": rule_checks,
+                        "assumptions": assumptions,
+                        "freshness": freshness_status,
+                        "deterministic": deterministic,
+                    },
+                },
                 data_freshness=context.get("data_freshness", {}),
                 warnings=[warning] if warning else [],
                 source="advisor",
@@ -409,6 +429,7 @@ class FinancialAdvisor:
             "- Use the user's actual data whenever possible",
             "- Flag when data is missing or stale",
             "- Monitor 'Emergency Fund Runway' and suggest building cash reserves if < 3 months",
+            "- When calling create_recommendation, include data_used, rationale, warnings, and a trace object with rules/assumptions/confidence",
         ]
 
         # Add skill-specific instructions
@@ -521,6 +542,12 @@ class FinancialAdvisor:
         session_id: uuid.UUID,
         tool_input: dict,
     ) -> dict:
+        context = await build_financial_context(user_id, self._session)
+        freshness_status = evaluate_freshness(context)
+        deterministic = run_deterministic_checks(context)
+        rule_checks = self._build_rule_checks(context, freshness_status) + deterministic["rules_applied"]
+        assumptions = self._build_assumptions(context) + deterministic["assumptions"]
+
         # Get skill name from session
         result = await self._session.execute(
             select(AgentSession).where(AgentSession.id == session_id)
@@ -559,19 +586,33 @@ class FinancialAdvisor:
         await self._session.commit()
         await self._session.refresh(rec)
 
+        data_used = tool_input.get("data_used") or {}
+        if "portfolio_metrics" not in data_used:
+            data_used["portfolio_metrics"] = context.get("portfolio_metrics", {})
+        if "profile" not in data_used:
+            data_used["profile"] = context.get("profile", {})
+
+        trace_payload = tool_input.get("trace") or {}
+        trace_payload.setdefault("rules_applied", rule_checks)
+        trace_payload.setdefault("assumptions", assumptions)
+        trace_payload.setdefault("confidence", tool_input.get("confidence"))
+        trace_payload.setdefault("freshness", freshness_status)
+        trace_payload.setdefault("deterministic", deterministic)
+
         trace = DecisionTrace(
             user_id=user_id,
             session_id=session_id,
             recommendation_id=rec.id,
             trace_type=DecisionTraceType.recommendation,
-            input_data=tool_input.get("data_used", {}),
+            input_data=data_used,
             reasoning_steps=tool_input.get("rationale", []),
             outputs={
                 "title": rec.title,
                 "summary": rec.summary,
                 "details": rec.details,
+                "trace": trace_payload,
             },
-            data_freshness=tool_input.get("freshness_summary", {}),
+            data_freshness=tool_input.get("freshness_summary", freshness_status),
             warnings=tool_input.get("warnings", []),
             source="advisor",
         )
@@ -610,6 +651,52 @@ class FinancialAdvisor:
             "top_holdings": holdings[:10],
             "holding_count": len(holdings),
         }
+
+    @staticmethod
+    def _build_rule_checks(context: dict, freshness_status: dict) -> list[dict]:
+        metrics = context.get("portfolio_metrics", {}) or {}
+        rules: list[dict] = []
+
+        total_debt = metrics.get("total_debt_value")
+        if total_debt is not None:
+            rules.append({
+                "name": "No revolving debt balance",
+                "passed": total_debt <= 0,
+                "value": total_debt,
+            })
+
+        total_investment = metrics.get("total_investment_value") or 0
+        tax_advantaged = metrics.get("tax_advantaged_value")
+        if tax_advantaged is not None and total_investment:
+            ratio = tax_advantaged / total_investment if total_investment else 0
+            rules.append({
+                "name": "Tax-advantaged share >= 40%",
+                "passed": ratio >= 0.4,
+                "value": round(ratio, 2),
+            })
+
+        if freshness_status.get("warning"):
+            rules.append({
+                "name": "Data freshness within policy",
+                "passed": bool(freshness_status.get("is_fresh")),
+                "value": freshness_status.get("age_hours"),
+            })
+
+        return rules
+
+    @staticmethod
+    def _build_assumptions(context: dict) -> list[str]:
+        profile = context.get("profile", {}) or {}
+        assumptions = []
+        if not profile.get("average_monthly_expenses"):
+            assumptions.append("Monthly expenses missing; runway uses available cash only.")
+        if not profile.get("annual_income") and not profile.get("monthly_income"):
+            assumptions.append("Income not provided; contribution guidance may be incomplete.")
+        if not profile.get("risk_tolerance"):
+            assumptions.append("Risk tolerance not set; recommendations default to moderate risk.")
+        if not context.get("accounts", {}).get("investment"):
+            assumptions.append("No investment accounts connected; allocations may be incomplete.")
+        return assumptions
 
     @staticmethod
     def _handle_calculate(tool_input: dict) -> dict:

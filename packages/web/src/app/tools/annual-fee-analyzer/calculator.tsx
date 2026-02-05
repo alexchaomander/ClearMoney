@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
@@ -12,9 +12,13 @@ import {
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { formatCurrency } from "@/lib/shared/formatters";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 import { calculate } from "@/lib/calculators/annual-fee-analyzer/calculations";
 import type { CalculatorInputs } from "@/lib/calculators/annual-fee-analyzer/types";
 import { cn } from "@/lib/utils";
+import { useCreditCardData, usePointsPrograms } from "@/lib/strata/hooks";
+import type { CreditCardData, PointsProgram } from "@clearmoney/strata-sdk";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   annualFee: 550,
@@ -31,7 +35,30 @@ const POINT_VALUE_PRESETS = [
   { label: "Travel Transfers (1.5¢)", value: 1.5 },
 ];
 
+const buildCardPreset = (
+  card: CreditCardData,
+  programs: PointsProgram[] | undefined
+): Partial<CalculatorInputs> => {
+  const creditsValue = card.credits.reduce(
+    (sum, credit) =>
+      sum + (credit.value * (credit.default_usable_pct ?? 100)) / 100,
+    0
+  );
+  const program = programs?.find((p) => p.id === card.currency_id);
+  const pointsValueCpp = program?.valuations.conservative ?? 1.0;
+
+  return {
+    annualFee: card.annual_fee,
+    rewardsRate: card.default_rewards_rate ?? 2.0,
+    totalCredits: Math.round(creditsValue),
+    pointsValueCpp,
+  };
+};
+
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("annual-fee-analyzer");
+  const { data: creditCardData } = useCreditCardData();
+  const { data: pointsPrograms } = usePointsPrograms();
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -44,11 +71,20 @@ export function Calculator() {
     ],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
+  const [selectedCardId, setSelectedCardId] = useState<string>("manual");
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 
@@ -108,6 +144,36 @@ export function Calculator() {
               <h2 className="text-xl font-semibold text-white mb-6">
                 Card Details
               </h2>
+              <div className="mb-6">
+                <label className="block text-sm text-neutral-400 mb-2">
+                  Card Preset
+                </label>
+                <select
+                  value={selectedCardId}
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    setSelectedCardId(next);
+                    const selected = creditCardData?.find((card) => card.id === next);
+                    if (selected) {
+                      setInputs((prev) => ({
+                        ...prev,
+                        ...buildCardPreset(selected, pointsPrograms),
+                      }));
+                    }
+                  }}
+                  className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3 text-sm text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                >
+                  <option value="manual">Manual entry</option>
+                  {(creditCardData ?? []).map((card) => (
+                    <option key={card.id} value={card.id}>
+                      {card.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-2 text-xs text-neutral-500">
+                  Pick a card to prefill defaults. You can still edit every value.
+                </p>
+              </div>
               <div className="space-y-6">
                 <SliderInput
                   label="Annual Fee"

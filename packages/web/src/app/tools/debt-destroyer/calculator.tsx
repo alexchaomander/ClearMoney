@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { Plus, Trash2, Trophy } from "lucide-react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
@@ -8,6 +8,7 @@ import { formatCurrency } from "@/lib/shared/formatters";
 import { useAccounts } from "@/lib/strata/hooks";
 import { calculateDebtPayoff } from "@/lib/calculators/debt-destroyer/calculations";
 import type { DebtItem } from "@/lib/calculators/debt-destroyer/types";
+import { useToolPreset } from "@/lib/strata/presets";
 
 // Default debts if no connected accounts
 const DEFAULT_DEBTS: DebtItem[] = [
@@ -83,6 +84,7 @@ function MethodCard({
 export function Calculator() {
   const { data: accountsData, isSuccess: accountsLoaded } = useAccounts();
   const [dataApplied, setDataApplied] = useState(false);
+  const { preset } = useToolPreset<{ debts: DebtItem[]; extraPayment: number }>("debt-destroyer");
   
   // Transform connected debt accounts into calculator format
   const connectedDebts: DebtItem[] = useMemo(() => {
@@ -96,8 +98,21 @@ export function Calculator() {
     }));
   }, [accountsData]);
 
-  const [debts, setDebts] = useState<DebtItem[]>(DEFAULT_DEBTS);
-  const [monthlyExtra, setMonthlyExtra] = useState(500);
+  const [debts, setDebts] = useState<DebtItem[]>(
+    () => (preset?.debts as DebtItem[] | undefined) ?? DEFAULT_DEBTS
+  );
+  const [monthlyExtra, setMonthlyExtra] = useState(
+    () => (preset?.extraPayment as number | undefined) ?? 500
+  );
+
+  useEffect(() => {
+    if (preset?.debts) {
+      setDebts(preset.debts as DebtItem[]);
+    }
+    if (preset?.extraPayment != null) {
+      setMonthlyExtra(preset.extraPayment as number);
+    }
+  }, [preset]);
 
   const handleLoadData = useCallback(() => {
     if (connectedDebts.length === 0) return;

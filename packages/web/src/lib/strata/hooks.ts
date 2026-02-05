@@ -19,6 +19,8 @@ export const queryKeys = {
   investmentAccounts: ["accounts", "investment"] as const,
   investmentAccount: (id: string) => ["accounts", "investment", id] as const,
   holdings: ["portfolio", "holdings"] as const,
+  transactions: (params?: { accountId?: string; startDate?: string; endDate?: string }) =>
+    ["portfolio", "transactions", params?.accountId ?? "", params?.startDate ?? "", params?.endDate ?? ""] as const,
   connections: ["connections"] as const,
   accounts: ["accounts", "all"] as const,
   searchInstitutions: (query?: string) =>
@@ -37,71 +39,184 @@ export const queryKeys = {
   recommendations: ["advisor", "recommendations"] as const,
   creditCards: ["creditCards"] as const,
   creditCard: (id: string) => ["creditCards", id] as const,
+  pointsPrograms: ["data", "pointsPrograms"] as const,
+  creditCardData: ["data", "creditCards"] as const,
+  liquidAssets: ["data", "liquidAssets"] as const,
+  investments: ["data", "investments"] as const,
+  realAssets: ["data", "realAssets"] as const,
+  liabilities: ["data", "liabilities"] as const,
+  income: ["data", "income"] as const,
+  credit: ["data", "credit"] as const,
+  protection: ["data", "protection"] as const,
+  toolPresets: ["data", "toolPresets"] as const,
+  consents: ["consents"] as const,
+  decisionTraces: (filters?: { sessionId?: string; recommendationId?: string }) =>
+    ["decisionTraces", filters?.sessionId ?? "", filters?.recommendationId ?? ""] as const,
 };
 
-export function usePortfolioSummary() {
+export function usePortfolioSummary(options?: { enabled?: boolean }) {
   const client = useStrataClient();
   return useQuery({
     queryKey: queryKeys.portfolioSummary,
     queryFn: () => client.getPortfolioSummary(),
+    enabled: options?.enabled ?? true,
   });
 }
 
-export function useInvestmentAccounts() {
+export function useInvestmentAccounts(options?: { enabled?: boolean }) {
   const client = useStrataClient();
   return useQuery({
     queryKey: queryKeys.investmentAccounts,
     queryFn: () => client.getInvestmentAccounts(),
+    enabled: options?.enabled ?? true,
   });
 }
 
-export function useInvestmentAccount(id: string) {
+export function useInvestmentAccount(id: string, options?: { enabled?: boolean }) {
   const client = useStrataClient();
   return useQuery({
     queryKey: queryKeys.investmentAccount(id),
     queryFn: () => client.getInvestmentAccount(id),
-    enabled: !!id,
+    enabled: (options?.enabled ?? true) && !!id,
   });
 }
 
-export function useHoldings() {
+export function useHoldings(options?: { enabled?: boolean }) {
   const client = useStrataClient();
   return useQuery({
     queryKey: queryKeys.holdings,
     queryFn: () => client.getHoldings(),
+    enabled: options?.enabled ?? true,
   });
 }
 
-export function useConnections() {
+export function useTransactions(
+  params?: { accountId?: string; startDate?: string; endDate?: string },
+  options?: { enabled?: boolean }
+) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.transactions(params),
+    queryFn: () => client.getTransactions(params),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useConnections(options?: { enabled?: boolean }) {
   const client = useStrataClient();
   return useQuery({
     queryKey: queryKeys.connections,
     queryFn: () => client.getConnections(),
+    enabled: options?.enabled ?? true,
   });
 }
 
-export function useAccounts() {
+export function useAccounts(options?: { enabled?: boolean }) {
   const client = useStrataClient();
   return useQuery({
     queryKey: queryKeys.accounts,
     queryFn: () => client.getAccounts(),
+    enabled: options?.enabled ?? true,
   });
 }
 
-export function useSearchInstitutions(query?: string) {
+export function useSearchInstitutions(query?: string, options?: { enabled?: boolean }) {
   const client = useStrataClient();
   return useQuery({
     queryKey: queryKeys.searchInstitutions(query),
     queryFn: () => client.searchInstitutions(query),
-    enabled: !!query,
+    enabled: (options?.enabled ?? true) && !!query,
   });
 }
 
-export function usePopularInstitutions() {
+export function usePopularInstitutions(options?: { enabled?: boolean }) {
   const client = useStrataClient();
   return useQuery({
     queryKey: queryKeys.popularInstitutions,
     queryFn: () => client.getPopularInstitutions(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+// === Shared Data ===
+
+export function usePointsPrograms() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.pointsPrograms,
+    queryFn: () => client.getPointsPrograms(),
+  });
+}
+
+export function useCreditCardData() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.creditCardData,
+    queryFn: () => client.getCreditCardData(),
+  });
+}
+
+export function useLiquidAssets() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.liquidAssets,
+    queryFn: () => client.getLiquidAssets(),
+  });
+}
+
+export function useInvestmentData() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.investments,
+    queryFn: () => client.getInvestments(),
+  });
+}
+
+export function useRealAssetData() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.realAssets,
+    queryFn: () => client.getRealAssets(),
+  });
+}
+
+export function useLiabilityData() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.liabilities,
+    queryFn: () => client.getLiabilities(),
+  });
+}
+
+export function useIncomeData() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.income,
+    queryFn: () => client.getIncome(),
+  });
+}
+
+export function useCreditData() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.credit,
+    queryFn: () => client.getCredit(),
+  });
+}
+
+export function useProtectionData() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.protection,
+    queryFn: () => client.getProtection(),
+  });
+}
+
+export function useToolPresets() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.toolPresets,
+    queryFn: () => client.getToolPresets(),
   });
 }
 
@@ -168,11 +283,12 @@ export function useDeleteConnection() {
 
 // === Portfolio History ===
 
-export function usePortfolioHistory(range: PortfolioHistoryRange) {
+export function usePortfolioHistory(range: PortfolioHistoryRange, options?: { enabled?: boolean }) {
   const client = useStrataClient();
   return useQuery({
     queryKey: queryKeys.portfolioHistory(range),
     queryFn: () => client.getPortfolioHistory(range),
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -226,6 +342,56 @@ export function useDebtAccountMutations() {
   return { create, update, remove };
 }
 
+// === Consent ===
+
+export function useConsents() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.consents,
+    queryFn: () => client.listConsents(),
+  });
+}
+
+export function useConsentStatus(scopes: string[]) {
+  const { data, isLoading } = useConsents();
+  const hasConsent =
+    data?.some(
+      (consent) =>
+        consent.status === "active" &&
+        scopes.every((scope) => consent.scopes.includes(scope))
+    ) ?? false;
+  return { hasConsent, isLoading };
+}
+
+export function useCreateConsent() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof client.createConsent>[0]) =>
+      client.createConsent(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.consents }),
+  });
+}
+
+export function useRevokeConsent() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (consentId: string) => client.revokeConsent(consentId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.consents }),
+  });
+}
+
+// === Decision Traces ===
+
+export function useDecisionTraces(filters?: { sessionId?: string; recommendationId?: string }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.decisionTraces(filters),
+    queryFn: () => client.getDecisionTraces(filters),
+  });
+}
+
 export function useCreateInvestmentAccount() {
   const client = useStrataClient();
   const queryClient = useQueryClient();
@@ -239,11 +405,12 @@ export function useCreateInvestmentAccount() {
 
 // === Financial Memory ===
 
-export function useFinancialMemory() {
+export function useFinancialMemory(options?: { enabled?: boolean }) {
   const client = useStrataClient();
   return useQuery({
     queryKey: queryKeys.financialMemory,
     queryFn: () => client.getFinancialMemory(),
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -274,11 +441,12 @@ export function useDeriveMemory() {
   });
 }
 
-export function useMemoryEvents() {
+export function useMemoryEvents(options?: { enabled?: boolean }) {
   const client = useStrataClient();
   return useQuery({
     queryKey: queryKeys.memoryEvents,
     queryFn: () => client.getMemoryEvents(),
+    enabled: options?.enabled ?? true,
   });
 }
 

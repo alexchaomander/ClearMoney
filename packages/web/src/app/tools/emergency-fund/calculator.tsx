@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/shared/formatters";
+import { mergeDeep } from "@/lib/shared/merge";
 import {
   calculate,
   riskMultipliers,
@@ -14,6 +15,7 @@ import type {
   CalculatorInputs,
   RiskFactor,
 } from "@/lib/calculators/emergency-fund/types";
+import { useToolPreset } from "@/lib/strata/presets";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
   monthlyExpenses: 4000,
@@ -230,6 +232,7 @@ function RiskBreakdown({ factors }: { factors: RiskFactor[] }) {
 }
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("emergency-fund");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -239,9 +242,16 @@ export function Calculator() {
     monthlyExpenses: "average_monthly_expenses",
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const [currentSavings, setCurrentSavings] = useState<number>(8000);
   const handleLoadData = useCallback(() => applyMemoryDefaults(setInputs), [applyMemoryDefaults]);
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

@@ -30,10 +30,24 @@ import type {
   PortfolioSummary,
   Transaction,
   CreditCard,
+  ConsentCreateRequest,
+  ConsentResponse,
+  DecisionTrace,
+  PointsProgram,
+  CreditCardData,
+  SavingsProduct,
+  InvestmentData,
+  RealAssetData,
+  LiabilityData,
+  IncomeData,
+  CreditData,
+  ProtectionData,
+  ToolPresetBundle,
 } from './types';
 
 export interface StrataClientInterface {
-  setClerkUserId(userId: string): void;
+  setClerkUserId(userId: string | null): void;
+  setAuthToken(token: string | null): void;
   healthCheck(): Promise<HealthResponse>;
   createLinkSession(request?: LinkSessionRequest): Promise<LinkSessionResponse>;
   handleConnectionCallback(request: ConnectionCallbackRequest): Promise<Connection>;
@@ -76,31 +90,57 @@ export interface StrataClientInterface {
   getAdvisorSession(sessionId: string): Promise<AdvisorSession>;
   sendAdvisorMessage(sessionId: string, content: string): Promise<ReadableStream<Uint8Array>>;
   getRecommendations(): Promise<AdvisorRecommendation[]>;
+  getDecisionTraces(params?: {
+    sessionId?: string;
+    recommendationId?: string;
+  }): Promise<DecisionTrace[]>;
+  // Consent
+  listConsents(): Promise<ConsentResponse[]>;
+  createConsent(data: ConsentCreateRequest): Promise<ConsentResponse>;
+  revokeConsent(consentId: string): Promise<ConsentResponse>;
   // Credit Cards
   getCreditCards(): Promise<CreditCard[]>;
   getCreditCard(id: string): Promise<CreditCard>;
   seedAmexPlatinum(): Promise<CreditCard>;
+  // Shared data
+  getPointsPrograms(): Promise<PointsProgram[]>;
+  getCreditCardData(): Promise<CreditCardData[]>;
+  getLiquidAssets(): Promise<SavingsProduct[]>;
+  getInvestments(): Promise<InvestmentData>;
+  getRealAssets(): Promise<RealAssetData>;
+  getLiabilities(): Promise<LiabilityData>;
+  getIncome(): Promise<IncomeData>;
+  getCredit(): Promise<CreditData>;
+  getProtection(): Promise<ProtectionData>;
+  getToolPresets(): Promise<ToolPresetBundle>;
 }
 
 export interface StrataClientOptions {
   baseUrl: string;
   clerkUserId?: string;
+  authToken?: string;
 }
 
 export class StrataClient implements StrataClientInterface {
   private baseUrl: string;
   private clerkUserId: string | null;
+  private authToken: string | null;
 
   constructor(options: StrataClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, '');
     this.clerkUserId = options.clerkUserId ?? null;
+    this.authToken = options.authToken ?? null;
   }
 
   /**
    * Set the Clerk user ID for authenticated requests.
    */
-  setClerkUserId(userId: string): void {
-    this.clerkUserId = userId;
+  setClerkUserId(userId: string | null): void {
+    this.clerkUserId = userId ?? null;
+  }
+
+  setAuthToken(token: string | null): void {
+    this.authToken = token;
   }
 
   private async request<T>(
@@ -114,6 +154,9 @@ export class StrataClient implements StrataClientInterface {
 
     if (this.clerkUserId) {
       headers['X-Clerk-User-Id'] = this.clerkUserId;
+    }
+    if (this.authToken) {
+      headers.Authorization = `Bearer ${this.authToken}`;
     }
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
@@ -447,6 +490,36 @@ export class StrataClient implements StrataClientInterface {
     return this.request<AdvisorRecommendation[]>('/api/v1/advisor/recommendations');
   }
 
+  async getDecisionTraces(params?: {
+    sessionId?: string;
+    recommendationId?: string;
+  }): Promise<DecisionTrace[]> {
+    const query = new URLSearchParams();
+    if (params?.sessionId) query.set('session_id', params.sessionId);
+    if (params?.recommendationId) query.set('recommendation_id', params.recommendationId);
+    const suffix = query.toString() ? `?${query.toString()}` : '';
+    return this.request<DecisionTrace[]>(`/api/v1/agent/decision-traces${suffix}`);
+  }
+
+  // === Consent ===
+
+  async listConsents(): Promise<ConsentResponse[]> {
+    return this.request<ConsentResponse[]>('/api/v1/consents');
+  }
+
+  async createConsent(data: ConsentCreateRequest): Promise<ConsentResponse> {
+    return this.request<ConsentResponse>('/api/v1/consents', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async revokeConsent(consentId: string): Promise<ConsentResponse> {
+    return this.request<ConsentResponse>(`/api/v1/consents/${consentId}/revoke`, {
+      method: 'POST',
+    });
+  }
+
   // === Credit Cards ===
 
   async getCreditCards(): Promise<CreditCard[]> {
@@ -461,5 +534,47 @@ export class StrataClient implements StrataClientInterface {
     return this.request<CreditCard>('/api/v1/credit-cards/seed', {
       method: 'POST',
     });
+  }
+
+  // === Shared Data ===
+
+  async getPointsPrograms(): Promise<PointsProgram[]> {
+    return this.request<PointsProgram[]>('/api/v1/data/points-programs');
+  }
+
+  async getCreditCardData(): Promise<CreditCardData[]> {
+    return this.request<CreditCardData[]>('/api/v1/data/credit-cards');
+  }
+
+  async getLiquidAssets(): Promise<SavingsProduct[]> {
+    return this.request<SavingsProduct[]>('/api/v1/data/liquid-assets');
+  }
+
+  async getInvestments(): Promise<InvestmentData> {
+    return this.request<InvestmentData>('/api/v1/data/investments');
+  }
+
+  async getRealAssets(): Promise<RealAssetData> {
+    return this.request<RealAssetData>('/api/v1/data/real-assets');
+  }
+
+  async getLiabilities(): Promise<LiabilityData> {
+    return this.request<LiabilityData>('/api/v1/data/liabilities');
+  }
+
+  async getIncome(): Promise<IncomeData> {
+    return this.request<IncomeData>('/api/v1/data/income');
+  }
+
+  async getCredit(): Promise<CreditData> {
+    return this.request<CreditData>('/api/v1/data/credit');
+  }
+
+  async getProtection(): Promise<ProtectionData> {
+    return this.request<ProtectionData>('/api/v1/data/protection');
+  }
+
+  async getToolPresets(): Promise<ToolPresetBundle> {
+    return this.request<ToolPresetBundle>('/api/v1/data/tool-presets');
   }
 }

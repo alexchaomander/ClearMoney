@@ -159,8 +159,11 @@ export function CategoryPage({ category }: CategoryPageProps) {
               <span>- Financial literacy for everyone</span>
             </div>
             <div className="flex items-center gap-4">
-              <Link href="/about" className="hover:text-white transition-colors">
-                About
+              <Link href="/methodology" className="hover:text-white transition-colors">
+                Methodology
+              </Link>
+              <Link href="/transparency" className="hover:text-white transition-colors">
+                Transparency
               </Link>
               <Link href="/blog" className="hover:text-white transition-colors">
                 Blog

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X, ChevronDown, Calculator, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { categories, getLiveTools, getCategoryById } from "@/lib/site-config";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
 // Group tools by category for the dropdown
 function getToolsByCategory() {
@@ -195,15 +196,26 @@ export function Header() {
                 Blog
               </Link>
               <Link
-                href="/about"
+                href="/transparency"
                 className={cn(
                   "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
-                  pathname === "/about"
+                  pathname === "/transparency"
                     ? "text-white bg-neutral-800"
                     : "text-neutral-300 hover:text-white hover:bg-neutral-800/50"
                 )}
               >
-                About
+                Transparency
+              </Link>
+              <Link
+                href="/methodology"
+                className={cn(
+                  "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+                  pathname === "/methodology"
+                    ? "text-white bg-neutral-800"
+                    : "text-neutral-300 hover:text-white hover:bg-neutral-800/50"
+                )}
+              >
+                Methodology
               </Link>
             </nav>
 
@@ -215,6 +227,16 @@ export function Header() {
               >
                 Explore Tools
               </Link>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className="px-4 py-2 text-sm font-medium rounded-lg text-neutral-200 border border-neutral-700 hover:border-neutral-500 hover:text-white transition-colors">
+                    Sign in
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
               <Link
                 href="/dashboard"
                 className={cn(
@@ -285,10 +307,16 @@ export function Header() {
                   Blog
                 </Link>
                 <Link
-                  href="/about"
+                  href="/transparency"
                   className="block py-2 text-sm font-medium text-neutral-300 hover:text-white transition-colors"
                 >
-                  About
+                  Transparency
+                </Link>
+                <Link
+                  href="/methodology"
+                  className="block py-2 text-sm font-medium text-neutral-300 hover:text-white transition-colors"
+                >
+                  Methodology
                 </Link>
               </div>
 
