@@ -18,6 +18,7 @@ from app.schemas.memory import (
 from app.services.financial_context import build_financial_context
 from app.services.context_renderer import render_context_as_markdown
 from app.services.memory_derivation import derive_memory_from_accounts
+from app.services.user_refresh import get_or_create_memory
 
 router = APIRouter(prefix="/memory", tags=["memory"])
 
@@ -56,31 +57,15 @@ _MEMORY_FIELDS = {
 }
 
 
-async def _get_or_create_memory(
-    user_id: uuid.UUID, session: AsyncSession
-) -> FinancialMemory:
-    """Get the user's financial memory, creating an empty one if it doesn't exist."""
-    result = await session.execute(
-        select(FinancialMemory).where(FinancialMemory.user_id == user_id)
-    )
-    memory = result.scalar_one_or_none()
-
-    if memory is None:
-        memory = FinancialMemory(user_id=user_id)
-        session.add(memory)
-        await session.commit()
-        await session.refresh(memory)
-
-    return memory
-
-
 @router.get("", response_model=FinancialMemoryResponse)
 async def get_memory(
     user: User = Depends(require_scopes(["memory:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> FinancialMemoryResponse:
     """Get the user's financial memory (creates empty if not exists)."""
-    memory = await _get_or_create_memory(user.id, session)
+    memory = await get_or_create_memory(user.id, session)
+    await session.commit()
+    await session.refresh(memory)
     return FinancialMemoryResponse.model_validate(memory)
 
 
@@ -94,7 +79,7 @@ async def update_memory(
 
     Logs a MemoryEvent for each changed field.
     """
-    memory = await _get_or_create_memory(user.id, session)
+    memory = await get_or_create_memory(user.id, session)
 
     update_dict = data.model_dump(exclude_unset=True)
     source = update_dict.pop("source", MemoryEventSource.user_input)
@@ -152,11 +137,11 @@ async def list_memory_events(
 
 @router.post("/derive", response_model=FinancialMemoryResponse)
 async def derive_memory(
-    user: User = Depends(require_scopes(["memory:write"])),
+    user: User = Depends(require_scopes(["memory:write", "accounts:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> FinancialMemoryResponse:
     """Derive memory fields from linked account data."""
-    memory = await _get_or_create_memory(user.id, session)
+    memory = await get_or_create_memory(user.id, session)
     await derive_memory_from_accounts(user.id, memory, session)
     await session.commit()
     await session.refresh(memory)
@@ -165,7 +150,7 @@ async def derive_memory(
 
 @router.get("/context")
 async def get_financial_context(
-    user: User = Depends(require_scopes(["memory:read"])),
+    user: User = Depends(require_scopes(["memory:read", "accounts:read", "portfolio:read", "transactions:read"])),
     session: AsyncSession = Depends(get_async_session),
     format: str = Query("json", pattern="^(json|markdown)$"),
 ):

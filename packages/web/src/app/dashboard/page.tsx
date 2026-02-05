@@ -27,6 +27,7 @@ import {
   useCashAccountMutations,
   useDebtAccountMutations,
   useConsentStatus,
+  useSyncAllConnections,
 } from "@/lib/strata/hooks";
 import type { HoldingDetail } from "@clearmoney/strata-sdk";
 
@@ -51,10 +52,14 @@ export default function DashboardPage() {
 
   const cashMutations = useCashAccountMutations();
   const debtMutations = useDebtAccountMutations();
+  const syncAllConnections = useSyncAllConnections();
   const { hasConsent: hasPortfolioConsent } = useConsentStatus([
     "portfolio:read",
     "accounts:read",
     "connections:read",
+  ]);
+  const { hasConsent: hasSyncConsent } = useConsentStatus([
+    "connections:write",
   ]);
 
   useEffect(() => {
@@ -102,7 +107,10 @@ export default function DashboardPage() {
   const isLoading = portfolioLoading || accountsLoading || holdingsLoading || allAccountsLoading;
   const isError = portfolioError || accountsError || holdingsError || allAccountsError;
 
-  function handleRefresh() {
+  async function handleRefresh() {
+    if (hasSyncConsent) {
+      await syncAllConnections.mutateAsync();
+    }
     refetchPortfolio();
     refetchAccounts();
     refetchHoldings();
@@ -313,7 +321,7 @@ export default function DashboardPage() {
 
       <DashboardHeader
         onRefresh={handleRefresh}
-        isRefreshing={isLoading}
+        isRefreshing={isLoading || syncAllConnections.isPending}
         showRefresh={!!hasAccounts}
       />
 

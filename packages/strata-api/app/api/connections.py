@@ -21,6 +21,7 @@ from app.schemas.connection import (
 )
 from app.services.connection_sync import sync_connection_accounts
 from app.services.providers.snaptrade import SnapTradeProvider
+from app.services.user_refresh import refresh_user_financials
 
 logger = logging.getLogger(__name__)
 
@@ -160,9 +161,11 @@ async def handle_callback(
     await session.commit()
     await session.refresh(connection)
 
-    # Sync accounts in the background (or trigger a sync job)
-    # For MVP, we'll sync inline
+    # Sync accounts inline for MVP
     await sync_connection_accounts(session, connection, provider)
+    connection.last_synced_at = datetime.now(timezone.utc)
+    await session.commit()
+    await session.refresh(connection)
 
     return ConnectionResponse.model_validate(connection)
 
@@ -212,6 +215,7 @@ async def delete_connection(
     # Finally delete the connection
     await session.delete(connection)
     await session.commit()
+    await refresh_user_financials(session, user.id)
 
     logger.info(
         f"Deleted connection {connection_id} with {len(accounts)} accounts "
@@ -246,3 +250,35 @@ async def sync_connection(
     await session.refresh(connection)
 
     return ConnectionResponse.model_validate(connection)
+
+
+@router.post("/sync-all", response_model=list[ConnectionResponse])
+async def sync_all_connections(
+    user: User = Depends(require_scopes(["connections:write"])),
+    session: AsyncSession = Depends(get_async_session),
+    provider: SnapTradeProvider = Depends(get_provider),
+) -> list[ConnectionResponse]:
+    """Sync all active connections for the current user."""
+    result = await session.execute(
+        select(Connection).where(Connection.user_id == user.id)
+    )
+    connections = result.scalars().all()
+
+    synced: list[ConnectionResponse] = []
+    now = datetime.now(timezone.utc)
+    for connection in connections:
+        try:
+            await sync_connection_accounts(session, connection, provider)
+            connection.status = ConnectionStatus.active
+            connection.last_synced_at = now
+            connection.error_code = None
+            connection.error_message = None
+        except Exception as e:
+            connection.status = ConnectionStatus.error
+            connection.error_code = "SYNC_FAILED"
+            connection.error_message = str(e)[:1000]
+
+        synced.append(ConnectionResponse.model_validate(connection))
+
+    await session.commit()
+    return synced

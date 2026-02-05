@@ -19,6 +19,7 @@ from app.schemas.debt_account import (
     DebtAccountResponse,
     DebtAccountUpdate,
 )
+from app.services.user_refresh import refresh_user_financials
 
 router = APIRouter(prefix="/accounts", tags=["cash_debt"])
 
@@ -44,6 +45,7 @@ async def create_cash_account(
     session.add(account)
     await session.commit()
     await session.refresh(account)
+    await refresh_user_financials(session, user.id)
     return CashAccountResponse.model_validate(account)
 
 
@@ -80,6 +82,7 @@ async def update_cash_account(
 
     await session.commit()
     await session.refresh(account)
+    await refresh_user_financials(session, user.id)
     return CashAccountResponse.model_validate(account)
 
 
@@ -96,6 +99,7 @@ async def delete_cash_account(
 
     await session.delete(account)
     await session.commit()
+    await refresh_user_financials(session, user.id)
     return {"status": "deleted"}
 
 
@@ -121,6 +125,7 @@ async def create_debt_account(
     session.add(account)
     await session.commit()
     await session.refresh(account)
+    await refresh_user_financials(session, user.id)
     return DebtAccountResponse.model_validate(account)
 
 
@@ -157,6 +162,7 @@ async def update_debt_account(
 
     await session.commit()
     await session.refresh(account)
+    await refresh_user_financials(session, user.id)
     return DebtAccountResponse.model_validate(account)
 
 
@@ -173,4 +179,5 @@ async def delete_debt_account(
 
     await session.delete(account)
     await session.commit()
+    await refresh_user_financials(session, user.id)
     return {"status": "deleted"}

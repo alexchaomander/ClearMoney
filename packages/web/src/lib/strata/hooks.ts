@@ -271,6 +271,16 @@ export function useSyncConnection() {
   });
 }
 
+export function useSyncAllConnections() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => client.syncAllConnections(),
+    onSuccess: () => invalidatePortfolioQueries(queryClient),
+  });
+}
+
 export function useDeleteConnection() {
   const client = useStrataClient();
   const queryClient = useQueryClient();
