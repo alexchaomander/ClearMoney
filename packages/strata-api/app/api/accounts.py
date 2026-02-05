@@ -22,6 +22,7 @@ from app.schemas.investment_account import (
     InvestmentAccountWithHoldingsResponse,
 )
 from app.schemas.security import SecurityResponse
+from app.services.user_refresh import refresh_user_financials
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])
 
@@ -149,6 +150,7 @@ async def create_investment_account(
     session.add(account)
     await session.commit()
     await session.refresh(account)
+    await refresh_user_financials(session, user.id)
     return InvestmentAccountResponse.model_validate(account)
 
 
@@ -172,6 +174,7 @@ async def update_investment_account(
 
     await session.commit()
     await session.refresh(account)
+    await refresh_user_financials(session, user.id)
     return InvestmentAccountResponse.model_validate(account)
 
 
@@ -188,4 +191,5 @@ async def delete_investment_account(
 
     await session.delete(account)
     await session.commit()
+    await refresh_user_financials(session, user.id)
     return {"status": "deleted"}

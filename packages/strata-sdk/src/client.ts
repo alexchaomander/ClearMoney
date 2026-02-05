@@ -54,6 +54,7 @@ export interface StrataClientInterface {
   getConnections(): Promise<Connection[]>;
   deleteConnection(connectionId: string): Promise<void>;
   syncConnection(connectionId: string): Promise<Connection>;
+  syncAllConnections(): Promise<Connection[]>;
   getAccounts(): Promise<AllAccountsResponse>;
   getInvestmentAccounts(): Promise<InvestmentAccount[]>;
   getInvestmentAccount(accountId: string): Promise<InvestmentAccountWithHoldings>;
@@ -231,6 +232,15 @@ export class StrataClient implements StrataClientInterface {
       `/api/v1/connections/${connectionId}/sync`,
       { method: 'POST' }
     );
+  }
+
+  /**
+   * Sync all connections for the current user.
+   */
+  async syncAllConnections(): Promise<Connection[]> {
+    return this.request<Connection[]>('/api/v1/connections/sync-all', {
+      method: 'POST',
+    });
   }
 
   // === Accounts ===

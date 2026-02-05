@@ -231,8 +231,15 @@ export default function AdvisorPage() {
 
       <main className="relative z-10 flex-1 flex flex-col max-w-4xl w-full mx-auto px-6 lg:px-8">
         <ConsentGate
-          scopes={["agent:read", "decision_traces:read"]}
-          purpose="Provide personalized advisor sessions and decision traces."
+          scopes={[
+            "agent:read",
+            "decision_traces:read",
+            "portfolio:read",
+            "transactions:read",
+            "accounts:read",
+            "memory:read",
+          ]}
+          purpose="Provide personalized advisor sessions using your linked accounts and transaction data."
           className="mt-10"
         >
         {!activeSession ? (

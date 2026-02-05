@@ -20,11 +20,19 @@ from app.services.financial_advisor import FinancialAdvisor
 
 router = APIRouter(prefix="/advisor", tags=["advisor"])
 
+ADVISOR_DATA_SCOPES = [
+    "agent:read",
+    "portfolio:read",
+    "transactions:read",
+    "accounts:read",
+    "memory:read",
+]
+
 
 @router.post("/sessions", response_model=SessionResponse, status_code=201)
 async def create_session(
     data: SessionCreateRequest,
-    user: User = Depends(require_scopes(["agent:read"])),
+    user: User = Depends(require_scopes(ADVISOR_DATA_SCOPES)),
     session: AsyncSession = Depends(get_async_session),
 ) -> SessionResponse:
     """Start a new advisor session, optionally with a specific skill."""
@@ -81,7 +89,7 @@ async def get_session(
 async def send_message(
     session_id: uuid.UUID,
     data: MessageRequest,
-    user: User = Depends(require_scopes(["agent:read"])),
+    user: User = Depends(require_scopes(ADVISOR_DATA_SCOPES)),
     session: AsyncSession = Depends(get_async_session),
 ):
     """Send a message to the advisor and stream the response via SSE."""
