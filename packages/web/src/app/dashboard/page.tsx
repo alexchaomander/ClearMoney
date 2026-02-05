@@ -78,6 +78,7 @@ export default function DashboardPage() {
     data: portfolio,
     isLoading: portfolioLoading,
     isError: portfolioError,
+    error: portfolioErrorDetails,
     refetch: refetchPortfolio,
   } = usePortfolioSummary({ enabled: hasPortfolioConsent });
 
@@ -85,6 +86,7 @@ export default function DashboardPage() {
     data: accounts,
     isLoading: accountsLoading,
     isError: accountsError,
+    error: accountsErrorDetails,
     refetch: refetchAccounts,
   } = useInvestmentAccounts({ enabled: hasPortfolioConsent });
 
@@ -92,6 +94,7 @@ export default function DashboardPage() {
     data: holdingsData,
     isLoading: holdingsLoading,
     isError: holdingsError,
+    error: holdingsErrorDetails,
     refetch: refetchHoldings,
   } = useHoldings({ enabled: hasPortfolioConsent });
 
@@ -99,6 +102,7 @@ export default function DashboardPage() {
     data: allAccountsData,
     isLoading: allAccountsLoading,
     isError: allAccountsError,
+    error: allAccountsErrorDetails,
     refetch: refetchAllAccounts,
   } = useAccounts({ enabled: hasPortfolioConsent });
 
@@ -106,6 +110,11 @@ export default function DashboardPage() {
 
   const isLoading = portfolioLoading || accountsLoading || holdingsLoading || allAccountsLoading;
   const isError = portfolioError || accountsError || holdingsError || allAccountsError;
+  const errorDetails =
+    portfolioErrorDetails ||
+    accountsErrorDetails ||
+    holdingsErrorDetails ||
+    allAccountsErrorDetails;
 
   async function handleRefresh() {
     if (hasSyncConsent) {
@@ -139,6 +148,7 @@ export default function DashboardPage() {
       return (
         <ApiErrorState
           message="We couldn't load your portfolio data. Please check that the API is running and try again."
+          error={errorDetails}
           onRetry={handleRefresh}
         />
       );

@@ -12,6 +12,8 @@ node_modules/
 
 # Playwright MCP
 .playwright-mcp/
+.codex/
+package-lock.json
 
 # Python
 **/__pycache__/

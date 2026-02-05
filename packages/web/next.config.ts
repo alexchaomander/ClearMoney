@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true, // Required for static export
   },
+  turbopack: {
+    resolveAlias: {
+      // Static export has no server runtime. Stub Clerk's Next integration to keep build/export working.
+      "@clerk/nextjs": "./src/lib/clerk-static.tsx",
+    },
+  },
 };
 
 const withMDX = createMDX({

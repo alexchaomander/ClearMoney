@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { QueryProvider } from "@/lib/strata/query-provider";
-import { DemoModeProvider } from "@/lib/strata/demo-context";
-import { StrataProvider } from "@/lib/strata/client";
-import { DemoBanner } from "@/components/shared/DemoBanner";
-import { ClerkProvider } from "@clerk/nextjs";
-import { StrataAuthSync } from "@/lib/strata/auth";
+import { AppProviders } from "@/components/layout/AppProviders";
 
 const SITE_NAME = "ClearMoney";
 
@@ -71,23 +64,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen">
-        <ThemeProvider>
-          <ClerkProvider>
-            <QueryProvider>
-              <Suspense fallback={null}>
-                <DemoModeProvider>
-                  <StrataProvider>
-                    <StrataAuthSync />
-                    <DemoBanner />
-                    <div className="flex min-h-screen flex-col">
-                      <main className="flex-1">{children}</main>
-                    </div>
-                  </StrataProvider>
-                </DemoModeProvider>
-              </Suspense>
-            </QueryProvider>
-          </ClerkProvider>
-        </ThemeProvider>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

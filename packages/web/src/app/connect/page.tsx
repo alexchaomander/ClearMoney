@@ -57,6 +57,7 @@ export default function ConnectPage() {
     data: popularInstitutions,
     isLoading: popularLoading,
     isError: popularError,
+    error: popularErrorDetails,
     refetch: refetchPopular,
   } = usePopularInstitutions({ enabled: hasConnectionConsent });
 
@@ -198,6 +199,7 @@ export default function ConnectPage() {
             {popularError && !isSearching ? (
               <ApiErrorState
                 message="Could not load institutions. Please check that the API is running."
+                error={popularErrorDetails}
                 onRetry={refetchPopular}
               />
             ) : (
