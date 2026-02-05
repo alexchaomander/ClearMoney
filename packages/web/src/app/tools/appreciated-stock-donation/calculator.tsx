@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 import {
   formatCurrency,
   formatPercent,
@@ -105,6 +107,7 @@ const DONATION_TYPE_OPTIONS: { value: DonationType; label: string }[] = [
 ];
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("appreciated-stock-donation");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -136,11 +139,19 @@ export function Calculator() {
     ],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const stateRate = STATE_TAX_RATES[inputs.tax.stateCode] || 0;

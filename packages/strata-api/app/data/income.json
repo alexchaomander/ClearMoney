@@ -1,0 +1,55 @@
+{
+  "last_updated": "2026-01-15",
+  "tax_brackets": [
+    {
+      "id": "single-2026",
+      "year": 2026,
+      "filing_status": "single",
+      "brackets": [
+        { "rate": 0.10, "cap": 11950 },
+        { "rate": 0.12, "cap": 48500 },
+        { "rate": 0.22, "cap": 103500 },
+        { "rate": 0.24, "cap": 198500 },
+        { "rate": 0.32, "cap": 252000 },
+        { "rate": 0.35, "cap": 616000 },
+        { "rate": 0.37, "cap": null }
+      ]
+    },
+    {
+      "id": "married-2026",
+      "year": 2026,
+      "filing_status": "married_filing_jointly",
+      "brackets": [
+        { "rate": 0.10, "cap": 23900 },
+        { "rate": 0.12, "cap": 97000 },
+        { "rate": 0.22, "cap": 207000 },
+        { "rate": 0.24, "cap": 397000 },
+        { "rate": 0.32, "cap": 504000 },
+        { "rate": 0.35, "cap": 740000 },
+        { "rate": 0.37, "cap": null }
+      ]
+    },
+    {
+      "id": "head-2026",
+      "year": 2026,
+      "filing_status": "head_of_household",
+      "brackets": [
+        { "rate": 0.10, "cap": 17100 },
+        { "rate": 0.12, "cap": 65100 },
+        { "rate": 0.22, "cap": 103500 },
+        { "rate": 0.24, "cap": 198500 },
+        { "rate": 0.32, "cap": 252000 },
+        { "rate": 0.35, "cap": 616000 },
+        { "rate": 0.37, "cap": null }
+      ]
+    }
+  ],
+  "standard_deductions": [
+    { "year": 2026, "filing_status": "single", "amount": 14600 },
+    { "year": 2026, "filing_status": "married_filing_jointly", "amount": 29200 },
+    { "year": 2026, "filing_status": "head_of_household", "amount": 21900 }
+  ],
+  "payroll_limits": [
+    { "year": 2026, "social_security_wage_base": 174000, "medicare_additional_threshold": 200000 }
+  ]
+}

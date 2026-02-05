@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Calculator, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
 interface DashboardHeaderProps {
   onRefresh?: () => void;
@@ -80,6 +81,16 @@ export function DashboardHeader({
                 </motion.div>
               </button>
             )}
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="px-3 py-2 text-xs font-semibold rounded-lg text-neutral-200 border border-neutral-700 hover:border-neutral-500 transition-colors">
+                  Sign in
+                </button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
           </div>
         </nav>
       </div>

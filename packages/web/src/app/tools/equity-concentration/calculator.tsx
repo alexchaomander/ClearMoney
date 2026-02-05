@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { AppShell, MethodologySection, SliderInput } from "@/components/shared";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { MemoryBadge } from "@/components/tools/MemoryBadge";
@@ -12,6 +12,8 @@ import {
   formatYears,
 } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/equity-concentration/calculations";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 import type {
   CalculatorInputs,
   CalculatorResults,
@@ -662,6 +664,7 @@ function Recommendations({ results }: { results: CalculatorResults }) {
 }
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("equity-concentration");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -744,11 +747,19 @@ export function Calculator() {
     ],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import {useCallback, useEffect, useState} from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { AppShell, MethodologySection } from "@/components/shared/AppShell";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { formatCurrency, formatPercent } from "@/lib/shared/formatters";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 import { calculate } from "@/lib/calculators/roth-vs-traditional/calculations";
 import type {
   CalculatorInputs,
@@ -31,6 +33,7 @@ const TAX_BRACKETS = [
 ];
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("roth-vs-traditional");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -51,11 +54,19 @@ export function Calculator() {
     ],
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
   const [showRetirementHelp, setShowRetirementHelp] = useState(false);
 
   const results: CalculatorResults = calculate(inputs);

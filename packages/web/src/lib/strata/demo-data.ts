@@ -11,6 +11,17 @@ import type {
   PortfolioHistoryPoint,
   PortfolioHistoryRange,
   PortfolioSummary,
+  PointsProgram,
+  CreditCardData,
+  SavingsProduct,
+  InvestmentData,
+  RealAssetData,
+  LiabilityData,
+  IncomeData,
+  CreditData,
+  ProtectionData,
+  ToolPreset,
+  ToolPresetBundle,
 } from "@clearmoney/strata-sdk";
 
 const NOW = "2026-01-15T12:00:00Z";
@@ -204,6 +215,986 @@ export const DEMO_DEBT_ACCOUNTS: DebtAccount[] = [
     institution_name: "Chase",
     created_at: NOW,
     updated_at: NOW,
+  },
+];
+
+// === Shared Data ===
+
+export const DEMO_LIQUID_ASSETS: SavingsProduct[] = [
+  {
+    id: "demo-hysa",
+    name: "Demo High-Yield Savings",
+    provider: "ClearMoney Bank",
+    product_type: "savings",
+    apy: 4.2,
+    minimum_balance: 0,
+    monthly_fee: 0,
+    fdic_insured: true,
+    last_updated: NOW,
+    notes: "Baseline HYSA rate for demos.",
+  },
+];
+
+export const DEMO_INVESTMENT_DATA: InvestmentData = {
+  last_updated: NOW,
+  contribution_limits: [
+    {
+      id: "401k",
+      account_type: "401k",
+      year: 2026,
+      base_limit: 24500,
+      catch_up_50: 8000,
+      catch_up_60_63: 11250,
+      notes: "Employee deferral limit.",
+    },
+  ],
+  market_assumptions: [
+    {
+      id: "us_stocks",
+      name: "US Stocks",
+      expected_return: 0.07,
+      volatility: 0.15,
+      inflation: 0.025,
+      notes: "Long-run equity assumption.",
+    },
+  ],
+};
+
+export const DEMO_REAL_ASSET_DATA: RealAssetData = {
+  last_updated: NOW,
+  mortgage_rates: [
+    {
+      id: "30yr-fixed",
+      loan_type: "fixed",
+      term_years: 30,
+      rate: 0.068,
+      points: 0,
+      notes: "Demo mortgage rate.",
+    },
+  ],
+  home_price_assumptions: [
+    {
+      id: "national-appreciation",
+      name: "National Home Price Growth",
+      appreciation_rate: 0.03,
+      notes: "Long-run assumption.",
+    },
+  ],
+};
+
+export const DEMO_LIABILITY_DATA: LiabilityData = {
+  last_updated: NOW,
+  loan_rates: [
+    {
+      id: "credit-card",
+      loan_type: "credit_card",
+      rate: 0.219,
+      term_years: null,
+      notes: "Average credit card APR.",
+    },
+  ],
+};
+
+export const DEMO_INCOME_DATA: IncomeData = {
+  last_updated: NOW,
+  tax_brackets: [
+    {
+      id: "single-2026",
+      year: 2026,
+      filing_status: "single",
+      brackets: [
+        { rate: 0.1, cap: 11950 },
+        { rate: 0.12, cap: 48500 },
+        { rate: 0.22, cap: 103500 },
+        { rate: 0.24, cap: 198500 },
+        { rate: 0.32, cap: 252000 },
+        { rate: 0.35, cap: 616000 },
+        { rate: 0.37, cap: null },
+      ],
+    },
+  ],
+  standard_deductions: [
+    { year: 2026, filing_status: "single", amount: 14600 },
+  ],
+  payroll_limits: [
+    { year: 2026, social_security_wage_base: 174000, medicare_additional_threshold: 200000 },
+  ],
+};
+
+export const DEMO_CREDIT_DATA: CreditData = {
+  last_updated: NOW,
+  score_factors: [
+    { id: "payment_history", name: "Payment History", weight: 0.35, description: "On-time payments." },
+    { id: "utilization", name: "Utilization", weight: 0.3, description: "Balance-to-limit ratio." },
+  ],
+  utilization_guidelines: [
+    { label: "Excellent", min: 0, max: 10, notes: "Best range." },
+    { label: "Good", min: 10, max: 30, notes: "Healthy range." },
+  ],
+};
+
+export const DEMO_PROTECTION_DATA: ProtectionData = {
+  last_updated: NOW,
+  insurance_estimates: [
+    {
+      id: "term-life",
+      name: "Term Life Insurance",
+      coverage_multiple_income: 10,
+      typical_cost_pct_income: 0.005,
+      notes: "Typical starting point.",
+    },
+  ],
+};
+
+const RAW_TOOL_PRESETS: Omit<ToolPreset, "updated_at">[] = [
+    {
+      "tool_id": "annual-fee-analyzer",
+      "defaults": {
+        "annualFee": 550,
+        "annualSpending": 30000,
+        "rewardsRate": 2.0,
+        "totalCredits": 300,
+        "creditUtilization": 50,
+        "pointsValueCpp": 1.0
+      }
+    },
+    {
+      "tool_id": "amex-comparison",
+      "defaults": {
+        "spending": {
+          "dining": 500,
+          "groceries": 600,
+          "flights": 200,
+          "hotels": 100,
+          "other": 1000
+        },
+        "creditUsage": {
+          "uberCreditUsage": 80,
+          "diningCreditUsage": 70,
+          "airlineFeeUsage": 50,
+          "hotelCreditUsage": 50,
+          "entertainmentUsage": 60,
+          "saksUsage": 30
+        },
+        "preferences": {
+          "valuesLoungeAccess": false,
+          "flightsPerYear": 6,
+          "pointsValue": 1.2
+        }
+      }
+    },
+    {
+      "tool_id": "tpg-transparency",
+      "defaults": {
+        "selectedCard": "sapphire-preferred",
+        "spending": {
+          "dining": 400,
+          "travel": 200,
+          "groceries": 500,
+          "other": 1500
+        },
+        "redemptionStyle": "cashBack"
+      }
+    },
+    {
+      "tool_id": "chase-trifecta",
+      "defaults": {
+        "pointsValue": 1.25,
+        "spending": {
+          "dining": 400,
+          "groceries": 600,
+          "gas": 150,
+          "travel": 200,
+          "streaming": 50,
+          "drugstores": 50,
+          "other": 1500
+        },
+        "cards": {
+          "hasSapphirePreferred": false,
+          "hasSapphireReserve": true,
+          "hasFreedomFlex": true,
+          "hasFreedomUnlimited": true
+        }
+      }
+    },
+    {
+      "tool_id": "points-valuation",
+      "defaults": {
+        "holdings": {
+          "chase-ur": 0,
+          "amex-mr": 0,
+          "citi-ty": 0,
+          "capital-one": 0,
+          "marriott": 0,
+          "hilton": 0,
+          "hyatt": 0
+        },
+        "redemptionStyle": "conservative"
+      }
+    },
+    {
+      "tool_id": "bilt-calculator",
+      "defaults": {
+        "rent": 3000,
+        "dining": 500,
+        "grocery": 500,
+        "travel": 500,
+        "misc": 750,
+        "mode": "Multiplier",
+        "timeframe": "year1"
+      }
+    },
+    {
+      "tool_id": "conscious-spending",
+      "defaults": {
+        "monthlyIncome": 5000,
+        "fixedCosts": 2500,
+        "investments": 500,
+        "savings": 300,
+        "guiltFree": 700,
+        "moneyDials": []
+      }
+    },
+    {
+      "tool_id": "dividend-tracker",
+      "defaults": {
+        "portfolioValue": 50000,
+        "dividendYield": 3.0,
+        "monthlyContribution": 500,
+        "dividendGrowthRate": 6,
+        "reinvestDividends": true,
+        "monthlyExpenses": 4000,
+        "yearsToProject": 20
+      }
+    },
+    {
+      "tool_id": "investment-growth",
+      "defaults": {
+        "initialInvestment": 20000,
+        "monthlyContribution": 600,
+        "investmentHorizon": 25,
+        "annualReturnRate": 7,
+        "inflationRate": 2.5
+      }
+    },
+    {
+      "tool_id": "fire-calculator",
+      "defaults": {
+        "annualIncome": 100000,
+        "annualExpenses": 60000,
+        "currentSavings": 85000,
+        "expectedReturn": 6.5,
+        "withdrawalRate": 4
+      }
+    },
+    {
+      "tool_id": "savings-goal",
+      "defaults": {
+        "goalAmount": 25000,
+        "currentSavings": 2000,
+        "monthlyContribution": 500,
+        "annualReturnRate": 5
+      }
+    },
+    {
+      "tool_id": "debt-destroyer",
+      "defaults": {
+        "debts": [
+          {
+            "id": "preset-cc",
+            "name": "Credit Card",
+            "balance": 6500,
+            "interestRate": 21.9,
+            "minimumPayment": 200
+          },
+          {
+            "id": "preset-auto",
+            "name": "Auto Loan",
+            "balance": 18000,
+            "interestRate": 7.1,
+            "minimumPayment": 375
+          }
+        ],
+        "extraPayment": 250
+      }
+    },
+    {
+      "tool_id": "student-loan-strategy",
+      "defaults": {
+        "loanBalance": 28000,
+        "interestRate": 6.2,
+        "loanType": "direct",
+        "annualIncome": 65000,
+        "incomeGrowthRate": 3,
+        "filingStatus": "single",
+        "familySize": 1,
+        "state": "CA",
+        "yearsInRepayment": 0,
+        "pslfEligible": false,
+        "pslfPaymentsMade": 0,
+        "hasParentPlus": false
+      }
+    },
+    {
+      "tool_id": "credit-score-simulator",
+      "defaults": {
+        "profile": {
+          "estimatedScore": 700,
+          "totalCreditLimit": 20000,
+          "currentBalance": 3000,
+          "oldestAccountYears": 5,
+          "totalAccounts": 4,
+          "recentInquiries": 1,
+          "missedPayments": 0
+        }
+      }
+    },
+    {
+      "tool_id": "mortgage",
+      "defaults": {
+        "homePrice": 600000,
+        "downPaymentPercent": 20,
+        "loanTermYears": 30,
+        "interestRate": 6.8,
+        "propertyTaxRate": 1.1,
+        "homeInsurance": 1800,
+        "pmiRate": 0.5
+      }
+    },
+    {
+      "tool_id": "home-affordability",
+      "defaults": {
+        "annualIncome": 120000,
+        "monthlyDebt": 500,
+        "downPaymentSaved": 80000,
+        "targetDownPaymentPercent": 20,
+        "currentRent": 2000,
+        "mortgageRate": 6.8,
+        "propertyTaxRate": 1.1,
+        "hoa": 0,
+        "riskTolerance": "moderate"
+      }
+    },
+    {
+      "tool_id": "rent-vs-buy",
+      "defaults": {
+        "monthlyRent": 2000,
+        "annualRentIncrease": 3,
+        "homePrice": 400000,
+        "downPaymentPercent": 20,
+        "mortgageRate": 6.5,
+        "loanTermYears": 30,
+        "propertyTaxRate": 1.2,
+        "homeAppreciationRate": 3,
+        "maintenanceRate": 1,
+        "investmentReturnRate": 7,
+        "timeHorizon": 10
+      }
+    },
+    {
+      "tool_id": "capital-gains",
+      "defaults": {
+        "purchasePrice": 15000,
+        "salePrice": 32000,
+        "holdingPeriod": "long",
+        "filingStatus": "single",
+        "annualIncome": 90000,
+        "state": "CA"
+      }
+    },
+    {
+      "tool_id": "tax-bracket-optimizer",
+      "defaults": {
+        "filingStatus": "single",
+        "income": {
+          "wagesIncome": 150000
+        },
+        "deductions": {
+          "deductionType": "standard"
+        },
+        "scenario": {
+          "rothConversionAmount": 0,
+          "additionalIncome": 0,
+          "additionalDeduction": 0
+        }
+      }
+    },
+    {
+      "tool_id": "obbb-tax-optimizer",
+      "defaults": {
+        "filingStatus": "single",
+        "age": 40,
+        "spouseAge": 40,
+        "modifiedAGI": 75000,
+        "annualTips": 0,
+        "annualOvertime": 0,
+        "carLoanInterest": 0,
+        "saltPaid": 10000,
+        "otherItemized": 0,
+        "marginalRate": 0.22
+      }
+    },
+    {
+      "tool_id": "2026-limits",
+      "defaults": {
+        "age": 35,
+        "filingStatus": "single",
+        "annualIncome": 100000,
+        "accounts": {
+          "has401k": true,
+          "hasTraditionalIRA": true,
+          "hasRothIRA": true,
+          "hasHSA": true,
+          "hsaCoverageType": "family",
+          "hasFSA": false,
+          "hasSimpleIRA": false,
+          "has403b": false,
+          "has457b": false,
+          "hasSolo401k": false,
+          "hasSepIRA": false
+        }
+      }
+    },
+    {
+      "tool_id": "backdoor-roth",
+      "defaults": {
+        "income": 200000,
+        "filingStatus": "single",
+        "hasWorkplacePlan": true,
+        "traditionalIRABalance": 0,
+        "sepIRABalance": 0,
+        "simpleIRABalance": 0,
+        "contributionAmount": 7000,
+        "age": 35
+      }
+    },
+    {
+      "tool_id": "mega-backdoor-roth",
+      "defaults": {
+        "age": 35,
+        "annualIncome": 250000,
+        "plan": {
+          "allowsAfterTax": false,
+          "allowsInPlanConversion": false,
+          "allowsInServiceDistribution": false,
+          "employeeContribution": 23000,
+          "employeeContributionType": "traditional",
+          "employerMatch": 10000,
+          "afterTaxContributionLimit": 0
+        },
+        "currentRothBalance": 50000,
+        "yearsUntilRetirement": 25,
+        "expectedReturn": 7
+      }
+    },
+    {
+      "tool_id": "roth-vs-traditional",
+      "defaults": {
+        "annualContribution": 7000,
+        "currentTaxRate": 22,
+        "retirementTaxRate": 22,
+        "yearsUntilRetirement": 30,
+        "expectedReturn": 7
+      }
+    },
+    {
+      "tool_id": "roth-catch-up",
+      "defaults": {
+        "priorYearW2Wages": 175000,
+        "currentAge": 55,
+        "currentBalance": 500000,
+        "currentMarginalRate": 32,
+        "retirementTaxRate": 24,
+        "yearsUntilRetirement": 10,
+        "expectedReturn": 7,
+        "stateTaxRate": 5,
+        "employerOffersRoth": true,
+        "filingStatus": "single"
+      }
+    },
+    {
+      "tool_id": "super-catch-up",
+      "defaults": {
+        "currentAge": 58,
+        "birthDate": "",
+        "currentBalance": 500000,
+        "annualSalary": 150000,
+        "contributionRate": 15,
+        "employerMatchPercent": 4,
+        "employerMatchCap": 6,
+        "expectedReturn": 7,
+        "retirementAge": 65,
+        "priorYearWages": 150000,
+        "filingStatus": "single"
+      }
+    },
+    {
+      "tool_id": "hsa-maximization",
+      "defaults": {
+        "eligibility": {
+          "hasHDHP": true,
+          "coverageType": "individual",
+          "age": 35,
+          "enrolledInMedicare": false,
+          "monthsOfCoverage": 12
+        },
+        "contribution": {
+          "currentContribution": 3000,
+          "employerContribution": 500,
+          "currentHSABalance": 5000
+        },
+        "investment": {
+          "expectedReturn": 7,
+          "yearsToRetirement": 30,
+          "yearsInRetirement": 25
+        },
+        "tax": {
+          "marginalTaxRate": 32,
+          "retirementTaxRate": 24,
+          "stateCode": "CA"
+        },
+        "medical": {
+          "annualMedicalExpenses": 2000,
+          "retirementMedicalExpenses": 10000
+        }
+      }
+    },
+    {
+      "tool_id": "i-bond-comparison",
+      "defaults": {
+        "amount": 10000,
+        "years": 3,
+        "hysaRate": 4.5,
+        "federalBracket": 0.22,
+        "stateRate": 5,
+        "needsFullLiquidity": false,
+        "expectedInflation": 2.5,
+        "iBondFixedRate": 0.9,
+        "iBondInflationRate": 3.12
+      }
+    },
+    {
+      "tool_id": "529-roth-rollover",
+      "defaults": {
+        "accountBalance": 50000,
+        "accountOpenDate": "2010-01-01",
+        "beneficiaryAge": 22,
+        "earnedIncome": 40000,
+        "otherIRAContributions": 0,
+        "contributionsMade5YearsAgo": 30000,
+        "priorRollovers": 0,
+        "expectedReturn": 7,
+        "yearsUntilRetirement": 40
+      }
+    },
+    {
+      "tool_id": "appreciated-stock-donation",
+      "defaults": {
+        "stock": {
+          "stockValue": 10000,
+          "costBasis": 2000,
+          "holdingPeriod": 24
+        },
+        "tax": {
+          "filingStatus": "single",
+          "adjustedGrossIncome": 200000,
+          "marginalTaxRate": 32,
+          "stateCode": "CA",
+          "itemizesDeductions": true
+        },
+        "donation": {
+          "donationAmount": 10000,
+          "donationType": "public_charity"
+        }
+      }
+    },
+    {
+      "tool_id": "estate-tax",
+      "defaults": {
+        "assets": {
+          "bankAccounts": 100000,
+          "brokerageAccounts": 500000,
+          "retirementAccounts": 500000,
+          "primaryResidence": 1000000,
+          "otherRealEstate": 0,
+          "lifeInsurance": 1000000,
+          "businessInterests": 0,
+          "otherAssets": 100000
+        },
+        "liabilities": {
+          "mortgages": 400000,
+          "otherDebts": 0
+        },
+        "personal": {
+          "maritalStatus": "single",
+          "stateOfResidence": "CA",
+          "age": 45,
+          "spouseAge": 43
+        },
+        "lifetimeGiftsMade": 0
+      }
+    },
+    {
+      "tool_id": "equity-concentration",
+      "defaults": {
+        "equity": {
+          "currentSharesValue": 500000,
+          "vestedOptionsValue": 100000,
+          "unvestedEquityValue": 200000,
+          "costBasis": 50000
+        },
+        "assets": {
+          "cashSavings": 50000,
+          "retirementAccounts": 200000,
+          "otherInvestments": 100000,
+          "realEstate": 300000,
+          "otherAssets": 0
+        },
+        "income": {
+          "annualSalary": 200000,
+          "annualEquityGrant": 100000,
+          "yearsAtCompany": 3
+        },
+        "tax": {
+          "filingStatus": "single",
+          "marginalTaxRate": 37,
+          "stateCode": "CA"
+        }
+      }
+    },
+    {
+      "tool_id": "total-compensation",
+      "defaults": {
+        "baseSalary": 180000,
+        "targetBonus": 15,
+        "expectedBonusMultiplier": 100,
+        "rsuGrant": {
+          "totalValue": 200000,
+          "vestingSchedule": "standard",
+          "vestingYears": 4,
+          "currentPrice": 150,
+          "grantPrice": 150
+        },
+        "signOnBonus": 0,
+        "signOnVestingYears": 1,
+        "match401k": 4,
+        "match401kLimit": 11600,
+        "esppDiscount": 15,
+        "esppContribution": 10000,
+        "hsaContribution": 500,
+        "annualRefresher": 50000,
+        "refresherVestingYears": 4
+      }
+    },
+    {
+      "tool_id": "rsu-tax-calculator",
+      "defaults": {
+        "sharesVesting": 100,
+        "stockPrice": 150,
+        "filingStatus": "single",
+        "annualSalary": 200000,
+        "otherIncome": 0,
+        "state": "CA",
+        "withholdingMethod": "sell_to_cover"
+      }
+    },
+    {
+      "tool_id": "stock-option-exercise",
+      "defaults": {
+        "option": {
+          "optionType": "iso",
+          "totalOptions": 10000,
+          "strikePrice": 5,
+          "currentFMV": 50,
+          "vestedOptions": 2500,
+          "grantDate": "2022-01-01",
+          "vestStartDate": "2022-01-01"
+        },
+        "tax": {
+          "filingStatus": "single",
+          "annualIncome": 200000,
+          "stateCode": "CA",
+          "existingAMTPreference": 0
+        },
+        "scenario": {
+          "optionsToExercise": 2500,
+          "exerciseDate": "2026-01-01",
+          "holdingPeriod": 12,
+          "expectedFMVAtSale": 75
+        }
+      }
+    },
+    {
+      "tool_id": "crypto-cost-basis",
+      "defaults": {
+        "numberOfWallets": 3,
+        "totalHoldings": 50000,
+        "totalCostBasis": 30000,
+        "plannedSaleAmount": 10000,
+        "holdingPeriodMix": 50,
+        "ordinaryIncome": 100000,
+        "filingStatus": "single",
+        "state": "CA",
+        "applyTransitionalRelief": true
+      }
+    },
+    {
+      "tool_id": "medicare-irmaa",
+      "defaults": {
+        "filingStatus": "married",
+        "currentAge": 63,
+        "magi2024": 200000,
+        "magi2025": 200000,
+        "socialSecurityIncome": 40000,
+        "pensionIncome": 0,
+        "traditionalBalance": 1000000,
+        "plannedRothConversion": 0,
+        "taxExemptInterest": 0,
+        "lifeChangingEvent": "none"
+      }
+    },
+    {
+      "tool_id": "emergency-fund",
+      "defaults": {
+        "monthlyExpenses": 4000,
+        "jobStability": "stable",
+        "incomeSource": "single_stable",
+        "dependents": "partner",
+        "healthSituation": "good",
+        "housingSituation": "rent_normal"
+      }
+    }
+];
+
+export const DEMO_TOOL_PRESETS: ToolPresetBundle = {
+  "last_updated": "2026-01-15",
+  "presets": RAW_TOOL_PRESETS.map((preset) => ({
+    ...preset,
+    updated_at: NOW,
+  })),
+};
+
+// === Shared Data (Points + Cards) ===
+
+export const DEMO_POINTS_PROGRAMS: PointsProgram[] = [
+  {
+    id: "chase-ur",
+    name: "Chase Ultimate Rewards",
+    short_name: "Chase UR",
+    issuer: "Chase",
+    category: "bank",
+    valuations: { tpg: 2.0, conservative: 1.25, moderate: 1.35, optimistic: 1.5 },
+    methodology: {
+      cash_out: 1.0,
+      portal_value: 1.25,
+      transfer_value: "Hyatt transfers often yield 1.5-2cpp.",
+    },
+    best_uses: ["Hyatt transfers", "Pay Yourself Back", "Travel portal with Sapphire Reserve"],
+    worst_uses: ["Amazon checkout (0.8cpp)", "Cash back without Sapphire"],
+    last_updated: "2026-01-15",
+  },
+  {
+    id: "amex-mr",
+    name: "Amex Membership Rewards",
+    short_name: "Amex MR",
+    issuer: "American Express",
+    category: "bank",
+    valuations: { tpg: 2.0, conservative: 1.1, moderate: 1.25, optimistic: 1.5 },
+    methodology: {
+      cash_out: 0.6,
+      portal_value: 1.0,
+      transfer_value: "ANA/Virgin transfers can yield 1.5-2cpp.",
+    },
+    best_uses: ["Transfer to ANA", "Transfer to Virgin Atlantic", "Schwab cash out (1.1cpp)"],
+    worst_uses: ["Statement credits", "Amazon (0.7cpp)"],
+    last_updated: "2026-01-15",
+  },
+  {
+    id: "citi-ty",
+    name: "Citi ThankYou Points",
+    short_name: "Citi TY",
+    issuer: "Citi",
+    category: "bank",
+    valuations: { tpg: 1.7, conservative: 1.0, moderate: 1.1, optimistic: 1.25 },
+    methodology: {
+      cash_out: 1.0,
+      portal_value: 1.0,
+      transfer_value: "Limited transfer partners; JetBlue can be solid.",
+    },
+    best_uses: ["Cash back", "JetBlue transfers", "Travel portal"],
+    worst_uses: ["Gift cards", "Merchandise"],
+    last_updated: "2026-01-15",
+  },
+  {
+    id: "capital-one",
+    name: "Capital One Miles",
+    short_name: "Capital One",
+    issuer: "Capital One",
+    category: "bank",
+    valuations: { tpg: 1.85, conservative: 0.85, moderate: 0.9, optimistic: 1.0 },
+    methodology: {
+      cash_out: 0.5,
+      portal_value: 1.0,
+      transfer_value: "Some partners are 1:1, but value varies by route.",
+    },
+    best_uses: ["Erase travel purchases", "Select transfer partners at 1:1"],
+    worst_uses: ["Cash out", "Gift cards"],
+    last_updated: "2026-01-15",
+  },
+  {
+    id: "marriott",
+    name: "Marriott Bonvoy",
+    short_name: "Marriott",
+    issuer: "Marriott",
+    category: "hotel",
+    valuations: { tpg: 0.8, conservative: 0.6, moderate: 0.7, optimistic: 0.8 },
+    methodology: {
+      cash_out: null,
+      portal_value: null,
+      transfer_value: "Transfers to airlines run about 3:1.",
+    },
+    best_uses: ["Off-peak hotel stays", "5th night free on 5-night stays"],
+    worst_uses: ["Peak pricing properties", "Airline transfers (3:1)"],
+    last_updated: "2026-01-15",
+  },
+  {
+    id: "hilton",
+    name: "Hilton Honors",
+    short_name: "Hilton",
+    issuer: "Hilton",
+    category: "hotel",
+    valuations: { tpg: 0.5, conservative: 0.4, moderate: 0.45, optimistic: 0.5 },
+    methodology: {
+      cash_out: null,
+      portal_value: null,
+      transfer_value: "Devalued over time, 5th night free helps.",
+    },
+    best_uses: ["Standard room redemptions", "5th night free"],
+    worst_uses: ["Premium properties", "Points + Cash"],
+    last_updated: "2026-01-15",
+  },
+  {
+    id: "hyatt",
+    name: "World of Hyatt",
+    short_name: "Hyatt",
+    issuer: "Hyatt",
+    category: "hotel",
+    valuations: { tpg: 1.7, conservative: 1.5, moderate: 1.7, optimistic: 1.9 },
+    methodology: {
+      cash_out: null,
+      portal_value: null,
+      transfer_value: "Best hotel currency with consistent value.",
+    },
+    best_uses: ["Category 1-4 properties", "Suite upgrades"],
+    worst_uses: ["All-inclusive resorts (lower cpp)"],
+    last_updated: "2026-01-15",
+  },
+  {
+    id: "bilt",
+    name: "Bilt Rewards",
+    short_name: "Bilt",
+    issuer: "Bilt",
+    category: "bank",
+    valuations: { tpg: 1.8, conservative: 1.2, moderate: 1.4, optimistic: 1.7 },
+    methodology: {
+      cash_out: 0.55,
+      portal_value: 1.25,
+      transfer_value: "Strong airline partners; transfer value varies by route.",
+    },
+    best_uses: ["Hyatt transfers", "Airline transfers", "Rent day bonuses"],
+    worst_uses: ["Cash out", "Low-value gift cards"],
+    last_updated: "2026-01-15",
+  },
+];
+
+export const DEMO_CREDIT_CARD_DATA: CreditCardData[] = [
+  {
+    id: "chase-sapphire-preferred",
+    name: "Chase Sapphire Preferred",
+    issuer: "Chase",
+    annual_fee: 95,
+    currency_id: "chase-ur",
+    image_url: null,
+    apply_url: null,
+    affiliate_payout_estimate: 175,
+    tpg_rank: 1,
+    default_rewards_rate: 2.1,
+    credits: [
+      {
+        name: "$50 Hotel Credit",
+        value: 50,
+        period: "annual",
+        description: "Statement credit for hotel stays booked through Chase Travel.",
+        category: "travel",
+        default_usable_pct: 70,
+      },
+    ],
+    benefits: [
+      {
+        name: "Primary rental car insurance",
+        description: "Primary coverage for rentals when paid with the card.",
+        valuation_method: "subjective",
+        default_value: 50,
+      },
+    ],
+    earn_rates: { dining: 3, travel: 2, online_grocery: 3, other: 1 },
+    signup_bonus: { points: 60000, spend_required: 4000, timeframe_months: 3 },
+  },
+  {
+    id: "amex-gold",
+    name: "American Express Gold",
+    issuer: "American Express",
+    annual_fee: 250,
+    currency_id: "amex-mr",
+    image_url: null,
+    apply_url: null,
+    affiliate_payout_estimate: 175,
+    tpg_rank: 1,
+    default_rewards_rate: 2.6,
+    credits: [
+      {
+        name: "$120 Dining Credit",
+        value: 120,
+        period: "annual",
+        description: "Monthly dining credits at select partners.",
+        category: "dining",
+        default_usable_pct: 70,
+      },
+      {
+        name: "$120 Uber Cash",
+        value: 120,
+        period: "annual",
+        description: "Monthly Uber Cash for rides or Uber Eats.",
+        category: "transportation",
+        default_usable_pct: 80,
+      },
+    ],
+    benefits: [
+      {
+        name: "Amex Offers",
+        description: "Targeted merchant offers with statement credits.",
+        valuation_method: "subjective",
+        default_value: 60,
+      },
+    ],
+    earn_rates: { dining: 4, groceries: 4, travel: 3, other: 1 },
+    signup_bonus: { points: 60000, spend_required: 6000, timeframe_months: 6 },
+  },
+  {
+    id: "chase-freedom-flex",
+    name: "Chase Freedom Flex",
+    issuer: "Chase",
+    annual_fee: 0,
+    currency_id: "chase-ur",
+    image_url: null,
+    apply_url: null,
+    affiliate_payout_estimate: 150,
+    tpg_rank: 2,
+    default_rewards_rate: 1.6,
+    credits: [],
+    benefits: [],
+    earn_rates: { dining: 3, drugstores: 3, travel: 5, other: 1 },
+    signup_bonus: { points: 20000, spend_required: 500, timeframe_months: 3 },
   },
 ];
 

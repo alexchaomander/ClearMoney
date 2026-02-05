@@ -1,0 +1,33 @@
+{
+  "last_updated": "2026-01-15",
+  "loan_rates": [
+    {
+      "id": "credit-card",
+      "loan_type": "credit_card",
+      "rate": 0.219,
+      "term_years": null,
+      "notes": "Average revolving APR."
+    },
+    {
+      "id": "student-loan",
+      "loan_type": "student_loan",
+      "rate": 0.062,
+      "term_years": 10,
+      "notes": "Federal undergraduate baseline."
+    },
+    {
+      "id": "auto-loan",
+      "loan_type": "auto_loan",
+      "rate": 0.071,
+      "term_years": 5,
+      "notes": "Prime used auto loan average."
+    },
+    {
+      "id": "personal-loan",
+      "loan_type": "personal_loan",
+      "rate": 0.109,
+      "term_years": 3,
+      "notes": "Prime personal loan estimate."
+    }
+  ]
+}

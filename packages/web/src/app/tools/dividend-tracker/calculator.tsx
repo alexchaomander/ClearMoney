@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
@@ -12,6 +12,8 @@ import {
   formatPercent,
 } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/dividend-tracker/calculations";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 import type {
   CalculatorInputs,
   YearlyProjection,
@@ -63,6 +65,7 @@ function buildLinePoints(
 }
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("dividend-tracker");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -80,11 +83,19 @@ export function Calculator() {
     monthlyExpenses: "average_monthly_expenses",
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
   const results = calculate(inputs);
   const annualExpenses = inputs.monthlyExpenses * 12;
 

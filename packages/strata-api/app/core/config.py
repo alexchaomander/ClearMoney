@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     agent_runtime_command: str = "python -m app.services.agent_runner"
     agent_container_command: str = ""
     agent_step_up_token: str = ""
+    data_dir: str = ""
+    auto_consent_on_missing: bool = False
 
     model_config = {"env_prefix": "STRATA_"}
 

@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { AppShell, MethodologySection } from "@/components/shared/AppShell";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { formatCurrency, formatPercent } from "@/lib/shared/formatters";
+import { mergeDeep } from "@/lib/shared/merge";
+import { useToolPreset } from "@/lib/strata/presets";
 import { calculate } from "@/lib/calculators/mega-backdoor-roth/calculations";
 import type {
   CalculatorInputs,
@@ -70,6 +72,7 @@ const PLAN_GRADE_STYLES: Record<
 };
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("mega-backdoor-roth");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -80,11 +83,19 @@ export function Calculator() {
     annualIncome: "annual_income",
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () => applyMemoryDefaults(setInputs),
     [applyMemoryDefaults]
   );
+
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

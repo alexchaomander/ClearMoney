@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { SliderInput } from "@/components/shared/SliderInput";
 import { AppShell, MethodologySection, ComparisonCard } from "@/components/shared";
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
@@ -11,12 +11,14 @@ import {
   formatPercent,
   formatWithSign,
 } from "@/lib/shared/formatters";
+import { mergeDeep } from "@/lib/shared/merge";
 import { calculate } from "@/lib/calculators/tax-bracket-optimizer/calculations";
 import type {
   BracketVisualization,
   CalculatorInputs,
   ThresholdAnalysis,
 } from "@/lib/calculators/tax-bracket-optimizer/types";
+import { useToolPreset } from "@/lib/strata/presets";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_INPUTS: CalculatorInputs = {
@@ -162,6 +164,7 @@ function ThresholdRow({ threshold }: { threshold: ThresholdAnalysis }) {
 }
 
 export function Calculator() {
+  const { preset } = useToolPreset<CalculatorInputs>("tax-bracket-optimizer");
   const {
     preFilledFields,
     isLoaded: memoryLoaded,
@@ -177,7 +180,9 @@ export function Calculator() {
     "income.wagesIncome": "annual_income",
   });
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() =>
+    mergeDeep(DEFAULT_INPUTS, preset ?? undefined)
+  );
   const handleLoadData = useCallback(
     () =>
       applyMemoryDefaults(setInputs, (prev, defaults) => ({
@@ -190,6 +195,11 @@ export function Calculator() {
       })),
     [applyMemoryDefaults]
   );
+
+  useEffect(() => {
+    if (!preset) return;
+    setInputs((prev) => mergeDeep(prev, preset));
+  }, [preset]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
 

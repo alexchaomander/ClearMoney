@@ -1,0 +1,67 @@
+{
+  "last_updated": "2026-01-15",
+  "contribution_limits": [
+    {
+      "id": "401k",
+      "account_type": "401k",
+      "year": 2026,
+      "base_limit": 24500,
+      "catch_up_50": 8000,
+      "catch_up_60_63": 11250,
+      "notes": "Employee deferral limit."
+    },
+    {
+      "id": "ira",
+      "account_type": "ira",
+      "year": 2026,
+      "base_limit": 7500,
+      "catch_up_50": 1100,
+      "catch_up_60_63": 1100,
+      "notes": "Combined Traditional + Roth IRA limit."
+    },
+    {
+      "id": "hsa",
+      "account_type": "hsa",
+      "year": 2026,
+      "base_limit": 4400,
+      "catch_up_50": 1000,
+      "catch_up_60_63": 1000,
+      "notes": "Self-only coverage."
+    },
+    {
+      "id": "hsa-family",
+      "account_type": "hsa_family",
+      "year": 2026,
+      "base_limit": 8750,
+      "catch_up_50": 1000,
+      "catch_up_60_63": 1000,
+      "notes": "Family coverage."
+    }
+  ],
+  "market_assumptions": [
+    {
+      "id": "us_stocks",
+      "name": "US Stocks",
+      "expected_return": 0.07,
+      "volatility": 0.15,
+      "inflation": 0.025,
+      "notes": "Long-run equity return assumption."
+    },
+    {
+      "id": "bonds",
+      "name": "US Bonds",
+      "expected_return": 0.035,
+      "volatility": 0.06,
+      "inflation": 0.025,
+      "notes": "Core bond return assumption."
+    },
+    {
+      "id": "cash",
+      "name": "Cash",
+      "expected_return": 0.025,
+      "volatility": 0.005,
+      "inflation": 0.025,
+      "notes": "Cash-like returns roughly match inflation."
+    }
+  ]
+}

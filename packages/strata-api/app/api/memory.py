@@ -5,7 +5,7 @@ from fastapi.responses import PlainTextResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import require_scopes
 from app.db.session import get_async_session
 from app.models.financial_memory import FinancialMemory
 from app.models.memory_event import MemoryEvent, MemoryEventSource
@@ -76,7 +76,7 @@ async def _get_or_create_memory(
 
 @router.get("", response_model=FinancialMemoryResponse)
 async def get_memory(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["memory:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> FinancialMemoryResponse:
     """Get the user's financial memory (creates empty if not exists)."""
@@ -87,7 +87,7 @@ async def get_memory(
 @router.patch("", response_model=FinancialMemoryResponse)
 async def update_memory(
     data: FinancialMemoryUpdate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["memory:write"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> FinancialMemoryResponse:
     """Partial update of the user's financial memory.
@@ -133,7 +133,7 @@ async def update_memory(
 
 @router.get("/events", response_model=list[MemoryEventResponse])
 async def list_memory_events(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["memory:read"])),
     session: AsyncSession = Depends(get_async_session),
     limit: int = Query(50, le=200),
     offset: int = Query(0, ge=0),
@@ -152,7 +152,7 @@ async def list_memory_events(
 
 @router.post("/derive", response_model=FinancialMemoryResponse)
 async def derive_memory(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["memory:write"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> FinancialMemoryResponse:
     """Derive memory fields from linked account data."""
@@ -165,7 +165,7 @@ async def derive_memory(
 
 @router.get("/context")
 async def get_financial_context(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["memory:read"])),
     session: AsyncSession = Depends(get_async_session),
     format: str = Query("json", pattern="^(json|markdown)$"),
 ):
@@ -185,7 +185,7 @@ async def get_financial_context(
 
 @router.delete("")
 async def delete_memory(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["memory:write"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Reset the user's financial memory."""

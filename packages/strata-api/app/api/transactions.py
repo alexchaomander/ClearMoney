@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import nulls_last, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import require_scopes
 from app.db.session import get_async_session
 from app.models.investment_account import InvestmentAccount
 from app.models.transaction import Transaction
@@ -22,7 +22,7 @@ async def list_transactions(
     end_date: date | None = Query(default=None),
     limit: int = Query(default=100, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_scopes(["transactions:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> list[TransactionResponse]:
     query = (
