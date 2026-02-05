@@ -10,6 +10,7 @@ from app.models.investment_account import InvestmentAccount
 from app.models.security import Security
 from app.models.transaction import Transaction, TransactionType
 from app.services.providers.base import BaseProvider
+from app.services.user_refresh import refresh_user_financials
 
 
 async def sync_connection_accounts(
@@ -82,6 +83,7 @@ async def sync_connection_accounts(
         )
 
     await session.flush()
+    await refresh_user_financials(session, connection.user_id, commit=False)
 
 
 async def get_or_create_security(

@@ -122,6 +122,15 @@ export class DemoStrataClient implements StrataClientInterface {
     return DEMO_CONNECTIONS[0];
   }
 
+  async syncAllConnections(): Promise<Connection[]> {
+    await delay(300);
+    return DEMO_CONNECTIONS.map((conn) => ({
+      ...conn,
+      last_synced_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }));
+  }
+
   async getAccounts(): Promise<AllAccountsResponse> {
     await delay(300);
     return getDemoAccountsResponse();
@@ -546,11 +555,24 @@ export class DemoStrataClient implements StrataClientInterface {
 
   async listConsents(): Promise<ConsentResponse[]> {
     await delay(200);
+    const scopes = [
+      "connections:read",
+      "connections:write",
+      "accounts:read",
+      "accounts:write",
+      "portfolio:read",
+      "holdings:read",
+      "transactions:read",
+      "memory:read",
+      "memory:write",
+      "decision_traces:read",
+      "agent:read",
+    ];
     return [
       {
         id: "demo-consent-001",
         user_id: "demo-user-001",
-        scopes: ["agent:read", "decision_traces:read"],
+        scopes,
         purpose: "Demo consent",
         status: "active",
         source: "demo",
