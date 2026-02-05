@@ -704,7 +704,6 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async handlePlaidCallback(request: PlaidCallbackRequest): Promise<Connection> {
-    void request;
     await delay(1500);
     return {
       id: crypto.randomUUID(),

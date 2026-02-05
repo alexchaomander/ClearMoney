@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Building2 } from "lucide-react";
 import { usePlaidLink, PlaidLinkOnSuccess } from "react-plaid-link";
@@ -16,26 +16,23 @@ export function PlaidLinkButton({ onSuccess, onError }: PlaidLinkButtonProps) {
   const router = useRouter();
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const hasFetchedRef = useRef(false);
 
   const createLinkToken = useCreatePlaidLinkToken();
   const handleCallback = useHandlePlaidCallback();
 
   // Fetch link token on mount
   useEffect(() => {
-    const fetchLinkToken = async () => {
-      try {
-        const response = await createLinkToken.mutateAsync({
-          redirect_uri: typeof window !== "undefined" ? window.location.origin : undefined,
-        });
-        setLinkToken(response.link_token);
-      } catch {
-        onError?.("Failed to initialize Plaid Link");
-      }
-    };
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
 
-    fetchLinkToken();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    createLinkToken
+      .mutateAsync({
+        redirect_uri: typeof window !== "undefined" ? window.location.origin : undefined,
+      })
+      .then((response) => setLinkToken(response.link_token))
+      .catch(() => onError?.("Failed to initialize Plaid Link"));
+  }, [createLinkToken, onError]);
 
   const handlePlaidSuccess: PlaidLinkOnSuccess = useCallback(
     async (publicToken, metadata) => {

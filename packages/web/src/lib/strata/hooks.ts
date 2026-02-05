@@ -58,7 +58,7 @@ export const queryKeys = {
   // Banking (Plaid)
   bankAccounts: ["banking", "accounts"] as const,
   bankTransactions: (params?: BankTransactionQuery) =>
-    ["banking", "transactions", params?.account_id ?? "", params?.start_date ?? "", params?.end_date ?? "", params?.category ?? "", params?.page ?? 1] as const,
+    ["banking", "transactions", params ?? {}] as const,
   spendingSummary: (months?: number) => ["banking", "spending-summary", months ?? 3] as const,
 };
 
@@ -575,11 +575,16 @@ export function useSeedAmexPlatinum() {
 
 /** Invalidate all banking-related queries after a connection change. */
 function invalidateBankingQueries(queryClient: ReturnType<typeof useQueryClient>): void {
-  queryClient.invalidateQueries({ queryKey: queryKeys.bankAccounts });
-  queryClient.invalidateQueries({ queryKey: ["banking", "transactions"] });
-  queryClient.invalidateQueries({ queryKey: ["banking", "spending-summary"] });
-  queryClient.invalidateQueries({ queryKey: queryKeys.accounts });
-  queryClient.invalidateQueries({ queryKey: queryKeys.financialMemory });
+  const keys = [
+    queryKeys.bankAccounts,
+    ["banking", "transactions"],
+    ["banking", "spending-summary"],
+    queryKeys.accounts,
+    queryKeys.financialMemory,
+  ];
+  for (const queryKey of keys) {
+    queryClient.invalidateQueries({ queryKey });
+  }
 }
 
 export function useCreatePlaidLinkToken() {
