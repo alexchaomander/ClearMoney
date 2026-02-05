@@ -10,6 +10,7 @@ import { InstitutionCard } from "@/components/connect/InstitutionCard";
 import { ConnectionProgress } from "@/components/connect/ConnectionProgress";
 import { SecurityBadges } from "@/components/connect/SecurityBadges";
 import { ConnectedAccountCard } from "@/components/connect/ConnectedAccountCard";
+import { PlaidLinkButton } from "@/components/connect/PlaidLinkButton";
 import { ApiErrorState } from "@/components/shared/ApiErrorState";
 import { formatCurrency } from "@/lib/shared/formatters";
 import { staggerContainer } from "@/lib/shared/animations";
@@ -138,6 +139,25 @@ export default function ConnectPage() {
           <div className="grid lg:grid-cols-3 gap-8">
           {/* Left column - Institutions search + list */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Banking Connection (Plaid) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.05 }}
+            >
+              <h2 className="font-serif text-xl text-emerald-100 mb-3">
+                Bank Accounts
+              </h2>
+              <PlaidLinkButton />
+            </motion.div>
+
+            {/* Divider */}
+            <div className="flex items-center gap-4">
+              <div className="flex-1 h-px bg-neutral-800" />
+              <span className="text-sm text-neutral-500">or connect an investment account</span>
+              <div className="flex-1 h-px bg-neutral-800" />
+            </div>
+
             {/* Search */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -149,7 +169,7 @@ export default function ConnectPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for your bank or brokerage..."
+                  placeholder="Search for your brokerage..."
                   className="w-full pl-12 pr-4 py-4 rounded-xl text-base outline-none transition-all duration-300 bg-neutral-900 border border-neutral-800 text-neutral-100 focus:border-emerald-500 placeholder:text-neutral-500"
                 />
                 <svg

@@ -97,6 +97,12 @@ export interface CashAccount {
   balance: number;
   apy: number | null;
   institution_name: string | null;
+  // Provider-linked fields (Plaid banking)
+  connection_id: string | null;
+  provider_account_id: string | null;
+  available_balance: number | null;
+  mask: string | null;
+  is_manual: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -885,4 +891,86 @@ export interface ToolPreset {
 export interface ToolPresetBundle {
   last_updated: string | null;
   presets: ToolPreset[];
+}
+
+// Banking types (Plaid integration)
+export interface PlaidLinkRequest {
+  redirect_uri?: string;
+}
+
+export interface PlaidLinkResponse {
+  link_token: string;
+  expiration: string | null;
+}
+
+export interface PlaidCallbackRequest {
+  public_token: string;
+  institution_id?: string;
+  institution_name?: string;
+}
+
+export interface BankAccount {
+  id: string;
+  user_id: string;
+  connection_id: string | null;
+  name: string;
+  account_type: CashAccountType;
+  balance: number;
+  available_balance: number | null;
+  institution_name: string | null;
+  mask: string | null;
+  is_manual: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BankTransaction {
+  id: string;
+  cash_account_id: string;
+  provider_transaction_id: string;
+  amount: number;
+  transaction_date: string;
+  posted_date: string | null;
+  name: string;
+  primary_category: string | null;
+  detailed_category: string | null;
+  merchant_name: string | null;
+  payment_channel: string | null;
+  pending: boolean;
+  iso_currency_code: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BankTransactionQuery {
+  account_id?: string;
+  start_date?: string;
+  end_date?: string;
+  category?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface PaginatedBankTransactions {
+  transactions: BankTransaction[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export interface SpendingCategoryBreakdown {
+  category: string;
+  total: number;
+  percentage: number;
+  transaction_count: number;
+}
+
+export interface SpendingSummary {
+  total_spending: number;
+  monthly_average: number;
+  categories: SpendingCategoryBreakdown[];
+  start_date: string;
+  end_date: string;
+  months_analyzed: number;
 }

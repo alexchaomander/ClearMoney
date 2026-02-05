@@ -3,6 +3,9 @@ import type {
   AdvisorSession,
   AdvisorSessionSummary,
   AllAccountsResponse,
+  BankAccount,
+  BankTransaction,
+  BankTransactionQuery,
   CashAccount,
   CashAccountCreate,
   CashAccountUpdate,
@@ -23,11 +26,16 @@ import type {
   LinkSessionResponse,
   FinancialContext,
   MemoryEvent,
+  PaginatedBankTransactions,
+  PlaidCallbackRequest,
+  PlaidLinkRequest,
+  PlaidLinkResponse,
   PortfolioHistoryPoint,
   SkillDetail,
   SkillSummary,
   PortfolioHistoryRange,
   PortfolioSummary,
+  SpendingSummary,
   Transaction,
   CreditCard,
   ConsentCreateRequest,
@@ -114,6 +122,12 @@ export interface StrataClientInterface {
   getCredit(): Promise<CreditData>;
   getProtection(): Promise<ProtectionData>;
   getToolPresets(): Promise<ToolPresetBundle>;
+  // Banking (Plaid)
+  createPlaidLinkToken(request?: PlaidLinkRequest): Promise<PlaidLinkResponse>;
+  handlePlaidCallback(request: PlaidCallbackRequest): Promise<Connection>;
+  getBankAccounts(): Promise<BankAccount[]>;
+  getBankTransactions(params?: BankTransactionQuery): Promise<PaginatedBankTransactions>;
+  getSpendingSummary(months?: number): Promise<SpendingSummary>;
 }
 
 export interface StrataClientOptions {
@@ -586,5 +600,59 @@ export class StrataClient implements StrataClientInterface {
 
   async getToolPresets(): Promise<ToolPresetBundle> {
     return this.request<ToolPresetBundle>('/api/v1/data/tool-presets');
+  }
+
+  // === Banking (Plaid) ===
+
+  /**
+   * Create a Plaid Link token for initializing Plaid Link.
+   */
+  async createPlaidLinkToken(request?: PlaidLinkRequest): Promise<PlaidLinkResponse> {
+    return this.request<PlaidLinkResponse>('/api/v1/banking/link', {
+      method: 'POST',
+      body: JSON.stringify(request ?? {}),
+    });
+  }
+
+  /**
+   * Handle the Plaid Link callback with the public token.
+   */
+  async handlePlaidCallback(request: PlaidCallbackRequest): Promise<Connection> {
+    return this.request<Connection>('/api/v1/banking/callback', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  /**
+   * Get all bank accounts (both manual and Plaid-linked).
+   */
+  async getBankAccounts(): Promise<BankAccount[]> {
+    return this.request<BankAccount[]>('/api/v1/banking/accounts');
+  }
+
+  /**
+   * Get bank transactions with optional filtering and pagination.
+   */
+  async getBankTransactions(params?: BankTransactionQuery): Promise<PaginatedBankTransactions> {
+    return this.request<PaginatedBankTransactions>(
+      this.buildUrl('/api/v1/banking/transactions', {
+        account_id: params?.account_id,
+        start_date: params?.start_date,
+        end_date: params?.end_date,
+        category: params?.category,
+        page: params?.page,
+        page_size: params?.page_size,
+      })
+    );
+  }
+
+  /**
+   * Get spending summary by category.
+   */
+  async getSpendingSummary(months?: number): Promise<SpendingSummary> {
+    return this.request<SpendingSummary>(
+      this.buildUrl('/api/v1/banking/spending-summary', { months })
+    );
   }
 }
