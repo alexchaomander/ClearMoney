@@ -201,6 +201,94 @@ for (const inst of institutions) {
 }
 ```
 
+### Banking Methods (Plaid)
+
+#### Create Plaid Link Token
+Get a link token to initialize Plaid Link on the client.
+
+```typescript
+const linkToken = await client.createPlaidLinkToken({
+  redirect_uri: 'https://app.example.com/connect', // Optional
+});
+
+// Use linkToken.link_token to initialize Plaid Link
+```
+
+#### Handle Plaid Callback
+Process the Plaid Link success callback after user authorization.
+
+```typescript
+const connection = await client.handlePlaidCallback({
+  public_token: 'public-sandbox-xxx', // From Plaid Link onSuccess
+});
+```
+
+#### List Bank Accounts
+Get all bank accounts (linked via Plaid and manual).
+
+```typescript
+const accounts = await client.getBankAccounts();
+
+for (const account of accounts) {
+  console.log(`${account.name}: $${account.balance}`);
+  console.log(`  Type: ${account.account_type}`);
+  console.log(`  Linked: ${!account.is_manual}`);
+}
+```
+
+#### List Bank Transactions
+Get bank transactions with filtering and pagination.
+
+```typescript
+// Get recent transactions
+const result = await client.getBankTransactions();
+
+// Filter by account
+const filtered = await client.getBankTransactions({
+  account_id: 'account-uuid',
+});
+
+// Filter by date range and category
+const dateFiltered = await client.getBankTransactions({
+  start_date: '2026-01-01',
+  end_date: '2026-01-31',
+  category: 'FOOD_AND_DRINK',
+  page: 1,
+  page_size: 100,
+});
+
+for (const txn of result.transactions) {
+  console.log(`${txn.name}: $${txn.amount}`);
+  console.log(`  Category: ${txn.primary_category}`);
+  console.log(`  Date: ${txn.transaction_date}`);
+}
+```
+
+**Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `account_id` | `string` | Filter by bank account ID |
+| `start_date` | `string` | Filter transactions on or after this date (YYYY-MM-DD) |
+| `end_date` | `string` | Filter transactions on or before this date (YYYY-MM-DD) |
+| `category` | `string` | Filter by primary category |
+| `page` | `number` | Page number (default: 1) |
+| `page_size` | `number` | Items per page (1-500, default: 50) |
+
+#### Get Spending Summary
+Get spending breakdown by category for a time period.
+
+```typescript
+const summary = await client.getSpendingSummary(3); // Last 3 months
+
+console.log(`Total Spending: $${summary.total_spending}`);
+console.log(`Monthly Average: $${summary.monthly_average}`);
+
+for (const cat of summary.categories) {
+  console.log(`${cat.category}: $${cat.total} (${cat.percentage}%)`);
+}
+```
+
 ## Types
 
 The SDK exports all TypeScript types for use in your application:
@@ -231,7 +319,7 @@ import type {
   HoldingWithSecurity,
   HoldingDetail,
 
-  // Transactions
+  // Investment Transactions
   Transaction,
   TransactionType,
 
@@ -242,6 +330,17 @@ import type {
   AssetAllocation,
   TopHolding,
   ConcentrationAlert,
+
+  // Banking (Plaid)
+  PlaidLinkRequest,
+  PlaidLinkResponse,
+  PlaidCallbackRequest,
+  BankAccount,
+  BankTransaction,
+  BankTransactionQuery,
+  PaginatedBankTransactions,
+  SpendingSummary,
+  SpendingCategory,
 } from '@clearmoney/strata-sdk';
 ```
 

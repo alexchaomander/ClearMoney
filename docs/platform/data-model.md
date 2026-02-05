@@ -1,7 +1,7 @@
 # Strata API - Data Model
 
-Version: 1.0.0
-Last Updated: 2026-01-30
+Version: 1.1.0
+Last Updated: 2026-02-05
 
 ## Overview
 
@@ -75,6 +75,9 @@ erDiagram
     accounts ||--o{ transactions : "contains"
     accounts ||--o{ holdings : "holds"
     accounts ||--o{ liabilities : "owes"
+
+    cash_accounts ||--o{ bank_transactions : "contains"
+    connections ||--o{ cash_accounts : "links"
 
     securities ||--o{ holdings : "held as"
     securities ||--o{ transactions : "referenced in"
@@ -308,6 +311,42 @@ erDiagram
         text context
         timestamptz created_at
     }
+
+    cash_accounts {
+        uuid id PK
+        uuid user_id FK
+        uuid connection_id FK
+        text name
+        cash_account_type account_type
+        numeric balance
+        numeric available_balance
+        numeric apy
+        text institution_name
+        text provider_account_id
+        text mask
+        boolean is_manual
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    bank_transactions {
+        uuid id PK
+        uuid cash_account_id FK
+        text provider_transaction_id
+        numeric amount
+        date transaction_date
+        date posted_date
+        text name
+        text primary_category
+        text detailed_category
+        jsonb plaid_category
+        text merchant_name
+        text payment_channel
+        boolean pending
+        text iso_currency_code
+        timestamptz created_at
+        timestamptz updated_at
+    }
 ```
 
 ## Table Descriptions
@@ -497,6 +536,44 @@ Detailed liability information for loans and credit accounts.
 | `next_payment_due_date` | DATE | Next payment date |
 | `next_payment_amount` | NUMERIC(19,4) | Next payment amount |
 
+#### `cash_accounts`
+Cash, checking, savings, and money market accounts. Can be manually created or linked via Plaid.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `user_id` | UUID | FK to users |
+| `connection_id` | UUID | FK to connections (NULL for manual accounts) |
+| `name` | TEXT | Account name |
+| `account_type` | cash_account_type | Account type enum |
+| `balance` | NUMERIC(14,2) | Current balance |
+| `available_balance` | NUMERIC(14,2) | Available balance (from provider) |
+| `apy` | NUMERIC(6,4) | Annual percentage yield |
+| `institution_name` | TEXT | Name of financial institution |
+| `provider_account_id` | TEXT | Provider's account ID (for linked accounts) |
+| `mask` | TEXT | Last 4 digits of account number |
+| `is_manual` | BOOLEAN | True if manually created, false if linked via provider |
+
+#### `bank_transactions`
+Bank transaction history from linked Plaid accounts. Includes Plaid's automatic categorization.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `cash_account_id` | UUID | FK to cash_accounts |
+| `provider_transaction_id` | TEXT | Provider's transaction ID (unique with cash_account_id) |
+| `amount` | NUMERIC(14,2) | Transaction amount (negative=debit, positive=credit) |
+| `transaction_date` | DATE | Date of transaction |
+| `posted_date` | DATE | Date transaction posted (may differ from transaction_date) |
+| `name` | TEXT | Transaction description |
+| `primary_category` | TEXT | Plaid primary category (e.g., "FOOD_AND_DRINK") |
+| `detailed_category` | TEXT | Plaid detailed category (e.g., "RESTAURANTS") |
+| `plaid_category` | JSONB | Raw Plaid category array |
+| `merchant_name` | TEXT | Cleaned merchant name |
+| `payment_channel` | TEXT | Payment method ("online", "in_store", "other") |
+| `pending` | BOOLEAN | Whether transaction is pending |
+| `iso_currency_code` | TEXT | Currency code (default: "USD") |
+
 #### `financial_memories`
 User-specific financial profile and goals, serving as the "long-term memory" for the AI Advisor. Can be updated by the user or derived from connected accounts.
 
@@ -620,6 +697,11 @@ Encrypted storage for provider OAuth tokens. Access restricted to token service.
 ```sql
 'checking' | 'savings' | 'money_market' | 'cd' | 'investment' | 'brokerage' |
 '401k' | 'ira' | 'credit' | 'loan' | 'mortgage' | 'other'
+```
+
+### `cash_account_type`
+```sql
+'checking' | 'savings' | 'money_market' | 'cd' | 'other'
 ```
 
 ### `transaction_type`
