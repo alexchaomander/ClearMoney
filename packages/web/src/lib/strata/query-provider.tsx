@@ -1,20 +1,24 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useDemoMode } from "./demo-context";
 
 export function QueryProvider({ children }: { children: ReactNode }) {
-  const [queryClient] = useState(
+  const isDemo = useDemoMode();
+  const queryClient = useMemo(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 30 * 1000,
+            staleTime: 60 * 1000,
             retry: 2,
-            refetchOnWindowFocus: true,
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: true,
           },
         },
-      })
+      }),
+    [isDemo]
   );
 
   return (

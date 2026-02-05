@@ -5,13 +5,26 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 
 interface ApiErrorStateProps {
   message?: string;
+  error?: unknown;
   onRetry?: () => void;
 }
 
 export function ApiErrorState({
   message = "Something went wrong loading your data.",
+  error,
   onRetry,
 }: ApiErrorStateProps) {
+  const isApiErrorLike = (value: unknown): value is { status: number; detail?: string } =>
+    !!value &&
+    typeof value === "object" &&
+    "status" in value &&
+    typeof (value as { status?: unknown }).status === "number";
+
+  const detail =
+    isApiErrorLike(error)
+      ? error.detail || `${error.status}`
+      : null;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -25,7 +38,14 @@ export function ApiErrorState({
       <h3 className="font-serif text-xl text-neutral-100 mb-2">
         Unable to Load Data
       </h3>
-      <p className="text-neutral-400 max-w-md mb-6">{message}</p>
+      <p className={`text-neutral-400 max-w-md ${detail ? "mb-2" : "mb-6"}`}>
+        {message}
+      </p>
+      {detail && (
+        <p className="text-xs text-neutral-500 mb-6">
+          {detail}
+        </p>
+      )}
       {onRetry && (
         <button
           onClick={onRetry}

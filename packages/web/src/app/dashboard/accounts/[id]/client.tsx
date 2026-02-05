@@ -54,6 +54,7 @@ export function AccountDetailClient() {
     data: accountData,
     isLoading,
     isError,
+    error,
     refetch,
   } = useInvestmentAccount(id, { enabled: hasConsent });
 
@@ -82,6 +83,7 @@ export function AccountDetailClient() {
       <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
         <ApiErrorState
           message="Could not load account details. Please check that the API is running."
+          error={error}
           onRetry={refetch}
         />
       </div>
