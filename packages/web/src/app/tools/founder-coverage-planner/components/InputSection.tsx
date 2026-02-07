@@ -1,20 +1,22 @@
 import { SliderInput } from "@/components/shared/SliderInput";
+import type { ChangeEvent, Dispatch, ReactElement, SetStateAction } from "react";
 import type {
   CalculatorInputs,
-  EntityType,
+  EquityGrantType,
   FundingPlan,
+  LegalEntityType,
   OwnerRole,
+  TaxElection,
 } from "@/lib/calculators/founder-coverage-planner/types";
 
 interface InputSectionProps {
   inputs: CalculatorInputs;
-  setInputs: React.Dispatch<React.SetStateAction<CalculatorInputs>>;
+  setInputs: Dispatch<SetStateAction<CalculatorInputs>>;
 }
 
-const ENTITY_LABELS: Record<EntityType, string> = {
+const ENTITY_LABELS: Record<LegalEntityType, string> = {
   sole_prop: "Sole Proprietor",
   llc: "LLC",
-  s_corp: "S-Corp",
   c_corp: "C-Corp",
 };
 
@@ -29,7 +31,123 @@ const ROLE_LABELS: Record<OwnerRole, string> = {
   investor: "Investor",
 };
 
-export function InputSection({ inputs, setInputs }: InputSectionProps) {
+const TAX_ELECTION_LABELS: Record<TaxElection, string> = {
+  none: "No S-Corp election",
+  s_corp: "S-Corp election (Form 2553)",
+};
+
+const EQUITY_GRANT_TYPE_LABELS: Record<EquityGrantType, string> = {
+  options: "Stock options (ISO/NSO)",
+  restricted_stock: "Restricted stock / early exercise (83b)",
+  rsu: "RSUs",
+};
+
+export function InputSection({ inputs, setInputs }: InputSectionProps): ReactElement {
+  function handleLegalEntityChange(event: ChangeEvent<HTMLSelectElement>): void {
+    const legalEntityType = event.target.value as LegalEntityType;
+    setInputs((prev) => ({
+      ...prev,
+      legalEntityType,
+      taxElection: legalEntityType === "c_corp" ? "none" : prev.taxElection,
+    }));
+  }
+
+  function handleFundingPlanChange(event: ChangeEvent<HTMLSelectElement>): void {
+    const fundingPlan = event.target.value as FundingPlan;
+    setInputs((prev) => ({
+      ...prev,
+      fundingPlan,
+    }));
+  }
+
+  function handleOwnerRoleChange(event: ChangeEvent<HTMLSelectElement>): void {
+    const ownerRole = event.target.value as OwnerRole;
+    setInputs((prev) => ({
+      ...prev,
+      ownerRole,
+    }));
+  }
+
+  function handleFilingStatusChange(event: ChangeEvent<HTMLSelectElement>): void {
+    const filingStatus = event.target.value as CalculatorInputs["filingStatus"];
+    setInputs((prev) => ({
+      ...prev,
+      filingStatus,
+    }));
+  }
+
+  function handleEntityStartDateChange(event: ChangeEvent<HTMLInputElement>): void {
+    const entityStartDate = event.target.value;
+    setInputs((prev) => ({
+      ...prev,
+      entityStartDate,
+    }));
+  }
+
+  function handleTaxYearStartDateChange(event: ChangeEvent<HTMLInputElement>): void {
+    const taxYearStartDate = event.target.value;
+    setInputs((prev) => ({
+      ...prev,
+      taxYearStartDate,
+    }));
+  }
+
+  function handleTaxElectionChange(event: ChangeEvent<HTMLSelectElement>): void {
+    const taxElection = event.target.value as TaxElection;
+    setInputs((prev) => ({
+      ...prev,
+      taxElection,
+    }));
+  }
+
+  function handleCurrentQuarterChange(event: ChangeEvent<HTMLSelectElement>): void {
+    const currentQuarter = Number(event.target.value) as 1 | 2 | 3 | 4;
+    setInputs((prev) => ({
+      ...prev,
+      currentQuarter,
+    }));
+  }
+
+  function handleReimbursementPolicyChange(event: ChangeEvent<HTMLSelectElement>): void {
+    const reimbursementPolicy = event.target.value as CalculatorInputs["reimbursementPolicy"];
+    setInputs((prev) => ({
+      ...prev,
+      reimbursementPolicy,
+    }));
+  }
+
+  function handlePayrollCadenceChange(event: ChangeEvent<HTMLSelectElement>): void {
+    const payrollCadence = event.target.value as CalculatorInputs["payrollCadence"];
+    setInputs((prev) => ({
+      ...prev,
+      payrollCadence,
+    }));
+  }
+
+  function handleHasEquityGrantsChange(event: ChangeEvent<HTMLSelectElement>): void {
+    const hasEquityGrants = event.target.value === "yes";
+    setInputs((prev) => ({
+      ...prev,
+      hasEquityGrants,
+    }));
+  }
+
+  function handleEquityGrantTypeChange(event: ChangeEvent<HTMLSelectElement>): void {
+    const equityGrantType = event.target.value as EquityGrantType;
+    setInputs((prev) => ({
+      ...prev,
+      equityGrantType,
+    }));
+  }
+
+  function handleIsQualifiedBusinessChange(event: ChangeEvent<HTMLSelectElement>): void {
+    const isQualifiedBusiness = event.target.value === "yes";
+    setInputs((prev) => ({
+      ...prev,
+      isQualifiedBusiness,
+    }));
+  }
+
   return (
     <div className="space-y-10">
       <div className="rounded-2xl bg-neutral-900 p-6">
@@ -37,17 +155,12 @@ export function InputSection({ inputs, setInputs }: InputSectionProps) {
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-3">
             <label className="text-sm font-medium text-neutral-200">
-              Current entity
+              Current legal entity
             </label>
             <select
               className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white"
-              value={inputs.entityType}
-              onChange={(event) =>
-                setInputs((prev) => ({
-                  ...prev,
-                  entityType: event.target.value as EntityType,
-                }))
-              }
+              value={inputs.legalEntityType}
+              onChange={handleLegalEntityChange}
             >
               {Object.entries(ENTITY_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>
@@ -55,6 +168,10 @@ export function InputSection({ inputs, setInputs }: InputSectionProps) {
                 </option>
               ))}
             </select>
+            <p className="text-xs text-neutral-500">
+              S-Corp is a tax election. The underlying legal entity is typically an
+              LLC or corporation.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -64,12 +181,7 @@ export function InputSection({ inputs, setInputs }: InputSectionProps) {
             <select
               className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white"
               value={inputs.fundingPlan}
-              onChange={(event) =>
-                setInputs((prev) => ({
-                  ...prev,
-                  fundingPlan: event.target.value as FundingPlan,
-                }))
-              }
+              onChange={handleFundingPlanChange}
             >
               {Object.entries(FUNDING_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>
@@ -86,12 +198,7 @@ export function InputSection({ inputs, setInputs }: InputSectionProps) {
             <select
               className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white"
               value={inputs.ownerRole}
-              onChange={(event) =>
-                setInputs((prev) => ({
-                  ...prev,
-                  ownerRole: event.target.value as OwnerRole,
-                }))
-              }
+              onChange={handleOwnerRoleChange}
             >
               {Object.entries(ROLE_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>
@@ -108,12 +215,7 @@ export function InputSection({ inputs, setInputs }: InputSectionProps) {
             <select
               className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white"
               value={inputs.filingStatus}
-              onChange={(event) =>
-                setInputs((prev) => ({
-                  ...prev,
-                  filingStatus: event.target.value as "single" | "married",
-                }))
-              }
+              onChange={handleFilingStatusChange}
             >
               <option value="single">Single</option>
               <option value="married">Married Filing Jointly</option>
@@ -232,12 +334,7 @@ export function InputSection({ inputs, setInputs }: InputSectionProps) {
               type="date"
               className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white"
               value={inputs.entityStartDate}
-              onChange={(event) =>
-                setInputs((prev) => ({
-                  ...prev,
-                  entityStartDate: event.target.value,
-                }))
-              }
+              onChange={handleEntityStartDateChange}
             />
           </div>
           <div className="space-y-3">
@@ -248,31 +345,30 @@ export function InputSection({ inputs, setInputs }: InputSectionProps) {
               type="date"
               className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white"
               value={inputs.taxYearStartDate}
-              onChange={(event) =>
-                setInputs((prev) => ({
-                  ...prev,
-                  taxYearStartDate: event.target.value,
-                }))
-              }
+              onChange={handleTaxYearStartDateChange}
             />
           </div>
           <div className="space-y-3">
             <label className="text-sm font-medium text-neutral-200">
-              Filing S-Corp election?
+              Tax election
             </label>
             <select
               className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white"
-              value={inputs.usesSorpElection ? "yes" : "no"}
-              onChange={(event) =>
-                setInputs((prev) => ({
-                  ...prev,
-                  usesSorpElection: event.target.value === "yes",
-                }))
-              }
+              value={inputs.taxElection}
+              onChange={handleTaxElectionChange}
+              disabled={inputs.legalEntityType === "c_corp"}
             >
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
+              {Object.entries(TAX_ELECTION_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
+            {inputs.legalEntityType === "c_corp" && (
+              <p className="text-xs text-neutral-500">
+                C-Corps cannot elect S-Corp status.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -331,12 +427,7 @@ export function InputSection({ inputs, setInputs }: InputSectionProps) {
             <select
               className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white"
               value={inputs.currentQuarter}
-              onChange={(event) =>
-                setInputs((prev) => ({
-                  ...prev,
-                  currentQuarter: Number(event.target.value) as 1 | 2 | 3 | 4,
-                }))
-              }
+              onChange={handleCurrentQuarterChange}
             >
               <option value={1}>Q1</option>
               <option value={2}>Q2</option>
@@ -395,15 +486,7 @@ export function InputSection({ inputs, setInputs }: InputSectionProps) {
             <select
               className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white"
               value={inputs.reimbursementPolicy}
-              onChange={(event) =>
-                setInputs((prev) => ({
-                  ...prev,
-                  reimbursementPolicy: event.target.value as
-                    | "none"
-                    | "manual"
-                    | "accountable",
-                }))
-              }
+              onChange={handleReimbursementPolicyChange}
             >
               <option value="none">None</option>
               <option value="manual">Manual reimbursements</option>
@@ -417,15 +500,7 @@ export function InputSection({ inputs, setInputs }: InputSectionProps) {
             <select
               className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white"
               value={inputs.payrollCadence}
-              onChange={(event) =>
-                setInputs((prev) => ({
-                  ...prev,
-                  payrollCadence: event.target.value as
-                    | "monthly"
-                    | "biweekly"
-                    | "weekly",
-                }))
-              }
+              onChange={handlePayrollCadenceChange}
             >
               <option value="monthly">Monthly</option>
               <option value="biweekly">Biweekly</option>
@@ -447,19 +522,39 @@ export function InputSection({ inputs, setInputs }: InputSectionProps) {
             <select
               className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white"
               value={inputs.hasEquityGrants ? "yes" : "no"}
-              onChange={(event) =>
-                setInputs((prev) => ({
-                  ...prev,
-                  hasEquityGrants: event.target.value === "yes",
-                }))
-              }
+              onChange={handleHasEquityGrantsChange}
             >
               <option value="yes">Yes</option>
               <option value="no">No</option>
             </select>
           </div>
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-neutral-200">
+              Equity type
+            </label>
+            <select
+              className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white"
+              value={inputs.equityGrantType}
+              onChange={handleEquityGrantTypeChange}
+              disabled={!inputs.hasEquityGrants}
+            >
+              {Object.entries(EQUITY_GRANT_TYPE_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-neutral-500">
+              83(b) elections typically apply to restricted stock or early-exercised
+              options, not standard option grants or RSUs.
+            </p>
+          </div>
           <SliderInput
-            label="Days since grant (for 83(b))"
+            label={
+              inputs.equityGrantType === "restricted_stock"
+                ? "Days since restricted stock grant / early exercise (83b)"
+                : "Days since grant event"
+            }
             value={inputs.daysSinceGrant}
             onChange={(value) =>
               setInputs((prev) => ({ ...prev, daysSinceGrant: value }))
@@ -476,12 +571,7 @@ export function InputSection({ inputs, setInputs }: InputSectionProps) {
             <select
               className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white"
               value={inputs.isQualifiedBusiness ? "yes" : "no"}
-              onChange={(event) =>
-                setInputs((prev) => ({
-                  ...prev,
-                  isQualifiedBusiness: event.target.value === "yes",
-                }))
-              }
+              onChange={handleIsQualifiedBusinessChange}
             >
               <option value="yes">Yes</option>
               <option value="no">No</option>

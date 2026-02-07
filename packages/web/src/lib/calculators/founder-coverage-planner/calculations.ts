@@ -13,6 +13,7 @@ import type {
 const SOCIAL_SECURITY_RATE = 0.124;
 const MEDICARE_RATE = 0.029;
 const ADDITIONAL_MEDICARE_RATE = 0.009;
+const SE_EARNINGS_MULTIPLIER = 0.9235;
 const ADDITIONAL_MEDICARE_THRESHOLD = {
   single: 200000,
   married: 250000,
@@ -93,34 +94,48 @@ export function calculate(
 
 function buildEntityRecommendation(inputs: CalculatorInputs): EntityRecommendation {
   const reasons: string[] = [];
-  let recommendedEntity: EntityRecommendation["recommendedEntity"] = "llc";
+  let recommendedLegalEntity: EntityRecommendation["recommendedLegalEntity"] = "llc";
+  let recommendedTaxElection: EntityRecommendation["recommendedTaxElection"] = "none";
 
   if (inputs.fundingPlan === "vc") {
-    recommendedEntity = "c_corp";
+    recommendedLegalEntity = "c_corp";
+    recommendedTaxElection = "none";
     reasons.push("VC funding typically requires a C-Corp for equity issuance.");
   } else if (inputs.annualNetIncome >= 80000 && inputs.ownerRole === "operator") {
-    recommendedEntity = "s_corp";
-    reasons.push("S-Corp status can reduce payroll taxes for active owners.");
+    recommendedLegalEntity = "llc";
+    recommendedTaxElection = "s_corp";
+    reasons.push("S-Corp election can reduce payroll taxes for active owner-operators.");
   } else if (inputs.ownersCount > 1) {
-    recommendedEntity = "llc";
+    recommendedLegalEntity = "llc";
+    recommendedTaxElection = "none";
     reasons.push("Multi-member LLCs keep pass-through flexibility.");
   } else {
-    recommendedEntity = "llc";
+    recommendedLegalEntity = "llc";
+    recommendedTaxElection = "none";
     reasons.push("LLC provides liability protection with lighter admin burden.");
   }
 
-  if (inputs.entityType === recommendedEntity) {
-    reasons.push("Your current entity already matches this recommendation.");
+  if (inputs.legalEntityType === recommendedLegalEntity) {
+    reasons.push("Your current legal entity already matches this recommendation.");
+  }
+  if (inputs.taxElection === recommendedTaxElection) {
+    reasons.push("Your current tax election already matches this recommendation.");
+  }
+
+  let summary: string;
+  if (recommendedLegalEntity === "c_corp") {
+    summary = "C-Corp is the standard for VC-backed startups and QSBS eligibility.";
+  } else if (recommendedTaxElection === "s_corp") {
+    summary =
+      "LLC + S-Corp election can lower self-employment tax with reasonable compensation.";
+  } else {
+    summary = "LLC keeps flexibility while reducing personal liability.";
   }
 
   return {
-    recommendedEntity,
-    summary:
-      recommendedEntity === "c_corp"
-        ? "C-Corp is the standard for VC-backed startups and QSBS eligibility."
-        : recommendedEntity === "s_corp"
-          ? "S-Corp election can lower self-employment tax with reasonable compensation."
-          : "LLC keeps flexibility while reducing personal liability.",
+    recommendedLegalEntity,
+    recommendedTaxElection,
+    summary,
     reasons,
   };
 }
@@ -132,11 +147,7 @@ function buildSCorpEstimate(inputs: CalculatorInputs): SCorpSavingsEstimate {
       ? SALARY_MIN_MULTIPLIER_OPERATOR
       : SALARY_MIN_MULTIPLIER_INVESTOR);
   const maxSalary = inputs.marketSalary * SALARY_MAX_MULTIPLIER;
-  const recommendedSalary = clamp(
-    inputs.plannedSalary || inputs.marketSalary,
-    minSalary,
-    maxSalary
-  );
+  const recommendedSalary = clamp(inputs.plannedSalary, minSalary, maxSalary);
 
   const distributionEstimate = Math.max(0, inputs.annualNetIncome - recommendedSalary);
 
@@ -183,10 +194,14 @@ function calculateSelfEmploymentTax(
   wageBase: number,
   filingStatus: CalculatorInputs["filingStatus"]
 ): number {
-  const ssTax = Math.min(income, wageBase) * SOCIAL_SECURITY_RATE;
-  const medicareTax = income * MEDICARE_RATE;
+  // SE tax applies to 92.35% of net earnings (approx). This is intentionally
+  // simplified and does not model the income-tax deduction for 1/2 SE tax.
+  const seEarnings = income * SE_EARNINGS_MULTIPLIER;
+  const ssTax = Math.min(seEarnings, wageBase) * SOCIAL_SECURITY_RATE;
+  const medicareTax = seEarnings * MEDICARE_RATE;
   const threshold = ADDITIONAL_MEDICARE_THRESHOLD[filingStatus];
-  const additionalMedicare = Math.max(0, income - threshold) * ADDITIONAL_MEDICARE_RATE;
+  const additionalMedicare =
+    Math.max(0, seEarnings - threshold) * ADDITIONAL_MEDICARE_RATE;
   return ssTax + medicareTax + additionalMedicare;
 }
 
@@ -229,7 +244,7 @@ function buildElectionChecklist(
   inputs: CalculatorInputs,
   referenceDate: Date
 ): ElectionChecklist {
-  if (!inputs.usesSorpElection) {
+  if (inputs.taxElection !== "s_corp") {
     return {
       deadlineDate: "",
       daysRemaining: 0,
@@ -238,11 +253,13 @@ function buildElectionChecklist(
     };
   }
 
-  const baseDate = new Date(inputs.taxYearStartDate || inputs.entityStartDate);
-  const deadlineDate = addMonthsAndDays(baseDate, 2, 15);
-  // Use referenceDate instead of new Date()
+  const baseDate =
+    parseDateOnly(inputs.taxYearStartDate || inputs.entityStartDate) ??
+    toUtcDateOnly(referenceDate);
+  const deadlineDate = addMonthsAndDaysUtc(baseDate, 2, 15);
+  const referenceDay = toUtcDateOnly(referenceDate);
   const daysRemaining = Math.ceil(
-    (deadlineDate.getTime() - referenceDate.getTime()) / DAYS_IN_MS
+    (deadlineDate.getTime() - referenceDay.getTime()) / DAYS_IN_MS
   );
 
   let status: ElectionChecklist["status"] = "on-track";
@@ -253,7 +270,7 @@ function buildElectionChecklist(
   }
 
   return {
-    deadlineDate: deadlineDate.toISOString().slice(0, 10),
+    deadlineDate: formatDateOnly(deadlineDate),
     daysRemaining,
     status,
     items: [
@@ -279,7 +296,8 @@ function buildQuarterlyPlan(inputs: CalculatorInputs): QuarterlyTaxPlan {
   const priorYearTarget = inputs.priorYearTax * safeHarborRate;
   const currentYearTarget = inputs.projectedCurrentTax * PROJECTED_TAX_SAFE_HARBOR;
 
-  const usePriorYear = priorYearTarget >= currentYearTarget;
+  // You are safe if you meet *either* threshold; planner uses the lower target.
+  const usePriorYear = priorYearTarget <= currentYearTarget;
   const safeHarborTarget = usePriorYear ? priorYearTarget : currentYearTarget;
   const safeHarborType: "prior-year" | "current-year" = usePriorYear
     ? "prior-year"
@@ -292,9 +310,8 @@ function buildQuarterlyPlan(inputs: CalculatorInputs): QuarterlyTaxPlan {
     quartersRemaining > 0 ? remainingNeeded / quartersRemaining : 0;
 
   const notes = [
-    usePriorYear
-      ? "Safe-harbor based on prior-year tax (100% or 110% for high income)."
-      : "Safe-harbor based on 90% of current-year projected tax.",
+    `Safe-harbor options: ${Math.round(priorYearTarget).toLocaleString()} (prior-year) or ${Math.round(currentYearTarget).toLocaleString()} (90% current-year).`,
+    `Planner uses lower target: ${safeHarborType.replace("-", " ")}.`,
     "Quarterly due dates: Apr 15, Jun 15, Sep 15, Jan 15 (next year).",
   ];
 
@@ -378,27 +395,32 @@ function buildEquityChecklist(inputs: CalculatorInputs): EquityChecklist {
     };
   }
 
-  let deadlineStatus: EquityChecklist["deadlineStatus"] = "on-track";
-  if (inputs.daysSinceGrant > 30) {
-    deadlineStatus = "missed";
-  } else if (inputs.daysSinceGrant >= 25) {
-    deadlineStatus = "urgent";
+  let deadlineStatus: EquityChecklist["deadlineStatus"] = "not-applicable";
+  if (inputs.equityGrantType === "restricted_stock") {
+    deadlineStatus = "on-track";
+    if (inputs.daysSinceGrant > 30) {
+      deadlineStatus = "missed";
+    } else if (inputs.daysSinceGrant >= 25) {
+      deadlineStatus = "urgent";
+    }
   }
 
   const qsbsEligible =
-    inputs.entityType === "c_corp" &&
+    inputs.legalEntityType === "c_corp" &&
     inputs.isQualifiedBusiness &&
     inputs.assetsAtIssuance <= QSBS_ASSET_LIMIT &&
     inputs.expectedHoldingYears >= QSBS_HOLDING_PERIOD_YEARS;
 
   const qsbsStatus: EquityChecklist["qsbsStatus"] = qsbsEligible
     ? "likely"
-    : inputs.entityType !== "c_corp"
+    : inputs.legalEntityType !== "c_corp"
       ? "unlikely"
       : "unknown";
 
   const items = [
-    "Track 83(b) election deadline (30 days from grant).",
+    inputs.equityGrantType === "restricted_stock"
+      ? "Track 83(b) election deadline (30 days from restricted stock grant / early exercise)."
+      : "83(b) elections typically apply to restricted stock / early exercise, not standard option or RSU grants.",
     "Confirm qualified trade/business status for QSBS.",
     `Vesting schedule: ${inputs.vestingYears} years with ${inputs.cliffMonths}-month cliff.`,
     `Exercise window: ${inputs.exerciseWindowMonths} months post-termination.`,
@@ -419,9 +441,51 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-function addMonthsAndDays(date: Date, months: number, days: number): Date {
-  const result = new Date(date);
-  result.setMonth(result.getMonth() + months);
-  result.setDate(result.getDate() + days);
+function toUtcDateOnly(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
+function parseDateOnly(value: string): Date | null {
+  // Expect YYYY-MM-DD from <input type="date">.
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const monthIndex = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  if (!Number.isFinite(year) || !Number.isFinite(monthIndex) || !Number.isFinite(day)) {
+    return null;
+  }
+  return new Date(Date.UTC(year, monthIndex, day));
+}
+
+function formatDateOnly(date: Date): string {
+  const y = date.getUTCFullYear();
+  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(date.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function addMonthsAndDaysUtc(date: Date, months: number, days: number): Date {
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+  const day = date.getUTCDate();
+
+  let targetYear = year;
+  let targetMonth = month + months;
+  if (targetMonth >= 12) {
+    targetYear += Math.floor(targetMonth / 12);
+    targetMonth = targetMonth % 12;
+  } else if (targetMonth < 0) {
+    const yearsBack = Math.ceil(Math.abs(targetMonth) / 12);
+    targetYear -= yearsBack;
+    targetMonth = (targetMonth % 12 + 12) % 12;
+  }
+
+  // Clamp day-of-month to avoid rollover (e.g., Jan 31 + 1 month).
+  const daysInTargetMonth = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
+  const clampedDay = Math.min(day, daysInTargetMonth);
+
+  const result = new Date(Date.UTC(targetYear, targetMonth, clampedDay));
+  result.setUTCDate(result.getUTCDate() + days);
   return result;
 }

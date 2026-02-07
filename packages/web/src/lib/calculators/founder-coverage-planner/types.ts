@@ -1,13 +1,15 @@
-export type EntityType = "sole_prop" | "llc" | "s_corp" | "c_corp";
+export type LegalEntityType = "sole_prop" | "llc" | "c_corp";
+export type TaxElection = "none" | "s_corp";
 export type OwnerRole = "operator" | "investor";
 export type FundingPlan = "bootstrapped" | "vc" | "undecided";
 export type FilingStatus = "single" | "married";
+export type EquityGrantType = "options" | "restricted_stock" | "rsu";
 
 export interface CalculatorInputs {
   annualNetIncome: number;
   ownersCount: number;
   employeesCount: number;
-  entityType: EntityType;
+  legalEntityType: LegalEntityType;
   fundingPlan: FundingPlan;
   ownerRole: OwnerRole;
   marketSalary: number;
@@ -23,13 +25,14 @@ export interface CalculatorInputs {
   currentQuarter: 1 | 2 | 3 | 4;
   entityStartDate: string;
   taxYearStartDate: string;
-  usesSorpElection: boolean;
+  taxElection: TaxElection;
   payrollCadence: "monthly" | "biweekly" | "weekly";
   businessAccounts: number;
   personalAccounts: number;
   mixedTransactionsPerMonth: number;
   reimbursementPolicy: "none" | "manual" | "accountable";
   hasEquityGrants: boolean;
+  equityGrantType: EquityGrantType;
   daysSinceGrant: number;
   vestingYears: number;
   cliffMonths: number;
@@ -43,7 +46,8 @@ export interface CalculatorInputs {
 }
 
 export interface EntityRecommendation {
-  recommendedEntity: EntityType;
+  recommendedLegalEntity: LegalEntityType;
+  recommendedTaxElection: TaxElection;
   summary: string;
   reasons: string[];
 }
