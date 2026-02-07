@@ -1,6 +1,7 @@
 import type {
   AllAccountsResponse,
   BankAccount,
+  BankTransaction,
   BankTransactionQuery,
   CashAccount,
   CashAccountCreate,
@@ -367,6 +368,7 @@ export class DemoStrataClient implements StrataClientInterface {
           payrollAdminCosts: 3200,
           statePayrollTaxRate: 2.5,
           ssWageBase: 174000,
+          stateCode: "CA",
           filingStatus: "single",
           priorYearTax: 52000,
           projectedCurrentTax: 61000,
@@ -813,117 +815,166 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async getBankTransactions(_params?: BankTransactionQuery): Promise<PaginatedBankTransactions> {
-    void _params;
     await delay(300);
-    return {
-      transactions: [
-        {
-          id: "demo-tx-001",
-          cash_account_id: "demo-bank-001",
-          provider_transaction_id: "plaid-tx-001",
-          amount: -45.67,
-          transaction_date: new Date().toISOString().split("T")[0],
-          posted_date: new Date().toISOString().split("T")[0],
-          name: "UBER EATS",
-          primary_category: "FOOD_AND_DRINK",
-          detailed_category: "FOOD_AND_DRINK_RESTAURANTS",
-          merchant_name: "Uber Eats",
-          payment_channel: "online",
-          pending: false,
-          iso_currency_code: "USD",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "demo-tx-002",
-          cash_account_id: "demo-bank-001",
-          provider_transaction_id: "plaid-tx-002",
-          amount: -125.00,
-          transaction_date: new Date().toISOString().split("T")[0],
-          posted_date: new Date().toISOString().split("T")[0],
-          name: "TRADER JOE'S",
-          primary_category: "FOOD_AND_DRINK",
-          detailed_category: "FOOD_AND_DRINK_GROCERIES",
-          merchant_name: "Trader Joe's",
-          payment_channel: "in_store",
-          pending: false,
-          iso_currency_code: "USD",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "demo-tx-003",
-          cash_account_id: "demo-bank-003",
-          provider_transaction_id: "plaid-tx-003",
+
+    const now = new Date();
+    const createdAt = now.toISOString();
+
+    function toDateOnly(daysAgo: number): string {
+      const d = new Date(now);
+      d.setDate(d.getDate() - daysAgo);
+      return d.toISOString().split("T")[0];
+    }
+
+    function tx(args: {
+      id: string;
+      cashAccountId: string;
+      amount: number;
+      daysAgo: number;
+      name: string;
+      merchantName: string;
+      primaryCategory: BankTransaction["primary_category"];
+      detailedCategory: BankTransaction["detailed_category"];
+      paymentChannel: BankTransaction["payment_channel"];
+    }): BankTransaction {
+      const dateOnly = toDateOnly(args.daysAgo);
+      return {
+        id: args.id,
+        cash_account_id: args.cashAccountId,
+        provider_transaction_id: `plaid-${args.id}`,
+        amount: args.amount,
+        transaction_date: dateOnly,
+        posted_date: dateOnly,
+        name: args.name,
+        primary_category: args.primaryCategory,
+        detailed_category: args.detailedCategory,
+        merchant_name: args.merchantName,
+        payment_channel: args.paymentChannel,
+        pending: false,
+        iso_currency_code: "USD",
+        created_at: createdAt,
+        updated_at: createdAt,
+      };
+    }
+
+    const all: BankTransaction[] = [];
+
+    // Business account: steady Stripe payouts + SaaS + a few personal-ish slips to demo commingling.
+    let counter = 1;
+    for (let daysAgo = 6; daysAgo <= 84; daysAgo += 7) {
+      all.push(
+        tx({
+          id: `demo-biz-in-${counter++}`,
+          cashAccountId: "demo-bank-003",
+          amount: 18000.0,
+          daysAgo,
+          name: "STRIPE PAYOUT",
+          merchantName: "Stripe",
+          primaryCategory: "INCOME",
+          detailedCategory: "INCOME_OTHER_INCOME",
+          paymentChannel: "online",
+        })
+      );
+    }
+
+    for (let daysAgo = 3; daysAgo <= 90; daysAgo += 30) {
+      all.push(
+        tx({
+          id: `demo-biz-saas-${daysAgo}`,
+          cashAccountId: "demo-bank-003",
           amount: -299.0,
-          transaction_date: new Date().toISOString().split("T")[0],
-          posted_date: new Date().toISOString().split("T")[0],
+          daysAgo,
           name: "AMAZON WEB SERVICES",
-          primary_category: "GENERAL_SERVICES",
-          detailed_category: "GENERAL_SERVICES_CLOUD_SERVICES",
-          merchant_name: "Amazon Web Services",
-          payment_channel: "online",
-          pending: false,
-          iso_currency_code: "USD",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "demo-tx-004",
-          cash_account_id: "demo-bank-003",
-          provider_transaction_id: "plaid-tx-004",
-          amount: -89.0,
-          transaction_date: new Date().toISOString().split("T")[0],
-          posted_date: new Date().toISOString().split("T")[0],
+          merchantName: "Amazon Web Services",
+          primaryCategory: "GENERAL_SERVICES",
+          detailedCategory: "GENERAL_SERVICES_CLOUD_SERVICES",
+          paymentChannel: "online",
+        })
+      );
+    }
+
+    for (let daysAgo = 2; daysAgo <= 88; daysAgo += 14) {
+      all.push(
+        tx({
+          id: `demo-biz-food-${daysAgo}`,
+          cashAccountId: "demo-bank-003",
+          amount: -64.32,
+          daysAgo,
           name: "DOORDASH",
-          primary_category: "FOOD_AND_DRINK",
-          detailed_category: "FOOD_AND_DRINK_RESTAURANTS",
-          merchant_name: "DoorDash",
-          payment_channel: "online",
-          pending: false,
-          iso_currency_code: "USD",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "demo-tx-005",
-          cash_account_id: "demo-bank-003",
-          provider_transaction_id: "plaid-tx-005",
-          amount: -312.45,
-          transaction_date: new Date().toISOString().split("T")[0],
-          posted_date: new Date().toISOString().split("T")[0],
-          name: "DELTA AIR LINES",
-          primary_category: "TRAVEL",
-          detailed_category: "TRAVEL_AIRLINES_AND_AVIATION_SERVICES",
-          merchant_name: "Delta",
-          payment_channel: "online",
-          pending: false,
-          iso_currency_code: "USD",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "demo-tx-006",
-          cash_account_id: "demo-bank-003",
-          provider_transaction_id: "plaid-tx-006",
-          amount: -63.21,
-          transaction_date: new Date().toISOString().split("T")[0],
-          posted_date: new Date().toISOString().split("T")[0],
+          merchantName: "DoorDash",
+          primaryCategory: "FOOD_AND_DRINK",
+          detailedCategory: "FOOD_AND_DRINK_RESTAURANTS",
+          paymentChannel: "online",
+        })
+      );
+    }
+
+    for (let daysAgo = 9; daysAgo <= 85; daysAgo += 21) {
+      all.push(
+        tx({
+          id: `demo-biz-shopping-${daysAgo}`,
+          cashAccountId: "demo-bank-003",
+          amount: -58.11,
+          daysAgo,
           name: "TARGET",
-          primary_category: "SHOPPING",
-          detailed_category: "GENERAL_MERCHANDISE_DISCOUNT_STORES",
-          merchant_name: "Target",
-          payment_channel: "in_store",
-          pending: false,
-          iso_currency_code: "USD",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ],
-      total: 6,
-      page: 1,
-      page_size: 50,
-      total_pages: 1,
+          merchantName: "Target",
+          primaryCategory: "SHOPPING",
+          detailedCategory: "GENERAL_MERCHANDISE_DISCOUNT_STORES",
+          paymentChannel: "in_store",
+        })
+      );
+    }
+
+    // Personal checking: a few normal spending examples.
+    all.push(
+      tx({
+        id: "demo-personal-uber-eats",
+        cashAccountId: "demo-bank-001",
+        amount: -45.67,
+        daysAgo: 0,
+        name: "UBER EATS",
+        merchantName: "Uber Eats",
+        primaryCategory: "FOOD_AND_DRINK",
+        detailedCategory: "FOOD_AND_DRINK_RESTAURANTS",
+        paymentChannel: "online",
+      })
+    );
+    all.push(
+      tx({
+        id: "demo-personal-groceries",
+        cashAccountId: "demo-bank-001",
+        amount: -125.0,
+        daysAgo: 1,
+        name: "TRADER JOE'S",
+        merchantName: "Trader Joe's",
+        primaryCategory: "FOOD_AND_DRINK",
+        detailedCategory: "FOOD_AND_DRINK_GROCERIES",
+        paymentChannel: "in_store",
+      })
+    );
+
+    const start = _params?.start_date ?? null;
+    const end = _params?.end_date ?? null;
+    const filtered = all.filter((t) => {
+      if (start && t.transaction_date < start) return false;
+      if (end && t.transaction_date > end) return false;
+      return true;
+    });
+
+    filtered.sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
+
+    const page = _params?.page ?? 1;
+    const pageSize = _params?.page_size ?? 50;
+    const startIdx = (page - 1) * pageSize;
+    const endIdx = startIdx + pageSize;
+    const slice = filtered.slice(startIdx, endIdx);
+
+    return {
+      transactions: slice,
+      total: filtered.length,
+      page,
+      page_size: pageSize,
+      total_pages: Math.max(1, Math.ceil(filtered.length / pageSize)),
     };
   }
 
