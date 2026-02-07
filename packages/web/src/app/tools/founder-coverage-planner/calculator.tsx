@@ -13,6 +13,7 @@ import {
   looksBusinessAccount,
   PERSONALISH_CATEGORIES,
 } from "@/lib/calculators/founder-coverage-planner/bankingHeuristics";
+import { encodeFounderCoverageSnapshot } from "@/lib/calculators/founder-coverage-planner/snapshotShare";
 import {
   FOUNDER_COVERAGE_CHECKLIST_STORAGE_KEY,
   FOUNDER_COVERAGE_ONBOARDING_STORAGE_KEY,
@@ -221,6 +222,7 @@ export function Calculator(): ReactElement {
   const [inputs, setInputs] = useState<CalculatorInputs>(() => loadInitialInputs());
   const [prefillApplied, setPrefillApplied] = useState(false);
   const [presetApplied, setPresetApplied] = useState(false);
+  const [lastPrefillSummary, setLastPrefillSummary] = useState<string | null>(null);
   const [completed, setCompleted] = useState<Record<string, boolean>>(() =>
     loadChecklistState()
   );
@@ -448,6 +450,22 @@ export function Calculator(): ReactElement {
     if (!hasPrefillData) return;
     setInputs((prev) => ({ ...prev, ...prefill.defaults }));
     setPrefillApplied(true);
+
+    const fieldList = prefill.filledFields.slice(0, 8).join(", ");
+    const extraCount = Math.max(0, prefill.filledFields.length - 8);
+    const suffix = extraCount > 0 ? ` +${extraCount} more` : "";
+
+    const sources: string[] = [];
+    if (prefill.sources.snapshot) sources.push("saved snapshot");
+    if (!prefill.sources.snapshot) {
+      if (prefill.sources.memory) sources.push("profile");
+      if (prefill.sources.accounts) sources.push("linked accounts");
+    }
+    const from = sources.length > 0 ? sources.join(" + ") : "your data";
+
+    setLastPrefillSummary(
+      `Prefilled ${prefill.filledFields.length} fields from ${from}: ${fieldList}${suffix}`
+    );
   }
 
   function applyScenario(values: Partial<CalculatorInputs>): void {
@@ -457,13 +475,30 @@ export function Calculator(): ReactElement {
   function saveSnapshotToProfile(): void {
     if (!hasMemoryWrite) return;
     const prevNotes = (memory?.notes && typeof memory.notes === "object") ? memory.notes : {};
+    const snapshotId = crypto.randomUUID();
+    const savedAt = new Date().toISOString();
+
+    const existing = (prevNotes as Record<string, unknown>)["founderCoveragePlanner"];
+    const existingObj = existing && typeof existing === "object" ? (existing as Record<string, unknown>) : null;
+    const snapshotsRaw = existingObj ? existingObj["snapshots"] : null;
+    const snapshots = Array.isArray(snapshotsRaw) ? snapshotsRaw.slice() : [];
+
+    snapshots.unshift({
+      id: snapshotId,
+      savedAt,
+      inputs,
+      checklist: completed,
+    });
+
+    // Keep recent history only to avoid unbounded growth in notes.
+    const trimmed = snapshots.slice(0, 10);
+
     const nextNotes = {
       ...(prevNotes as Record<string, unknown>),
       founderCoveragePlanner: {
-        version: 1,
-        savedAt: new Date().toISOString(),
-        inputs,
-        checklist: completed,
+        version: 2,
+        latestSnapshotId: snapshotId,
+        snapshots: trimmed,
       },
     };
 
@@ -472,6 +507,28 @@ export function Calculator(): ReactElement {
       source: "calculator",
       source_context: "founder-coverage-planner.save",
     });
+  }
+
+  const shareLink = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const payload = {
+      version: 1 as const,
+      savedAt: new Date().toISOString(),
+      inputs,
+      checklist: completed,
+    };
+
+    const encoded = encodeFounderCoverageSnapshot(payload);
+    const url = new URL(window.location.href);
+    url.pathname = "/tools/founder-coverage-planner/report";
+    url.search = "";
+    url.searchParams.set("snapshot", encoded);
+    return url.toString();
+  }, [completed, inputs]);
+
+  function copyShareLink(): void {
+    if (!shareLink) return;
+    void navigator.clipboard?.writeText(shareLink);
   }
 
   return (
@@ -517,6 +574,13 @@ export function Calculator(): ReactElement {
                 description={prefillDescription}
               />
 
+              {lastPrefillSummary && (
+                <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
+                  <p className="text-sm font-semibold text-white">Data provenance</p>
+                  <p className="mt-1 text-xs text-neutral-400">{lastPrefillSummary}</p>
+                </div>
+              )}
+
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
                   <p className="text-sm font-semibold text-white">Showcase scenarios</p>
@@ -559,10 +623,20 @@ export function Calculator(): ReactElement {
                     >
                       Save snapshot to profile
                     </button>
+                    <button
+                      type="button"
+                      onClick={copyShareLink}
+                      className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors"
+                    >
+                      Copy share link
+                    </button>
                   </div>
                   {bankContextLine && (
                     <p className="mt-3 text-xs text-neutral-500">{bankContextLine}</p>
                   )}
+                  <p className="mt-3 text-xs text-neutral-500">
+                    Share links include your inputs in the URL. Treat them like sensitive data.
+                  </p>
                 </div>
               </div>
             </div>
@@ -934,6 +1008,33 @@ export function Calculator(): ReactElement {
                     Accounts: {comminglingInsight.businessAccountNames.join(", ")}. Range:{" "}
                     {comminglingInsight.startDate} to {comminglingInsight.endDate}.
                   </p>
+                  {inputs.reimbursementPolicy !== "accountable" && comminglingInsight.comminglingRate >= 0.08 && (
+                    <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+                      <p className="text-sm font-semibold text-emerald-100">
+                        Suggested remediation
+                      </p>
+                      <p className="mt-1 text-xs text-emerald-200/80">
+                        Set an accountable reimbursement policy and route personal expenses through reimbursements,
+                        not direct business spending.
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setInputs((prev) => ({ ...prev, reimbursementPolicy: "accountable" }))}
+                          className="rounded-xl bg-emerald-300 px-3 py-2 text-xs font-semibold text-neutral-950"
+                        >
+                          Set accountable policy
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleCompleted("action.reimbursementPolicy")}
+                          className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors"
+                        >
+                          Mark addressed
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   {comminglingInsight.topExamples.length > 0 && (
                     <div className="mt-3">
                       <p className="text-xs text-neutral-400 mb-2">Examples</p>

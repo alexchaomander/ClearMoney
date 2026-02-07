@@ -6,13 +6,20 @@ import { useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
 import { AppShell } from "@/components/shared/AppShell";
 import { buildActionPlan } from "@/lib/calculators/founder-coverage-planner/actionPlan";
 import { calculate } from "@/lib/calculators/founder-coverage-planner/calculations";
+import {
+  decodeFounderCoverageSnapshot,
+  encodeFounderCoverageSnapshot,
+  type FounderCoverageSnapshotPayload,
+} from "@/lib/calculators/founder-coverage-planner/snapshotShare";
 import type { CalculatorInputs } from "@/lib/calculators/founder-coverage-planner/types";
 import { formatCurrency } from "@/lib/shared/formatters";
 import { useConsentStatus, useFinancialMemory } from "@/lib/strata/hooks";
 
 type SavedSnapshot = {
+  id: string;
   savedAt: string;
   inputs: CalculatorInputs;
+  checklist?: Record<string, boolean>;
 };
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -32,14 +39,39 @@ function readSavedSnapshot(memoryNotes: unknown): SavedSnapshot | null {
   const founder = memoryNotes["founderCoveragePlanner"];
   if (!isPlainObject(founder)) return null;
 
+  const version = founder["version"];
+  if (version === 2) {
+    const latestId = founder["latestSnapshotId"];
+    const snapshots = founder["snapshots"];
+    if (typeof latestId !== "string") return null;
+    if (!Array.isArray(snapshots)) return null;
+    const latest = snapshots.find((s) => isPlainObject(s) && s["id"] === latestId);
+    if (!latest || !isPlainObject(latest)) return null;
+
+    const savedAt = latest["savedAt"];
+    const inputs = latest["inputs"];
+    const checklist = latest["checklist"];
+    if (typeof savedAt !== "string") return null;
+    if (!isPlainObject(inputs)) return null;
+    return {
+      id: latestId,
+      savedAt,
+      inputs: inputs as unknown as CalculatorInputs,
+      checklist: isPlainObject(checklist) ? (checklist as Record<string, boolean>) : undefined,
+    };
+  }
+
+  // Back-compat for older snapshots (v1).
   const savedAt = founder["savedAt"];
   const inputs = founder["inputs"];
+  const checklist = founder["checklist"];
   if (typeof savedAt !== "string") return null;
   if (!isPlainObject(inputs)) return null;
-
   return {
+    id: "latest",
     savedAt,
     inputs: inputs as unknown as CalculatorInputs,
+    checklist: isPlainObject(checklist) ? (checklist as Record<string, boolean>) : undefined,
   };
 }
 
@@ -48,16 +80,49 @@ function toDemoQuery(searchParams: ReadonlyURLSearchParams): string {
   return demo === "true" ? "?demo=true" : "";
 }
 
+function toShareLink(encodedSnapshot: string): string {
+  const url = new URL(window.location.href);
+  url.pathname = "/tools/founder-coverage-planner/report";
+  url.search = "";
+  url.searchParams.set("snapshot", encodedSnapshot);
+  return url.toString();
+}
+
 export default function FounderCoveragePlannerReportPage(): ReactElement {
   const searchParams = useSearchParams();
   const demoQuery = useMemo(() => toDemoQuery(searchParams), [searchParams]);
+  const encodedSnapshot = searchParams.get("snapshot");
 
   const { hasConsent: hasMemoryRead } = useConsentStatus(["memory:read"]);
   const { data: memory, isSuccess: memoryLoaded } = useFinancialMemory({ enabled: hasMemoryRead });
 
-  const snapshot = useMemo(() => {
+  const snapshot = useMemo<SavedSnapshot | null>(() => {
+    if (encodedSnapshot) {
+      const decoded = decodeFounderCoverageSnapshot(encodedSnapshot);
+      if (!decoded) return null;
+      return {
+        id: "shared",
+        savedAt: decoded.savedAt,
+        inputs: decoded.inputs,
+        checklist: decoded.checklist,
+      };
+    }
+
     return readSavedSnapshot(memory?.notes ?? null);
-  }, [memory?.notes]);
+  }, [encodedSnapshot, memory?.notes]);
+
+  const shareLink = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    if (!snapshot) return null;
+    const payload: FounderCoverageSnapshotPayload = {
+      version: 1,
+      savedAt: snapshot.savedAt,
+      inputs: snapshot.inputs,
+      checklist: snapshot.checklist,
+    };
+    const encoded = encodeFounderCoverageSnapshot(payload);
+    return toShareLink(encoded);
+  }, [snapshot]);
 
   const results = useMemo(() => {
     if (!snapshot) return null;
@@ -118,6 +183,11 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
     window.print();
   }
 
+  function copyShareLink(): void {
+    if (!shareLink) return;
+    void navigator.clipboard?.writeText(shareLink);
+  }
+
   return (
     <AppShell>
       <div className="min-h-screen bg-neutral-950">
@@ -156,6 +226,14 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                 </button>
                 <button
                   type="button"
+                  onClick={copyShareLink}
+                  disabled={!shareLink}
+                  className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-semibold text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
+                >
+                  Copy share link
+                </button>
+                <button
+                  type="button"
                   onClick={downloadIcs}
                   disabled={!results}
                   className="inline-flex items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-neutral-950 disabled:opacity-50"
@@ -164,6 +242,15 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                 </button>
               </div>
             </div>
+
+            {encodedSnapshot && (
+              <div className="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+                <p className="text-sm font-semibold text-amber-100">Shared report link</p>
+                <p className="mt-2 text-xs text-amber-200/80">
+                  This page is rendering from a snapshot embedded in the URL. Treat shared links as sensitive.
+                </p>
+              </div>
+            )}
 
             {!hasMemoryRead && (
               <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
