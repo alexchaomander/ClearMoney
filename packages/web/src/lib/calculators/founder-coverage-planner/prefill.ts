@@ -4,6 +4,12 @@ import type { CalculatorInputs } from "./types";
 export type FounderPrefillResult = {
   defaults: Partial<CalculatorInputs>;
   filledFields: string[];
+  sources: {
+    snapshot: boolean;
+    memory: boolean;
+    accounts: boolean;
+  };
+  hasRealData: boolean;
 };
 
 export type FounderPrefillArgs = {
@@ -74,21 +80,29 @@ export function buildFounderPrefillFromData(args: FounderPrefillArgs): FounderPr
   const { memory, bankAccounts, bankTransactions, now = new Date() } = args;
   const defaults: Partial<CalculatorInputs> = {};
   const filledFields: string[] = [];
+  const sources = {
+    snapshot: false,
+    memory: false,
+    accounts: false,
+  };
 
   // If we have a saved snapshot in memory notes, prefer it (it is most specific).
   const savedInputs = getSavedSnapshotInputs(memory);
   if (savedInputs) {
+    sources.snapshot = true;
+    sources.memory = true;
     for (const [key, value] of Object.entries(savedInputs)) {
       if (value === null || value === undefined) continue;
       // Trust snapshot types, since it was written by this calculator.
       (defaults as Record<string, unknown>)[key] = value;
       filledFields.push(key);
     }
-    return { defaults, filledFields };
+    return { defaults, filledFields, sources, hasRealData: true };
   }
 
   const filingStatus = mapFilingStatus(memory?.filing_status ?? null);
   if (filingStatus) {
+    sources.memory = true;
     defaults.filingStatus = filingStatus;
     filledFields.push("filingStatus");
   }
@@ -96,27 +110,36 @@ export function buildFounderPrefillFromData(args: FounderPrefillArgs): FounderPr
   // As a weak fallback, use annual income as a proxy for net business income.
   // This is intentionally conservative and should be shown as editable.
   if (memory?.annual_income != null && Number.isFinite(memory.annual_income)) {
+    sources.memory = true;
     defaults.annualNetIncome = Math.round(memory.annual_income);
     filledFields.push("annualNetIncome");
   }
 
-  const year = now.getFullYear();
-  defaults.taxYearStartDate = `${year}-01-01`;
-  defaults.currentQuarter = getQuarterForDate(now);
-  filledFields.push("taxYearStartDate", "currentQuarter");
+  const hasAnySourceData =
+    sources.memory ||
+    (bankAccounts != null && bankAccounts.length > 0) ||
+    (bankTransactions != null && bankTransactions.length > 0);
+  if (hasAnySourceData) {
+    const year = now.getFullYear();
+    defaults.taxYearStartDate = `${year}-01-01`;
+    defaults.currentQuarter = getQuarterForDate(now);
+    filledFields.push("taxYearStartDate", "currentQuarter");
+  }
 
   if (bankAccounts && bankAccounts.length > 0) {
-    defaults.personalAccounts = bankAccounts.length;
-    filledFields.push("personalAccounts");
+    sources.accounts = true;
 
     const businessCount = bankAccounts.filter(looksBusinessAccount).length;
-    if (businessCount > 0) {
-      defaults.businessAccounts = businessCount;
-      filledFields.push("businessAccounts");
-    }
+    const personalCount = Math.max(0, bankAccounts.length - businessCount);
+    defaults.personalAccounts = personalCount;
+    filledFields.push("personalAccounts");
+
+    defaults.businessAccounts = businessCount;
+    filledFields.push("businessAccounts");
   }
 
   if (bankAccounts && bankTransactions && bankTransactions.length > 0) {
+    sources.accounts = true;
     const businessAccountIds = new Set(
       bankAccounts.filter(looksBusinessAccount).map((a) => a.id)
     );
@@ -134,5 +157,6 @@ export function buildFounderPrefillFromData(args: FounderPrefillArgs): FounderPr
     }
   }
 
-  return { defaults, filledFields };
+  const hasRealData = sources.snapshot || sources.memory || sources.accounts;
+  return { defaults, filledFields, sources, hasRealData };
 }

@@ -72,10 +72,9 @@ test("prefill infers business/personal accounts and mixed transactions from bank
     now: new Date("2026-02-07T12:00:00Z"),
   });
 
-  expect(defaults.personalAccounts).toBe(2);
+  expect(defaults.personalAccounts).toBe(1);
   expect(defaults.businessAccounts).toBe(1);
   expect(defaults.mixedTransactionsPerMonth).toBe(2);
   expect(defaults.currentQuarter).toBe(1);
   expect(defaults.taxYearStartDate).toBe("2026-01-01");
 });
-

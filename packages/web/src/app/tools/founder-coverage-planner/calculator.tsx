@@ -17,6 +17,7 @@ import {
   useUpdateMemory,
 } from "@/lib/strata/hooks";
 import { InputSection } from "./components/InputSection";
+import { useActionPlan } from "./useActionPlan";
 
 const CHECKLIST_STORAGE_KEY = "founderCoveragePlanner.checklist.v1";
 
@@ -24,18 +25,6 @@ type Scenario = {
   id: string;
   label: string;
   values: Partial<CalculatorInputs>;
-};
-
-type ActionItem = {
-  title: string;
-  detail: string;
-  key: string;
-};
-
-type CalendarEvent = {
-  date: string;
-  title: string;
-  description: string;
 };
 
 function loadChecklistState(): Record<string, boolean> {
@@ -234,9 +223,26 @@ export function Calculator(): ReactElement {
     [memory, bankAccounts, bankTxPage, now]
   );
 
-  const hasPrefillData = prefill.filledFields.length > 0;
+  const hasPrefillData = prefill.hasRealData && prefill.filledFields.length > 0;
   const prefillLoaded =
     (!hasMemoryRead || memoryLoaded) && (!hasAccountsRead || bankLoaded);
+
+  const prefillDescription = useMemo(() => {
+    if (!hasPrefillData) {
+      return "Connect accounts and fill out your profile to unlock prefills.";
+    }
+
+    const parts: string[] = [];
+    if (prefill.sources.snapshot) {
+      parts.push("your saved founder snapshot");
+    } else {
+      if (prefill.sources.memory) parts.push("your profile");
+      if (prefill.sources.accounts) parts.push("linked accounts");
+    }
+
+    const from = parts.length > 0 ? parts.join(" + ") : "your data";
+    return `We can prefill ${prefill.filledFields.length} fields from ${from}.`;
+  }, [hasPrefillData, prefill.filledFields.length, prefill.sources]);
 
   const bankContextLine = useMemo(() => {
     if (!spendingLoaded || !spendingSummary) return null;
@@ -244,101 +250,7 @@ export function Calculator(): ReactElement {
   }, [spendingLoaded, spendingSummary]);
 
   const results = useMemo(() => calculate(inputs), [inputs]);
-  const showSCorp =
-    inputs.taxElection === "s_corp" || results.entity.recommendedTaxElection === "s_corp";
-
-  const actionItems = useMemo<ActionItem[]>(() => {
-    const items: ActionItem[] = [];
-
-    const electionStatus = results.electionChecklist.status;
-    if (electionStatus === "urgent" || electionStatus === "missed") {
-      const titleSuffix = electionStatus === "missed" ? "missed deadline" : "file this week";
-      const detail =
-        electionStatus === "missed"
-          ? `Deadline was ${results.electionChecklist.deadlineDate}. Check late-election relief with a CPA.`
-          : `Deadline: ${results.electionChecklist.deadlineDate} (${results.electionChecklist.daysRemaining} days left).`;
-      items.push({
-        key: "action.2553",
-        title: `Form 2553: ${titleSuffix}`,
-        detail,
-      });
-    }
-
-    if (results.quarterlyTaxes.remainingNeeded > 0) {
-      items.push({
-        key: "action.estimatedTaxes",
-        title: "Estimated taxes: set your next payment",
-        detail: `Remaining to safe-harbor target: ${formatCurrency(results.quarterlyTaxes.remainingNeeded, 0)}. Suggested per-quarter: ${formatCurrency(results.quarterlyTaxes.perQuarterAmount, 0)}.`,
-      });
-    }
-
-    for (const alert of results.cashflowAlerts.slice(0, 2)) {
-      items.push({
-        key: `action.cashflow.${alert}`,
-        title: "Cashflow hygiene",
-        detail: alert,
-      });
-    }
-
-    if (results.sCorp.warnings.length > 0) {
-      items.push({
-        key: "action.salary",
-        title: "Owner comp: sanity-check salary vs distributions",
-        detail: `Recommended salary range: ${formatCurrency(results.sCorp.salaryRange.min, 0)} to ${formatCurrency(results.sCorp.salaryRange.max, 0)}.`,
-      });
-    }
-
-    const equityStatus = results.equityChecklist.deadlineStatus;
-    if (equityStatus === "urgent" || equityStatus === "missed") {
-      items.push({
-        key: "action.83b",
-        title: `83(b): ${equityStatus === "missed" ? "deadline passed" : "deadline approaching"}`,
-        detail: results.equityChecklist.items[0] ?? "Review 83(b) timing with counsel.",
-      });
-    }
-
-    return items.slice(0, 5);
-  }, [results]);
-
-  const actionEvents = useMemo<CalendarEvent[]>(() => {
-    const events: CalendarEvent[] = [];
-
-    if (results.electionChecklist.status !== "not-applicable" && results.electionChecklist.deadlineDate) {
-      events.push({
-        date: results.electionChecklist.deadlineDate,
-        title: "S-Corp election: Form 2553 deadline",
-        description:
-          "Educational reminder: confirm deadline rules and signatures. Consider late-election relief if missed.",
-      });
-    }
-
-    // Baseline quarterly due dates; actual dates can shift for weekends/holidays.
-    const taxYear = Number((inputs.taxYearStartDate || "2026-01-01").slice(0, 4)) || 2026;
-    const dueDates = [
-      { date: `${taxYear}-04-15`, label: "Q1 estimated tax due" },
-      { date: `${taxYear}-06-15`, label: "Q2 estimated tax due" },
-      { date: `${taxYear}-09-15`, label: "Q3 estimated tax due" },
-      { date: `${taxYear + 1}-01-15`, label: "Q4 estimated tax due" },
-    ];
-    for (const d of dueDates) {
-      events.push({
-        date: d.date,
-        title: d.label,
-        description: "Educational reminder: verify IRS due dates and state deadlines.",
-      });
-    }
-
-    if (results.equityChecklist.deadlineStatus !== "not-applicable" && inputs.equityGrantType === "restricted_stock") {
-      const daysRemaining = Math.max(0, 30 - inputs.daysSinceGrant);
-      events.push({
-        date: "TBD",
-        title: "83(b) election deadline (approx)",
-        description: `Based on ${inputs.daysSinceGrant} days since grant, ~${daysRemaining} days remaining. Verify actual grant/exercise date.`,
-      });
-    }
-
-    return events;
-  }, [results, inputs]);
+  const { showSCorp, actionItems, actionEvents } = useActionPlan({ inputs, results });
 
   function downloadIcs(): void {
     const stampDate = new Date();
@@ -455,14 +367,10 @@ export function Calculator(): ReactElement {
             <div className="space-y-4">
               <LoadMyDataBanner
                 isLoaded={prefillLoaded}
-                hasData={hasPrefillData && hasMemoryRead && hasAccountsRead}
+                hasData={hasPrefillData}
                 isApplied={prefillApplied}
                 onApply={applyMyData}
-                description={
-                  hasPrefillData
-                    ? `We can prefill ${prefill.filledFields.length} fields from your profile + linked accounts.`
-                    : "Connect accounts and fill out your profile to unlock prefills."
-                }
+                description={prefillDescription}
               />
 
               <div className="grid gap-3 sm:grid-cols-2">
