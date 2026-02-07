@@ -3,6 +3,7 @@ import type {
   CalculatorInputs,
   CalculatorResults,
 } from "@/lib/calculators/founder-coverage-planner/types";
+import { nextBusinessDayDateOnlyUtc, type DateOnly, isDateOnly } from "./dateUtils";
 
 export type ActionItem = {
   title: string;
@@ -21,6 +22,47 @@ export type ActionPlan = {
   actionItems: ActionItem[];
   actionEvents: CalendarEvent[];
 };
+
+const STATES_WITH_NO_INCOME_TAX = new Set([
+  "AK",
+  "FL",
+  "NV",
+  "SD",
+  "TN",
+  "TX",
+  "WA",
+  "WY",
+]);
+
+function getFederalEstimatedTaxDueDates(taxYear: number): Array<{ date: DateOnly; label: string }> {
+  const q1 = nextBusinessDayDateOnlyUtc(`${taxYear}-04-15`);
+  const q2 = nextBusinessDayDateOnlyUtc(`${taxYear}-06-15`);
+  const q3 = nextBusinessDayDateOnlyUtc(`${taxYear}-09-15`);
+  const q4 = nextBusinessDayDateOnlyUtc(`${taxYear + 1}-01-15`);
+  return [
+    { date: q1, label: "Federal Q1 estimated tax due" },
+    { date: q2, label: "Federal Q2 estimated tax due" },
+    { date: q3, label: "Federal Q3 estimated tax due" },
+    { date: q4, label: "Federal Q4 estimated tax due" },
+  ];
+}
+
+function getStateEstimatedTaxDueDates(args: {
+  stateCode: string;
+  taxYear: number;
+}): Array<{ date: DateOnly; label: string }> {
+  const { stateCode, taxYear } = args;
+  const normalized = stateCode.trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(normalized)) return [];
+  if (STATES_WITH_NO_INCOME_TAX.has(normalized)) return [];
+
+  // Default assumption: many states align roughly with federal dates.
+  // We keep this educational and always advise to verify state rules.
+  return getFederalEstimatedTaxDueDates(taxYear).map((d) => ({
+    date: d.date,
+    label: `${normalized} estimated tax due (verify state rules)`,
+  }));
+}
 
 export function buildActionPlan(args: {
   inputs: CalculatorInputs;
@@ -65,6 +107,15 @@ export function buildActionPlan(args: {
     });
   }
 
+  if (inputs.mixedTransactionsPerMonth >= 4 && inputs.reimbursementPolicy !== "accountable") {
+    actionItems.push({
+      key: "action.reimbursementPolicy",
+      title: "Commingling: set a reimbursement policy",
+      detail:
+        "If you have personal-ish spending on business accounts, an accountable plan helps track reimbursements and keep the books clean.",
+    });
+  }
+
   if (results.sCorp.warnings.length > 0) {
     actionItems.push({
       key: "action.salary",
@@ -88,28 +139,33 @@ export function buildActionPlan(args: {
     results.electionChecklist.status !== "not-applicable" &&
     results.electionChecklist.deadlineDate
   ) {
+    const deadline = isDateOnly(results.electionChecklist.deadlineDate)
+      ? nextBusinessDayDateOnlyUtc(results.electionChecklist.deadlineDate)
+      : results.electionChecklist.deadlineDate;
     actionEvents.push({
-      date: results.electionChecklist.deadlineDate,
+      date: deadline,
       title: "S-Corp election: Form 2553 deadline",
       description:
         "Educational reminder: confirm deadline rules and signatures. Consider late-election relief if missed.",
     });
   }
 
-  // Baseline quarterly due dates; actual dates can shift for weekends/holidays.
+  // Baseline quarterly due dates adjusted for weekends and common federal holidays.
   const taxYear = Number((inputs.taxYearStartDate || "2026-01-01").slice(0, 4)) || 2026;
-  const dueDates = [
-    { date: `${taxYear}-04-15`, label: "Q1 estimated tax due" },
-    { date: `${taxYear}-06-15`, label: "Q2 estimated tax due" },
-    { date: `${taxYear}-09-15`, label: "Q3 estimated tax due" },
-    { date: `${taxYear + 1}-01-15`, label: "Q4 estimated tax due" },
-  ];
-
-  for (const due of dueDates) {
+  for (const due of getFederalEstimatedTaxDueDates(taxYear)) {
     actionEvents.push({
       date: due.date,
       title: due.label,
-      description: "Educational reminder: verify IRS due dates and state deadlines.",
+      description: "Educational reminder: verify IRS due dates and payment methods.",
+    });
+  }
+
+  const stateCode = inputs.stateCode;
+  for (const due of getStateEstimatedTaxDueDates({ stateCode, taxYear })) {
+    actionEvents.push({
+      date: due.date,
+      title: due.label,
+      description: `Educational reminder: verify ${stateCode.toUpperCase()} due dates and state-specific rules.`,
     });
   }
 
@@ -131,4 +187,3 @@ export function buildActionPlan(args: {
     actionEvents,
   };
 }
-
