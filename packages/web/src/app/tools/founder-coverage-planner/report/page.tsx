@@ -1,0 +1,290 @@
+"use client";
+
+import { useMemo, type ReactElement } from "react";
+import Link from "next/link";
+import { useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
+import { AppShell } from "@/components/shared/AppShell";
+import { buildActionPlan } from "@/lib/calculators/founder-coverage-planner/actionPlan";
+import { calculate } from "@/lib/calculators/founder-coverage-planner/calculations";
+import type { CalculatorInputs } from "@/lib/calculators/founder-coverage-planner/types";
+import { formatCurrency } from "@/lib/shared/formatters";
+import { useConsentStatus, useFinancialMemory } from "@/lib/strata/hooks";
+
+type SavedSnapshot = {
+  savedAt: string;
+  inputs: CalculatorInputs;
+};
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function escapeIcsText(text: string): string {
+  return text
+    .replace(/\\/g, "\\\\")
+    .replace(/\n/g, "\\n")
+    .replace(/,/g, "\\,")
+    .replace(/;/g, "\\;");
+}
+
+function readSavedSnapshot(memoryNotes: unknown): SavedSnapshot | null {
+  if (!isPlainObject(memoryNotes)) return null;
+  const founder = memoryNotes["founderCoveragePlanner"];
+  if (!isPlainObject(founder)) return null;
+
+  const savedAt = founder["savedAt"];
+  const inputs = founder["inputs"];
+  if (typeof savedAt !== "string") return null;
+  if (!isPlainObject(inputs)) return null;
+
+  return {
+    savedAt,
+    inputs: inputs as unknown as CalculatorInputs,
+  };
+}
+
+function toDemoQuery(searchParams: ReadonlyURLSearchParams): string {
+  const demo = searchParams.get("demo");
+  return demo === "true" ? "?demo=true" : "";
+}
+
+export default function FounderCoveragePlannerReportPage(): ReactElement {
+  const searchParams = useSearchParams();
+  const demoQuery = useMemo(() => toDemoQuery(searchParams), [searchParams]);
+
+  const { hasConsent: hasMemoryRead } = useConsentStatus(["memory:read"]);
+  const { data: memory, isSuccess: memoryLoaded } = useFinancialMemory({ enabled: hasMemoryRead });
+
+  const snapshot = useMemo(() => {
+    return readSavedSnapshot(memory?.notes ?? null);
+  }, [memory?.notes]);
+
+  const results = useMemo(() => {
+    if (!snapshot) return null;
+    return calculate(snapshot.inputs);
+  }, [snapshot]);
+
+  const actionPlan = useMemo(() => {
+    if (!snapshot || !results) return null;
+    return buildActionPlan({ inputs: snapshot.inputs, results });
+  }, [results, snapshot]);
+
+  const actionEvents = actionPlan?.actionEvents ?? [];
+  const actionItems = actionPlan?.actionItems ?? [];
+
+  function downloadIcs(): void {
+    const stampDate = new Date();
+    const dtstamp = stampDate
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace(/\.\d{3}Z$/, "Z");
+
+    const lines: string[] = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//ClearMoney//FounderCoveragePlanner//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+    ];
+
+    let uidCounter = 1;
+    for (const event of actionEvents) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(event.date)) continue;
+      const date = event.date.replaceAll("-", "");
+      lines.push("BEGIN:VEVENT");
+      lines.push(`UID:${dtstamp}-${uidCounter++}@clearmoney`);
+      lines.push(`DTSTAMP:${dtstamp}`);
+      lines.push(`DTSTART;VALUE=DATE:${date}`);
+      lines.push(`DTEND;VALUE=DATE:${date}`);
+      lines.push(`SUMMARY:${escapeIcsText(event.title)}`);
+      lines.push(`DESCRIPTION:${escapeIcsText(event.description)}`);
+      lines.push("END:VEVENT");
+    }
+
+    lines.push("END:VCALENDAR");
+
+    const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "clearmoney-founder-coverage-reminders.ics";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function printReport(): void {
+    window.print();
+  }
+
+  return (
+    <AppShell>
+      <div className="min-h-screen bg-neutral-950">
+        <section className="px-4 py-12 sm:py-16">
+          <div className="mx-auto max-w-4xl">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm uppercase tracking-[0.3em] text-sky-400 mb-2">
+                  Report view
+                </p>
+                <h1 className="text-3xl sm:text-4xl font-bold text-white">
+                  Founder Coverage
+                </h1>
+                <p className="mt-3 text-sm text-neutral-400">
+                  A read-only snapshot you can share, print, or review after you save.
+                </p>
+                {snapshot?.savedAt && (
+                  <p className="mt-2 text-xs text-neutral-500">
+                    Saved: {new Date(snapshot.savedAt).toLocaleString()}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Link
+                  href={`/tools/founder-coverage-planner${demoQuery}`}
+                  className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-semibold text-neutral-200 hover:border-neutral-600 transition-colors"
+                >
+                  Open planner
+                </Link>
+                <button
+                  type="button"
+                  onClick={printReport}
+                  className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-semibold text-neutral-200 hover:border-neutral-600 transition-colors"
+                >
+                  Print
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadIcs}
+                  disabled={!results}
+                  className="inline-flex items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-neutral-950 disabled:opacity-50"
+                >
+                  Download calendar (.ics)
+                </button>
+              </div>
+            </div>
+
+            {!hasMemoryRead && (
+              <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
+                <p className="text-sm font-semibold text-white">Connect your profile</p>
+                <p className="mt-2 text-sm text-neutral-400">
+                  This report view loads your most recently saved planner snapshot from your
+                  profile memory.
+                </p>
+                <p className="mt-3 text-xs text-neutral-500">
+                  Grant `memory:read` to see this report.
+                </p>
+              </div>
+            )}
+
+            {hasMemoryRead && !memoryLoaded && (
+              <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
+                <p className="text-sm text-neutral-200">Loading your saved snapshot…</p>
+              </div>
+            )}
+
+            {hasMemoryRead && memoryLoaded && !snapshot && (
+              <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
+                <p className="text-sm font-semibold text-white">No snapshot saved yet</p>
+                <p className="mt-2 text-sm text-neutral-400">
+                  Open the planner and click “Save snapshot to profile” to generate this
+                  report.
+                </p>
+                <div className="mt-4">
+                  <Link
+                    href={`/tools/founder-coverage-planner${demoQuery}`}
+                    className="inline-flex items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-neutral-950"
+                  >
+                    Open planner
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {snapshot && results && (
+              <div className="mt-10 space-y-8">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-5">
+                    <p className="text-xs text-neutral-400">Recommended entity</p>
+                    <p className="mt-1 text-lg font-semibold text-white capitalize">
+                      {results.entity.recommendedLegalEntity.replace("_", " ")}
+                    </p>
+                    <p className="mt-3 text-xs text-neutral-500">
+                      Tax election:{" "}
+                      {results.entity.recommendedTaxElection === "s_corp"
+                        ? "S-Corp election"
+                        : "None"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-5 md:col-span-2">
+                    <p className="text-xs text-neutral-400">Summary</p>
+                    <p className="mt-2 text-sm text-neutral-200">{results.entity.summary}</p>
+                    <ul className="mt-3 text-sm text-neutral-300 space-y-1">
+                      {results.entity.reasons.slice(0, 4).map((reason) => (
+                        <li key={reason}>• {reason}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold text-white">Action plan</h2>
+                      <p className="mt-1 text-sm text-neutral-400">
+                        Educational only. Confirm with your CPA and counsel.
+                      </p>
+                    </div>
+                  </div>
+
+                  {actionItems.length === 0 ? (
+                    <p className="mt-4 text-sm text-neutral-400">
+                      No urgent actions detected for this snapshot.
+                    </p>
+                  ) : (
+                    <ul className="mt-4 space-y-2 text-sm text-neutral-200">
+                      {actionItems.map((item) => (
+                        <li
+                          key={item.key}
+                          className="rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3"
+                        >
+                          <p className="font-semibold text-white">{item.title}</p>
+                          <p className="text-neutral-400">{item.detail}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                  <StatCard
+                    label="Safe-harbor target"
+                    value={formatCurrency(results.quarterlyTaxes.safeHarborTarget, 0)}
+                  />
+                  <StatCard
+                    label="Remaining due"
+                    value={formatCurrency(results.quarterlyTaxes.remainingNeeded, 0)}
+                  />
+                  <StatCard
+                    label="Per-quarter payment"
+                    value={formatCurrency(results.quarterlyTaxes.perQuarterAmount, 0)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    </AppShell>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }): ReactElement {
+  return (
+    <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-5">
+      <p className="text-xs text-neutral-400">{label}</p>
+      <p className="mt-1 text-lg font-semibold text-white">{value}</p>
+    </div>
+  );
+}

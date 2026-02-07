@@ -988,6 +988,7 @@ const RAW_TOOL_PRESETS: Omit<ToolPreset, "updated_at">[] = [
         "payrollAdminCosts": 3200,
         "statePayrollTaxRate": 2.5,
         "ssWageBase": 174000,
+        "stateCode": "CA",
         "filingStatus": "single",
         "priorYearTax": 52000,
         "projectedCurrentTax": 61000,

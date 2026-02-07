@@ -36,6 +36,60 @@ const TAX_ELECTION_LABELS: Record<TaxElection, string> = {
   s_corp: "S-Corp election (Form 2553)",
 };
 
+const STATE_CODES = [
+  "AL",
+  "AK",
+  "AZ",
+  "AR",
+  "CA",
+  "CO",
+  "CT",
+  "DE",
+  "DC",
+  "FL",
+  "GA",
+  "HI",
+  "ID",
+  "IL",
+  "IN",
+  "IA",
+  "KS",
+  "KY",
+  "LA",
+  "ME",
+  "MD",
+  "MA",
+  "MI",
+  "MN",
+  "MS",
+  "MO",
+  "MT",
+  "NE",
+  "NV",
+  "NH",
+  "NJ",
+  "NM",
+  "NY",
+  "NC",
+  "ND",
+  "OH",
+  "OK",
+  "OR",
+  "PA",
+  "RI",
+  "SC",
+  "SD",
+  "TN",
+  "TX",
+  "UT",
+  "VT",
+  "VA",
+  "WA",
+  "WV",
+  "WI",
+  "WY",
+] as const;
+
 const EQUITY_GRANT_TYPE_LABELS: Record<EquityGrantType, string> = {
   options: "Stock options (ISO/NSO)",
   restricted_stock: "Restricted stock / early exercise (83b)",
@@ -73,6 +127,14 @@ export function InputSection({ inputs, setInputs }: InputSectionProps): ReactEle
     setInputs((prev) => ({
       ...prev,
       filingStatus,
+    }));
+  }
+
+  function handleStateCodeChange(event: ChangeEvent<HTMLSelectElement>): void {
+    const stateCode = event.target.value;
+    setInputs((prev) => ({
+      ...prev,
+      stateCode,
     }));
   }
 
@@ -220,6 +282,26 @@ export function InputSection({ inputs, setInputs }: InputSectionProps): ReactEle
               <option value="single">Single</option>
               <option value="married">Married Filing Jointly</option>
             </select>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-neutral-200">
+              State
+            </label>
+            <select
+              className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white"
+              value={inputs.stateCode}
+              onChange={handleStateCodeChange}
+            >
+              {STATE_CODES.map((code) => (
+                <option key={code} value={code}>
+                  {code}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-neutral-500">
+              Used for context and (later) state-specific deadline guidance.
+            </p>
           </div>
 
           <SliderInput

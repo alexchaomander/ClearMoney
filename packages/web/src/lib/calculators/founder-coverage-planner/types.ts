@@ -17,6 +17,7 @@ export interface CalculatorInputs {
   payrollAdminCosts: number;
   statePayrollTaxRate: number;
   ssWageBase: number;
+  stateCode: string;
   filingStatus: FilingStatus;
   priorYearTax: number;
   projectedCurrentTax: number;

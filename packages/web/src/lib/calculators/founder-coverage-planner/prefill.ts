@@ -1,5 +1,10 @@
 import type { BankAccount, BankTransaction, FinancialMemory } from "@clearmoney/strata-sdk";
 import type { CalculatorInputs } from "./types";
+import {
+  INFLOW_CATEGORIES,
+  looksBusinessAccount,
+  PERSONALISH_CATEGORIES,
+} from "./bankingHeuristics";
 
 export type FounderPrefillResult = {
   defaults: Partial<CalculatorInputs>;
@@ -40,26 +45,89 @@ function mapFilingStatus(
   return null;
 }
 
-function looksBusinessAccount(
-  account: Pick<BankAccount, "name" | "institution_name">
-): boolean {
-  const hay = `${account.institution_name ?? ""} ${account.name}`.toLowerCase();
-  return (
-    hay.includes("business") ||
-    hay.includes("mercury") ||
-    hay.includes("brex") ||
-    hay.includes("relay") ||
-    hay.includes("novo")
-  );
+function mapStateCode(state: FinancialMemory["state"]): string | null {
+  if (!state) return null;
+  const normalized = state.trim().toUpperCase();
+  return /^[A-Z]{2}$/.test(normalized) ? normalized : null;
 }
 
-const PERSONALISH_CATEGORIES = new Set([
-  "FOOD_AND_DRINK",
-  "SHOPPING",
-  "ENTERTAINMENT",
-  "PERSONAL_CARE",
-  "TRANSPORTATION",
-]);
+type OutflowSign = "positive" | "negative";
+
+function determineOutflowSign(transactions: BankTransaction[]): OutflowSign | null {
+  let personalCount = 0;
+  let negativePersonal = 0;
+  let positivePersonal = 0;
+
+  for (const tx of transactions) {
+    if (!tx.primary_category) continue;
+    if (!PERSONALISH_CATEGORIES.has(tx.primary_category)) continue;
+    personalCount += 1;
+    if (tx.amount < 0) negativePersonal += 1;
+    if (tx.amount > 0) positivePersonal += 1;
+  }
+
+  if (personalCount < 5) return null;
+  if (negativePersonal / personalCount >= 0.6) return "negative";
+  if (positivePersonal / personalCount >= 0.6) return "positive";
+  return null;
+}
+
+function estimateAnnualNetIncomeFromBanking(args: {
+  bankAccounts: BankAccount[];
+  bankTransactions: BankTransaction[];
+  now: Date;
+}): number | null {
+  const { bankAccounts, bankTransactions, now } = args;
+  if (bankAccounts.length === 0 || bankTransactions.length === 0) return null;
+
+  const businessIds = new Set(
+    bankAccounts.filter(looksBusinessAccount).map((a) => a.id)
+  );
+  if (businessIds.size === 0) return null;
+
+  const businessTx = bankTransactions.filter((t) => businessIds.has(t.cash_account_id));
+  if (businessTx.length < 5) return null;
+
+  const outflowSign = determineOutflowSign(businessTx);
+
+  let inflow = 0;
+  let outflow = 0;
+  let earliest: string | null = null;
+
+  for (const tx of businessTx) {
+    // Track time range from the data we have.
+    if (!earliest || tx.transaction_date < earliest) earliest = tx.transaction_date;
+
+    const hasCategory = !!tx.primary_category;
+    const isInflowCategory = hasCategory && tx.primary_category ? INFLOW_CATEGORIES.has(tx.primary_category) : false;
+
+    if (outflowSign === "negative") {
+      if (tx.amount >= 0 || isInflowCategory) inflow += Math.abs(tx.amount);
+      else outflow += Math.abs(tx.amount);
+      continue;
+    }
+    if (outflowSign === "positive") {
+      // If amounts are positive for expenses (Plaid default), inflows may appear as negative.
+      if (tx.amount <= 0 || isInflowCategory) inflow += Math.abs(tx.amount);
+      else outflow += Math.abs(tx.amount);
+      continue;
+    }
+
+    // Unknown sign convention: only count explicit inflow categories.
+    if (isInflowCategory) inflow += Math.abs(tx.amount);
+  }
+
+  // Require some evidence of inflows; otherwise this isn't useful.
+  if (inflow <= 0) return null;
+
+  const start = earliest ? new Date(`${earliest}T00:00:00Z`) : null;
+  const days = start ? Math.max(7, Math.round((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))) : 30;
+  const annualized = (inflow - outflow) * (365 / days);
+
+  if (!Number.isFinite(annualized)) return null;
+  if (annualized < 20000) return null;
+  return Math.round(annualized);
+}
 
 function getSavedSnapshotInputs(
   memory: FinancialMemory | null | undefined
@@ -107,9 +175,29 @@ export function buildFounderPrefillFromData(args: FounderPrefillArgs): FounderPr
     filledFields.push("filingStatus");
   }
 
+  const stateCode = mapStateCode(memory?.state ?? null);
+  if (stateCode) {
+    sources.memory = true;
+    defaults.stateCode = stateCode;
+    filledFields.push("stateCode");
+  }
+
+  if (bankAccounts && bankTransactions) {
+    const estimated = estimateAnnualNetIncomeFromBanking({
+      bankAccounts,
+      bankTransactions,
+      now,
+    });
+    if (estimated != null) {
+      sources.accounts = true;
+      defaults.annualNetIncome = estimated;
+      filledFields.push("annualNetIncome");
+    }
+  }
+
   // As a weak fallback, use annual income as a proxy for net business income.
   // This is intentionally conservative and should be shown as editable.
-  if (memory?.annual_income != null && Number.isFinite(memory.annual_income)) {
+  if (defaults.annualNetIncome == null && memory?.annual_income != null && Number.isFinite(memory.annual_income)) {
     sources.memory = true;
     defaults.annualNetIncome = Math.round(memory.annual_income);
     filledFields.push("annualNetIncome");

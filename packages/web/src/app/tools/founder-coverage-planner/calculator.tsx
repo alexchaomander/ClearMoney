@@ -1,12 +1,22 @@
 "use client";
 
 import { useMemo, useState, type ReactElement } from "react";
+import Link from "next/link";
 import { AppShell, MethodologySection } from "@/components/shared/AppShell";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { formatCurrency } from "@/lib/shared/formatters";
 import { calculate } from "@/lib/calculators/founder-coverage-planner/calculations";
 import type { CalculatorInputs } from "@/lib/calculators/founder-coverage-planner/types";
 import { buildFounderPrefillFromData } from "@/lib/calculators/founder-coverage-planner/prefill";
+import {
+  INFLOW_CATEGORIES,
+  looksBusinessAccount,
+  PERSONALISH_CATEGORIES,
+} from "@/lib/calculators/founder-coverage-planner/bankingHeuristics";
+import {
+  FOUNDER_COVERAGE_CHECKLIST_STORAGE_KEY,
+  FOUNDER_COVERAGE_ONBOARDING_STORAGE_KEY,
+} from "@/lib/calculators/founder-coverage-planner/storage";
 import { useToolPreset } from "@/lib/strata/presets";
 import {
   useBankAccounts,
@@ -19,8 +29,6 @@ import {
 import { InputSection } from "./components/InputSection";
 import { useActionPlan } from "./useActionPlan";
 
-const CHECKLIST_STORAGE_KEY = "founderCoveragePlanner.checklist.v1";
-
 type Scenario = {
   id: string;
   label: string;
@@ -30,7 +38,7 @@ type Scenario = {
 function loadChecklistState(): Record<string, boolean> {
   if (typeof window === "undefined") return {};
   try {
-    const raw = window.localStorage.getItem(CHECKLIST_STORAGE_KEY);
+    const raw = window.localStorage.getItem(FOUNDER_COVERAGE_CHECKLIST_STORAGE_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as unknown;
     if (!parsed || typeof parsed !== "object") return {};
@@ -42,7 +50,10 @@ function loadChecklistState(): Record<string, boolean> {
 
 function persistChecklistState(state: Record<string, boolean>): void {
   try {
-    window.localStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify(state));
+    window.localStorage.setItem(
+      FOUNDER_COVERAGE_CHECKLIST_STORAGE_KEY,
+      JSON.stringify(state)
+    );
   } catch {
     // ignore
   }
@@ -50,7 +61,7 @@ function persistChecklistState(state: Record<string, boolean>): void {
 
 function clearChecklistState(): void {
   try {
-    window.localStorage.removeItem(CHECKLIST_STORAGE_KEY);
+    window.localStorage.removeItem(FOUNDER_COVERAGE_CHECKLIST_STORAGE_KEY);
   } catch {
     // ignore
   }
@@ -90,6 +101,7 @@ const DEFAULT_INPUTS: CalculatorInputs = {
   payrollAdminCosts: 2500,
   statePayrollTaxRate: 2.5,
   ssWageBase: 170000,
+  stateCode: "CA",
   filingStatus: "single",
   priorYearTax: 35000,
   projectedCurrentTax: 42000,
@@ -117,6 +129,26 @@ const DEFAULT_INPUTS: CalculatorInputs = {
   assetsAtIssuance: 12000000,
   expectedHoldingYears: 5,
 };
+
+function loadOnboardingInputs(): Partial<CalculatorInputs> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(FOUNDER_COVERAGE_ONBOARDING_STORAGE_KEY);
+    if (!raw) return null;
+    window.sessionStorage.removeItem(FOUNDER_COVERAGE_ONBOARDING_STORAGE_KEY);
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed as Partial<CalculatorInputs>;
+  } catch {
+    return null;
+  }
+}
+
+function loadInitialInputs(): CalculatorInputs {
+  const onboarding = loadOnboardingInputs();
+  if (!onboarding) return DEFAULT_INPUTS;
+  return { ...DEFAULT_INPUTS, ...onboarding };
+}
 
 const SCENARIOS: Scenario[] = [
   {
@@ -186,7 +218,7 @@ const METHODOLOGY_ITEMS = [
 ];
 
 export function Calculator(): ReactElement {
-  const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<CalculatorInputs>(() => loadInitialInputs());
   const [prefillApplied, setPrefillApplied] = useState(false);
   const [presetApplied, setPresetApplied] = useState(false);
   const [completed, setCompleted] = useState<Record<string, boolean>>(() =>
@@ -206,9 +238,15 @@ export function Calculator(): ReactElement {
 
   const now = useMemo(() => new Date(), []);
   const last30 = useMemo(() => buildLastNDaysRange(now, 30), [now]);
+  const last90 = useMemo(() => buildLastNDaysRange(now, 90), [now]);
 
   const { data: bankTxPage } = useBankTransactions(
     { start_date: last30.start, end_date: last30.end, page: 1, page_size: 100 },
+    { enabled: hasAccountsRead }
+  );
+
+  const { data: bankTx90Page } = useBankTransactions(
+    { start_date: last90.start, end_date: last90.end, page: 1, page_size: 250 },
     { enabled: hasAccountsRead }
   );
 
@@ -222,6 +260,59 @@ export function Calculator(): ReactElement {
       }),
     [memory, bankAccounts, bankTxPage, now]
   );
+
+  const comminglingInsight = useMemo(() => {
+    if (!bankAccounts || bankAccounts.length === 0) return null;
+    const tx = bankTx90Page?.transactions;
+    if (!tx || tx.length === 0) return null;
+
+    const businessAccounts = bankAccounts.filter(looksBusinessAccount);
+    if (businessAccounts.length === 0) return null;
+
+    const businessIds = new Set(businessAccounts.map((a) => a.id));
+    const eligible: typeof tx = [];
+    const commingling: typeof tx = [];
+
+    for (const t of tx) {
+      if (!businessIds.has(t.cash_account_id)) continue;
+      if (!t.primary_category) continue;
+      if (INFLOW_CATEGORIES.has(t.primary_category)) continue;
+      eligible.push(t);
+      if (PERSONALISH_CATEGORIES.has(t.primary_category)) commingling.push(t);
+    }
+
+    if (eligible.length < 10) return null;
+
+    const examples = new Map<
+      string,
+      { merchant: string; count: number; sample: string[] }
+    >();
+
+    for (const t of commingling) {
+      const merchant = (t.merchant_name ?? t.name ?? "Unknown").trim();
+      const key = merchant.toLowerCase();
+      const row = examples.get(key) ?? { merchant, count: 0, sample: [] };
+      row.count += 1;
+      if (row.sample.length < 2) {
+        row.sample.push(`${t.transaction_date}: ${t.name} (${formatCurrency(Math.abs(t.amount), 0)})`);
+      }
+      examples.set(key, row);
+    }
+
+    const top = [...examples.values()]
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
+
+    return {
+      startDate: last90.start,
+      endDate: last90.end,
+      businessAccountNames: businessAccounts.map((a) => a.name),
+      eligibleCount: eligible.length,
+      comminglingCount: commingling.length,
+      comminglingRate: commingling.length / eligible.length,
+      topExamples: top,
+    };
+  }, [bankAccounts, bankTx90Page?.transactions, last90.end, last90.start]);
 
   const hasPrefillData = prefill.hasRealData && prefill.filledFields.length > 0;
   const prefillLoaded =
@@ -294,6 +385,44 @@ export function Calculator(): ReactElement {
     URL.revokeObjectURL(url);
   }
 
+  function downloadSingleIcs(event: { date: string; title: string; description: string }): void {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(event.date)) return;
+
+    const stampDate = new Date();
+    const dtstamp = stampDate
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace(/\.\d{3}Z$/, "Z");
+
+    const date = event.date.replaceAll("-", "");
+    const lines: string[] = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//ClearMoney//FounderCoveragePlanner//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      "BEGIN:VEVENT",
+      `UID:${dtstamp}-single@clearmoney`,
+      `DTSTAMP:${dtstamp}`,
+      `DTSTART;VALUE=DATE:${date}`,
+      `DTEND;VALUE=DATE:${date}`,
+      `SUMMARY:${escapeIcsText(event.title)}`,
+      `DESCRIPTION:${escapeIcsText(event.description)}`,
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ];
+
+    const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `clearmoney-${event.date}-${event.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   function toggleCompleted(key: string): void {
     setCompleted((prev) => {
       const next = { ...prev, [key]: !prev[key] };
@@ -334,6 +463,7 @@ export function Calculator(): ReactElement {
         version: 1,
         savedAt: new Date().toISOString(),
         inputs,
+        checklist: completed,
       },
     };
 
@@ -359,6 +489,20 @@ export function Calculator(): ReactElement {
               Evaluate entity choice, S-Corp savings, payroll planning, and compliance
               checkpoints with a single founder workflow.
             </p>
+            <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+              <Link
+                href="/tools/founder-coverage-planner/start"
+                className="inline-flex items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-neutral-950 hover:bg-neutral-100 transition-colors"
+              >
+                Start 60-second setup
+              </Link>
+              <Link
+                href="/tools/founder-coverage-planner/report"
+                className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-semibold text-neutral-200 hover:border-neutral-600 transition-colors"
+              >
+                Open report view
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -479,6 +623,46 @@ export function Calculator(): ReactElement {
                     </li>
                   ))}
                 </ul>
+              )}
+
+              {actionEvents.filter((e) => /^\d{4}-\d{2}-\d{2}$/.test(e.date)).length > 0 && (
+                <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-4">
+                  <p className="text-xs uppercase tracking-wide text-neutral-400">
+                    Upcoming deadlines
+                  </p>
+                  <p className="mt-2 text-xs text-neutral-500">
+                    Dates are educational defaults; verify weekends/holidays and state rules.
+                  </p>
+                  <ul className="mt-4 space-y-2">
+                    {actionEvents
+                      .filter((e) => /^\d{4}-\d{2}-\d{2}$/.test(e.date))
+                      .slice()
+                      .sort((a, b) => a.date.localeCompare(b.date))
+                      .slice(0, 8)
+                      .map((event) => (
+                        <li
+                          key={`${event.date}:${event.title}`}
+                          className="flex flex-col gap-2 rounded-xl border border-neutral-800 bg-neutral-900/40 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-white">
+                              {event.title}
+                            </p>
+                            <p className="text-xs text-neutral-400">
+                              {event.date} · {event.description}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => downloadSingleIcs(event)}
+                            className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors"
+                          >
+                            Add to calendar
+                          </button>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
               )}
             </div>
 
@@ -736,6 +920,43 @@ export function Calculator(): ReactElement {
                   <li key={item}>• {item}</li>
                 ))}
               </ul>
+              {comminglingInsight && (
+                <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-4">
+                  <p className="text-xs uppercase tracking-wide text-neutral-400">
+                    Commingling signals (last 90 days)
+                  </p>
+                  <p className="mt-2 text-sm text-neutral-200">
+                    {Math.round(comminglingInsight.comminglingRate * 100)}% of eligible business-account
+                    transactions look personal ({comminglingInsight.comminglingCount} of{" "}
+                    {comminglingInsight.eligibleCount}).
+                  </p>
+                  <p className="mt-2 text-xs text-neutral-500">
+                    Accounts: {comminglingInsight.businessAccountNames.join(", ")}. Range:{" "}
+                    {comminglingInsight.startDate} to {comminglingInsight.endDate}.
+                  </p>
+                  {comminglingInsight.topExamples.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-xs text-neutral-400 mb-2">Examples</p>
+                      <ul className="text-sm text-neutral-300 space-y-2">
+                        {comminglingInsight.topExamples.map((ex) => (
+                          <li key={ex.merchant} className="rounded-xl border border-neutral-800 bg-neutral-900/40 px-3 py-2">
+                            <p className="text-neutral-100 font-semibold">
+                              {ex.merchant} <span className="text-neutral-500 font-normal">({ex.count}x)</span>
+                            </p>
+                            {ex.sample.length > 0 && (
+                              <ul className="mt-1 text-xs text-neutral-400 space-y-1">
+                                {ex.sample.map((s) => (
+                                  <li key={s}>• {s}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
               {results.cashflowAlerts.length > 0 && (
                 <div className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">
                   <p className="font-semibold mb-2">Commingling alerts</p>
