@@ -15,6 +15,7 @@ function baseInputs(overrides: Partial<CalculatorInputs> = {}): CalculatorInputs
     payrollAdminCosts: 2500,
     statePayrollTaxRate: 2.5,
     ssWageBase: 170000,
+    stateCode: "CA",
     filingStatus: "single",
     priorYearTax: 35000,
     projectedCurrentTax: 42000,
