@@ -444,6 +444,28 @@ This roadmap splits into two parallel tracks:
 
 ---
 
+### Founder Coverage Track (parallel, 6–18 months)
+
+**Platform**
+- Add business entity + tax election records (LLC/S-Corp/C-Corp).
+- Add owner compensation records (salary vs distributions).
+- Add compliance task engine (federal + state filings, payroll reports, 1099s).
+- Add founder equity records (issuance, vesting, 83(b), QSBS status).
+
+**ClearMoney**
+- Founder onboarding: entity selection + S-Corp election guidance.
+- S-Corp savings estimator + election checklist.
+- Quarterly estimated tax planner with safe-harbor guidance.
+- Founder payroll + distribution planner with reasonable-comp guardrails.
+- Compliance hub + document vault + reminders.
+- Founder equity planner (83(b) deadline, QSBS eligibility).
+- Business vs personal cashflow separation warnings.
+
+**Milestone**
+- End-to-end founder coverage: entity selection → payroll setup → tax planner → compliance reminders → equity tracking.
+
+---
+
 ### Phase D — Strata Flywheel (12–18 months)
 
 **Platform**

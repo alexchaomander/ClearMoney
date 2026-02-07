@@ -250,3 +250,59 @@ Acceptance criteria
 - Range math correct and stable for all inputs.
 - Summary text updates with horizon.
 
+
+--------------------------------------------------------------------------------
+
+PROMPT 5: S-Corp Savings Estimator
+
+Purpose and why this exists
+Founders often delay S-Corp elections because they don’t understand the tradeoffs or administrative burden. This mini-app estimates payroll tax savings vs pass-through self-employment tax and includes a compliance checklist so users can make an informed decision.
+
+User story
+"As a solo founder, I want to estimate the potential tax savings of an S-Corp election and understand the steps required to stay compliant."
+
+Scope
+- Deterministic estimate of payroll tax savings and net benefit after admin costs.
+- Display a compliance checklist and deadlines.
+- Educational tone, no advice, no external APIs.
+
+Routes and files
+- Page: src/app/taxes/s-corp-savings/page.tsx
+- Calculator: src/lib/calculators/s-corp-savings/calculations.ts
+- Update: src/lib/site-config.ts
+
+Inputs
+- Net business income ($)
+- Owner role (Operator / Investor)
+- Estimated market salary ($)
+- Payroll admin costs ($/year)
+- State payroll tax rate (%)
+- Filing status (Single / MFJ)
+
+Outputs
+- Recommended wage base (bounded by "reasonable compensation" input assumptions)
+- Estimated payroll taxes vs self-employment taxes
+- Estimated net savings
+- Compliance checklist + deadline reminder
+
+Logic (transparent + deterministic)
+- Assume pass-through self-employment tax applies to full net income (educational simplification).
+- S-Corp payroll taxes apply to wage base; distributions are not subject to payroll tax.
+- Net savings = (pass-through payroll tax estimate - S-Corp payroll tax estimate) - admin costs.
+- Provide range output if salary is below a market salary minimum (warn about reasonable comp risk).
+
+Compliance checklist (display list)
+- Form 2553 election
+- Run payroll and withhold taxes
+- File quarterly payroll reports
+- File 1120-S and issue K-1
+- Document reasonable compensation methodology
+
+Copy requirements
+- Educational tone.
+- Explicit note: "This is an estimate and not tax advice."
+- Include a reminder about the general election deadline (2 months + 15 days after tax year start).
+
+Acceptance criteria
+- Changing any input changes output deterministically.
+- Methodology explains assumptions and limitations clearly.
