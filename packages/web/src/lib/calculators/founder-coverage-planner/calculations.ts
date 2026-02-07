@@ -7,6 +7,7 @@ import type {
   ElectionChecklist,
   RetirementPlanRecommendation,
   SCorpSavingsEstimate,
+  QuarterlyTaxPlan,
 } from "./types";
 
 const SOCIAL_SECURITY_RATE = 0.124;
@@ -16,6 +17,22 @@ const ADDITIONAL_MEDICARE_THRESHOLD = {
   single: 200000,
   married: 250000,
 };
+
+// Magic Numbers Constants
+const SALARY_MIN_MULTIPLIER_OPERATOR = 0.6;
+const SALARY_MIN_MULTIPLIER_INVESTOR = 0.4;
+const SALARY_MAX_MULTIPLIER = 1.1;
+
+const HIGH_INCOME_THRESHOLD_SINGLE = 200000;
+const HIGH_INCOME_THRESHOLD_MARRIED = 250000;
+const SAFE_HARBOR_RATE_HIGH_INCOME = 1.1;
+const SAFE_HARBOR_RATE_STANDARD = 1.0;
+const PROJECTED_TAX_SAFE_HARBOR = 0.9;
+
+const QSBS_ASSET_LIMIT = 50000000;
+const QSBS_HOLDING_PERIOD_YEARS = 5;
+
+const DAYS_IN_MS = 1000 * 60 * 60 * 24;
 
 const COMPLIANCE_CHECKLIST = [
   "Form 2553 election (if choosing S-Corp status)",
@@ -41,10 +58,13 @@ const CASHFLOW_TIPS = [
   "Set aside tax reserves in a dedicated savings account.",
 ];
 
-export function calculate(inputs: CalculatorInputs): CalculatorResults {
+export function calculate(
+  inputs: CalculatorInputs,
+  referenceDate: Date = new Date()
+): CalculatorResults {
   const entity = buildEntityRecommendation(inputs);
   const sCorp = buildSCorpEstimate(inputs);
-  const electionChecklist = buildElectionChecklist(inputs);
+  const electionChecklist = buildElectionChecklist(inputs, referenceDate);
   const payrollPlan = {
     recommendedSalary: sCorp.recommendedSalary,
     payrollTax: sCorp.payrollTax,
@@ -106,8 +126,12 @@ function buildEntityRecommendation(inputs: CalculatorInputs): EntityRecommendati
 }
 
 function buildSCorpEstimate(inputs: CalculatorInputs): SCorpSavingsEstimate {
-  const minSalary = inputs.marketSalary * (inputs.ownerRole === "operator" ? 0.6 : 0.4);
-  const maxSalary = inputs.marketSalary * 1.1;
+  const minSalary =
+    inputs.marketSalary *
+    (inputs.ownerRole === "operator"
+      ? SALARY_MIN_MULTIPLIER_OPERATOR
+      : SALARY_MIN_MULTIPLIER_INVESTOR);
+  const maxSalary = inputs.marketSalary * SALARY_MAX_MULTIPLIER;
   const recommendedSalary = clamp(
     inputs.plannedSalary || inputs.marketSalary,
     minSalary,
@@ -201,7 +225,10 @@ function buildPayrollGuidance(
   return guidance;
 }
 
-function buildElectionChecklist(inputs: CalculatorInputs): ElectionChecklist {
+function buildElectionChecklist(
+  inputs: CalculatorInputs,
+  referenceDate: Date
+): ElectionChecklist {
   if (!inputs.usesSorpElection) {
     return {
       deadlineDate: "",
@@ -213,9 +240,9 @@ function buildElectionChecklist(inputs: CalculatorInputs): ElectionChecklist {
 
   const baseDate = new Date(inputs.taxYearStartDate || inputs.entityStartDate);
   const deadlineDate = addMonthsAndDays(baseDate, 2, 15);
-  const today = new Date();
+  // Use referenceDate instead of new Date()
   const daysRemaining = Math.ceil(
-    (deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    (deadlineDate.getTime() - referenceDate.getTime()) / DAYS_IN_MS
   );
 
   let status: ElectionChecklist["status"] = "on-track";
@@ -239,22 +266,30 @@ function buildElectionChecklist(inputs: CalculatorInputs): ElectionChecklist {
   };
 }
 
-function buildQuarterlyPlan(inputs: CalculatorInputs) {
+function buildQuarterlyPlan(inputs: CalculatorInputs): QuarterlyTaxPlan {
   const highIncomeThreshold =
-    inputs.filingStatus === "married" ? 250000 : 200000;
+    inputs.filingStatus === "married"
+      ? HIGH_INCOME_THRESHOLD_MARRIED
+      : HIGH_INCOME_THRESHOLD_SINGLE;
   const safeHarborRate =
-    inputs.annualNetIncome >= highIncomeThreshold ? 1.1 : 1.0;
+    inputs.annualNetIncome >= highIncomeThreshold
+      ? SAFE_HARBOR_RATE_HIGH_INCOME
+      : SAFE_HARBOR_RATE_STANDARD;
 
   const priorYearTarget = inputs.priorYearTax * safeHarborRate;
-  const currentYearTarget = inputs.projectedCurrentTax * 0.9;
+  const currentYearTarget = inputs.projectedCurrentTax * PROJECTED_TAX_SAFE_HARBOR;
 
   const usePriorYear = priorYearTarget >= currentYearTarget;
   const safeHarborTarget = usePriorYear ? priorYearTarget : currentYearTarget;
+  const safeHarborType: "prior-year" | "current-year" = usePriorYear
+    ? "prior-year"
+    : "current-year";
 
   const alreadyPaid = inputs.federalWithholding + inputs.estimatedPayments;
   const remainingNeeded = Math.max(0, safeHarborTarget - alreadyPaid);
   const quartersRemaining = 4 - inputs.currentQuarter + 1;
-  const perQuarterAmount = quartersRemaining > 0 ? remainingNeeded / quartersRemaining : 0;
+  const perQuarterAmount =
+    quartersRemaining > 0 ? remainingNeeded / quartersRemaining : 0;
 
   const notes = [
     usePriorYear
@@ -304,7 +339,8 @@ function buildRetirementPlan(
   return {
     recommendedPlan: "solo_401k",
     employeeDeferralLimit: LIMITS_2026.solo401kEmployee,
-    employerContributionLimit: LIMITS_2026.total415Limit - LIMITS_2026.solo401kEmployee,
+    employerContributionLimit:
+      LIMITS_2026.total415Limit - LIMITS_2026.solo401kEmployee,
     totalLimit: LIMITS_2026.total415Limit,
     notes: [
       "Solo 401(k) is available when there are no full-time employees.",
@@ -352,8 +388,8 @@ function buildEquityChecklist(inputs: CalculatorInputs): EquityChecklist {
   const qsbsEligible =
     inputs.entityType === "c_corp" &&
     inputs.isQualifiedBusiness &&
-    inputs.assetsAtIssuance <= 50000000 &&
-    inputs.expectedHoldingYears >= 5;
+    inputs.assetsAtIssuance <= QSBS_ASSET_LIMIT &&
+    inputs.expectedHoldingYears >= QSBS_HOLDING_PERIOD_YEARS;
 
   const qsbsStatus: EquityChecklist["qsbsStatus"] = qsbsEligible
     ? "likely"
