@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState, type ReactElement } from "react";
+import { useEffect, useMemo, useState, type ReactElement } from "react";
 import Link from "next/link";
 import { useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/shared/AppShell";
 import { buildActionPlan } from "@/lib/calculators/founder-coverage-planner/actionPlan";
 import { calculate } from "@/lib/calculators/founder-coverage-planner/calculations";
@@ -16,6 +16,7 @@ import {
 import type { CalculatorInputs } from "@/lib/calculators/founder-coverage-planner/types";
 import { formatCurrency } from "@/lib/shared/formatters";
 import { useStrataClient } from "@/lib/strata/client";
+import { useDemoMode } from "@/lib/strata/demo-context";
 import { useConsentStatus, useFinancialMemory } from "@/lib/strata/hooks";
 
 type MemorySnapshot = {
@@ -135,6 +136,32 @@ function buildReportUrl(args: {
   return url.toString();
 }
 
+const SHARE_TOKENS_STORAGE_KEY = "clearmoney-share-report-tokens.v1";
+
+type StoredShareTokens = Record<string, string>;
+
+function readStoredShareTokens(): StoredShareTokens {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(SHARE_TOKENS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return {};
+    return parsed as StoredShareTokens;
+  } catch {
+    return {};
+  }
+}
+
+function writeStoredShareTokens(tokens: StoredShareTokens): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(SHARE_TOKENS_STORAGE_KEY, JSON.stringify(tokens));
+  } catch {
+    // ignore
+  }
+}
+
 export default function FounderCoveragePlannerReportPage(): ReactElement {
   const searchParams = useSearchParams();
   const demoQuery = useMemo(() => toDemoQuery(searchParams), [searchParams]);
@@ -147,11 +174,19 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
   const isServerShare = !!(reportId && reportToken);
 
   const client = useStrataClient();
+  const queryClient = useQueryClient();
+  const isDemo = useDemoMode();
 
   const { hasConsent: hasMemoryRead } = useConsentStatus(["memory:read"]);
   const { data: memory, isSuccess: memoryLoaded } = useFinancialMemory({ enabled: hasMemoryRead });
   const [revoked, setRevoked] = useState(false);
   const [revokeBusy, setRevokeBusy] = useState(false);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [storedTokens, setStoredTokens] = useState<StoredShareTokens>({});
+
+  useEffect(() => {
+    setStoredTokens(readStoredShareTokens());
+  }, []);
 
   const serverShare = useQuery({
     queryKey: ["shareReport", reportId ?? "", reportToken ?? ""],
@@ -244,6 +279,14 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
 
   const activeSnapshot = snapshot ?? shareFullSnapshot;
 
+  const canManageShareLinks = isDemo || hasMemoryRead;
+  const shareReports = useQuery({
+    queryKey: ["shareReports", "founder-coverage-planner"],
+    queryFn: () => client.listShareReports({ toolId: "founder-coverage-planner", limit: 25 }),
+    enabled: canManageShareLinks,
+    staleTime: 15_000,
+  });
+
   const shareLink = useMemo(() => {
     if (typeof window === "undefined") return null;
 
@@ -326,8 +369,104 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
   }
 
   function copyShareLink(): void {
-    if (!shareLink) return;
-    void navigator.clipboard?.writeText(shareLink);
+    void copyServerShareLink("full");
+  }
+
+  async function copyRedactedShareLink(): Promise<void> {
+    await copyServerShareLink("redacted");
+  }
+
+  function rememberShareToken(reportId: string, token: string): void {
+    const next = { ...storedTokens, [reportId]: token };
+    setStoredTokens(next);
+    writeStoredShareTokens(next);
+  }
+
+  function buildFullSharePayload(active: MemorySnapshot): Record<string, unknown> {
+    return {
+      version: 2,
+      mode: "full",
+      savedAt: active.savedAt,
+      inputs: active.inputs,
+      checklist: active.checklist,
+    };
+  }
+
+  function buildRedactedSharePayload(active: MemorySnapshot): Record<string, unknown> {
+    const results = computed?.results;
+    const plan = computed?.plan;
+    const topMerchants = active.insights?.commingling90d?.topMerchants?.slice(0, 3) ?? [];
+    return {
+      version: 2,
+      mode: "redacted",
+      savedAt: active.savedAt,
+      inputs: {
+        legalEntityType: active.inputs.legalEntityType,
+        taxElection: active.inputs.taxElection,
+        fundingPlan: active.inputs.fundingPlan,
+        ownerRole: active.inputs.ownerRole,
+        stateCode: active.inputs.stateCode,
+        filingStatus: active.inputs.filingStatus,
+        payrollCadence: active.inputs.payrollCadence,
+        reimbursementPolicy: active.inputs.reimbursementPolicy,
+      },
+      checklist: active.checklist,
+      entity: results
+        ? {
+            recommendedLegalEntity: results.entity.recommendedLegalEntity,
+            recommendedTaxElection: results.entity.recommendedTaxElection,
+            summary: results.entity.summary,
+            reasons: results.entity.reasons,
+          }
+        : undefined,
+      actionItems: (plan?.actionItems ?? []).map((i) => ({
+        key: i.key,
+        title: i.title,
+        detail: stripCurrencyLikeText(i.detail),
+      })),
+      actionEvents: plan?.actionEvents ?? [],
+      commingling90d: active.insights?.commingling90d
+        ? {
+            rate: active.insights.commingling90d.rate,
+            comminglingCount: active.insights.commingling90d.comminglingCount,
+            eligibleCount: active.insights.commingling90d.eligibleCount,
+            topMerchants,
+          }
+        : undefined,
+    };
+  }
+
+  async function copyServerShareLink(mode: "full" | "redacted"): Promise<void> {
+    if (shareBusy) return;
+    setShareBusy(true);
+    try {
+      if (reportId && reportToken) {
+        const url = buildReportUrl({ demoQuery, rid: reportId, rt: reportToken });
+        await navigator.clipboard?.writeText(url);
+        return;
+      }
+
+      if (!activeSnapshot) throw new Error("No snapshot to share");
+
+      const payload = mode === "redacted" ? buildRedactedSharePayload(activeSnapshot) : buildFullSharePayload(activeSnapshot);
+      const created = await client.createShareReport({
+        tool_id: "founder-coverage-planner",
+        mode,
+        payload,
+        expires_in_days: 30,
+      });
+
+      rememberShareToken(created.id, created.token);
+      const url = buildReportUrl({ demoQuery, rid: created.id, rt: created.token });
+      await navigator.clipboard?.writeText(url);
+      await queryClient.invalidateQueries({ queryKey: ["shareReports", "founder-coverage-planner"] });
+    } catch {
+      if (shareLink) {
+        await navigator.clipboard?.writeText(shareLink);
+      }
+    } finally {
+      setShareBusy(false);
+    }
   }
 
   async function revokeLink(): Promise<void> {
@@ -341,6 +480,20 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
     } finally {
       setRevokeBusy(false);
     }
+  }
+
+  async function revokeShareReportById(id: string): Promise<void> {
+    try {
+      await client.revokeShareReport(id);
+      await queryClient.invalidateQueries({ queryKey: ["shareReports", "founder-coverage-planner"] });
+    } catch {
+      // ignore
+    }
+  }
+
+  function clearStoredTokens(): void {
+    setStoredTokens({});
+    writeStoredShareTokens({});
   }
 
   return (
@@ -382,10 +535,18 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                 <button
                   type="button"
                   onClick={copyShareLink}
-                  disabled={!shareLink}
+                  disabled={!shareLink && !activeSnapshot}
                   className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-semibold text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
                 >
-                  Copy share link
+                  {shareBusy ? "Sharing..." : "Copy share link"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void copyRedactedShareLink()}
+                  disabled={shareBusy || !computed || !activeSnapshot || !!compareSnapshots}
+                  className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-semibold text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
+                >
+                  Copy redacted link
                 </button>
                 {reportId && hasMemoryRead && (
                   <button
@@ -433,6 +594,111 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                     Redacted mode: currency-like values are removed.
                   </p>
                 )}
+              </div>
+            )}
+
+            {canManageShareLinks && (
+              <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-white">Share links</p>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      Create revocable links. Tokens are only shown at creation time; we store them locally on this device so you can reopen/copy later.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void copyServerShareLink("full")}
+                      disabled={shareBusy || !activeSnapshot || !!compareSnapshots}
+                      className="inline-flex items-center justify-center rounded-xl bg-white px-3 py-2 text-xs font-semibold text-neutral-950 disabled:opacity-50"
+                    >
+                      {shareBusy ? "Creating..." : "Create full link"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void copyServerShareLink("redacted")}
+                      disabled={shareBusy || !computed || !activeSnapshot || !!compareSnapshots}
+                      className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs font-semibold text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
+                    >
+                      Create redacted link
+                    </button>
+                    <button
+                      type="button"
+                      onClick={clearStoredTokens}
+                      className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs font-semibold text-neutral-200 hover:border-neutral-600 transition-colors"
+                    >
+                      Clear stored tokens
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  {shareReports.isLoading && (
+                    <p className="text-xs text-neutral-400">Loading share links…</p>
+                  )}
+                  {shareReports.isError && (
+                    <p className="text-xs text-neutral-400">Could not load share links.</p>
+                  )}
+                  {shareReports.data && shareReports.data.length === 0 && (
+                    <p className="text-xs text-neutral-400">No share links created yet.</p>
+                  )}
+
+                  {shareReports.data && shareReports.data.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {shareReports.data.slice(0, 10).map((r) => {
+                        const token = storedTokens[r.id];
+                        const url = token ? buildReportUrl({ demoQuery, rid: r.id, rt: token }) : null;
+                        return (
+                          <div key={r.id} className="flex flex-col gap-2 rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-white">
+                                {r.mode === "redacted" ? "Redacted" : "Full"} link
+                              </p>
+                              <p className="mt-1 text-xs text-neutral-500">
+                                Created: {new Date(r.created_at).toLocaleString()}
+                                {r.expires_at ? ` · Expires: ${new Date(r.expires_at).toLocaleString()}` : ""}
+                                {r.revoked_at ? " · Revoked" : ""}
+                              </p>
+                              {!token && (
+                                <p className="mt-1 text-[11px] text-neutral-600">
+                                  Token not available on this device (only returned at creation time).
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                disabled={!url}
+                                onClick={() => url && window.open(url, "_blank", "noreferrer")}
+                                className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs font-semibold text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
+                              >
+                                Open
+                              </button>
+                              <button
+                                type="button"
+                                disabled={!url}
+                                onClick={() => url && void navigator.clipboard?.writeText(url)}
+                                className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs font-semibold text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
+                              >
+                                Copy
+                              </button>
+                              {!r.revoked_at && (
+                                <button
+                                  type="button"
+                                  onClick={() => void revokeShareReportById(r.id)}
+                                  className="inline-flex items-center justify-center rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-100 hover:border-rose-500/70 transition-colors"
+                                >
+                                  Revoke
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

@@ -9,6 +9,9 @@ export type StateEstimatedTaxRule = {
   sources: string[]; // human-readable; not URLs
 };
 
+// As of 2026-02-08. (NH only taxes interest/dividends; excluded here.)
+const NO_STATE_INCOME_TAX_STATES = new Set(["AK", "FL", "NV", "SD", "TN", "TX", "WA", "WY"]);
+
 // Verified 2026-02-08 by checking state revenue sites. See sources strings.
 const RULES: Record<string, StateEstimatedTaxRule> = {
   CA: {
@@ -69,8 +72,12 @@ const RULES: Record<string, StateEstimatedTaxRule> = {
   },
 };
 
+export function isNoStateIncomeTaxState(stateCode: string): boolean {
+  const normalized = stateCode.trim().toUpperCase();
+  return NO_STATE_INCOME_TAX_STATES.has(normalized);
+}
+
 export function getStateEstimatedTaxRule(stateCode: string): StateEstimatedTaxRule | null {
   const normalized = stateCode.trim().toUpperCase();
   return RULES[normalized] ?? null;
 }
-

@@ -20,23 +20,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Add provider-linking columns to cash_accounts
-    op.add_column(
-        "cash_accounts",
-        sa.Column("connection_id", sa.Uuid(), nullable=True),
-    )
-    op.add_column(
-        "cash_accounts",
-        sa.Column("provider_account_id", sa.String(length=255), nullable=True),
-    )
-    op.add_column(
-        "cash_accounts",
-        sa.Column("available_balance", sa.Numeric(precision=14, scale=2), nullable=True),
-    )
-    op.add_column(
-        "cash_accounts",
-        sa.Column("mask", sa.String(length=10), nullable=True),
-    )
+    # Add provider-linking columns to cash_accounts.
+    op.add_column("cash_accounts", sa.Column("connection_id", sa.Uuid(), nullable=True))
+    op.add_column("cash_accounts", sa.Column("provider_account_id", sa.String(length=255), nullable=True))
+    op.add_column("cash_accounts", sa.Column("available_balance", sa.Numeric(precision=14, scale=2), nullable=True))
+    op.add_column("cash_accounts", sa.Column("mask", sa.String(length=10), nullable=True))
     op.add_column(
         "cash_accounts",
         sa.Column(
@@ -47,21 +35,27 @@ def upgrade() -> None:
         ),
     )
 
-    # Add foreign key constraint and index for connection_id
-    op.create_foreign_key(
-        "fk_cash_accounts_connection_id",
-        "cash_accounts",
-        "connections",
-        ["connection_id"],
-        ["id"],
-        ondelete="SET NULL",
-    )
-    op.create_index(
-        op.f("ix_cash_accounts_connection_id"),
-        "cash_accounts",
-        ["connection_id"],
-        unique=False,
-    )
+    # SQLite cannot add foreign keys via ALTER TABLE. Use batch mode when needed.
+    if op.get_context().dialect.name == "sqlite":
+        with op.batch_alter_table("cash_accounts", recreate="always") as batch_op:
+            batch_op.create_foreign_key(
+                "fk_cash_accounts_connection_id",
+                "connections",
+                ["connection_id"],
+                ["id"],
+                ondelete="SET NULL",
+            )
+    else:
+        op.create_foreign_key(
+            "fk_cash_accounts_connection_id",
+            "cash_accounts",
+            "connections",
+            ["connection_id"],
+            ["id"],
+            ondelete="SET NULL",
+        )
+
+    op.create_index(op.f("ix_cash_accounts_connection_id"), "cash_accounts", ["connection_id"], unique=False)
 
     # Create bank_transactions table
     op.create_table(
@@ -147,17 +141,19 @@ def downgrade() -> None:
     op.drop_table("bank_transactions")
 
     # Remove columns from cash_accounts
-    op.drop_index(
-        op.f("ix_cash_accounts_connection_id"),
-        table_name="cash_accounts",
-    )
-    op.drop_constraint(
-        "fk_cash_accounts_connection_id",
-        "cash_accounts",
-        type_="foreignkey",
-    )
-    op.drop_column("cash_accounts", "is_manual")
-    op.drop_column("cash_accounts", "mask")
-    op.drop_column("cash_accounts", "available_balance")
-    op.drop_column("cash_accounts", "provider_account_id")
-    op.drop_column("cash_accounts", "connection_id")
+    op.drop_index(op.f("ix_cash_accounts_connection_id"), table_name="cash_accounts")
+    if op.get_context().dialect.name == "sqlite":
+        with op.batch_alter_table("cash_accounts", recreate="always") as batch_op:
+            batch_op.drop_constraint("fk_cash_accounts_connection_id", type_="foreignkey")
+            batch_op.drop_column("is_manual")
+            batch_op.drop_column("mask")
+            batch_op.drop_column("available_balance")
+            batch_op.drop_column("provider_account_id")
+            batch_op.drop_column("connection_id")
+    else:
+        op.drop_constraint("fk_cash_accounts_connection_id", "cash_accounts", type_="foreignkey")
+        op.drop_column("cash_accounts", "is_manual")
+        op.drop_column("cash_accounts", "mask")
+        op.drop_column("cash_accounts", "available_balance")
+        op.drop_column("cash_accounts", "provider_account_id")
+        op.drop_column("cash_accounts", "connection_id")
