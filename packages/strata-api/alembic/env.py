@@ -27,6 +27,7 @@ from app.models import (  # noqa: E402, F401
     MemoryEvent,
     Recommendation,
     Security,
+    ShareReport,
     User,
 )
 from app.models.connection import Connection as ConnectionModel  # noqa: E402, F401

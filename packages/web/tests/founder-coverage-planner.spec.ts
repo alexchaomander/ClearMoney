@@ -39,7 +39,7 @@ test.describe("founder coverage planner", () => {
     await page.getByRole("button", { name: /apply preset/i }).click();
 
     const popupPromise = page.waitForEvent("popup");
-    await page.getByRole("link", { name: /open redacted report/i }).click();
+    await page.getByRole("button", { name: /open redacted report/i }).click();
     const popup = await popupPromise;
 
     await expect(popup.getByText(/shared report link/i)).toBeVisible();
