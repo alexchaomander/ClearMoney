@@ -62,5 +62,12 @@ describe("buildActionPlan state estimated tax events", () => {
     expect(plan.actionEvents.some((e) => /CA Q1 estimated tax due/i.test(e.title))).toBe(true);
     expect(plan.actionEvents.some((e) => /CA Q4 estimated tax due/i.test(e.title))).toBe(true);
   });
-});
 
+  test("VA uses May 1 for Q1 estimated tax due", () => {
+    const inputs = baseInputs({ stateCode: "VA", taxYearStartDate: "2026-01-01" });
+    const results = calculate(inputs);
+    const plan = buildActionPlan({ inputs, results });
+    const q1 = plan.actionEvents.find((e) => /VA Q1 estimated tax due/i.test(e.title));
+    expect(q1?.date).toBe("2026-05-01");
+  });
+});
