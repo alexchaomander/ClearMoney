@@ -16,6 +16,7 @@ from app.models.user import User
 from app.schemas.banking import (
     BankAccountResponse,
     BankTransactionResponse,
+    BankTransactionReimbursementUpdate,
     ConnectionResponse,
     PaginatedBankTransactions,
     PlaidCallbackRequest,
@@ -214,6 +215,35 @@ async def list_bank_transactions(
         page_size=page_size,
         total_pages=ceil(total / page_size) if total > 0 else 0,
     )
+
+
+@router.patch("/transactions/{transaction_id}", response_model=BankTransactionResponse)
+async def update_bank_transaction_reimbursement(
+    transaction_id: uuid.UUID,
+    data: BankTransactionReimbursementUpdate,
+    user: User = Depends(require_scopes(["accounts:write"])),
+    session: AsyncSession = Depends(get_async_session),
+) -> BankTransactionResponse:
+    """Annotate a bank transaction with reimbursement metadata."""
+    result = await session.execute(
+        select(BankTransaction)
+        .join(CashAccount)
+        .where(BankTransaction.id == transaction_id, CashAccount.user_id == user.id)
+    )
+    tx = result.scalar_one_or_none()
+    if not tx:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    if data.reimbursed:
+        tx.reimbursed_at = datetime.now(timezone.utc)
+        tx.reimbursement_memo = (data.memo or "").strip() or None
+    else:
+        tx.reimbursed_at = None
+        tx.reimbursement_memo = None
+
+    await session.commit()
+    await session.refresh(tx)
+    return BankTransactionResponse.model_validate(tx)
 
 
 @router.get("/spending-summary", response_model=SpendingSummaryResponse)

@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, JSON, String
+from sqlalchemy import DateTime, ForeignKey, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -28,3 +28,9 @@ class ShareReport(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Optional view limits (e.g. one-time links). If max_views is set, enforce view_count < max_views.
+    max_views: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    view_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    first_viewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_viewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -3,6 +3,7 @@ import type {
   BankAccount,
   BankTransaction,
   BankTransactionQuery,
+  BankTransactionReimbursementUpdate,
   CashAccount,
   CashAccountCreate,
   CashAccountUpdate,
@@ -84,6 +85,8 @@ function delay(ms: number): Promise<void> {
 }
 
 export class DemoStrataClient implements StrataClientInterface {
+  private static readonly BANK_TX_REIMBURSEMENTS_STORAGE_KEY = "clearmoney-demo-bank-tx-reimbursements.v1";
+
   setClerkUserId(_userId: string | null): void {
     // no-op in demo mode
   }
@@ -893,6 +896,7 @@ export class DemoStrataClient implements StrataClientInterface {
   async getBankTransactions(_params?: BankTransactionQuery): Promise<PaginatedBankTransactions> {
     await delay(300);
 
+    const reimbursements = this.loadBankTxReimbursements();
     const now = new Date();
     const createdAt = now.toISOString();
 
@@ -914,6 +918,7 @@ export class DemoStrataClient implements StrataClientInterface {
       paymentChannel: BankTransaction["payment_channel"];
     }): BankTransaction {
       const dateOnly = toDateOnly(args.daysAgo);
+      const reimbursement = reimbursements[args.id] ?? null;
       return {
         id: args.id,
         cash_account_id: args.cashAccountId,
@@ -928,6 +933,8 @@ export class DemoStrataClient implements StrataClientInterface {
         payment_channel: args.paymentChannel,
         pending: false,
         iso_currency_code: "USD",
+        reimbursed_at: reimbursement?.reimbursed_at ?? null,
+        reimbursement_memo: reimbursement?.reimbursement_memo ?? null,
         created_at: createdAt,
         updated_at: createdAt,
       };
@@ -1054,6 +1061,30 @@ export class DemoStrataClient implements StrataClientInterface {
     };
   }
 
+  async updateBankTransactionReimbursement(
+    transactionId: string,
+    data: BankTransactionReimbursementUpdate
+  ): Promise<BankTransaction> {
+    await delay(150);
+    const map = this.loadBankTxReimbursements();
+
+    if (data.reimbursed) {
+      map[transactionId] = {
+        reimbursed_at: new Date().toISOString(),
+        reimbursement_memo: (data.memo ?? "").trim() || null,
+      };
+    } else {
+      delete map[transactionId];
+    }
+
+    this.persistBankTxReimbursements(map);
+
+    const page = await this.getBankTransactions({ page: 1, page_size: 500 });
+    const tx = page.transactions.find((t) => t.id === transactionId);
+    if (!tx) throw new Error(`Transaction not found: ${transactionId}`);
+    return tx;
+  }
+
   async getSpendingSummary(_months?: number): Promise<SpendingSummary> {
     void _months;
     await delay(300);
@@ -1122,6 +1153,9 @@ export class DemoStrataClient implements StrataClientInterface {
       mode: data.mode,
       created_at: now,
       expires_at: null,
+      max_views: data.max_views ?? null,
+      view_count: 0,
+      last_viewed_at: null,
       payload: data.payload,
     };
     const store = this.loadShareReports();
@@ -1135,16 +1169,26 @@ export class DemoStrataClient implements StrataClientInterface {
       mode: data.mode,
       created_at: now,
       expires_at: null,
+      max_views: data.max_views ?? null,
     };
   }
 
   async getShareReport(reportId: string, token: string): Promise<ShareReportPublicResponse> {
     await delay(150);
-    const row = this.loadShareReports()[reportId];
+    const store = this.loadShareReports();
+    const row = store[reportId];
     if (!row || row.revoked || row.token !== token) {
       throw new Error("Share report not found");
     }
-    return row.report;
+    const report = row.report;
+    if (report.max_views != null && report.view_count >= report.max_views) {
+      throw new Error("Share report not found");
+    }
+    report.view_count += 1;
+    report.last_viewed_at = new Date().toISOString();
+    store[reportId] = { ...row, report };
+    this.persistShareReports(store);
+    return report;
   }
 
   async listShareReports(params?: { toolId?: string; limit?: number }): Promise<ShareReportListItem[]> {
@@ -1163,6 +1207,9 @@ export class DemoStrataClient implements StrataClientInterface {
         created_at: row.report.created_at,
         expires_at: row.report.expires_at,
         revoked_at: row.revoked ? new Date().toISOString() : null,
+        max_views: row.report.max_views ?? null,
+        view_count: row.report.view_count ?? 0,
+        last_viewed_at: row.report.last_viewed_at ?? null,
       });
     }
 
@@ -1179,5 +1226,60 @@ export class DemoStrataClient implements StrataClientInterface {
     store[reportId] = row;
     this.persistShareReports(store);
     return { status: "revoked" };
+  }
+
+  async rotateShareReport(
+    reportId: string,
+    _params?: { expiresInDays?: number | null }
+  ): Promise<ShareReportCreateResponse> {
+    void _params;
+    await delay(150);
+    const store = this.loadShareReports();
+    const row = store[reportId];
+    if (!row || row.revoked) throw new Error("Share report not found");
+
+    const token = crypto.randomUUID().replace(/-/g, "");
+    row.token = token;
+    row.report.view_count = 0;
+    row.report.last_viewed_at = null;
+    store[reportId] = row;
+    this.persistShareReports(store);
+
+    return {
+      id: reportId,
+      token,
+      tool_id: row.report.tool_id,
+      mode: row.report.mode,
+      created_at: row.report.created_at,
+      expires_at: row.report.expires_at,
+      max_views: row.report.max_views ?? null,
+    };
+  }
+
+  private loadBankTxReimbursements(): Record<
+    string,
+    { reimbursed_at: string; reimbursement_memo: string | null }
+  > {
+    if (typeof window === "undefined") return {};
+    try {
+      const raw = window.localStorage.getItem(DemoStrataClient.BANK_TX_REIMBURSEMENTS_STORAGE_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw) as unknown;
+      if (!parsed || typeof parsed !== "object") return {};
+      return parsed as Record<string, { reimbursed_at: string; reimbursement_memo: string | null }>;
+    } catch {
+      return {};
+    }
+  }
+
+  private persistBankTxReimbursements(
+    data: Record<string, { reimbursed_at: string; reimbursement_memo: string | null }>
+  ): void {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(DemoStrataClient.BANK_TX_REIMBURSEMENTS_STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      // ignore
+    }
   }
 }
