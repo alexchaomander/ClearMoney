@@ -31,6 +31,7 @@ import {
   useSpendingSummary,
   useUpdateMemory,
 } from "@/lib/strata/hooks";
+import { useStrataClient } from "@/lib/strata/client";
 import { InputSection } from "./components/InputSection";
 import { useActionPlan } from "./useActionPlan";
 
@@ -139,6 +140,8 @@ const DEFAULT_INPUTS: CalculatorInputs = {
   expectedHoldingYears: 5,
 };
 
+const REIMBURSEMENTS_STORAGE_KEY = "founderCoveragePlanner.reimbursements.v1";
+
 function loadOnboardingInputs(): Partial<CalculatorInputs> | null {
   if (typeof window === "undefined") return null;
   try {
@@ -150,6 +153,32 @@ function loadOnboardingInputs(): Partial<CalculatorInputs> | null {
     return parsed as Partial<CalculatorInputs>;
   } catch {
     return null;
+  }
+}
+
+type ReimbursementEntry = {
+  reimbursedAt: string; // ISO date-time
+  memo: string;
+};
+
+function loadReimbursements(): Record<string, ReimbursementEntry> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(REIMBURSEMENTS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return {};
+    return parsed as Record<string, ReimbursementEntry>;
+  } catch {
+    return {};
+  }
+}
+
+function persistReimbursements(value: Record<string, ReimbursementEntry>): void {
+  try {
+    window.localStorage.setItem(REIMBURSEMENTS_STORAGE_KEY, JSON.stringify(value));
+  } catch {
+    // ignore
   }
 }
 
@@ -227,10 +256,15 @@ const METHODOLOGY_ITEMS = [
 ];
 
 export function Calculator(): ReactElement {
+  const client = useStrataClient();
   const [inputs, setInputs] = useState<CalculatorInputs>(() => loadInitialInputs());
   const [prefillApplied, setPrefillApplied] = useState(false);
   const [presetApplied, setPresetApplied] = useState(false);
   const [lastPrefillSummary, setLastPrefillSummary] = useState<string | null>(null);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [reimbursements, setReimbursements] = useState<Record<string, ReimbursementEntry>>(() =>
+    loadReimbursements()
+  );
   const [completed, setCompleted] = useState<Record<string, boolean>>(() =>
     loadChecklistState()
   );
@@ -288,7 +322,9 @@ export function Calculator(): ReactElement {
       if (!t.primary_category) continue;
       if (INFLOW_CATEGORIES.has(t.primary_category)) continue;
       eligible.push(t);
-      if (PERSONALISH_CATEGORIES.has(t.primary_category)) commingling.push(t);
+      if (PERSONALISH_CATEGORIES.has(t.primary_category) && !reimbursements[t.id]) {
+        commingling.push(t);
+      }
     }
 
     if (eligible.length < 10) return null;
@@ -313,6 +349,19 @@ export function Calculator(): ReactElement {
       .sort((a, b) => b.count - a.count)
       .slice(0, 3);
 
+    const flagged = commingling
+      .slice()
+      .sort((a, b) => b.transaction_date.localeCompare(a.transaction_date))
+      .slice(0, 25)
+      .map((t) => ({
+        id: t.id,
+        transactionDate: t.transaction_date,
+        name: t.name,
+        merchantName: t.merchant_name ?? null,
+        amount: t.amount,
+        primaryCategory: t.primary_category ?? null,
+      }));
+
     return {
       startDate: last90.start,
       endDate: last90.end,
@@ -321,8 +370,9 @@ export function Calculator(): ReactElement {
       comminglingCount: commingling.length,
       comminglingRate: commingling.length / eligible.length,
       topExamples: top,
+      flaggedTransactions: flagged,
     };
-  }, [bankAccounts, bankTx90Page?.transactions, last90.end, last90.start]);
+  }, [bankAccounts, bankTx90Page?.transactions, last90.end, last90.start, reimbursements]);
 
   const comminglingTrend = useMemo(() => {
     const notes = memory?.notes;
@@ -503,6 +553,79 @@ export function Calculator(): ReactElement {
     });
   }
 
+  function toggleReimbursed(txId: string): void {
+    setReimbursements((prev) => {
+      const next = { ...prev };
+      if (next[txId]) {
+        delete next[txId];
+      } else {
+        next[txId] = { reimbursedAt: new Date().toISOString(), memo: "" };
+      }
+      persistReimbursements(next);
+      return next;
+    });
+  }
+
+  function updateReimbursementMemo(txId: string, memo: string): void {
+    setReimbursements((prev) => {
+      const row = prev[txId];
+      if (!row) return prev;
+      const next = { ...prev, [txId]: { ...row, memo } };
+      persistReimbursements(next);
+      return next;
+    });
+  }
+
+  function downloadReimbursementCsv(): void {
+    if (!comminglingInsight) return;
+    const rows = comminglingInsight.flaggedTransactions
+      .filter((t) => !!reimbursements[t.id])
+      .map((t) => ({
+        tx_id: t.id,
+        transaction_date: t.transactionDate,
+        merchant: t.merchantName ?? "",
+        description: t.name,
+        amount: t.amount,
+        primary_category: t.primaryCategory ?? "",
+        reimbursed_at: reimbursements[t.id]?.reimbursedAt ?? "",
+        memo: reimbursements[t.id]?.memo ?? "",
+      }));
+
+    const header = Object.keys(rows[0] ?? {
+      tx_id: "",
+      transaction_date: "",
+      merchant: "",
+      description: "",
+      amount: "",
+      primary_category: "",
+      reimbursed_at: "",
+      memo: "",
+    });
+
+    const lines = [header.join(",")];
+    for (const row of rows) {
+      lines.push(
+        header
+          .map((k) => {
+            const raw = String((row as any)[k] ?? "");
+            const escaped = raw.replace(/\"/g, "\"\"");
+            return `"${escaped}"`;
+          })
+          .join(",")
+      );
+    }
+
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "clearmoney-reimbursements.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   function resetChecklist(): void {
     setCompleted(() => {
       clearChecklistState();
@@ -561,6 +684,7 @@ export function Calculator(): ReactElement {
           comminglingCount: comminglingInsight.comminglingCount,
           eligibleCount: comminglingInsight.eligibleCount,
           topMerchants: comminglingInsight.topExamples.map((ex) => ex.merchant).slice(0, 5),
+          reimbursedTxCount: Object.keys(reimbursements).length,
         }
       : null;
 
@@ -591,7 +715,7 @@ export function Calculator(): ReactElement {
     });
   }
 
-  const shareLink = useMemo(() => {
+  const embeddedShareLink = useMemo(() => {
     if (typeof window === "undefined") return null;
     const payload = {
       version: 2 as const,
@@ -609,7 +733,7 @@ export function Calculator(): ReactElement {
     return url.toString();
   }, [completed, inputs]);
 
-  const redactedShareLink = useMemo(() => {
+  const embeddedRedactedShareLink = useMemo(() => {
     if (typeof window === "undefined") return null;
 
     const topMerchants =
@@ -677,14 +801,137 @@ export function Calculator(): ReactElement {
     results.entity.summary,
   ]);
 
-  function copyShareLink(): void {
-    if (!shareLink) return;
-    void navigator.clipboard?.writeText(shareLink);
+  function buildServerShareUrl(id: string, token: string): string | null {
+    if (typeof window === "undefined") return null;
+    const currentUrl = new URL(window.location.href);
+    const url = new URL(window.location.href);
+    url.pathname = "/tools/founder-coverage-planner/report";
+    url.search = "";
+    if (currentUrl.searchParams.get("demo") === "true") {
+      url.searchParams.set("demo", "true");
+    }
+    url.searchParams.set("rid", id);
+    url.searchParams.set("rt", token);
+    return url.toString();
   }
 
-  function copyRedactedLink(): void {
-    if (!redactedShareLink) return;
-    void navigator.clipboard?.writeText(redactedShareLink);
+  async function copyShareLink(): Promise<void> {
+    if (shareBusy) return;
+    setShareBusy(true);
+    try {
+      const payload = {
+        version: 2 as const,
+        mode: "full" as const,
+        savedAt: new Date().toISOString(),
+        inputs,
+        checklist: completed,
+      };
+      const created = await client.createShareReport({
+        tool_id: "founder-coverage-planner",
+        mode: "full",
+        payload: payload as unknown as Record<string, unknown>,
+        expires_in_days: 30,
+      });
+
+      const url = buildServerShareUrl(created.id, created.token);
+      if (url) await navigator.clipboard?.writeText(url);
+    } catch {
+      if (embeddedShareLink) {
+        await navigator.clipboard?.writeText(embeddedShareLink);
+      }
+    } finally {
+      setShareBusy(false);
+    }
+  }
+
+  function buildRedactedSharePayload(savedAt: string): Record<string, unknown> {
+    const topMerchants =
+      comminglingInsight?.topExamples.map((ex) => ex.merchant).slice(0, 3) ?? [];
+
+    return {
+      version: 2 as const,
+      mode: "redacted" as const,
+      savedAt,
+      inputs: {
+        legalEntityType: inputs.legalEntityType,
+        taxElection: inputs.taxElection,
+        fundingPlan: inputs.fundingPlan,
+        ownerRole: inputs.ownerRole,
+        stateCode: inputs.stateCode,
+        filingStatus: inputs.filingStatus,
+        payrollCadence: inputs.payrollCadence,
+        reimbursementPolicy: inputs.reimbursementPolicy,
+      },
+      checklist: completed,
+      entity: {
+        recommendedLegalEntity: results.entity.recommendedLegalEntity,
+        recommendedTaxElection: results.entity.recommendedTaxElection,
+        summary: results.entity.summary,
+        reasons: results.entity.reasons,
+      },
+      actionItems: redactedPlan.actionItems.map((i) => ({
+        key: i.key,
+        title: i.title,
+        detail: stripCurrencyLikeText(i.detail),
+      })),
+      actionEvents: redactedPlan.actionEvents,
+      commingling90d: comminglingInsight
+        ? {
+            rate: comminglingInsight.comminglingRate,
+            comminglingCount: comminglingInsight.comminglingCount,
+            eligibleCount: comminglingInsight.eligibleCount,
+            topMerchants,
+          }
+        : undefined,
+    };
+  }
+
+  async function copyRedactedLink(): Promise<void> {
+    if (shareBusy) return;
+    setShareBusy(true);
+    try {
+      const payload = buildRedactedSharePayload(new Date().toISOString());
+
+      const created = await client.createShareReport({
+        tool_id: "founder-coverage-planner",
+        mode: "redacted",
+        payload: payload as unknown as Record<string, unknown>,
+        expires_in_days: 30,
+      });
+
+      const url = buildServerShareUrl(created.id, created.token);
+      if (url) await navigator.clipboard?.writeText(url);
+    } catch {
+      if (embeddedRedactedShareLink) {
+        await navigator.clipboard?.writeText(embeddedRedactedShareLink);
+      }
+    } finally {
+      setShareBusy(false);
+    }
+  }
+
+  async function openRedactedReport(): Promise<void> {
+    if (shareBusy) return;
+    setShareBusy(true);
+    try {
+      const payload = buildRedactedSharePayload(new Date().toISOString());
+
+      const created = await client.createShareReport({
+        tool_id: "founder-coverage-planner",
+        mode: "redacted",
+        payload: payload as unknown as Record<string, unknown>,
+        expires_in_days: 30,
+      });
+
+      const url = buildServerShareUrl(created.id, created.token);
+      if (url) window.open(url, "_blank", "noreferrer");
+    } catch {
+      if (embeddedRedactedShareLink) {
+        window.open(embeddedRedactedShareLink, "_blank", "noreferrer");
+      }
+    } finally {
+      setShareBusy(false);
+    }
   }
 
   return (
@@ -781,34 +1028,34 @@ export function Calculator(): ReactElement {
                     </button>
                     <button
                       type="button"
-                      onClick={copyShareLink}
+                      onClick={() => void copyShareLink()}
+                      disabled={shareBusy}
                       className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors"
                     >
-                      Copy share link
+                      {shareBusy ? "Sharing..." : "Copy share link"}
                     </button>
                     <button
                       type="button"
-                      onClick={copyRedactedLink}
+                      onClick={() => void copyRedactedLink()}
+                      disabled={shareBusy}
                       className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors"
                     >
-                      Copy redacted link
+                      {shareBusy ? "Sharing..." : "Copy redacted link"}
                     </button>
-                    {redactedShareLink && (
-                      <a
-                        href={redactedShareLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="rounded-xl bg-emerald-300 px-3 py-2 text-xs font-semibold text-neutral-950"
-                      >
-                        Open redacted report
-                      </a>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => void openRedactedReport()}
+                      disabled={shareBusy}
+                      className="rounded-xl bg-emerald-300 px-3 py-2 text-xs font-semibold text-neutral-950 disabled:opacity-50"
+                    >
+                      {shareBusy ? "Sharing..." : "Open redacted report"}
+                    </button>
                   </div>
                   {bankContextLine && (
                     <p className="mt-3 text-xs text-neutral-500">{bankContextLine}</p>
                   )}
                   <p className="mt-3 text-xs text-neutral-500">
-                    Share links include your inputs in the URL. Treat them like sensitive data.
+                    Share links expire after 30 days by default. Redacted share links omit currency-like values.
                   </p>
                 </div>
               </div>
@@ -1258,6 +1505,79 @@ export function Calculator(): ReactElement {
                           </li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+
+                  {comminglingInsight.flaggedTransactions.length > 0 && (
+                    <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-neutral-400">
+                            Reimbursement ledger
+                          </p>
+                          <p className="mt-1 text-xs text-neutral-500">
+                            Mark reimbursed transactions to remove them from commingling signals, then export a CSV for bookkeeping.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={downloadReimbursementCsv}
+                          className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors"
+                        >
+                          Download CSV
+                        </button>
+                      </div>
+
+                      <div className="mt-4 space-y-2">
+                        {comminglingInsight.flaggedTransactions.map((t) => {
+                          const reimbursed = !!reimbursements[t.id];
+                          const merchant = t.merchantName ?? t.name;
+                          return (
+                            <div
+                              key={t.id}
+                              className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-3"
+                            >
+                              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                <div className="flex items-start gap-3">
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleReimbursed(t.id)}
+                                    className="mt-0.5 h-5 w-5 rounded border border-neutral-700 flex items-center justify-center"
+                                    aria-label="Toggle reimbursed"
+                                  >
+                                    {reimbursed && <span className="text-xs text-emerald-300">✓</span>}
+                                  </button>
+                                  <div>
+                                    <p className="text-sm font-semibold text-white">
+                                      {merchant}
+                                      <span className="ml-2 text-xs font-normal text-neutral-500">
+                                        {t.transactionDate}
+                                      </span>
+                                    </p>
+                                    <p className="mt-1 text-xs text-neutral-400">
+                                      {t.name} · {t.primaryCategory ?? "—"} · {formatCurrency(Math.abs(t.amount), 0)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="min-w-[220px]">
+                                  <input
+                                    className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-white disabled:opacity-50"
+                                    placeholder="Memo (optional)"
+                                    value={reimbursements[t.id]?.memo ?? ""}
+                                    onChange={(e) => updateReimbursementMemo(t.id, e.target.value)}
+                                    disabled={!reimbursed}
+                                  />
+                                  {reimbursed && (
+                                    <p className="mt-1 text-[10px] text-neutral-500">
+                                      Reimbursed at: {new Date(reimbursements[t.id]?.reimbursedAt ?? "").toLocaleString()}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>

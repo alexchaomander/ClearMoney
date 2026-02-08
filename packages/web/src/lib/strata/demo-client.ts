@@ -33,6 +33,10 @@ import type {
   CreditData,
   ProtectionData,
   ToolPresetBundle,
+  ShareReportCreateRequest,
+  ShareReportCreateResponse,
+  ShareReportListItem,
+  ShareReportPublicResponse,
   SkillDetail,
   SkillSummary,
   SpendingSummary,
@@ -1072,5 +1076,108 @@ export class DemoStrataClient implements StrataClientInterface {
       end_date: today.toISOString().split("T")[0],
       months_analyzed: 3,
     };
+  }
+
+  // === Share Reports ===
+
+  private static readonly SHARE_REPORTS_STORAGE_KEY = "clearmoney-demo-share-reports.v1";
+
+  private loadShareReports(): Record<
+    string,
+    { token: string; report: ShareReportPublicResponse; revoked: boolean }
+  > {
+    if (typeof window === "undefined") return {};
+    try {
+      // Use localStorage so share links work across tabs/windows in demo mode.
+      const raw = window.localStorage.getItem(DemoStrataClient.SHARE_REPORTS_STORAGE_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw) as unknown;
+      if (!parsed || typeof parsed !== "object") return {};
+      return parsed as Record<string, { token: string; report: ShareReportPublicResponse; revoked: boolean }>;
+    } catch {
+      return {};
+    }
+  }
+
+  private persistShareReports(data: Record<
+    string,
+    { token: string; report: ShareReportPublicResponse; revoked: boolean }
+  >): void {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(DemoStrataClient.SHARE_REPORTS_STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      // ignore
+    }
+  }
+
+  async createShareReport(data: ShareReportCreateRequest): Promise<ShareReportCreateResponse> {
+    await delay(150);
+    const id = crypto.randomUUID();
+    const token = crypto.randomUUID().replace(/-/g, "");
+    const now = new Date().toISOString();
+    const report: ShareReportPublicResponse = {
+      id,
+      tool_id: data.tool_id,
+      mode: data.mode,
+      created_at: now,
+      expires_at: null,
+      payload: data.payload,
+    };
+    const store = this.loadShareReports();
+    store[id] = { token, report, revoked: false };
+    this.persistShareReports(store);
+
+    return {
+      id,
+      token,
+      tool_id: data.tool_id,
+      mode: data.mode,
+      created_at: now,
+      expires_at: null,
+    };
+  }
+
+  async getShareReport(reportId: string, token: string): Promise<ShareReportPublicResponse> {
+    await delay(150);
+    const row = this.loadShareReports()[reportId];
+    if (!row || row.revoked || row.token !== token) {
+      throw new Error("Share report not found");
+    }
+    return row.report;
+  }
+
+  async listShareReports(params?: { toolId?: string; limit?: number }): Promise<ShareReportListItem[]> {
+    await delay(150);
+    const limit = params?.limit ?? 50;
+    const toolId = params?.toolId ?? null;
+    const rows: ShareReportListItem[] = [];
+
+    const store = this.loadShareReports();
+    for (const [id, row] of Object.entries(store)) {
+      if (toolId && row.report.tool_id !== toolId) continue;
+      rows.push({
+        id,
+        tool_id: row.report.tool_id,
+        mode: row.report.mode,
+        created_at: row.report.created_at,
+        expires_at: row.report.expires_at,
+        revoked_at: row.revoked ? new Date().toISOString() : null,
+      });
+    }
+
+    rows.sort((a, b) => b.created_at.localeCompare(a.created_at));
+    return rows.slice(0, limit);
+  }
+
+  async revokeShareReport(reportId: string): Promise<{ status: string }> {
+    await delay(150);
+    const store = this.loadShareReports();
+    const row = store[reportId];
+    if (!row) throw new Error("Share report not found");
+    row.revoked = true;
+    store[reportId] = row;
+    this.persistShareReports(store);
+    return { status: "revoked" };
   }
 }

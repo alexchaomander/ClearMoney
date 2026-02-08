@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, type ReactElement } from "react";
+import { useMemo, useState, type ReactElement } from "react";
 import Link from "next/link";
 import { useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/shared/AppShell";
 import { buildActionPlan } from "@/lib/calculators/founder-coverage-planner/actionPlan";
 import { calculate } from "@/lib/calculators/founder-coverage-planner/calculations";
@@ -14,6 +15,7 @@ import {
 } from "@/lib/calculators/founder-coverage-planner/snapshotShare";
 import type { CalculatorInputs } from "@/lib/calculators/founder-coverage-planner/types";
 import { formatCurrency } from "@/lib/shared/formatters";
+import { useStrataClient } from "@/lib/strata/client";
 import { useConsentStatus, useFinancialMemory } from "@/lib/strata/hooks";
 
 type MemorySnapshot = {
@@ -111,8 +113,16 @@ function toDemoQuery(searchParams: ReadonlyURLSearchParams): string {
   return demo === "true" ? "?demo=true" : "";
 }
 
-function buildReportUrl(args: { demoQuery: string; snapshot?: string; id?: string; a?: string; b?: string }): string {
-  const { demoQuery, snapshot, id, a, b } = args;
+function buildReportUrl(args: {
+  demoQuery: string;
+  snapshot?: string;
+  id?: string;
+  a?: string;
+  b?: string;
+  rid?: string;
+  rt?: string;
+}): string {
+  const { demoQuery, snapshot, id, a, b, rid, rt } = args;
   const url = new URL(window.location.href);
   url.pathname = "/tools/founder-coverage-planner/report";
   url.search = demoQuery || "";
@@ -120,6 +130,8 @@ function buildReportUrl(args: { demoQuery: string; snapshot?: string; id?: strin
   if (id) url.searchParams.set("id", id);
   if (a) url.searchParams.set("a", a);
   if (b) url.searchParams.set("b", b);
+  if (rid) url.searchParams.set("rid", rid);
+  if (rt) url.searchParams.set("rt", rt);
   return url.toString();
 }
 
@@ -130,20 +142,44 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
   const selectedId = searchParams.get("id");
   const compareA = searchParams.get("a");
   const compareB = searchParams.get("b");
+  const reportId = searchParams.get("rid");
+  const reportToken = searchParams.get("rt");
+  const isServerShare = !!(reportId && reportToken);
+
+  const client = useStrataClient();
 
   const { hasConsent: hasMemoryRead } = useConsentStatus(["memory:read"]);
   const { data: memory, isSuccess: memoryLoaded } = useFinancialMemory({ enabled: hasMemoryRead });
+  const [revoked, setRevoked] = useState(false);
+  const [revokeBusy, setRevokeBusy] = useState(false);
+
+  const serverShare = useQuery({
+    queryKey: ["shareReport", reportId ?? "", reportToken ?? ""],
+    queryFn: () => client.getShareReport(reportId!, reportToken!),
+    enabled: !!reportId && !!reportToken,
+    staleTime: 30_000,
+  });
 
   const memoryIndex = useMemo(() => {
     return readSnapshotIndex(memory?.notes ?? null);
   }, [memory?.notes]);
 
   const sharePayload = useMemo<FounderCoverageSharePayload | null>(() => {
+    if (serverShare.data?.payload) {
+      return serverShare.data.payload as unknown as FounderCoverageSharePayload;
+    }
     if (!encodedSnapshot) return null;
     return decodeFounderCoverageSharePayload(encodedSnapshot);
-  }, [encodedSnapshot]);
+  }, [encodedSnapshot, serverShare.data?.payload]);
 
-  const isRedactedShare = !!(sharePayload && (sharePayload as any).version === 2 && (sharePayload as any).mode === "redacted");
+  const isRedactedShare = useMemo(() => {
+    if (isServerShare && serverShare.data?.mode === "redacted") return true;
+    return !!(
+      sharePayload &&
+      (sharePayload as any).version === 2 &&
+      (sharePayload as any).mode === "redacted"
+    );
+  }, [isServerShare, serverShare.data?.mode, sharePayload]);
   const isShareMode = !!sharePayload;
 
   const shareFullSnapshot = useMemo<MemorySnapshot | null>(() => {
@@ -211,6 +247,10 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
   const shareLink = useMemo(() => {
     if (typeof window === "undefined") return null;
 
+    if (reportId && reportToken) {
+      return buildReportUrl({ demoQuery, rid: reportId, rt: reportToken });
+    }
+
     if (isShareMode) {
       return buildReportUrl({ demoQuery, snapshot: encodedSnapshot ?? undefined });
     }
@@ -225,7 +265,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
     };
     const encoded = encodeFounderCoverageSharePayload(payload);
     return buildReportUrl({ demoQuery, snapshot: encoded });
-  }, [demoQuery, encodedSnapshot, isShareMode, snapshot]);
+  }, [demoQuery, encodedSnapshot, isShareMode, reportId, reportToken, snapshot]);
 
   type DisplayActionEvent = { date: string; title: string; description: string };
   type DisplayActionItem = { key: string; title: string; detail: string };
@@ -290,6 +330,19 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
     void navigator.clipboard?.writeText(shareLink);
   }
 
+  async function revokeLink(): Promise<void> {
+    if (!reportId || revokeBusy) return;
+    setRevokeBusy(true);
+    try {
+      await client.revokeShareReport(reportId);
+      setRevoked(true);
+    } catch {
+      // ignore
+    } finally {
+      setRevokeBusy(false);
+    }
+  }
+
   return (
     <AppShell>
       <div className="min-h-screen bg-neutral-950">
@@ -334,6 +387,16 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                 >
                   Copy share link
                 </button>
+                {reportId && hasMemoryRead && (
+                  <button
+                    type="button"
+                    onClick={() => void revokeLink()}
+                    disabled={revokeBusy || revoked}
+                    className="inline-flex items-center justify-center rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-100 hover:border-rose-500/70 transition-colors disabled:opacity-50"
+                  >
+                    {revoked ? "Link revoked" : (revokeBusy ? "Revoking..." : "Revoke link")}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={downloadIcs}
@@ -359,6 +422,38 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
               </div>
             )}
 
+            {reportId && reportToken && (
+              <div className="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+                <p className="text-sm font-semibold text-amber-100">Shared report link</p>
+                <p className="mt-2 text-xs text-amber-200/80">
+                  This page is rendering from a server-backed share link. Treat shared links as sensitive.
+                </p>
+                {isRedactedShare && (
+                  <p className="mt-2 text-xs text-amber-200/80">
+                    Redacted mode: currency-like values are removed.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {reportId && reportToken && serverShare.isLoading && (
+              <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
+                <p className="text-sm font-semibold text-white">Loading shared report…</p>
+                <p className="mt-2 text-sm text-neutral-400">
+                  Fetching a server-backed share link.
+                </p>
+              </div>
+            )}
+
+            {reportId && reportToken && serverShare.isError && (
+              <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
+                <p className="text-sm font-semibold text-white">Shared report not found</p>
+                <p className="mt-2 text-sm text-neutral-400">
+                  This link may be expired or revoked.
+                </p>
+              </div>
+            )}
+
             {!hasMemoryRead && (
               <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
                 <p className="text-sm font-semibold text-white">Connect your profile</p>
@@ -378,7 +473,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
               </div>
             )}
 
-            {hasMemoryRead && memoryLoaded && !snapshot && !isShareMode && (
+            {hasMemoryRead && memoryLoaded && !snapshot && !isShareMode && !serverShare.isLoading && !serverShare.isError && (
               <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
                 <p className="text-sm font-semibold text-white">No snapshot saved yet</p>
                 <p className="mt-2 text-sm text-neutral-400">
@@ -465,6 +560,27 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                     right={computedCompare.planB.actionItems.find((i) => i.key === "action.estimatedTaxes")?.detail ?? "—"}
                   />
                 </div>
+
+                {renderInputDiffs(compareSnapshots.a.inputs, compareSnapshots.b.inputs).length > 0 && (
+                  <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
+                    <h3 className="text-sm font-semibold text-white">What changed</h3>
+                    <ul className="mt-4 space-y-2 text-sm text-neutral-200">
+                      {renderInputDiffs(compareSnapshots.a.inputs, compareSnapshots.b.inputs).map((d) => (
+                        <li key={d.label} className="rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3">
+                          <p className="text-xs text-neutral-400">{d.label}</p>
+                          <p className="mt-1 text-sm text-white">
+                            {d.left} → {d.right}
+                            {d.delta && (
+                              <span className="ml-2 text-xs text-neutral-500">
+                                ({d.delta})
+                              </span>
+                            )}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
 
@@ -626,4 +742,48 @@ function CompareCard(args: { title: string; left: string; right: string; helper?
       {helper && <p className="mt-2 text-xs text-neutral-500">{helper}</p>}
     </div>
   );
+}
+
+function formatDeltaNumber(next: number, prev: number): string {
+  const delta = next - prev;
+  if (!Number.isFinite(delta) || delta === 0) return "0";
+  const sign = delta > 0 ? "+" : "";
+  return `${sign}${delta.toLocaleString()}`;
+}
+
+function renderInputDiffs(a: CalculatorInputs, b: CalculatorInputs): Array<{ label: string; left: string; right: string; delta?: string }> {
+  const diffs: Array<{ label: string; left: string; right: string; delta?: string }> = [];
+
+  if (a.reimbursementPolicy !== b.reimbursementPolicy) {
+    diffs.push({ label: "Reimbursement policy", left: a.reimbursementPolicy, right: b.reimbursementPolicy });
+  }
+  if (a.mixedTransactionsPerMonth !== b.mixedTransactionsPerMonth) {
+    diffs.push({
+      label: "Mixed transactions / mo",
+      left: String(a.mixedTransactionsPerMonth),
+      right: String(b.mixedTransactionsPerMonth),
+      delta: formatDeltaNumber(b.mixedTransactionsPerMonth, a.mixedTransactionsPerMonth),
+    });
+  }
+  if (a.annualNetIncome !== b.annualNetIncome) {
+    diffs.push({
+      label: "Annual net income",
+      left: formatCurrency(a.annualNetIncome, 0),
+      right: formatCurrency(b.annualNetIncome, 0),
+      delta: stripCurrencyLikeText(formatDeltaNumber(b.annualNetIncome, a.annualNetIncome)),
+    });
+  }
+  if (a.plannedSalary !== b.plannedSalary) {
+    diffs.push({
+      label: "Planned salary",
+      left: formatCurrency(a.plannedSalary, 0),
+      right: formatCurrency(b.plannedSalary, 0),
+      delta: stripCurrencyLikeText(formatDeltaNumber(b.plannedSalary, a.plannedSalary)),
+    });
+  }
+  if (a.stateCode !== b.stateCode) {
+    diffs.push({ label: "State", left: a.stateCode, right: b.stateCode });
+  }
+
+  return diffs.slice(0, 8);
 }
