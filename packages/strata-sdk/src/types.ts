@@ -938,6 +938,8 @@ export interface BankTransaction {
   payment_channel: string | null;
   pending: boolean;
   iso_currency_code: string;
+  reimbursed_at: string | null;
+  reimbursement_memo: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -949,6 +951,11 @@ export interface BankTransactionQuery {
   category?: string;
   page?: number;
   page_size?: number;
+}
+
+export interface BankTransactionReimbursementUpdate {
+  reimbursed: boolean;
+  memo?: string | null;
 }
 
 export interface PaginatedBankTransactions {
@@ -984,6 +991,7 @@ export interface ShareReportCreateRequest {
   mode: ShareReportMode;
   payload: Record<string, unknown>;
   expires_in_days?: number | null;
+  max_views?: number | null;
 }
 
 export interface ShareReportCreateResponse {
@@ -993,6 +1001,7 @@ export interface ShareReportCreateResponse {
   mode: ShareReportMode;
   created_at: string;
   expires_at: string | null;
+  max_views: number | null;
 }
 
 export interface ShareReportPublicResponse {
@@ -1001,6 +1010,9 @@ export interface ShareReportPublicResponse {
   mode: ShareReportMode;
   created_at: string;
   expires_at: string | null;
+  max_views: number | null;
+  view_count: number;
+  last_viewed_at: string | null;
   payload: Record<string, unknown>;
 }
 
@@ -1011,4 +1023,7 @@ export interface ShareReportListItem {
   created_at: string;
   expires_at: string | null;
   revoked_at: string | null;
+  max_views: number | null;
+  view_count: number;
+  last_viewed_at: string | null;
 }

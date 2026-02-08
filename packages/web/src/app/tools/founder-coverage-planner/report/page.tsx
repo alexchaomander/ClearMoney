@@ -410,11 +410,11 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
   }
 
   function copyShareLink(): void {
-    void copyServerShareLink("full");
+    void copyServerShareLink({ mode: "full" });
   }
 
   async function copyRedactedShareLink(): Promise<void> {
-    await copyServerShareLink("redacted");
+    await copyServerShareLink({ mode: "redacted" });
   }
 
   function rememberShareToken(reportId: string, token: string): void {
@@ -477,7 +477,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
     };
   }
 
-  async function copyServerShareLink(mode: "full" | "redacted"): Promise<void> {
+  async function copyServerShareLink(args: { mode: "full" | "redacted"; maxViews?: number | null }): Promise<void> {
     if (shareBusy) return;
     setShareBusy(true);
     try {
@@ -489,12 +489,13 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
 
       if (!activeSnapshot) throw new Error("No snapshot to share");
 
-      const payload = mode === "redacted" ? buildRedactedSharePayload(activeSnapshot) : buildFullSharePayload(activeSnapshot);
+      const payload = args.mode === "redacted" ? buildRedactedSharePayload(activeSnapshot) : buildFullSharePayload(activeSnapshot);
       const created = await client.createShareReport({
         tool_id: "founder-coverage-planner",
-        mode,
+        mode: args.mode,
         payload,
         expires_in_days: 30,
+        max_views: args.maxViews ?? null,
       });
 
       rememberShareToken(created.id, created.token);
@@ -505,6 +506,20 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
       if (shareLink) {
         await navigator.clipboard?.writeText(shareLink);
       }
+    } finally {
+      setShareBusy(false);
+    }
+  }
+
+  async function rotateShareLink(reportId: string): Promise<void> {
+    if (shareBusy) return;
+    setShareBusy(true);
+    try {
+      const rotated = await client.rotateShareReport(reportId);
+      rememberShareToken(rotated.id, rotated.token);
+      await queryClient.invalidateQueries({ queryKey: ["shareReports", "founder-coverage-planner"] });
+    } catch {
+      // ignore
     } finally {
       setShareBusy(false);
     }
@@ -689,7 +704,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => void copyServerShareLink("full")}
+                      onClick={() => void copyServerShareLink({ mode: "full" })}
                       disabled={shareBusy || !activeSnapshot || !!compareSnapshots}
                       className="inline-flex items-center justify-center rounded-xl bg-white px-3 py-2 text-xs font-semibold text-neutral-950 disabled:opacity-50"
                     >
@@ -697,11 +712,19 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                     </button>
                     <button
                       type="button"
-                      onClick={() => void copyServerShareLink("redacted")}
+                      onClick={() => void copyServerShareLink({ mode: "redacted" })}
                       disabled={shareBusy || !computed || !activeSnapshot || !!compareSnapshots}
                       className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs font-semibold text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
                     >
                       Create redacted link
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void copyServerShareLink({ mode: "redacted", maxViews: 1 })}
+                      disabled={shareBusy || !computed || !activeSnapshot || !!compareSnapshots}
+                      className="inline-flex items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-100 hover:border-emerald-500/70 transition-colors disabled:opacity-50"
+                    >
+                      Create one-time (redacted)
                     </button>
                     <button
                       type="button"
@@ -738,6 +761,8 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                               <p className="mt-1 text-xs text-neutral-500">
                                 Created: {new Date(r.created_at).toLocaleString()}
                                 {r.expires_at ? ` · Expires: ${new Date(r.expires_at).toLocaleString()}` : ""}
+                                {r.max_views ? ` · Max views: ${r.max_views}` : ""}
+                                {r.view_count != null ? ` · Views: ${r.view_count}` : ""}
                                 {r.revoked_at ? " · Revoked" : ""}
                               </p>
                               {!token && (
@@ -770,6 +795,15 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                                   className="inline-flex items-center justify-center rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-100 hover:border-rose-500/70 transition-colors"
                                 >
                                   Revoke
+                                </button>
+                              )}
+                              {!r.revoked_at && token && (
+                                <button
+                                  type="button"
+                                  onClick={() => void rotateShareLink(r.id)}
+                                  className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs font-semibold text-neutral-200 hover:border-neutral-600 transition-colors"
+                                >
+                                  Rotate
                                 </button>
                               )}
                             </div>

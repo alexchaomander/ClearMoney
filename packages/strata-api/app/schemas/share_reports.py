@@ -15,6 +15,7 @@ class ShareReportCreateRequest(BaseModel):
     mode: ShareMode
     payload: dict[str, Any]
     expires_in_days: int | None = Field(default=30, ge=1, le=365)
+    max_views: int | None = Field(default=None, ge=1, le=1000)
 
 
 class ShareReportCreateResponse(BaseModel):
@@ -24,6 +25,7 @@ class ShareReportCreateResponse(BaseModel):
     mode: ShareMode
     created_at: datetime
     expires_at: datetime | None
+    max_views: int | None
 
     model_config = {"from_attributes": True}
 
@@ -34,6 +36,9 @@ class ShareReportPublicResponse(BaseModel):
     mode: ShareMode
     created_at: datetime
     expires_at: datetime | None
+    max_views: int | None
+    view_count: int
+    last_viewed_at: datetime | None
     payload: dict[str, Any]
 
 
@@ -44,6 +49,9 @@ class ShareReportListItem(BaseModel):
     created_at: datetime
     expires_at: datetime | None
     revoked_at: datetime | None
+    max_views: int | None
+    view_count: int
+    last_viewed_at: datetime | None
 
     model_config = {"from_attributes": True}
 
@@ -52,4 +60,3 @@ def compute_expires_at(expires_in_days: int | None) -> datetime | None:
     if not expires_in_days:
         return None
     return datetime.now(timezone.utc) + timedelta(days=expires_in_days)
-

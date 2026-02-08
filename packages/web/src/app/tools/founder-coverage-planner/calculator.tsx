@@ -32,6 +32,7 @@ import {
   useUpdateMemory,
 } from "@/lib/strata/hooks";
 import { useStrataClient } from "@/lib/strata/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InputSection } from "./components/InputSection";
 import { useActionPlan } from "./useActionPlan";
 
@@ -140,8 +141,6 @@ const DEFAULT_INPUTS: CalculatorInputs = {
   expectedHoldingYears: 5,
 };
 
-const REIMBURSEMENTS_STORAGE_KEY = "founderCoveragePlanner.reimbursements.v1";
-
 function loadOnboardingInputs(): Partial<CalculatorInputs> | null {
   if (typeof window === "undefined") return null;
   try {
@@ -156,31 +155,7 @@ function loadOnboardingInputs(): Partial<CalculatorInputs> | null {
   }
 }
 
-type ReimbursementEntry = {
-  reimbursedAt: string; // ISO date-time
-  memo: string;
-};
-
-function loadReimbursements(): Record<string, ReimbursementEntry> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = window.localStorage.getItem(REIMBURSEMENTS_STORAGE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object") return {};
-    return parsed as Record<string, ReimbursementEntry>;
-  } catch {
-    return {};
-  }
-}
-
-function persistReimbursements(value: Record<string, ReimbursementEntry>): void {
-  try {
-    window.localStorage.setItem(REIMBURSEMENTS_STORAGE_KEY, JSON.stringify(value));
-  } catch {
-    // ignore
-  }
-}
+type ReimbursedTxMeta = { reimbursedAt: string; memo: string };
 
 function loadInitialInputs(): CalculatorInputs {
   const onboarding = loadOnboardingInputs();
@@ -257,14 +232,13 @@ const METHODOLOGY_ITEMS = [
 
 export function Calculator(): ReactElement {
   const client = useStrataClient();
+  const queryClient = useQueryClient();
   const [inputs, setInputs] = useState<CalculatorInputs>(() => loadInitialInputs());
   const [prefillApplied, setPrefillApplied] = useState(false);
   const [presetApplied, setPresetApplied] = useState(false);
   const [lastPrefillSummary, setLastPrefillSummary] = useState<string | null>(null);
   const [shareBusy, setShareBusy] = useState(false);
-  const [reimbursements, setReimbursements] = useState<Record<string, ReimbursementEntry>>(() =>
-    loadReimbursements()
-  );
+  const [reimbursementMemos, setReimbursementMemos] = useState<Record<string, string>>({});
   const [completed, setCompleted] = useState<Record<string, boolean>>(() =>
     loadChecklistState()
   );
@@ -272,6 +246,7 @@ export function Calculator(): ReactElement {
   const { hasConsent: hasMemoryRead } = useConsentStatus(["memory:read"]);
   const { hasConsent: hasMemoryWrite } = useConsentStatus(["memory:read", "memory:write"]);
   const { hasConsent: hasAccountsRead } = useConsentStatus(["accounts:read"]);
+  const { hasConsent: hasAccountsWrite } = useConsentStatus(["accounts:write"]);
 
   const { data: memory, isSuccess: memoryLoaded } = useFinancialMemory({ enabled: hasMemoryRead });
   const updateMemory = useUpdateMemory();
@@ -305,6 +280,28 @@ export function Calculator(): ReactElement {
     [memory, bankAccounts, bankTxPage, now]
   );
 
+  const reimbursedTxById = useMemo<Record<string, ReimbursedTxMeta>>(() => {
+    const tx = bankTx90Page?.transactions ?? [];
+    const map: Record<string, ReimbursedTxMeta> = {};
+    for (const t of tx) {
+      if (!t.reimbursed_at) continue;
+      map[t.id] = { reimbursedAt: t.reimbursed_at, memo: t.reimbursement_memo ?? "" };
+    }
+    return map;
+  }, [bankTx90Page?.transactions]);
+
+  const updateReimbursement = useMutation({
+    mutationFn: (args: { transactionId: string; reimbursed: boolean; memo?: string | null }) => {
+      return client.updateBankTransactionReimbursement(args.transactionId, {
+        reimbursed: args.reimbursed,
+        memo: args.memo ?? null,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["banking", "transactions"] });
+    },
+  });
+
   const comminglingInsight = useMemo(() => {
     if (!bankAccounts || bankAccounts.length === 0) return null;
     const tx = bankTx90Page?.transactions;
@@ -322,7 +319,7 @@ export function Calculator(): ReactElement {
       if (!t.primary_category) continue;
       if (INFLOW_CATEGORIES.has(t.primary_category)) continue;
       eligible.push(t);
-      if (PERSONALISH_CATEGORIES.has(t.primary_category) && !reimbursements[t.id]) {
+      if (PERSONALISH_CATEGORIES.has(t.primary_category) && !t.reimbursed_at) {
         commingling.push(t);
       }
     }
@@ -360,6 +357,8 @@ export function Calculator(): ReactElement {
         merchantName: t.merchant_name ?? null,
         amount: t.amount,
         primaryCategory: t.primary_category ?? null,
+        reimbursedAt: t.reimbursed_at ?? null,
+        memo: t.reimbursement_memo ?? "",
       }));
 
     return {
@@ -372,7 +371,7 @@ export function Calculator(): ReactElement {
       topExamples: top,
       flaggedTransactions: flagged,
     };
-  }, [bankAccounts, bankTx90Page?.transactions, last90.end, last90.start, reimbursements]);
+  }, [bankAccounts, bankTx90Page?.transactions, last90.end, last90.start]);
 
   const comminglingTrend = useMemo(() => {
     const notes = memory?.notes;
@@ -554,32 +553,27 @@ export function Calculator(): ReactElement {
   }
 
   function toggleReimbursed(txId: string): void {
-    setReimbursements((prev) => {
-      const next = { ...prev };
-      if (next[txId]) {
-        delete next[txId];
-      } else {
-        next[txId] = { reimbursedAt: new Date().toISOString(), memo: "" };
-      }
-      persistReimbursements(next);
-      return next;
-    });
+    if (!hasAccountsWrite) return;
+    const reimbursed = !!reimbursedTxById[txId];
+    const memo = reimbursementMemos[txId] ?? reimbursedTxById[txId]?.memo ?? "";
+    updateReimbursement.mutate({ transactionId: txId, reimbursed: !reimbursed, memo });
   }
 
   function updateReimbursementMemo(txId: string, memo: string): void {
-    setReimbursements((prev) => {
-      const row = prev[txId];
-      if (!row) return prev;
-      const next = { ...prev, [txId]: { ...row, memo } };
-      persistReimbursements(next);
-      return next;
-    });
+    setReimbursementMemos((prev) => ({ ...prev, [txId]: memo }));
+  }
+
+  function commitReimbursementMemo(txId: string): void {
+    if (!hasAccountsWrite) return;
+    if (!reimbursedTxById[txId]) return;
+    const memo = reimbursementMemos[txId] ?? reimbursedTxById[txId]?.memo ?? "";
+    updateReimbursement.mutate({ transactionId: txId, reimbursed: true, memo });
   }
 
   function downloadReimbursementCsv(): void {
     if (!comminglingInsight) return;
     const rows = comminglingInsight.flaggedTransactions
-      .filter((t) => !!reimbursements[t.id])
+      .filter((t) => !!t.reimbursedAt)
       .map((t) => ({
         tx_id: t.id,
         transaction_date: t.transactionDate,
@@ -587,8 +581,8 @@ export function Calculator(): ReactElement {
         description: t.name,
         amount: t.amount,
         primary_category: t.primaryCategory ?? "",
-        reimbursed_at: reimbursements[t.id]?.reimbursedAt ?? "",
-        memo: reimbursements[t.id]?.memo ?? "",
+        reimbursed_at: t.reimbursedAt ?? "",
+        memo: t.memo ?? "",
       }));
 
     const header = Object.keys(rows[0] ?? {
@@ -684,7 +678,7 @@ export function Calculator(): ReactElement {
           comminglingCount: comminglingInsight.comminglingCount,
           eligibleCount: comminglingInsight.eligibleCount,
           topMerchants: comminglingInsight.topExamples.map((ex) => ex.merchant).slice(0, 5),
-          reimbursedTxCount: Object.keys(reimbursements).length,
+          reimbursedTxCount: Object.keys(reimbursedTxById).length,
         }
       : null;
 
@@ -1530,7 +1524,7 @@ export function Calculator(): ReactElement {
 
                       <div className="mt-4 space-y-2">
                         {comminglingInsight.flaggedTransactions.map((t) => {
-                          const reimbursed = !!reimbursements[t.id];
+                          const reimbursed = !!t.reimbursedAt;
                           const merchant = t.merchantName ?? t.name;
                           return (
                             <div
@@ -1542,7 +1536,8 @@ export function Calculator(): ReactElement {
                                   <button
                                     type="button"
                                     onClick={() => toggleReimbursed(t.id)}
-                                    className="mt-0.5 h-5 w-5 rounded border border-neutral-700 flex items-center justify-center"
+                                    disabled={!hasAccountsWrite}
+                                    className="mt-0.5 h-5 w-5 rounded border border-neutral-700 flex items-center justify-center disabled:opacity-50"
                                     aria-label="Toggle reimbursed"
                                   >
                                     {reimbursed && <span className="text-xs text-emerald-300">✓</span>}
@@ -1563,13 +1558,19 @@ export function Calculator(): ReactElement {
                                   <input
                                     className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-white disabled:opacity-50"
                                     placeholder="Memo (optional)"
-                                    value={reimbursements[t.id]?.memo ?? ""}
+                                    value={reimbursementMemos[t.id] ?? t.memo ?? ""}
                                     onChange={(e) => updateReimbursementMemo(t.id, e.target.value)}
-                                    disabled={!reimbursed}
+                                    onBlur={() => commitReimbursementMemo(t.id)}
+                                    disabled={!reimbursed || !hasAccountsWrite}
                                   />
                                   {reimbursed && (
                                     <p className="mt-1 text-[10px] text-neutral-500">
-                                      Reimbursed at: {new Date(reimbursements[t.id]?.reimbursedAt ?? "").toLocaleString()}
+                                      Reimbursed at: {new Date(t.reimbursedAt ?? "").toLocaleString()}
+                                    </p>
+                                  )}
+                                  {!hasAccountsWrite && (
+                                    <p className="mt-1 text-[10px] text-neutral-500">
+                                      Grant `accounts:write` to update reimbursements.
                                     </p>
                                   )}
                                 </div>
