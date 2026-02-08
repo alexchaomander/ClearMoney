@@ -5,7 +5,7 @@ import type {
 } from "@/lib/calculators/founder-coverage-planner/types";
 import { nextBusinessDayDateOnlyUtc, type DateOnly, isDateOnly } from "./dateUtils";
 import { stripCurrencyLikeText } from "./snapshotShare";
-import { getStateEstimatedTaxRule } from "./stateEstimatedTaxes";
+import { getStateEstimatedTaxRule, isNoStateIncomeTaxState } from "./stateEstimatedTaxes";
 
 export type ActionItem = {
   title: string;
@@ -24,17 +24,6 @@ export type ActionPlan = {
   actionItems: ActionItem[];
   actionEvents: CalendarEvent[];
 };
-
-const STATES_WITH_NO_INCOME_TAX = new Set([
-  "AK",
-  "FL",
-  "NV",
-  "SD",
-  "TN",
-  "TX",
-  "WA",
-  "WY",
-]);
 
 function getFederalEstimatedTaxDueDates(taxYear: number): Array<{ date: DateOnly; label: string }> {
   const q1 = nextBusinessDayDateOnlyUtc(`${taxYear}-04-15`);
@@ -56,7 +45,7 @@ function getStateEstimatedTaxDueDates(args: {
   const { stateCode, taxYear } = args;
   const normalized = stateCode.trim().toUpperCase();
   if (!/^[A-Z]{2}$/.test(normalized)) return [];
-  if (STATES_WITH_NO_INCOME_TAX.has(normalized)) return [];
+  if (isNoStateIncomeTaxState(normalized)) return [];
 
   const rule = getStateEstimatedTaxRule(normalized);
   if (rule) {
