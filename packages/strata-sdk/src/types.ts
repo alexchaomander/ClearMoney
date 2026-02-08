@@ -974,3 +974,41 @@ export interface SpendingSummary {
   end_date: string;
   months_analyzed: number;
 }
+
+// === Share Reports ===
+
+export type ShareReportMode = "full" | "redacted";
+
+export interface ShareReportCreateRequest {
+  tool_id: string;
+  mode: ShareReportMode;
+  payload: Record<string, unknown>;
+  expires_in_days?: number | null;
+}
+
+export interface ShareReportCreateResponse {
+  id: string;
+  token: string;
+  tool_id: string;
+  mode: ShareReportMode;
+  created_at: string;
+  expires_at: string | null;
+}
+
+export interface ShareReportPublicResponse {
+  id: string;
+  tool_id: string;
+  mode: ShareReportMode;
+  created_at: string;
+  expires_at: string | null;
+  payload: Record<string, unknown>;
+}
+
+export interface ShareReportListItem {
+  id: string;
+  tool_id: string;
+  mode: ShareReportMode;
+  created_at: string;
+  expires_at: string | null;
+  revoked_at: string | null;
+}

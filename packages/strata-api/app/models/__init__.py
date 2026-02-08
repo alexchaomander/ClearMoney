@@ -16,6 +16,7 @@ from app.models.investment_account import InvestmentAccount, InvestmentAccountTy
 from app.models.memory_event import MemoryEvent, MemoryEventSource
 from app.models.portfolio_snapshot import PortfolioSnapshot
 from app.models.security import Security, SecurityType
+from app.models.share_report import ShareReport
 from app.models.transaction import Transaction, TransactionType
 from app.models.user import User
 
@@ -57,6 +58,7 @@ __all__ = [
     "SessionStatus",
     "Security",
     "SecurityType",
+    "ShareReport",
     "Transaction",
     "TransactionType",
     "User",

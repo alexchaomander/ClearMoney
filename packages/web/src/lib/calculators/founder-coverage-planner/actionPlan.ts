@@ -5,6 +5,7 @@ import type {
 } from "@/lib/calculators/founder-coverage-planner/types";
 import { nextBusinessDayDateOnlyUtc, type DateOnly, isDateOnly } from "./dateUtils";
 import { stripCurrencyLikeText } from "./snapshotShare";
+import { getStateEstimatedTaxRule } from "./stateEstimatedTaxes";
 
 export type ActionItem = {
   title: string;
@@ -57,11 +58,15 @@ function getStateEstimatedTaxDueDates(args: {
   if (!/^[A-Z]{2}$/.test(normalized)) return [];
   if (STATES_WITH_NO_INCOME_TAX.has(normalized)) return [];
 
-  // Default assumption: many states align roughly with federal dates.
-  // We keep this educational and always advise to verify state rules.
+  const rule = getStateEstimatedTaxRule(normalized);
+  if (rule) {
+    return rule.dueDates(taxYear).map((d) => ({ date: d.date, label: d.label }));
+  }
+
+  // Fallback: show a generic state reminder aligned with federal dates.
   return getFederalEstimatedTaxDueDates(taxYear).map((d) => ({
     date: d.date,
-    label: `${normalized} estimated tax due (verify state rules)`,
+    label: `${normalized} estimated tax due`,
   }));
 }
 
@@ -169,7 +174,7 @@ export function buildActionPlan(args: {
     actionEvents.push({
       date: due.date,
       title: due.label,
-      description: `Educational reminder: verify ${stateCode.toUpperCase()} due dates and state-specific rules.`,
+      description: `Educational reminder: confirm ${stateCode.toUpperCase()} due dates and state-specific rules.`,
     });
   }
 
