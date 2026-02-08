@@ -63,10 +63,17 @@ class BankTransactionResponse(BaseModel):
     payment_channel: str | None
     pending: bool
     iso_currency_code: str
+    reimbursed_at: datetime | None
+    reimbursement_memo: str | None
     created_at: datetime
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class BankTransactionReimbursementUpdate(BaseModel):
+    reimbursed: bool
+    memo: str | None = None
 
 
 class PaginatedBankTransactions(BaseModel):

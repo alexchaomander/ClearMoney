@@ -46,6 +46,10 @@ async def create_share_report(
         payload=data.payload,
         expires_at=expires_at,
         revoked_at=None,
+        max_views=data.max_views,
+        view_count=0,
+        first_viewed_at=None,
+        last_viewed_at=None,
     )
     session.add(report)
     await session.commit()
@@ -58,6 +62,7 @@ async def create_share_report(
         mode=report.mode,  # type: ignore[arg-type]
         created_at=report.created_at,
         expires_at=report.expires_at,
+        max_views=report.max_views,
     )
 
 
@@ -67,18 +72,29 @@ async def get_share_report(
     token: str = Query(min_length=8, max_length=256),
     session: AsyncSession = Depends(get_async_session),
 ) -> ShareReportPublicResponse:
-    result = await session.execute(select(ShareReport).where(ShareReport.id == report_id))
-    report = result.scalar_one_or_none()
-    if not report:
-        raise HTTPException(status_code=404, detail="Share report not found")
+    now = datetime.now(timezone.utc)
 
-    if report.revoked_at is not None:
-        raise HTTPException(status_code=404, detail="Share report not found")
-    if report.expires_at is not None and report.expires_at <= datetime.now(timezone.utc):
-        raise HTTPException(status_code=404, detail="Share report not found")
+    async with session.begin():
+        result = await session.execute(select(ShareReport).where(ShareReport.id == report_id))
+        report = result.scalar_one_or_none()
+        if not report:
+            raise HTTPException(status_code=404, detail="Share report not found")
 
-    if _hash_token(token) != report.token_hash:
-        raise HTTPException(status_code=404, detail="Share report not found")
+        if report.revoked_at is not None:
+            raise HTTPException(status_code=404, detail="Share report not found")
+        if report.expires_at is not None and report.expires_at <= now:
+            raise HTTPException(status_code=404, detail="Share report not found")
+
+        if _hash_token(token) != report.token_hash:
+            raise HTTPException(status_code=404, detail="Share report not found")
+
+        if report.max_views is not None and report.view_count >= report.max_views:
+            raise HTTPException(status_code=404, detail="Share report not found")
+
+        report.view_count = (report.view_count or 0) + 1
+        if report.first_viewed_at is None:
+            report.first_viewed_at = now
+        report.last_viewed_at = now
 
     return ShareReportPublicResponse(
         id=report.id,
@@ -86,6 +102,9 @@ async def get_share_report(
         mode=report.mode,  # type: ignore[arg-type]
         created_at=report.created_at,
         expires_at=report.expires_at,
+        max_views=report.max_views,
+        view_count=report.view_count,
+        last_viewed_at=report.last_viewed_at,
         payload=report.payload,
     )
 
@@ -105,6 +124,50 @@ async def list_share_reports(
     result = await session.execute(stmt)
     rows = result.scalars().all()
     return [ShareReportListItem.model_validate(r) for r in rows]
+
+
+@router.post("/{report_id}/rotate", response_model=ShareReportCreateResponse)
+async def rotate_share_report_token(
+    report_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session),
+    expires_in_days: int | None = Query(default=None, ge=1, le=365),
+) -> ShareReportCreateResponse:
+    """Rotate the share token, invalidating prior links.
+
+    Returns a new token (shown once) while keeping the same report id.
+    """
+    token = secrets.token_urlsafe(24)
+    token_hash = _hash_token(token)
+
+    result = await session.execute(
+        select(ShareReport).where(ShareReport.id == report_id, ShareReport.user_id == user.id)
+    )
+    report = result.scalar_one_or_none()
+    if not report:
+        raise HTTPException(status_code=404, detail="Share report not found")
+
+    report.token_hash = token_hash
+    if expires_in_days is not None:
+        report.expires_at = compute_expires_at(expires_in_days)
+
+    # Rotation starts a fresh view counter for max-view links.
+    report.view_count = 0
+    report.first_viewed_at = None
+    report.last_viewed_at = None
+
+    await session.commit()
+    await session.refresh(report)
+
+    return ShareReportCreateResponse(
+        id=report.id,
+        token=token,
+        tool_id=report.tool_id,
+        mode=report.mode,  # type: ignore[arg-type]
+        created_at=report.created_at,
+        expires_at=report.expires_at,
+        max_views=report.max_views,
+    )
 
 
 @router.delete("/{report_id}")

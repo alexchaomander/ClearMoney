@@ -6,6 +6,7 @@ import type {
   BankAccount,
   BankTransaction,
   BankTransactionQuery,
+  BankTransactionReimbursementUpdate,
   CashAccount,
   CashAccountCreate,
   CashAccountUpdate,
@@ -132,10 +133,12 @@ export interface StrataClientInterface {
   getBankAccounts(): Promise<BankAccount[]>;
   getBankTransactions(params?: BankTransactionQuery): Promise<PaginatedBankTransactions>;
   getSpendingSummary(months?: number): Promise<SpendingSummary>;
+  updateBankTransactionReimbursement(transactionId: string, data: BankTransactionReimbursementUpdate): Promise<BankTransaction>;
   // Share Reports (public and owner)
   createShareReport(data: ShareReportCreateRequest): Promise<ShareReportCreateResponse>;
   getShareReport(reportId: string, token: string): Promise<ShareReportPublicResponse>;
   listShareReports(params?: { toolId?: string; limit?: number }): Promise<ShareReportListItem[]>;
+  rotateShareReport(reportId: string, params?: { expiresInDays?: number | null }): Promise<ShareReportCreateResponse>;
   revokeShareReport(reportId: string): Promise<{ status: string }>;
 }
 
@@ -677,6 +680,16 @@ export class StrataClient implements StrataClientInterface {
     );
   }
 
+  async updateBankTransactionReimbursement(
+    transactionId: string,
+    data: BankTransactionReimbursementUpdate
+  ): Promise<BankTransaction> {
+    return this.request<BankTransaction>(`/api/v1/banking/transactions/${transactionId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
   // === Share Reports ===
 
   async createShareReport(data: ShareReportCreateRequest): Promise<ShareReportCreateResponse> {
@@ -695,6 +708,13 @@ export class StrataClient implements StrataClientInterface {
   async listShareReports(params?: { toolId?: string; limit?: number }): Promise<ShareReportListItem[]> {
     return this.request<ShareReportListItem[]>(
       this.buildUrl('/api/v1/share-reports', { tool_id: params?.toolId, limit: params?.limit })
+    );
+  }
+
+  async rotateShareReport(reportId: string, params?: { expiresInDays?: number | null }): Promise<ShareReportCreateResponse> {
+    return this.request<ShareReportCreateResponse>(
+      this.buildUrl(`/api/v1/share-reports/${reportId}/rotate`, { expires_in_days: params?.expiresInDays ?? undefined }),
+      { method: 'POST' }
     );
   }
 
