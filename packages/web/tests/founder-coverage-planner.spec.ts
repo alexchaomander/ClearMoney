@@ -43,7 +43,9 @@ test.describe("founder coverage planner", () => {
     const popup = await popupPromise;
 
     await expect(popup.getByText(/shared report link/i)).toBeVisible();
-    await expect(popup.getByText(/redacted mode/i)).toBeVisible();
+    await expect(
+      popup.getByText(/redacted mode: currency-like values are removed/i)
+    ).toBeVisible();
     await expect(popup.getByText(/\$/)).toHaveCount(0);
   });
 });
