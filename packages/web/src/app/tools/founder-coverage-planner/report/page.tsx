@@ -8,6 +8,11 @@ import { AppShell } from "@/components/shared/AppShell";
 import { buildActionPlan } from "@/lib/calculators/founder-coverage-planner/actionPlan";
 import { calculate } from "@/lib/calculators/founder-coverage-planner/calculations";
 import {
+  getStateEstimatedTaxRule,
+  isNoStateIncomeTaxState,
+  type StateEstimatedTaxRule,
+} from "@/lib/calculators/founder-coverage-planner/stateEstimatedTaxes";
+import {
   decodeFounderCoverageSharePayload,
   encodeFounderCoverageSharePayload,
   type FounderCoverageSharePayload,
@@ -320,6 +325,42 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
   const actionItems: DisplayActionItem[] =
     computed?.plan.actionItems ??
     (isRedactedShare ? ((sharePayload as any).actionItems as DisplayActionItem[] | undefined) ?? [] : []);
+
+  type StateEstimatedTaxInfo =
+    | { kind: "mapped"; rule: StateEstimatedTaxRule }
+    | { kind: "fallback"; stateCode: string }
+    | { kind: "no_income_tax"; stateCode: string };
+
+  const stateEstimatedTaxInfo = useMemo<StateEstimatedTaxInfo | null>(() => {
+    const stateCodeCandidate =
+      activeSnapshot?.inputs.stateCode ??
+      (isRedactedShare ? String((sharePayload as any)?.inputs?.stateCode ?? "") : "");
+
+    const normalized = stateCodeCandidate.trim().toUpperCase();
+    if (!/^[A-Z]{2}$/.test(normalized)) return null;
+
+    if (isNoStateIncomeTaxState(normalized)) {
+      return { kind: "no_income_tax", stateCode: normalized };
+    }
+
+    const rule = getStateEstimatedTaxRule(normalized);
+    if (rule) {
+      return { kind: "mapped", rule };
+    }
+
+    return { kind: "fallback", stateCode: normalized };
+  }, [activeSnapshot?.inputs.stateCode, isRedactedShare, sharePayload]);
+
+  const sortedEvents = useMemo(() => {
+    const scored = actionEvents.map((event) => {
+      const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(event.date);
+      const score = isDateOnly ? Date.parse(`${event.date}T00:00:00Z`) : Number.POSITIVE_INFINITY;
+      return { event, score };
+    });
+
+    scored.sort((a, b) => a.score - b.score);
+    return scored.map((row) => row.event);
+  }, [actionEvents]);
   const savedAt = isShareMode ? sharePayload?.savedAt ?? null : snapshot?.savedAt ?? null;
 
   function downloadIcs(): void {
@@ -494,6 +535,45 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
   function clearStoredTokens(): void {
     setStoredTokens({});
     writeStoredShareTokens({});
+  }
+
+  function renderStateEstimatedTaxScheduleHint(): ReactElement | null {
+    if (!stateEstimatedTaxInfo) return null;
+
+    if (stateEstimatedTaxInfo.kind === "mapped") {
+      return (
+        <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3">
+          <p className="text-xs font-semibold text-white">State estimated tax schedule</p>
+          <p className="mt-1 text-xs text-neutral-400">
+            {stateEstimatedTaxInfo.rule.label} ({stateEstimatedTaxInfo.rule.stateCode}) last verified{" "}
+            {stateEstimatedTaxInfo.rule.lastVerified}.
+          </p>
+          <p className="mt-2 text-[11px] text-neutral-500">
+            Sources: {stateEstimatedTaxInfo.rule.sources.join(" ")}
+          </p>
+        </div>
+      );
+    }
+
+    if (stateEstimatedTaxInfo.kind === "fallback") {
+      return (
+        <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3">
+          <p className="text-xs font-semibold text-white">State estimated tax schedule</p>
+          <p className="mt-1 text-xs text-neutral-400">
+            {stateEstimatedTaxInfo.stateCode} is not mapped yet; state reminders align to the federal due dates.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3">
+        <p className="text-xs font-semibold text-white">State estimated tax schedule</p>
+        <p className="mt-1 text-xs text-neutral-400">
+          No state estimated income tax reminders for {stateEstimatedTaxInfo.stateCode} (as modeled).
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -900,6 +980,23 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                     ))}
                   </ul>
                 </div>
+
+                <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
+                  <h2 className="text-lg font-semibold text-white">Calendar reminders</h2>
+                  <p className="mt-1 text-sm text-neutral-400">
+                    These events are included in the shared snapshot. Calendar export is disabled in redacted mode.
+                  </p>
+                  <ul className="mt-4 space-y-2 text-sm text-neutral-200">
+                    {sortedEvents.slice(0, 10).map((event) => (
+                      <li key={`${event.date}-${event.title}`} className="rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3">
+                        <p className="text-xs text-neutral-400">{event.date}</p>
+                        <p className="mt-1 text-sm font-semibold text-white">{event.title}</p>
+                        <p className="mt-1 text-xs text-neutral-400">{event.description}</p>
+                      </li>
+                    ))}
+                  </ul>
+                  {renderStateEstimatedTaxScheduleHint()}
+                </div>
               </div>
             )}
 
@@ -956,6 +1053,23 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                       ))}
                     </ul>
                   )}
+                </div>
+
+                <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
+                  <h2 className="text-lg font-semibold text-white">Calendar reminders</h2>
+                  <p className="mt-1 text-sm text-neutral-400">
+                    Download an .ics file with these reminders using the button at the top of this page.
+                  </p>
+                  <ul className="mt-4 space-y-2 text-sm text-neutral-200">
+                    {sortedEvents.slice(0, 10).map((event) => (
+                      <li key={`${event.date}-${event.title}`} className="rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3">
+                        <p className="text-xs text-neutral-400">{event.date}</p>
+                        <p className="mt-1 text-sm font-semibold text-white">{event.title}</p>
+                        <p className="mt-1 text-xs text-neutral-400">{event.description}</p>
+                      </li>
+                    ))}
+                  </ul>
+                  {renderStateEstimatedTaxScheduleHint()}
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
