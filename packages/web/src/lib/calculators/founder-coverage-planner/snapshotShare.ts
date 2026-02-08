@@ -1,11 +1,55 @@
 import type { CalculatorInputs } from "@/lib/calculators/founder-coverage-planner/types";
 
-export type FounderCoverageSnapshotPayload = {
+export type FounderCoverageSnapshotPayloadV1 = {
   version: 1;
   savedAt: string;
   inputs: CalculatorInputs;
   checklist?: Record<string, boolean>;
 };
+
+type RedactedInputs = Pick<
+  CalculatorInputs,
+  | "legalEntityType"
+  | "taxElection"
+  | "fundingPlan"
+  | "ownerRole"
+  | "stateCode"
+  | "filingStatus"
+  | "payrollCadence"
+  | "reimbursementPolicy"
+>;
+
+export type FounderCoverageSharePayloadV2 =
+  | {
+      version: 2;
+      mode: "full";
+      savedAt: string;
+      inputs: CalculatorInputs;
+      checklist?: Record<string, boolean>;
+    }
+  | {
+      version: 2;
+      mode: "redacted";
+      savedAt: string;
+      inputs: RedactedInputs;
+      checklist?: Record<string, boolean>;
+      entity: {
+        recommendedLegalEntity: CalculatorInputs["legalEntityType"];
+        recommendedTaxElection: CalculatorInputs["taxElection"];
+        summary: string;
+        reasons: string[];
+      };
+      actionItems: Array<{ key: string; title: string; detail: string }>;
+      actionEvents: Array<{ date: string; title: string; description: string }>;
+      commingling90d?: {
+        rate: number;
+        comminglingCount: number;
+        eligibleCount: number;
+        topMerchants: string[];
+      };
+    };
+
+export type FounderCoverageSharePayload = FounderCoverageSnapshotPayloadV1 | FounderCoverageSharePayloadV2;
 
 function bytesToBase64Url(bytes: Uint8Array): string {
   let binary = "";
@@ -29,25 +73,32 @@ function base64UrlToBytes(base64Url: string): Uint8Array {
   return bytes;
 }
 
-export function encodeFounderCoverageSnapshot(payload: FounderCoverageSnapshotPayload): string {
+export function encodeFounderCoverageSharePayload(payload: FounderCoverageSharePayload): string {
   const json = JSON.stringify(payload);
   const bytes = new TextEncoder().encode(json);
   return bytesToBase64Url(bytes);
 }
 
-export function decodeFounderCoverageSnapshot(encoded: string): FounderCoverageSnapshotPayload | null {
+export function decodeFounderCoverageSharePayload(encoded: string): FounderCoverageSharePayload | null {
   try {
     const bytes = base64UrlToBytes(encoded);
     const json = new TextDecoder().decode(bytes);
     const parsed = JSON.parse(json) as unknown;
     if (!parsed || typeof parsed !== "object") return null;
+
     const obj = parsed as Record<string, unknown>;
-    if (obj["version"] !== 1) return null;
+    const version = obj["version"];
+    if (version !== 1 && version !== 2) return null;
     if (typeof obj["savedAt"] !== "string") return null;
-    if (!obj["inputs"] || typeof obj["inputs"] !== "object") return null;
-    return parsed as FounderCoverageSnapshotPayload;
+
+    return parsed as FounderCoverageSharePayload;
   } catch {
     return null;
   }
+}
+
+export function stripCurrencyLikeText(text: string): string {
+  // Remove common "$12,345" patterns (used only for redacted share output).
+  return text.replace(/\$[0-9][0-9,]*(\.[0-9]{2})?/g, "[redacted]");
 }
 
