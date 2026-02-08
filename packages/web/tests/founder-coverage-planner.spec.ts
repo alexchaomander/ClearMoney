@@ -33,5 +33,17 @@ test.describe("founder coverage planner", () => {
 
     expect(download.suggestedFilename()).toMatch(/\.ics$/i);
   });
-});
 
+  test("redacted share report renders without currency values", async ({ page }) => {
+    await page.goto("/tools/founder-coverage-planner?demo=true");
+    await page.getByRole("button", { name: /apply preset/i }).click();
+
+    const popupPromise = page.waitForEvent("popup");
+    await page.getByRole("link", { name: /open redacted report/i }).click();
+    const popup = await popupPromise;
+
+    await expect(popup.getByText(/shared report link/i)).toBeVisible();
+    await expect(popup.getByText(/redacted mode/i)).toBeVisible();
+    await expect(popup.getByText(/\$/)).toHaveCount(0);
+  });
+});

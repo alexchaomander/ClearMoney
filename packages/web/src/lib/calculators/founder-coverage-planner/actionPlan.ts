@@ -4,6 +4,7 @@ import type {
   CalculatorResults,
 } from "@/lib/calculators/founder-coverage-planner/types";
 import { nextBusinessDayDateOnlyUtc, type DateOnly, isDateOnly } from "./dateUtils";
+import { stripCurrencyLikeText } from "./snapshotShare";
 
 export type ActionItem = {
   title: string;
@@ -67,8 +68,9 @@ function getStateEstimatedTaxDueDates(args: {
 export function buildActionPlan(args: {
   inputs: CalculatorInputs;
   results: CalculatorResults;
+  redacted?: boolean;
 }): ActionPlan {
-  const { inputs, results } = args;
+  const { inputs, results, redacted = false } = args;
 
   const showSCorp =
     inputs.taxElection === "s_corp" ||
@@ -92,10 +94,11 @@ export function buildActionPlan(args: {
   }
 
   if (results.quarterlyTaxes.remainingNeeded > 0) {
+    const detail = `Remaining to safe-harbor target: ${formatCurrency(results.quarterlyTaxes.remainingNeeded, 0)}. Suggested per-quarter: ${formatCurrency(results.quarterlyTaxes.perQuarterAmount, 0)}.`;
     actionItems.push({
       key: "action.estimatedTaxes",
       title: "Estimated taxes: set your next payment",
-      detail: `Remaining to safe-harbor target: ${formatCurrency(results.quarterlyTaxes.remainingNeeded, 0)}. Suggested per-quarter: ${formatCurrency(results.quarterlyTaxes.perQuarterAmount, 0)}.`,
+      detail: redacted ? stripCurrencyLikeText(detail) : detail,
     });
   }
 
@@ -117,10 +120,11 @@ export function buildActionPlan(args: {
   }
 
   if (results.sCorp.warnings.length > 0) {
+    const detail = `Recommended salary range: ${formatCurrency(results.sCorp.salaryRange.min, 0)} to ${formatCurrency(results.sCorp.salaryRange.max, 0)}.`;
     actionItems.push({
       key: "action.salary",
       title: "Owner comp: sanity-check salary vs distributions",
-      detail: `Recommended salary range: ${formatCurrency(results.sCorp.salaryRange.min, 0)} to ${formatCurrency(results.sCorp.salaryRange.max, 0)}.`,
+      detail: redacted ? stripCurrencyLikeText(detail) : detail,
     });
   }
 

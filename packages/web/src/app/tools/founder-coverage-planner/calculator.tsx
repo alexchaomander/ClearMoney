@@ -13,7 +13,11 @@ import {
   looksBusinessAccount,
   PERSONALISH_CATEGORIES,
 } from "@/lib/calculators/founder-coverage-planner/bankingHeuristics";
-import { encodeFounderCoverageSnapshot } from "@/lib/calculators/founder-coverage-planner/snapshotShare";
+import { buildActionPlan } from "@/lib/calculators/founder-coverage-planner/actionPlan";
+import {
+  encodeFounderCoverageSharePayload,
+  stripCurrencyLikeText,
+} from "@/lib/calculators/founder-coverage-planner/snapshotShare";
 import {
   FOUNDER_COVERAGE_CHECKLIST_STORAGE_KEY,
   FOUNDER_COVERAGE_ONBOARDING_STORAGE_KEY,
@@ -35,6 +39,10 @@ type Scenario = {
   label: string;
   values: Partial<CalculatorInputs>;
 };
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 function loadChecklistState(): Record<string, boolean> {
   if (typeof window === "undefined") return {};
@@ -316,6 +324,64 @@ export function Calculator(): ReactElement {
     };
   }, [bankAccounts, bankTx90Page?.transactions, last90.end, last90.start]);
 
+  const comminglingTrend = useMemo(() => {
+    const notes = memory?.notes;
+    if (!isPlainObject(notes)) return null;
+    const founder = notes["founderCoveragePlanner"];
+    if (!isPlainObject(founder)) return null;
+    if (founder["version"] !== 2) return null;
+    const snapshots = founder["snapshots"];
+    if (!Array.isArray(snapshots)) return null;
+
+    const rows: Array<{
+      id: string;
+      savedAt: string;
+      rate: number | null;
+      reimbursementPolicy: CalculatorInputs["reimbursementPolicy"] | null;
+    }> = [];
+
+    for (const s of snapshots) {
+      if (!isPlainObject(s)) continue;
+      const id = s["id"];
+      const savedAt = s["savedAt"];
+      const inputsRaw = s["inputs"];
+      const insightsRaw = s["insights"];
+      if (typeof id !== "string" || typeof savedAt !== "string") continue;
+
+      let reimbursementPolicy: CalculatorInputs["reimbursementPolicy"] | null = null;
+      if (isPlainObject(inputsRaw) && typeof inputsRaw["reimbursementPolicy"] === "string") {
+        reimbursementPolicy = inputsRaw["reimbursementPolicy"] as CalculatorInputs["reimbursementPolicy"];
+      }
+
+      let rate: number | null = null;
+      if (isPlainObject(insightsRaw)) {
+        const comm = insightsRaw["commingling90d"];
+        if (isPlainObject(comm) && typeof comm["rate"] === "number") {
+          rate = comm["rate"];
+        }
+      }
+
+      rows.push({ id, savedAt, rate, reimbursementPolicy });
+    }
+
+    const withRate = rows.filter((r) => r.rate != null).slice(0, 8);
+    if (withRate.length < 2) return null;
+
+    const newest = withRate[0] ?? null;
+    const previous = withRate[1] ?? null;
+    const improved =
+      newest && previous && newest.rate != null && previous.rate != null
+        ? newest.rate <= previous.rate - 0.05
+        : false;
+
+    return {
+      points: withRate.reverse(), // oldest -> newest for rendering
+      improved,
+      newest,
+      previous,
+    };
+  }, [memory?.notes]);
+
   const hasPrefillData = prefill.hasRealData && prefill.filledFields.length > 0;
   const prefillLoaded =
     (!hasMemoryRead || memoryLoaded) && (!hasAccountsRead || bankLoaded);
@@ -344,6 +410,10 @@ export function Calculator(): ReactElement {
 
   const results = useMemo(() => calculate(inputs), [inputs]);
   const { showSCorp, actionItems, actionEvents } = useActionPlan({ inputs, results });
+
+  const redactedPlan = useMemo(() => {
+    return buildActionPlan({ inputs, results, redacted: true });
+  }, [inputs, results]);
 
   function downloadIcs(): void {
     const stampDate = new Date();
@@ -483,11 +553,23 @@ export function Calculator(): ReactElement {
     const snapshotsRaw = existingObj ? existingObj["snapshots"] : null;
     const snapshots = Array.isArray(snapshotsRaw) ? snapshotsRaw.slice() : [];
 
+    const commingling90d = comminglingInsight
+      ? {
+          startDate: comminglingInsight.startDate,
+          endDate: comminglingInsight.endDate,
+          rate: comminglingInsight.comminglingRate,
+          comminglingCount: comminglingInsight.comminglingCount,
+          eligibleCount: comminglingInsight.eligibleCount,
+          topMerchants: comminglingInsight.topExamples.map((ex) => ex.merchant).slice(0, 5),
+        }
+      : null;
+
     snapshots.unshift({
       id: snapshotId,
       savedAt,
       inputs,
       checklist: completed,
+      insights: commingling90d ? { commingling90d } : undefined,
     });
 
     // Keep recent history only to avoid unbounded growth in notes.
@@ -512,13 +594,14 @@ export function Calculator(): ReactElement {
   const shareLink = useMemo(() => {
     if (typeof window === "undefined") return null;
     const payload = {
-      version: 1 as const,
+      version: 2 as const,
+      mode: "full" as const,
       savedAt: new Date().toISOString(),
       inputs,
       checklist: completed,
     };
 
-    const encoded = encodeFounderCoverageSnapshot(payload);
+    const encoded = encodeFounderCoverageSharePayload(payload);
     const url = new URL(window.location.href);
     url.pathname = "/tools/founder-coverage-planner/report";
     url.search = "";
@@ -526,9 +609,82 @@ export function Calculator(): ReactElement {
     return url.toString();
   }, [completed, inputs]);
 
+  const redactedShareLink = useMemo(() => {
+    if (typeof window === "undefined") return null;
+
+    const topMerchants =
+      comminglingInsight?.topExamples.map((ex) => ex.merchant).slice(0, 3) ?? [];
+
+    const payload = {
+      version: 2 as const,
+      mode: "redacted" as const,
+      savedAt: new Date().toISOString(),
+      inputs: {
+        legalEntityType: inputs.legalEntityType,
+        taxElection: inputs.taxElection,
+        fundingPlan: inputs.fundingPlan,
+        ownerRole: inputs.ownerRole,
+        stateCode: inputs.stateCode,
+        filingStatus: inputs.filingStatus,
+        payrollCadence: inputs.payrollCadence,
+        reimbursementPolicy: inputs.reimbursementPolicy,
+      },
+      checklist: completed,
+      entity: {
+        recommendedLegalEntity: results.entity.recommendedLegalEntity,
+        recommendedTaxElection: results.entity.recommendedTaxElection,
+        summary: results.entity.summary,
+        reasons: results.entity.reasons,
+      },
+      actionItems: redactedPlan.actionItems.map((i) => ({
+        key: i.key,
+        title: i.title,
+        detail: stripCurrencyLikeText(i.detail),
+      })),
+      actionEvents: redactedPlan.actionEvents,
+      commingling90d: comminglingInsight
+        ? {
+            rate: comminglingInsight.comminglingRate,
+            comminglingCount: comminglingInsight.comminglingCount,
+            eligibleCount: comminglingInsight.eligibleCount,
+            topMerchants,
+          }
+        : undefined,
+    };
+
+    const encoded = encodeFounderCoverageSharePayload(payload);
+    const url = new URL(window.location.href);
+    url.pathname = "/tools/founder-coverage-planner/report";
+    url.search = "";
+    url.searchParams.set("snapshot", encoded);
+    return url.toString();
+  }, [
+    comminglingInsight,
+    completed,
+    inputs.filingStatus,
+    inputs.fundingPlan,
+    inputs.legalEntityType,
+    inputs.ownerRole,
+    inputs.payrollCadence,
+    inputs.reimbursementPolicy,
+    inputs.stateCode,
+    inputs.taxElection,
+    redactedPlan.actionEvents,
+    redactedPlan.actionItems,
+    results.entity.recommendedLegalEntity,
+    results.entity.recommendedTaxElection,
+    results.entity.reasons,
+    results.entity.summary,
+  ]);
+
   function copyShareLink(): void {
     if (!shareLink) return;
     void navigator.clipboard?.writeText(shareLink);
+  }
+
+  function copyRedactedLink(): void {
+    if (!redactedShareLink) return;
+    void navigator.clipboard?.writeText(redactedShareLink);
   }
 
   return (
@@ -630,6 +786,23 @@ export function Calculator(): ReactElement {
                     >
                       Copy share link
                     </button>
+                    <button
+                      type="button"
+                      onClick={copyRedactedLink}
+                      className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors"
+                    >
+                      Copy redacted link
+                    </button>
+                    {redactedShareLink && (
+                      <a
+                        href={redactedShareLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-xl bg-emerald-300 px-3 py-2 text-xs font-semibold text-neutral-950"
+                      >
+                        Open redacted report
+                      </a>
+                    )}
                   </div>
                   {bankContextLine && (
                     <p className="mt-3 text-xs text-neutral-500">{bankContextLine}</p>
@@ -994,6 +1167,37 @@ export function Calculator(): ReactElement {
                   <li key={item}>• {item}</li>
                 ))}
               </ul>
+              {comminglingTrend && (
+                <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-4">
+                  <p className="text-xs uppercase tracking-wide text-neutral-400">
+                    Commingling trend (saved snapshots)
+                  </p>
+                  <div className="mt-3 flex items-end gap-2 h-14">
+                    {comminglingTrend.points.map((p) => {
+                      const heightPx = p.rate != null ? Math.max(6, Math.round(p.rate * 48)) : 6;
+                      const label = p.rate != null ? `${Math.round(p.rate * 100)}%` : "—";
+                      return (
+                        <div key={p.id} className="flex flex-col items-center gap-1">
+                          <div
+                            title={`${new Date(p.savedAt).toLocaleDateString()} · ${label}`}
+                            className="w-6 rounded-md bg-sky-400/40 border border-sky-400/30"
+                            style={{ height: `${heightPx}px` }}
+                          />
+                          <span className="text-[10px] text-neutral-500">{label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {comminglingTrend.improved && (
+                    <p className="mt-3 text-xs text-emerald-200/80">
+                      Nice: commingling rate improved vs the prior snapshot.
+                    </p>
+                  )}
+                  <p className="mt-2 text-xs text-neutral-500">
+                    Tip: save a snapshot after you change reimbursement policy to track before/after.
+                  </p>
+                </div>
+              )}
               {comminglingInsight && (
                 <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-4">
                   <p className="text-xs uppercase tracking-wide text-neutral-400">
