@@ -1,9 +1,9 @@
 import uuid
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Date, ForeignKey, JSON, Numeric, String, UniqueConstraint
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, JSON, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -47,6 +47,10 @@ class BankTransaction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     payment_channel: Mapped[str | None] = mapped_column(String(50), nullable=True)
     pending: Mapped[bool] = mapped_column(Boolean, default=False)
     iso_currency_code: Mapped[str] = mapped_column(String(3), default="USD")
+
+    # User annotations for bookkeeping workflows.
+    reimbursed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reimbursement_memo: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Relationships
     cash_account: Mapped["CashAccount"] = relationship(back_populates="transactions")
