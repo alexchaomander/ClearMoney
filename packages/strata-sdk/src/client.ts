@@ -51,6 +51,10 @@ import type {
   CreditData,
   ProtectionData,
   ToolPresetBundle,
+  ShareReportCreateRequest,
+  ShareReportCreateResponse,
+  ShareReportPublicResponse,
+  ShareReportListItem,
 } from './types';
 
 export interface StrataClientInterface {
@@ -128,6 +132,11 @@ export interface StrataClientInterface {
   getBankAccounts(): Promise<BankAccount[]>;
   getBankTransactions(params?: BankTransactionQuery): Promise<PaginatedBankTransactions>;
   getSpendingSummary(months?: number): Promise<SpendingSummary>;
+  // Share Reports (public and owner)
+  createShareReport(data: ShareReportCreateRequest): Promise<ShareReportCreateResponse>;
+  getShareReport(reportId: string, token: string): Promise<ShareReportPublicResponse>;
+  listShareReports(params?: { toolId?: string; limit?: number }): Promise<ShareReportListItem[]>;
+  revokeShareReport(reportId: string): Promise<{ status: string }>;
 }
 
 export interface StrataClientOptions {
@@ -666,5 +675,30 @@ export class StrataClient implements StrataClientInterface {
     return this.request<SpendingSummary>(
       this.buildUrl('/api/v1/banking/spending-summary', { months })
     );
+  }
+
+  // === Share Reports ===
+
+  async createShareReport(data: ShareReportCreateRequest): Promise<ShareReportCreateResponse> {
+    return this.request<ShareReportCreateResponse>('/api/v1/share-reports', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getShareReport(reportId: string, token: string): Promise<ShareReportPublicResponse> {
+    return this.request<ShareReportPublicResponse>(
+      this.buildUrl(`/api/v1/share-reports/${reportId}`, { token })
+    );
+  }
+
+  async listShareReports(params?: { toolId?: string; limit?: number }): Promise<ShareReportListItem[]> {
+    return this.request<ShareReportListItem[]>(
+      this.buildUrl('/api/v1/share-reports', { tool_id: params?.toolId, limit: params?.limit })
+    );
+  }
+
+  async revokeShareReport(reportId: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>(`/api/v1/share-reports/${reportId}`, { method: 'DELETE' });
   }
 }
