@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
@@ -74,38 +74,51 @@ async def get_share_report(
 ) -> ShareReportPublicResponse:
     now = datetime.now(timezone.utc)
 
+    token_hash = _hash_token(token)
+
     async with session.begin():
-        result = await session.execute(select(ShareReport).where(ShareReport.id == report_id))
-        report = result.scalar_one_or_none()
-        if not report:
-            raise HTTPException(status_code=404, detail="Share report not found")
+        # Do a conditional UPDATE to avoid races for max-view links (e.g. one-time shares).
+        stmt = (
+            update(ShareReport)
+            .where(
+                ShareReport.id == report_id,
+                ShareReport.revoked_at.is_(None),
+                or_(ShareReport.expires_at.is_(None), ShareReport.expires_at > now),
+                ShareReport.token_hash == token_hash,
+                or_(ShareReport.max_views.is_(None), ShareReport.view_count < ShareReport.max_views),
+            )
+            .values(
+                view_count=func.coalesce(ShareReport.view_count, 0) + 1,
+                first_viewed_at=func.coalesce(ShareReport.first_viewed_at, now),
+                last_viewed_at=now,
+            )
+            .returning(
+                ShareReport.id,
+                ShareReport.tool_id,
+                ShareReport.mode,
+                ShareReport.created_at,
+                ShareReport.expires_at,
+                ShareReport.max_views,
+                ShareReport.view_count,
+                ShareReport.last_viewed_at,
+                ShareReport.payload,
+            )
+        )
 
-        if report.revoked_at is not None:
+        row = (await session.execute(stmt)).mappings().one_or_none()
+        if row is None:
             raise HTTPException(status_code=404, detail="Share report not found")
-        if report.expires_at is not None and report.expires_at <= now:
-            raise HTTPException(status_code=404, detail="Share report not found")
-
-        if _hash_token(token) != report.token_hash:
-            raise HTTPException(status_code=404, detail="Share report not found")
-
-        if report.max_views is not None and report.view_count >= report.max_views:
-            raise HTTPException(status_code=404, detail="Share report not found")
-
-        report.view_count = (report.view_count or 0) + 1
-        if report.first_viewed_at is None:
-            report.first_viewed_at = now
-        report.last_viewed_at = now
 
     return ShareReportPublicResponse(
-        id=report.id,
-        tool_id=report.tool_id,
-        mode=report.mode,  # type: ignore[arg-type]
-        created_at=report.created_at,
-        expires_at=report.expires_at,
-        max_views=report.max_views,
-        view_count=report.view_count,
-        last_viewed_at=report.last_viewed_at,
-        payload=report.payload,
+        id=row["id"],
+        tool_id=row["tool_id"],
+        mode=row["mode"],  # type: ignore[arg-type]
+        created_at=row["created_at"],
+        expires_at=row["expires_at"],
+        max_views=row["max_views"],
+        view_count=row["view_count"],
+        last_viewed_at=row["last_viewed_at"],
+        payload=row["payload"],
     )
 
 

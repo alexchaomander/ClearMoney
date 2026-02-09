@@ -239,6 +239,8 @@ export function Calculator(): ReactElement {
   const [lastPrefillSummary, setLastPrefillSummary] = useState<string | null>(null);
   const [shareBusy, setShareBusy] = useState(false);
   const [reimbursementMemos, setReimbursementMemos] = useState<Record<string, string>>({});
+  const [reimbursementSaving, setReimbursementSaving] = useState<Record<string, boolean>>({});
+  const [reimbursementError, setReimbursementError] = useState<string | null>(null);
   const [completed, setCompleted] = useState<Record<string, boolean>>(() =>
     loadChecklistState()
   );
@@ -297,8 +299,19 @@ export function Calculator(): ReactElement {
         memo: args.memo ?? null,
       });
     },
+    onMutate: ({ transactionId }) => {
+      setReimbursementError(null);
+      setReimbursementSaving((prev) => ({ ...prev, [transactionId]: true }));
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["banking", "transactions"] });
+    },
+    onError: (err) => {
+      setReimbursementError(err instanceof Error ? err.message : "Failed to update reimbursement.");
+    },
+    onSettled: (_data, _error, args) => {
+      if (!args) return;
+      setReimbursementSaving((prev) => ({ ...prev, [args.transactionId]: false }));
     },
   });
 
@@ -554,6 +567,7 @@ export function Calculator(): ReactElement {
 
   function toggleReimbursed(txId: string): void {
     if (!hasAccountsWrite) return;
+    if (reimbursementSaving[txId]) return;
     const reimbursed = !!reimbursedTxById[txId];
     const memo = reimbursementMemos[txId] ?? reimbursedTxById[txId]?.memo ?? "";
     updateReimbursement.mutate({ transactionId: txId, reimbursed: !reimbursed, memo });
@@ -566,8 +580,14 @@ export function Calculator(): ReactElement {
   function commitReimbursementMemo(txId: string): void {
     if (!hasAccountsWrite) return;
     if (!reimbursedTxById[txId]) return;
+    if (reimbursementSaving[txId]) return;
     const memo = reimbursementMemos[txId] ?? reimbursedTxById[txId]?.memo ?? "";
     updateReimbursement.mutate({ transactionId: txId, reimbursed: true, memo });
+  }
+
+  function isReimbursementMemoDirty(txId: string, serverMemo: string): boolean {
+    if (!(txId in reimbursementMemos)) return false;
+    return reimbursementMemos[txId] !== serverMemo;
   }
 
   function downloadReimbursementCsv(): void {
@@ -1512,6 +1532,11 @@ export function Calculator(): ReactElement {
                           <p className="mt-1 text-xs text-neutral-500">
                             Mark reimbursed transactions to remove them from commingling signals, then export a CSV for bookkeeping.
                           </p>
+                          {reimbursementError && (
+                            <p className="mt-2 text-xs text-rose-300">
+                              {reimbursementError}
+                            </p>
+                          )}
                         </div>
                         <button
                           type="button"
@@ -1526,6 +1551,9 @@ export function Calculator(): ReactElement {
                         {comminglingInsight.flaggedTransactions.map((t) => {
                           const reimbursed = !!t.reimbursedAt;
                           const merchant = t.merchantName ?? t.name;
+                          const memoValue = reimbursementMemos[t.id] ?? t.memo ?? "";
+                          const memoDirty = reimbursed && isReimbursementMemoDirty(t.id, t.memo ?? "");
+                          const saving = !!reimbursementSaving[t.id];
                           return (
                             <div
                               key={t.id}
@@ -1536,7 +1564,7 @@ export function Calculator(): ReactElement {
                                   <button
                                     type="button"
                                     onClick={() => toggleReimbursed(t.id)}
-                                    disabled={!hasAccountsWrite}
+                                    disabled={!hasAccountsWrite || saving}
                                     className="mt-0.5 h-5 w-5 rounded border border-neutral-700 flex items-center justify-center disabled:opacity-50"
                                     aria-label="Toggle reimbursed"
                                   >
@@ -1555,14 +1583,29 @@ export function Calculator(): ReactElement {
                                   </div>
                                 </div>
                                 <div className="min-w-[220px]">
-                                  <input
-                                    className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-white disabled:opacity-50"
-                                    placeholder="Memo (optional)"
-                                    value={reimbursementMemos[t.id] ?? t.memo ?? ""}
-                                    onChange={(e) => updateReimbursementMemo(t.id, e.target.value)}
-                                    onBlur={() => commitReimbursementMemo(t.id)}
-                                    disabled={!reimbursed || !hasAccountsWrite}
-                                  />
+                                  <div className="flex gap-2">
+                                    <input
+                                      className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-white disabled:opacity-50"
+                                      placeholder="Memo (optional)"
+                                      value={memoValue}
+                                      onChange={(e) => updateReimbursementMemo(t.id, e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          e.currentTarget.blur();
+                                          commitReimbursementMemo(t.id);
+                                        }
+                                      }}
+                                      disabled={!reimbursed || !hasAccountsWrite || saving}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => commitReimbursementMemo(t.id)}
+                                      disabled={!memoDirty || !hasAccountsWrite || saving}
+                                      className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-40 disabled:hover:border-neutral-800"
+                                    >
+                                      {saving ? "Saving…" : "Save"}
+                                    </button>
+                                  </div>
                                   {reimbursed && (
                                     <p className="mt-1 text-[10px] text-neutral-500">
                                       Reimbursed at: {new Date(t.reimbursedAt ?? "").toLocaleString()}
