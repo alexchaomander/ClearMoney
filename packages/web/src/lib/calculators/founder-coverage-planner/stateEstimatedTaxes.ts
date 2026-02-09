@@ -1,8 +1,11 @@
 import { nextBusinessDayDateOnlyUtc, type DateOnly } from "./dateUtils";
 
+export type StateEstimatedTaxScheduleKind = "apr_jun_sep_jan" | "custom";
+
 export type StateEstimatedTaxRule = {
   stateCode: string;
   label: string;
+  scheduleKind: StateEstimatedTaxScheduleKind;
   // Date-only strings (YYYY-MM-DD). We'll shift for weekends/holidays using federal rules.
   dueDates: (taxYear: number) => Array<{ date: DateOnly; label: string; note: string }>;
   lastVerified: string; // YYYY-MM-DD
@@ -48,6 +51,7 @@ const RULES: Record<string, StateEstimatedTaxRule> = {
   CA: {
     stateCode: "CA",
     label: "California",
+    scheduleKind: "apr_jun_sep_jan",
     dueDates: (taxYear) => [
       { date: nextBusinessDayDateOnlyUtc(`${taxYear}-04-15`), label: "CA Q1 estimated tax due", note: "Typically April 15." },
       { date: nextBusinessDayDateOnlyUtc(`${taxYear}-06-15`), label: "CA Q2 estimated tax due", note: "Typically June 15." },
@@ -62,6 +66,7 @@ const RULES: Record<string, StateEstimatedTaxRule> = {
   MA: {
     stateCode: "MA",
     label: "Massachusetts",
+    scheduleKind: "apr_jun_sep_jan",
     dueDates: (taxYear) => [
       { date: nextBusinessDayDateOnlyUtc(`${taxYear}-04-15`), label: "MA Q1 estimated tax due", note: "Typically April 15." },
       { date: nextBusinessDayDateOnlyUtc(`${taxYear}-06-15`), label: "MA Q2 estimated tax due", note: "Typically June 15." },
@@ -76,6 +81,7 @@ const RULES: Record<string, StateEstimatedTaxRule> = {
   NY: {
     stateCode: "NY",
     label: "New York",
+    scheduleKind: "apr_jun_sep_jan",
     dueDates: (taxYear) => [
       { date: nextBusinessDayDateOnlyUtc(`${taxYear}-04-15`), label: "NY Q1 estimated tax due", note: "Typically April 15." },
       { date: nextBusinessDayDateOnlyUtc(`${taxYear}-06-15`), label: "NY Q2 estimated tax due", note: "Typically June 15." },
@@ -90,6 +96,7 @@ const RULES: Record<string, StateEstimatedTaxRule> = {
   IL: {
     stateCode: "IL",
     label: "Illinois",
+    scheduleKind: "apr_jun_sep_jan",
     dueDates: (taxYear) => [
       { date: nextBusinessDayDateOnlyUtc(`${taxYear}-04-15`), label: "IL Q1 estimated tax due", note: "Typically April 15." },
       { date: nextBusinessDayDateOnlyUtc(`${taxYear}-06-15`), label: "IL Q2 estimated tax due", note: "Typically June 15." },
@@ -104,6 +111,7 @@ const RULES: Record<string, StateEstimatedTaxRule> = {
   CO: {
     stateCode: "CO",
     label: "Colorado",
+    scheduleKind: "apr_jun_sep_jan",
     dueDates: (taxYear) => buildAprJunSepJanSchedule({ stateCode: "CO", taxYear }),
     lastVerified: LAST_VERIFIED,
     sources: [
@@ -113,6 +121,7 @@ const RULES: Record<string, StateEstimatedTaxRule> = {
   CT: {
     stateCode: "CT",
     label: "Connecticut",
+    scheduleKind: "apr_jun_sep_jan",
     dueDates: (taxYear) => buildAprJunSepJanSchedule({ stateCode: "CT", taxYear }),
     lastVerified: LAST_VERIFIED,
     sources: [
@@ -122,6 +131,7 @@ const RULES: Record<string, StateEstimatedTaxRule> = {
   GA: {
     stateCode: "GA",
     label: "Georgia",
+    scheduleKind: "apr_jun_sep_jan",
     dueDates: (taxYear) => buildAprJunSepJanSchedule({ stateCode: "GA", taxYear }),
     lastVerified: LAST_VERIFIED,
     sources: [
@@ -131,6 +141,7 @@ const RULES: Record<string, StateEstimatedTaxRule> = {
   NC: {
     stateCode: "NC",
     label: "North Carolina",
+    scheduleKind: "apr_jun_sep_jan",
     dueDates: (taxYear) => buildAprJunSepJanSchedule({ stateCode: "NC", taxYear }),
     lastVerified: LAST_VERIFIED,
     sources: [
@@ -140,6 +151,7 @@ const RULES: Record<string, StateEstimatedTaxRule> = {
   NJ: {
     stateCode: "NJ",
     label: "New Jersey",
+    scheduleKind: "apr_jun_sep_jan",
     dueDates: (taxYear) => buildAprJunSepJanSchedule({ stateCode: "NJ", taxYear }),
     lastVerified: LAST_VERIFIED,
     sources: [
@@ -149,6 +161,7 @@ const RULES: Record<string, StateEstimatedTaxRule> = {
   OR: {
     stateCode: "OR",
     label: "Oregon",
+    scheduleKind: "apr_jun_sep_jan",
     dueDates: (taxYear) => buildAprJunSepJanSchedule({ stateCode: "OR", taxYear }),
     lastVerified: LAST_VERIFIED,
     sources: [
@@ -158,6 +171,7 @@ const RULES: Record<string, StateEstimatedTaxRule> = {
   PA: {
     stateCode: "PA",
     label: "Pennsylvania",
+    scheduleKind: "apr_jun_sep_jan",
     dueDates: (taxYear) => buildAprJunSepJanSchedule({ stateCode: "PA", taxYear }),
     lastVerified: LAST_VERIFIED,
     sources: [
@@ -167,6 +181,7 @@ const RULES: Record<string, StateEstimatedTaxRule> = {
   VA: {
     stateCode: "VA",
     label: "Virginia",
+    scheduleKind: "custom",
     dueDates: (taxYear) => [
       { date: nextBusinessDayDateOnlyUtc(`${taxYear}-05-01`), label: "VA Q1 estimated tax due", note: "Typically May 1." },
       { date: nextBusinessDayDateOnlyUtc(`${taxYear}-06-15`), label: "VA Q2 estimated tax due", note: "Typically June 15." },
