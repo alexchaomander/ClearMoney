@@ -22,7 +22,9 @@ from app.db.session import get_async_session
 # Import all models so Base.metadata is populated
 from app.models import (  # noqa: F401
     AgentSession,
+    BankTransaction,
     CashAccount,
+    ConsentGrant,
     Connection,
     DebtAccount,
     FinancialMemory,
@@ -34,6 +36,7 @@ from app.models import (  # noqa: F401
     PortfolioSnapshot,
     Recommendation,
     Security,
+    ShareReport,
     Transaction,
     User,
 )
