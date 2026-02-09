@@ -427,8 +427,16 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
     void copyServerShareLink({ mode: "full" });
   }
 
+  function copyOneTimeFullLink(): void {
+    void copyServerShareLink({ mode: "full", maxViews: 1 });
+  }
+
   async function copyRedactedShareLink(): Promise<void> {
     await copyServerShareLink({ mode: "redacted" });
+  }
+
+  async function copyOneTimeRedactedShareLink(): Promise<void> {
+    await copyServerShareLink({ mode: "redacted", maxViews: 1 });
   }
 
   function rememberShareToken(reportId: string, token: string): void {
@@ -505,7 +513,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
 
       const payload = args.mode === "redacted" ? buildRedactedSharePayload(activeSnapshot) : buildFullSharePayload(activeSnapshot);
       const created = await client.createShareReport({
-        tool_id: "founder-coverage-planner",
+        tool_id: shareToolId,
         mode: args.mode,
         payload,
         expires_in_days: 30,
@@ -515,7 +523,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
       rememberShareToken(created.id, created.token);
       const url = buildReportUrl({ demoQuery, rid: created.id, rt: created.token });
       await navigator.clipboard?.writeText(url);
-      await queryClient.invalidateQueries({ queryKey: ["shareReports", "founder-coverage-planner"] });
+      await queryClient.invalidateQueries({ queryKey: ["shareReports", shareToolId] });
     } catch {
       if (shareLink) {
         await navigator.clipboard?.writeText(shareLink);
@@ -531,7 +539,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
     try {
       const rotated = await client.rotateShareReport(reportId);
       rememberShareToken(rotated.id, rotated.token);
-      await queryClient.invalidateQueries({ queryKey: ["shareReports", "founder-coverage-planner"] });
+      await queryClient.invalidateQueries({ queryKey: ["shareReports", shareToolId] });
     } catch {
       // ignore
     } finally {
@@ -555,7 +563,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
   async function revokeShareReportById(id: string): Promise<void> {
     try {
       await client.revokeShareReport(id);
-      await queryClient.invalidateQueries({ queryKey: ["shareReports", "founder-coverage-planner"] });
+      await queryClient.invalidateQueries({ queryKey: ["shareReports", shareToolId] });
     } catch {
       // ignore
     }
@@ -570,12 +578,16 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
     if (!stateEstimatedTaxInfo) return null;
 
     if (stateEstimatedTaxInfo.kind === "mapped") {
+      const scheduleHint =
+        stateEstimatedTaxInfo.rule.scheduleKind === "custom"
+          ? "Custom installment schedule."
+          : "Standard quarterly schedule (Apr/Jun/Sep/Jan).";
       return (
         <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3">
           <p className="text-xs font-semibold text-white">State estimated tax schedule</p>
           <p className="mt-1 text-xs text-neutral-400">
             {stateEstimatedTaxInfo.rule.label} ({stateEstimatedTaxInfo.rule.stateCode}) last verified{" "}
-            {stateEstimatedTaxInfo.rule.lastVerified}.
+            {stateEstimatedTaxInfo.rule.lastVerified}. {scheduleHint}
           </p>
           <p className="mt-2 text-[11px] text-neutral-500">
             Sources: {stateEstimatedTaxInfo.rule.sources.join(" ")}
@@ -723,7 +735,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                   <div>
                     <p className="text-sm font-semibold text-white">Share links</p>
                     <p className="mt-1 text-xs text-neutral-500">
-                      Create revocable links. Tokens are only shown at creation time; we store them locally on this device so you can reopen/copy later.
+                      Create revocable links. Tokens are only shown at creation time; we store them locally on this device so you can reopen/copy later. One-time links become invalid after the first view.
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -737,6 +749,14 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                     </button>
                     <button
                       type="button"
+                      onClick={copyOneTimeFullLink}
+                      disabled={shareBusy || !activeSnapshot || !!compareSnapshots}
+                      className="inline-flex items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-100 hover:border-emerald-500/70 transition-colors disabled:opacity-50"
+                    >
+                      Create one-time (full)
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => void copyServerShareLink({ mode: "redacted" })}
                       disabled={shareBusy || !computed || !activeSnapshot || !!compareSnapshots}
                       className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs font-semibold text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
@@ -745,7 +765,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                     </button>
                     <button
                       type="button"
-                      onClick={() => void copyServerShareLink({ mode: "redacted", maxViews: 1 })}
+                      onClick={() => void copyOneTimeRedactedShareLink()}
                       disabled={shareBusy || !computed || !activeSnapshot || !!compareSnapshots}
                       className="inline-flex items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-100 hover:border-emerald-500/70 transition-colors disabled:opacity-50"
                     >

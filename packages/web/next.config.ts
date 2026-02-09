@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   output: "export", // Static export for Cloudflare Pages
   distDir: "dist", // Output to dist for Cloudflare Pages
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
+  // Playwright uses 127.0.0.1; Next will increasingly require explicit allow-listing for dev origins.
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   images: {
     unoptimized: true, // Required for static export
   },
