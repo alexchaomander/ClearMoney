@@ -222,6 +222,19 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
   }, [isServerShare, serverShare.data?.mode, sharePayload]);
   const isShareMode = !!sharePayload;
 
+  const demoShowcase = useMemo(() => {
+    if (!isDemo) return null;
+    if (isShareMode) return null;
+    return {
+      title: "Demo: end-to-end founder flow",
+      steps: [
+        "Review the action plan and commingling alerts.",
+        "Download calendar reminders (ICS) for your estimated tax deadlines.",
+        "Create a redacted one-time share link to send to a CPA or cofounder.",
+      ],
+    };
+  }, [isDemo, isShareMode]);
+
   const shareFullSnapshot = useMemo<MemorySnapshot | null>(() => {
     if (!sharePayload) return null;
     if ((sharePayload as any).version === 1) {
@@ -284,10 +297,11 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
 
   const activeSnapshot = snapshot ?? shareFullSnapshot;
 
+  const shareToolId = "founder-coverage-planner";
   const canManageShareLinks = isDemo || hasMemoryRead;
   const shareReports = useQuery({
-    queryKey: ["shareReports", "founder-coverage-planner"],
-    queryFn: () => client.listShareReports({ toolId: "founder-coverage-planner", limit: 25 }),
+    queryKey: ["shareReports", shareToolId],
+    queryFn: () => client.listShareReports({ toolId: shareToolId, limit: 25 }),
     enabled: canManageShareLinks,
     staleTime: 15_000,
   });
@@ -663,6 +677,17 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                 </button>
               </div>
             </div>
+
+            {demoShowcase && (
+              <div className="mt-6 rounded-2xl border border-sky-500/30 bg-sky-500/10 p-4">
+                <p className="text-sm font-semibold text-sky-100">{demoShowcase.title}</p>
+                <ul className="mt-2 text-xs text-sky-100/80 space-y-1">
+                  {demoShowcase.steps.map((step) => (
+                    <li key={step}>• {step}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {encodedSnapshot && (
               <div className="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">

@@ -4,19 +4,35 @@ from datetime import date
 from decimal import Decimal
 from typing import Any
 
-from plaid.api import plaid_api
-from plaid.api_client import ApiClient
-from plaid.configuration import Configuration
-from plaid.model.country_code import CountryCode
-from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
-from plaid.model.link_token_create_request import LinkTokenCreateRequest
-from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
-from plaid.model.products import Products
-from plaid.model.accounts_get_request import AccountsGetRequest
-from plaid.model.transactions_get_request import TransactionsGetRequest
-from plaid.model.transactions_get_request_options import TransactionsGetRequestOptions
-from plaid.model.institutions_get_by_id_request import InstitutionsGetByIdRequest
-from plaid.model.item_remove_request import ItemRemoveRequest
+try:
+    from plaid.api import plaid_api
+    from plaid.api_client import ApiClient
+    from plaid.configuration import Configuration
+    from plaid.model.accounts_get_request import AccountsGetRequest
+    from plaid.model.country_code import CountryCode
+    from plaid.model.institutions_get_by_id_request import InstitutionsGetByIdRequest
+    from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
+    from plaid.model.item_remove_request import ItemRemoveRequest
+    from plaid.model.link_token_create_request import LinkTokenCreateRequest
+    from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
+    from plaid.model.products import Products
+    from plaid.model.transactions_get_request import TransactionsGetRequest
+    from plaid.model.transactions_get_request_options import TransactionsGetRequestOptions
+except ModuleNotFoundError:  # pragma: no cover
+    # Plaid is an optional dependency for development/test environments.
+    plaid_api = None  # type: ignore[assignment]
+    ApiClient = None  # type: ignore[assignment]
+    Configuration = None  # type: ignore[assignment]
+    AccountsGetRequest = None  # type: ignore[assignment]
+    CountryCode = None  # type: ignore[assignment]
+    InstitutionsGetByIdRequest = None  # type: ignore[assignment]
+    ItemPublicTokenExchangeRequest = None  # type: ignore[assignment]
+    ItemRemoveRequest = None  # type: ignore[assignment]
+    LinkTokenCreateRequest = None  # type: ignore[assignment]
+    LinkTokenCreateRequestUser = None  # type: ignore[assignment]
+    Products = None  # type: ignore[assignment]
+    TransactionsGetRequest = None  # type: ignore[assignment]
+    TransactionsGetRequestOptions = None  # type: ignore[assignment]
 
 from app.core.config import settings
 from app.models.cash_account import CashAccountType
@@ -68,6 +84,12 @@ class PlaidProvider(BaseBankingProvider):
 
     def __init__(self) -> None:
         """Initialize Plaid client."""
+        if plaid_api is None:  # pragma: no cover
+            raise RuntimeError(
+                "Plaid provider is unavailable because the 'plaid' package is not installed. "
+                "Install Plaid dependencies to use banking connections."
+            )
+
         host = self._ENVIRONMENT_HOSTS.get(
             settings.plaid_environment, self._ENVIRONMENT_HOSTS["sandbox"]
         )
