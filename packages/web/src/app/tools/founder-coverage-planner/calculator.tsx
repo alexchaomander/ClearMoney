@@ -35,6 +35,14 @@ import { useStrataClient } from "@/lib/strata/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InputSection } from "./components/InputSection";
 import { useActionPlan } from "./useActionPlan";
+import { useDemoMode } from "@/lib/strata/demo-context";
+import { useToast } from "@/components/shared/toast";
+import {
+  markFounderDemoStep,
+  readFounderDemoFlowState,
+  type FounderDemoFlowState,
+} from "@/lib/demo/founderDemoFlow";
+import { resetFounderShowcaseArtifacts } from "@/lib/demo/resetDemoArtifacts";
 
 type Scenario = {
   id: string;
@@ -233,6 +241,11 @@ const METHODOLOGY_ITEMS = [
 export function Calculator(): ReactElement {
   const client = useStrataClient();
   const queryClient = useQueryClient();
+  const isDemo = useDemoMode();
+  const { pushToast } = useToast();
+  const [demoFlow, setDemoFlow] = useState<FounderDemoFlowState | null>(() =>
+    isDemo ? readFounderDemoFlowState() : null
+  );
   const [inputs, setInputs] = useState<CalculatorInputs>(() => loadInitialInputs());
   const [prefillApplied, setPrefillApplied] = useState(false);
   const [presetApplied, setPresetApplied] = useState(false);
@@ -303,11 +316,16 @@ export function Calculator(): ReactElement {
       setReimbursementError(null);
       setReimbursementSaving((prev) => ({ ...prev, [transactionId]: true }));
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["banking", "transactions"] });
+      if (variables?.reimbursed) {
+        markFounderDemoStep("reimbursement_marked");
+        setDemoFlow(isDemo ? readFounderDemoFlowState() : null);
+      }
     },
     onError: (err) => {
       setReimbursementError(err instanceof Error ? err.message : "Failed to update reimbursement.");
+      pushToast({ title: "Could not update reimbursement", variant: "error" });
     },
     onSettled: (_data, _error, args) => {
       if (!args) return;
@@ -325,19 +343,21 @@ export function Calculator(): ReactElement {
 
     const businessIds = new Set(businessAccounts.map((a) => a.id));
     const eligible: typeof tx = [];
-    const commingling: typeof tx = [];
+    const personalish: typeof tx = [];
 
     for (const t of tx) {
       if (!businessIds.has(t.cash_account_id)) continue;
       if (!t.primary_category) continue;
       if (INFLOW_CATEGORIES.has(t.primary_category)) continue;
       eligible.push(t);
-      if (PERSONALISH_CATEGORIES.has(t.primary_category) && !t.reimbursed_at) {
-        commingling.push(t);
+      if (PERSONALISH_CATEGORIES.has(t.primary_category)) {
+        personalish.push(t);
       }
     }
 
     if (eligible.length < 10) return null;
+
+    const commingling = personalish.filter((t) => !t.reimbursed_at);
 
     const examples = new Map<
       string,
@@ -359,7 +379,7 @@ export function Calculator(): ReactElement {
       .sort((a, b) => b.count - a.count)
       .slice(0, 3);
 
-    const flagged = commingling
+    const flagged = personalish
       .slice()
       .sort((a, b) => b.transaction_date.localeCompare(a.transaction_date))
       .slice(0, 25)
@@ -517,6 +537,10 @@ export function Calculator(): ReactElement {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+
+    pushToast({ title: "Calendar downloaded", message: "Added reminders file (.ics).", variant: "success" });
+    markFounderDemoStep("calendar_downloaded");
+    setDemoFlow(isDemo ? readFounderDemoFlowState() : null);
   }
 
   function downloadSingleIcs(event: { date: string; title: string; description: string }): void {
@@ -651,6 +675,15 @@ export function Calculator(): ReactElement {
     if (!preset) return;
     setInputs((prev) => ({ ...prev, ...preset }));
     setPresetApplied(true);
+    pushToast({ title: "Demo preset applied", variant: "success" });
+    markFounderDemoStep("preset_applied");
+    setDemoFlow(isDemo ? readFounderDemoFlowState() : null);
+  }
+
+  function resetDemo(): void {
+    resetFounderShowcaseArtifacts();
+    pushToast({ title: "Demo reset", message: "Cleared demo links, reimbursements, and progress.", variant: "success" });
+    setTimeout(() => window.location.reload(), 250);
   }
 
   function applyMyData(): void {
@@ -727,6 +760,10 @@ export function Calculator(): ReactElement {
       source: "calculator",
       source_context: "founder-coverage-planner.save",
     });
+
+    pushToast({ title: "Snapshot saved", message: "Report view updated.", variant: "success" });
+    markFounderDemoStep("snapshot_saved");
+    setDemoFlow(isDemo ? readFounderDemoFlowState() : null);
   }
 
   const embeddedShareLink = useMemo(() => {
@@ -848,10 +885,17 @@ export function Calculator(): ReactElement {
       });
 
       const url = buildServerShareUrl(created.id, created.token);
-      if (url) await navigator.clipboard?.writeText(url);
-    } catch {
+      if (url) {
+        await navigator.clipboard?.writeText(url);
+        pushToast({ title: "Share link copied", variant: "success" });
+      }
+    } catch (err) {
       if (embeddedShareLink) {
         await navigator.clipboard?.writeText(embeddedShareLink);
+        pushToast({ title: "Share link copied", variant: "success" });
+      } else {
+        void err;
+        pushToast({ title: "Could not copy share link", variant: "error" });
       }
     } finally {
       setShareBusy(false);
@@ -914,10 +958,17 @@ export function Calculator(): ReactElement {
       });
 
       const url = buildServerShareUrl(created.id, created.token);
-      if (url) await navigator.clipboard?.writeText(url);
-    } catch {
+      if (url) {
+        await navigator.clipboard?.writeText(url);
+        pushToast({ title: "Redacted link copied", variant: "success" });
+      }
+    } catch (err) {
       if (embeddedRedactedShareLink) {
         await navigator.clipboard?.writeText(embeddedRedactedShareLink);
+        pushToast({ title: "Redacted link copied", variant: "success" });
+      } else {
+        void err;
+        pushToast({ title: "Could not copy redacted link", variant: "error" });
       }
     } finally {
       setShareBusy(false);
@@ -939,9 +990,14 @@ export function Calculator(): ReactElement {
 
       const url = buildServerShareUrl(created.id, created.token);
       if (url) window.open(url, "_blank", "noreferrer");
-    } catch {
+      pushToast({ title: "Opened redacted report", variant: "success" });
+    } catch (err) {
       if (embeddedRedactedShareLink) {
         window.open(embeddedRedactedShareLink, "_blank", "noreferrer");
+        pushToast({ title: "Opened redacted report", variant: "success" });
+      } else {
+        void err;
+        pushToast({ title: "Could not open redacted report", variant: "error" });
       }
     } finally {
       setShareBusy(false);
@@ -1019,16 +1075,64 @@ export function Calculator(): ReactElement {
                 </div>
 
                 <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
-                  <p className="text-sm font-semibold text-white">Demo prefill</p>
-                  <p className="text-xs text-neutral-400 mt-1">
-                    Apply a realistic default snapshot for this tool (from tool presets).
-                  </p>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-white">
+                        {isDemo ? "Demo flow" : "Demo prefill"}
+                      </p>
+                      <p className="text-xs text-neutral-400 mt-1">
+                        {isDemo
+                          ? "A guided end-to-end path you can demo in under 2 minutes."
+                          : "Apply a realistic default snapshot for this tool (from tool presets)."}
+                      </p>
+                    </div>
+                    {isDemo && (
+                      <button
+                        type="button"
+                        onClick={resetDemo}
+                        className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors"
+                        data-testid="demo-reset"
+                      >
+                        Reset demo
+                      </button>
+                    )}
+                  </div>
+
+                  {isDemo && demoFlow && (
+                    <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-950 p-3">
+                      <p className="text-xs uppercase tracking-wide text-neutral-500">
+                        Progress
+                      </p>
+                      <ul className="mt-2 space-y-1 text-xs text-neutral-300">
+                        <li>
+                          {demoFlow.steps.preset_applied ? "✓" : "○"} Apply preset
+                        </li>
+                        <li>
+                          {demoFlow.steps.snapshot_saved ? "✓" : "○"} Save snapshot
+                        </li>
+                        <li>
+                          {demoFlow.steps.reimbursement_marked ? "✓" : "○"} Mark a reimbursement
+                        </li>
+                        <li>
+                          {demoFlow.steps.calendar_downloaded ? "✓" : "○"} Download calendar (.ics)
+                        </li>
+                        <li>
+                          {demoFlow.steps.report_opened ? "✓" : "○"} Open report
+                        </li>
+                        <li>
+                          {demoFlow.steps.one_time_link_created ? "✓" : "○"} Create one-time link
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={applyPreset}
                       disabled={!preset}
                       className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-neutral-950 disabled:opacity-50"
+                      data-testid="demo-apply-preset"
                     >
                       {presetApplied ? "Re-apply preset" : "Apply preset"}
                     </button>
@@ -1037,40 +1141,56 @@ export function Calculator(): ReactElement {
                       onClick={saveSnapshotToProfile}
                       disabled={!hasMemoryWrite}
                       className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
+                      data-testid="demo-save-snapshot"
                     >
-                      Save snapshot to profile
+                      Save snapshot
                     </button>
                     <button
                       type="button"
-                      onClick={() => void copyShareLink()}
-                      disabled={shareBusy}
+                      onClick={() => {
+                        const el = document.getElementById("reimbursement-ledger");
+                        el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }}
                       className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors"
                     >
-                      {shareBusy ? "Sharing..." : "Copy share link"}
+                      Jump to ledger
                     </button>
                     <button
                       type="button"
-                      onClick={() => void copyRedactedLink()}
-                      disabled={shareBusy}
+                      onClick={downloadIcs}
                       className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors"
+                      data-testid="demo-download-calendar"
                     >
-                      {shareBusy ? "Sharing..." : "Copy redacted link"}
+                      Download calendar
                     </button>
+                    <Link
+                      href={`/tools/founder-coverage-planner/report${isDemo ? "?demo=true" : ""}`}
+                      className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors"
+                      data-testid="demo-open-report"
+                    >
+                      Open report
+                    </Link>
                     <button
                       type="button"
                       onClick={() => void openRedactedReport()}
                       disabled={shareBusy}
                       className="rounded-xl bg-emerald-300 px-3 py-2 text-xs font-semibold text-neutral-950 disabled:opacity-50"
+                      data-testid="demo-open-redacted-report"
                     >
-                      {shareBusy ? "Sharing..." : "Open redacted report"}
+                      {shareBusy ? "Opening..." : "Open redacted report"}
                     </button>
                   </div>
-                  {bankContextLine && (
-                    <p className="mt-3 text-xs text-neutral-500">{bankContextLine}</p>
+
+                  {!isDemo && (
+                    <>
+                      {bankContextLine && (
+                        <p className="mt-3 text-xs text-neutral-500">{bankContextLine}</p>
+                      )}
+                      <p className="mt-3 text-xs text-neutral-500">
+                        Share links expire after 30 days by default. Redacted share links omit currency-like values.
+                      </p>
+                    </>
                   )}
-                  <p className="mt-3 text-xs text-neutral-500">
-                    Share links expire after 30 days by default. Redacted share links omit currency-like values.
-                  </p>
                 </div>
               </div>
             </div>
@@ -1523,7 +1643,7 @@ export function Calculator(): ReactElement {
                   )}
 
                   {comminglingInsight.flaggedTransactions.length > 0 && (
-                    <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
+                    <div id="reimbursement-ledger" className="mt-5 rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-xs uppercase tracking-wide text-neutral-400">

@@ -28,7 +28,7 @@ test.describe("founder coverage planner", () => {
     ).toBeVisible();
 
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: /download calendar/i }).click();
+    await page.getByTestId("demo-download-calendar").click();
     const download = await downloadPromise;
 
     expect(download.suggestedFilename()).toMatch(/\.ics$/i);
