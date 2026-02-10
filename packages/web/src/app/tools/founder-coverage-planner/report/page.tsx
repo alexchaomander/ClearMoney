@@ -23,6 +23,13 @@ import { formatCurrency } from "@/lib/shared/formatters";
 import { useStrataClient } from "@/lib/strata/client";
 import { useDemoMode } from "@/lib/strata/demo-context";
 import { useConsentStatus, useFinancialMemory } from "@/lib/strata/hooks";
+import { useToast } from "@/components/shared/toast";
+import {
+  markFounderDemoStep,
+  readFounderDemoFlowState,
+  type FounderDemoFlowState,
+} from "@/lib/demo/founderDemoFlow";
+import { resetFounderShowcaseArtifacts } from "@/lib/demo/resetDemoArtifacts";
 
 type MemorySnapshot = {
   id: string;
@@ -181,6 +188,10 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
   const client = useStrataClient();
   const queryClient = useQueryClient();
   const isDemo = useDemoMode();
+  const { pushToast } = useToast();
+  const [demoFlow, setDemoFlow] = useState<FounderDemoFlowState | null>(() =>
+    isDemo ? readFounderDemoFlowState() : null
+  );
 
   const { hasConsent: hasMemoryRead } = useConsentStatus(["memory:read"]);
   const { data: memory, isSuccess: memoryLoaded } = useFinancialMemory({ enabled: hasMemoryRead });
@@ -221,6 +232,13 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
     );
   }, [isServerShare, serverShare.data?.mode, sharePayload]);
   const isShareMode = !!sharePayload;
+
+  useEffect(() => {
+    if (!isDemo) return;
+    if (isShareMode) return;
+    markFounderDemoStep("report_opened");
+    setDemoFlow(readFounderDemoFlowState());
+  }, [isDemo, isShareMode]);
 
   const demoShowcase = useMemo(() => {
     if (!isDemo) return null;
@@ -417,22 +435,18 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+
+    pushToast({ title: "Calendar downloaded", message: "Added reminders file (.ics).", variant: "success" });
+    markFounderDemoStep("calendar_downloaded");
+    setDemoFlow(isDemo ? readFounderDemoFlowState() : null);
   }
 
   function printReport(): void {
     window.print();
   }
 
-  function copyShareLink(): void {
-    void copyServerShareLink({ mode: "full" });
-  }
-
   function copyOneTimeFullLink(): void {
     void copyServerShareLink({ mode: "full", maxViews: 1 });
-  }
-
-  async function copyRedactedShareLink(): Promise<void> {
-    await copyServerShareLink({ mode: "redacted" });
   }
 
   async function copyOneTimeRedactedShareLink(): Promise<void> {
@@ -506,6 +520,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
       if (reportId && reportToken) {
         const url = buildReportUrl({ demoQuery, rid: reportId, rt: reportToken });
         await navigator.clipboard?.writeText(url);
+        pushToast({ title: "Link copied", variant: "success" });
         return;
       }
 
@@ -521,12 +536,28 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
       });
 
       rememberShareToken(created.id, created.token);
+      await queryClient.invalidateQueries({ queryKey: ["shareReports", shareToolId] });
       const url = buildReportUrl({ demoQuery, rid: created.id, rt: created.token });
       await navigator.clipboard?.writeText(url);
-      await queryClient.invalidateQueries({ queryKey: ["shareReports", shareToolId] });
-    } catch {
+
+      const isOneTime = args.maxViews === 1;
+      if (isOneTime) {
+        markFounderDemoStep("one_time_link_created");
+        setDemoFlow(isDemo ? readFounderDemoFlowState() : null);
+      }
+
+      pushToast({
+        title: "Link copied",
+        message: isOneTime ? "One-time link created and copied." : "Share link created and copied.",
+        variant: "success",
+      });
+    } catch (err) {
       if (shareLink) {
         await navigator.clipboard?.writeText(shareLink);
+        pushToast({ title: "Link copied", variant: "success" });
+      } else {
+        void err;
+        pushToast({ title: "Could not create share link", variant: "error" });
       }
     } finally {
       setShareBusy(false);
@@ -572,6 +603,17 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
   function clearStoredTokens(): void {
     setStoredTokens({});
     writeStoredShareTokens({});
+  }
+
+  function resetDemo(): void {
+    resetFounderShowcaseArtifacts();
+    pushToast({ title: "Demo reset", message: "Cleared demo links, reimbursements, and progress.", variant: "success" });
+    setTimeout(() => window.location.reload(), 250);
+  }
+
+  function scrollToShareLinks(): void {
+    const el = document.getElementById("share-links");
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function renderStateEstimatedTaxScheduleHint(): ReactElement | null {
@@ -655,19 +697,10 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                 </button>
                 <button
                   type="button"
-                  onClick={copyShareLink}
-                  disabled={!shareLink && !activeSnapshot}
+                  onClick={scrollToShareLinks}
                   className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-semibold text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
                 >
-                  {shareBusy ? "Sharing..." : "Copy share link"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void copyRedactedShareLink()}
-                  disabled={shareBusy || !computed || !activeSnapshot || !!compareSnapshots}
-                  className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-semibold text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
-                >
-                  Copy redacted link
+                  Share links
                 </button>
                 {reportId && hasMemoryRead && (
                   <button
@@ -692,12 +725,35 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
 
             {demoShowcase && (
               <div className="mt-6 rounded-2xl border border-sky-500/30 bg-sky-500/10 p-4">
-                <p className="text-sm font-semibold text-sky-100">{demoShowcase.title}</p>
-                <ul className="mt-2 text-xs text-sky-100/80 space-y-1">
-                  {demoShowcase.steps.map((step) => (
-                    <li key={step}>• {step}</li>
-                  ))}
-                </ul>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-sky-100">{demoShowcase.title}</p>
+                    <ul className="mt-2 text-xs text-sky-100/80 space-y-1">
+                      {demoShowcase.steps.map((step) => (
+                        <li key={step}>• {step}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={resetDemo}
+                    className="rounded-xl border border-sky-500/40 bg-sky-500/10 px-3 py-2 text-xs font-semibold text-sky-100 hover:border-sky-500/70 transition-colors"
+                    data-testid="report-demo-reset"
+                  >
+                    Reset demo
+                  </button>
+                </div>
+
+                {demoFlow && (
+                  <div className="mt-3 rounded-xl border border-sky-500/20 bg-neutral-950/40 p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-sky-100/60">
+                      Progress
+                    </p>
+                    <p className="mt-1 text-xs text-sky-100/80">
+                      {Object.values(demoFlow.steps).filter(Boolean).length} / {Object.keys(demoFlow.steps).length} steps complete
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -730,7 +786,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
             )}
 
             {canManageShareLinks && (
-              <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
+              <div id="share-links" className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-sm font-semibold text-white">Share links</p>
@@ -752,6 +808,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                       onClick={copyOneTimeFullLink}
                       disabled={shareBusy || !activeSnapshot || !!compareSnapshots}
                       className="inline-flex items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-100 hover:border-emerald-500/70 transition-colors disabled:opacity-50"
+                      data-testid="create-one-time-full"
                     >
                       Create one-time (full)
                     </button>
@@ -768,6 +825,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                       onClick={() => void copyOneTimeRedactedShareLink()}
                       disabled={shareBusy || !computed || !activeSnapshot || !!compareSnapshots}
                       className="inline-flex items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-100 hover:border-emerald-500/70 transition-colors disabled:opacity-50"
+                      data-testid="create-one-time-redacted"
                     >
                       Create one-time (redacted)
                     </button>
