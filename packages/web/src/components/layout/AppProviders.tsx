@@ -8,6 +8,7 @@ import { DemoModeProvider } from "@/lib/strata/demo-context";
 import { StrataProvider } from "@/lib/strata/client";
 import { DemoBanner } from "@/components/shared/DemoBanner";
 import { StrataAuthSync } from "@/lib/strata/auth";
+import { ToastProvider } from "@/components/shared/toast";
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
@@ -17,11 +18,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
           <DemoModeProvider>
             <QueryProvider>
               <StrataProvider>
-                <StrataAuthSync />
-                <DemoBanner />
-                <div className="flex min-h-screen flex-col">
-                  <main className="flex-1">{children}</main>
-                </div>
+                <ToastProvider>
+                  <StrataAuthSync />
+                  <DemoBanner />
+                  <div className="flex min-h-screen flex-col">
+                    <main className="flex-1">{children}</main>
+                  </div>
+                </ToastProvider>
               </StrataProvider>
             </QueryProvider>
           </DemoModeProvider>
