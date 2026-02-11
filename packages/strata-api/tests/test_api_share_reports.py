@@ -160,6 +160,38 @@ async def test_share_report_revoke(headers: dict) -> None:
 
 
 @pytest.mark.asyncio
+async def test_share_report_list_include_payload_flag(headers: dict) -> None:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        create = await client.post(
+            "/api/v1/share-reports",
+            headers=headers,
+            json={
+                "tool_id": "tax-plan-workspace",
+                "mode": "full",
+                "payload": {"version": 1, "label": "Server Snapshot"},
+                "expires_in_days": 30,
+            },
+        )
+        assert create.status_code == 200
+
+        listed_default = await client.get("/api/v1/share-reports", headers=headers, params={"tool_id": "tax-plan-workspace"})
+        assert listed_default.status_code == 200
+        items_default = listed_default.json()
+        assert len(items_default) >= 1
+        assert "payload" not in items_default[0] or items_default[0]["payload"] in (None, {})
+
+        listed_with_payload = await client.get(
+            "/api/v1/share-reports",
+            headers=headers,
+            params={"tool_id": "tax-plan-workspace", "include_payload": "true"},
+        )
+        assert listed_with_payload.status_code == 200
+        items_with_payload = listed_with_payload.json()
+        assert len(items_with_payload) >= 1
+        assert items_with_payload[0]["payload"]["label"] == "Server Snapshot"
+
+
+@pytest.mark.asyncio
 async def test_share_report_cannot_be_retrieved_by_random_id() -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         fetched = await client.get(
@@ -167,4 +199,3 @@ async def test_share_report_cannot_be_retrieved_by_random_id() -> None:
             params={"token": "invalid-token"},
         )
         assert fetched.status_code == 404
-

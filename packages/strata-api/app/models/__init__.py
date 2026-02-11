@@ -17,6 +17,13 @@ from app.models.memory_event import MemoryEvent, MemoryEventSource
 from app.models.portfolio_snapshot import PortfolioSnapshot
 from app.models.security import Security, SecurityType
 from app.models.share_report import ShareReport
+from app.models.tax_plan_workspace import (
+    TaxPlan,
+    TaxPlanCollaborator,
+    TaxPlanComment,
+    TaxPlanEvent,
+    TaxPlanVersion,
+)
 from app.models.transaction import Transaction, TransactionType
 from app.models.user import User
 
@@ -59,6 +66,11 @@ __all__ = [
     "Security",
     "SecurityType",
     "ShareReport",
+    "TaxPlan",
+    "TaxPlanCollaborator",
+    "TaxPlanComment",
+    "TaxPlanEvent",
+    "TaxPlanVersion",
     "Transaction",
     "TransactionType",
     "User",

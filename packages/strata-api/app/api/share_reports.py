@@ -128,6 +128,7 @@ async def list_share_reports(
     session: AsyncSession = Depends(get_async_session),
     tool_id: str | None = Query(None),
     limit: int = Query(50, ge=1, le=200),
+    include_payload: bool = Query(False),
 ) -> list[ShareReportListItem]:
     stmt = select(ShareReport).where(ShareReport.user_id == user.id).order_by(ShareReport.created_at.desc())
     if tool_id:
@@ -136,7 +137,38 @@ async def list_share_reports(
 
     result = await session.execute(stmt)
     rows = result.scalars().all()
-    return [ShareReportListItem.model_validate(r) for r in rows]
+    if include_payload:
+        return [
+            ShareReportListItem(
+                id=r.id,
+                tool_id=r.tool_id,
+                mode=r.mode,  # type: ignore[arg-type]
+                created_at=r.created_at,
+                expires_at=r.expires_at,
+                revoked_at=r.revoked_at,
+                max_views=r.max_views,
+                view_count=r.view_count,
+                last_viewed_at=r.last_viewed_at,
+                payload=r.payload,
+            )
+            for r in rows
+        ]
+
+    return [
+        ShareReportListItem(
+            id=r.id,
+            tool_id=r.tool_id,
+            mode=r.mode,  # type: ignore[arg-type]
+            created_at=r.created_at,
+            expires_at=r.expires_at,
+            revoked_at=r.revoked_at,
+            max_views=r.max_views,
+            view_count=r.view_count,
+            last_viewed_at=r.last_viewed_at,
+            payload=None,
+        )
+        for r in rows
+    ]
 
 
 @router.post("/{report_id}/rotate", response_model=ShareReportCreateResponse)
