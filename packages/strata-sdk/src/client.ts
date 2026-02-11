@@ -56,6 +56,17 @@ import type {
   ShareReportCreateResponse,
   ShareReportPublicResponse,
   ShareReportListItem,
+  TaxPlan,
+  TaxPlanCollaborator,
+  TaxPlanCollaboratorCreateRequest,
+  TaxPlanComment,
+  TaxPlanCommentCreateRequest,
+  TaxPlanCreateRequest,
+  TaxPlanEvent,
+  TaxPlanEventCreateRequest,
+  TaxPlanUpdateRequest,
+  TaxPlanVersion,
+  TaxPlanVersionCreateRequest,
 } from './types';
 
 export interface StrataClientInterface {
@@ -137,9 +148,24 @@ export interface StrataClientInterface {
   // Share Reports (public and owner)
   createShareReport(data: ShareReportCreateRequest): Promise<ShareReportCreateResponse>;
   getShareReport(reportId: string, token: string): Promise<ShareReportPublicResponse>;
-  listShareReports(params?: { toolId?: string; limit?: number }): Promise<ShareReportListItem[]>;
+  listShareReports(params?: { toolId?: string; limit?: number; includePayload?: boolean }): Promise<ShareReportListItem[]>;
   rotateShareReport(reportId: string, params?: { expiresInDays?: number | null }): Promise<ShareReportCreateResponse>;
   revokeShareReport(reportId: string): Promise<{ status: string }>;
+  // Tax Plan Workspace
+  createTaxPlan(data: TaxPlanCreateRequest): Promise<TaxPlan>;
+  listTaxPlans(params?: { limit?: number }): Promise<TaxPlan[]>;
+  getTaxPlan(planId: string): Promise<TaxPlan>;
+  updateTaxPlan(planId: string, data: TaxPlanUpdateRequest): Promise<TaxPlan>;
+  createTaxPlanVersion(planId: string, data: TaxPlanVersionCreateRequest): Promise<TaxPlanVersion>;
+  listTaxPlanVersions(planId: string, params?: { limit?: number }): Promise<TaxPlanVersion[]>;
+  approveTaxPlanVersion(planId: string, versionId: string): Promise<TaxPlanVersion>;
+  createTaxPlanComment(planId: string, data: TaxPlanCommentCreateRequest): Promise<TaxPlanComment>;
+  listTaxPlanComments(planId: string, params?: { limit?: number }): Promise<TaxPlanComment[]>;
+  addTaxPlanCollaborator(planId: string, data: TaxPlanCollaboratorCreateRequest): Promise<TaxPlanCollaborator>;
+  listTaxPlanCollaborators(planId: string): Promise<TaxPlanCollaborator[]>;
+  revokeTaxPlanCollaborator(planId: string, collaboratorId: string): Promise<{ status: string }>;
+  createTaxPlanEvent(planId: string, data: TaxPlanEventCreateRequest): Promise<TaxPlanEvent>;
+  listTaxPlanEvents(planId: string, params?: { limit?: number }): Promise<TaxPlanEvent[]>;
 }
 
 export interface StrataClientOptions {
@@ -705,9 +731,13 @@ export class StrataClient implements StrataClientInterface {
     );
   }
 
-  async listShareReports(params?: { toolId?: string; limit?: number }): Promise<ShareReportListItem[]> {
+  async listShareReports(params?: { toolId?: string; limit?: number; includePayload?: boolean }): Promise<ShareReportListItem[]> {
     return this.request<ShareReportListItem[]>(
-      this.buildUrl('/api/v1/share-reports', { tool_id: params?.toolId, limit: params?.limit })
+      this.buildUrl('/api/v1/share-reports', {
+        tool_id: params?.toolId,
+        limit: params?.limit,
+        include_payload: params?.includePayload ? "true" : undefined,
+      })
     );
   }
 
@@ -720,5 +750,103 @@ export class StrataClient implements StrataClientInterface {
 
   async revokeShareReport(reportId: string): Promise<{ status: string }> {
     return this.request<{ status: string }>(`/api/v1/share-reports/${reportId}`, { method: 'DELETE' });
+  }
+
+  // === Tax Plan Workspace ===
+
+  async createTaxPlan(data: TaxPlanCreateRequest): Promise<TaxPlan> {
+    return this.request<TaxPlan>('/api/v1/tax-plan-workspace/plans', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async listTaxPlans(params?: { limit?: number }): Promise<TaxPlan[]> {
+    return this.request<TaxPlan[]>(
+      this.buildUrl('/api/v1/tax-plan-workspace/plans', { limit: params?.limit })
+    );
+  }
+
+  async getTaxPlan(planId: string): Promise<TaxPlan> {
+    return this.request<TaxPlan>(`/api/v1/tax-plan-workspace/plans/${planId}`);
+  }
+
+  async updateTaxPlan(planId: string, data: TaxPlanUpdateRequest): Promise<TaxPlan> {
+    return this.request<TaxPlan>(`/api/v1/tax-plan-workspace/plans/${planId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async createTaxPlanVersion(planId: string, data: TaxPlanVersionCreateRequest): Promise<TaxPlanVersion> {
+    return this.request<TaxPlanVersion>(`/api/v1/tax-plan-workspace/plans/${planId}/versions`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async listTaxPlanVersions(planId: string, params?: { limit?: number }): Promise<TaxPlanVersion[]> {
+    return this.request<TaxPlanVersion[]>(
+      this.buildUrl(`/api/v1/tax-plan-workspace/plans/${planId}/versions`, { limit: params?.limit })
+    );
+  }
+
+  async approveTaxPlanVersion(planId: string, versionId: string): Promise<TaxPlanVersion> {
+    return this.request<TaxPlanVersion>(
+      `/api/v1/tax-plan-workspace/plans/${planId}/versions/${versionId}/approve`,
+      { method: 'POST' }
+    );
+  }
+
+  async createTaxPlanComment(planId: string, data: TaxPlanCommentCreateRequest): Promise<TaxPlanComment> {
+    return this.request<TaxPlanComment>(`/api/v1/tax-plan-workspace/plans/${planId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async listTaxPlanComments(planId: string, params?: { limit?: number }): Promise<TaxPlanComment[]> {
+    return this.request<TaxPlanComment[]>(
+      this.buildUrl(`/api/v1/tax-plan-workspace/plans/${planId}/comments`, { limit: params?.limit })
+    );
+  }
+
+  async addTaxPlanCollaborator(
+    planId: string,
+    data: TaxPlanCollaboratorCreateRequest
+  ): Promise<TaxPlanCollaborator> {
+    return this.request<TaxPlanCollaborator>(
+      `/api/v1/tax-plan-workspace/plans/${planId}/collaborators`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    );
+  }
+
+  async listTaxPlanCollaborators(planId: string): Promise<TaxPlanCollaborator[]> {
+    return this.request<TaxPlanCollaborator[]>(
+      `/api/v1/tax-plan-workspace/plans/${planId}/collaborators`
+    );
+  }
+
+  async revokeTaxPlanCollaborator(planId: string, collaboratorId: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>(
+      `/api/v1/tax-plan-workspace/plans/${planId}/collaborators/${collaboratorId}`,
+      { method: 'DELETE' }
+    );
+  }
+
+  async createTaxPlanEvent(planId: string, data: TaxPlanEventCreateRequest): Promise<TaxPlanEvent> {
+    return this.request<TaxPlanEvent>(`/api/v1/tax-plan-workspace/plans/${planId}/events`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async listTaxPlanEvents(planId: string, params?: { limit?: number }): Promise<TaxPlanEvent[]> {
+    return this.request<TaxPlanEvent[]>(
+      this.buildUrl(`/api/v1/tax-plan-workspace/plans/${planId}/events`, { limit: params?.limit })
+    );
   }
 }

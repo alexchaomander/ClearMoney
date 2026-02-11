@@ -52,6 +52,7 @@ class ShareReportListItem(BaseModel):
     max_views: int | None
     view_count: int
     last_viewed_at: datetime | None
+    payload: dict[str, Any] | None = None
 
     model_config = {"from_attributes": True}
 
