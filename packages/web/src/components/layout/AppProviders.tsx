@@ -10,26 +10,38 @@ import { DemoBanner } from "@/components/shared/DemoBanner";
 import { StrataAuthSync } from "@/lib/strata/auth";
 import { ToastProvider } from "@/components/shared/toast";
 
+const hasClerkKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+
+function ProvidersContent({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={null}>
+      <DemoModeProvider>
+        <QueryProvider>
+          <StrataProvider>
+            <ToastProvider>
+              {hasClerkKey ? <StrataAuthSync /> : null}
+              <DemoBanner />
+              <div className="flex min-h-screen flex-col">
+                <main className="flex-1">{children}</main>
+              </div>
+            </ToastProvider>
+          </StrataProvider>
+        </QueryProvider>
+      </DemoModeProvider>
+    </Suspense>
+  );
+}
+
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
-      <ClerkProvider>
-        <Suspense fallback={null}>
-          <DemoModeProvider>
-            <QueryProvider>
-              <StrataProvider>
-                <ToastProvider>
-                  <StrataAuthSync />
-                  <DemoBanner />
-                  <div className="flex min-h-screen flex-col">
-                    <main className="flex-1">{children}</main>
-                  </div>
-                </ToastProvider>
-              </StrataProvider>
-            </QueryProvider>
-          </DemoModeProvider>
-        </Suspense>
-      </ClerkProvider>
+      {hasClerkKey ? (
+        <ClerkProvider>
+          <ProvidersContent>{children}</ProvidersContent>
+        </ClerkProvider>
+      ) : (
+        <ProvidersContent>{children}</ProvidersContent>
+      )}
     </ThemeProvider>
   );
 }

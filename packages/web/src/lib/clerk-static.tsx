@@ -32,7 +32,7 @@ export function SignIn(props: Record<string, unknown>) {
     <div className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-6 text-neutral-100">
       <p className="font-semibold">Sign in is disabled in static export.</p>
       <p className="mt-2 text-sm text-neutral-400">
-        This deployment is built with <code>output: \"export\"</code>, so Clerk server features are not available.
+        This deployment is built with <code>output: &quot;export&quot;</code>, so Clerk server features are not available.
       </p>
     </div>
   );
@@ -44,7 +44,7 @@ export function SignUp(props: Record<string, unknown>) {
     <div className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-6 text-neutral-100">
       <p className="font-semibold">Sign up is disabled in static export.</p>
       <p className="mt-2 text-sm text-neutral-400">
-        This deployment is built with <code>output: \"export\"</code>, so Clerk server features are not available.
+        This deployment is built with <code>output: &quot;export&quot;</code>, so Clerk server features are not available.
       </p>
     </div>
   );
@@ -57,4 +57,3 @@ export function useAuth() {
     getToken: async () => null as string | null,
   };
 }
-

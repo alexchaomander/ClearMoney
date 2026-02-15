@@ -1,7 +1,7 @@
 import { SignUp } from "@clerk/nextjs";
 
 export function generateStaticParams() {
-  // Required for `output: "export"` with optional catch-all routes.
+  // Required for `static export mode` with optional catch-all routes.
   return [{ "sign-up": [] as string[] }];
 }
 
