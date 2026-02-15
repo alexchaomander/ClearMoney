@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Fraunces, Work_Sans } from "next/font/google";
 import { ArrowUpRight, ScrollText, CheckCircle2, AlertTriangle } from "lucide-react";
+import { correctionsLog } from "@/lib/transparency-data";
 
 const display = Fraunces({ subsets: ["latin"], weight: ["400", "600", "700"] });
 const body = Work_Sans({ subsets: ["latin"], weight: ["400", "500", "600"] });
@@ -11,26 +12,6 @@ export const metadata: Metadata = {
   description: "Every methodology change, public and timestamped.",
 };
 
-const corrections = [
-  {
-    date: "2026-01-19",
-    type: "Correction",
-    summary: "Updated Hilton valuation after program devaluation notice.",
-    impact: "-0.05 cpp",
-  },
-  {
-    date: "2026-01-12",
-    type: "Update",
-    summary: "Adjusted Amex Platinum credit usability defaults based on user surveys.",
-    impact: "No change to net value for median user",
-  },
-  {
-    date: "2026-01-05",
-    type: "Correction",
-    summary: "Fixed Chase Freedom Flex 5x category mapping bug.",
-    impact: "+$24/year average",
-  },
-];
 
 export default function CorrectionsPage() {
   return (
@@ -72,7 +53,7 @@ export default function CorrectionsPage() {
         <section className="mt-12 rounded-3xl border border-white/10 bg-white/5 p-8">
           <h2 className={`${display.className} text-3xl font-semibold`}>Recent corrections</h2>
           <div className="mt-6 space-y-4">
-            {corrections.map((item) => (
+            {correctionsLog.map((item) => (
               <div key={item.date} className="rounded-2xl border border-white/10 bg-white/5 p-5">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>

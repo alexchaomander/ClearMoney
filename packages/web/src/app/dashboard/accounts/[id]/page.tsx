@@ -1,6 +1,6 @@
 import { AccountDetailClient } from "./client";
 
-// Placeholder + demo IDs satisfy output: "export" requirement for dynamic routes.
+// Placeholder + demo IDs satisfy static export mode requirement for dynamic routes.
 // All account pages are rendered client-side via useParams() + API fetch.
 // Non-demo IDs are accessed via client-side navigation from the dashboard.
 export function generateStaticParams() {

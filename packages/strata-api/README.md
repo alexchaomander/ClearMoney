@@ -60,6 +60,12 @@ uvicorn app.main:app --reload --port 8000
 | `STRATA_SYNC_STALE_MINUTES` | Minutes before a connection is considered stale (default: `60`) | No |
 | `STRATA_SNAPSHOT_INTERVAL_SECONDS` | Seconds between snapshot runs (default: `86400`) | No |
 | `STRATA_BANKING_HISTORY_DAYS` | Days of transaction history to fetch on initial bank sync (default: `730`) | No |
+| `STRATA_CORS_ALLOW_ORIGINS` | Comma-separated list of allowed CORS origins (default: `http://localhost:3000,http://127.0.0.1:3000`) | No |
+| `STRATA_CORS_ALLOW_METHODS` | Comma-separated allowed CORS methods (default: `GET,POST,PUT,PATCH,DELETE,OPTIONS`) | No |
+| `STRATA_CORS_ALLOW_HEADERS` | Comma-separated allowed CORS headers | No |
+| `STRATA_CORS_ALLOW_CREDENTIALS` | Enable credentials in CORS responses (default: `true`) | No |
+
+> Note: when `STRATA_CORS_ALLOW_CREDENTIALS=true`, `STRATA_CORS_ALLOW_ORIGINS` must not contain `*`.
 
 Generate an encryption key:
 ```bash

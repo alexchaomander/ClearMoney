@@ -9,6 +9,7 @@ import {
   Receipt,
   BookOpen,
 } from "lucide-react";
+import { transparencyLastUpdated } from "@/lib/transparency-data";
 
 const display = Fraunces({ subsets: ["latin"], weight: ["400", "600", "700"] });
 const body = Work_Sans({ subsets: ["latin"], weight: ["400", "500", "600"] });
@@ -110,7 +111,7 @@ export default function TransparencyHubPage() {
                 </div>
               </div>
               <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-white/60">
-                Last updated: January 2026
+                Last updated: {transparencyLastUpdated}
               </div>
             </div>
           </div>

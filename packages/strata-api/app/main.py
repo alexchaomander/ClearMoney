@@ -55,16 +55,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Add CORS middleware
-# SECURITY: In production, replace "*" with specific frontend domain(s)
-# e.g., allow_origins=["https://clearmoney.app", "https://app.clearmoney.com"]
-# Using "*" with allow_credentials=True is insecure and should only be used in development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.cors_allow_origins,
+    allow_credentials=settings.cors_allow_credentials,
+    allow_methods=settings.cors_allow_methods,
+    allow_headers=settings.cors_allow_headers,
 )
 
 # Include routers
