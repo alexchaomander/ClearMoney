@@ -47,6 +47,6 @@ export function useMemoryWriteBack() {
         } as FinancialMemoryUpdate);
       }
     },
-    [memory, updateMemory]
+    [hasConsent, memory, updateMemory]
   );
 }

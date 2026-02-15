@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Fraunces, Work_Sans } from "next/font/google";
 import { ArrowUpRight, ShieldCheck, TrendingDown, TrendingUp } from "lucide-react";
+import { independenceAuditRows } from "@/lib/transparency-data";
 
 const display = Fraunces({ subsets: ["latin"], weight: ["400", "600", "700"] });
 const body = Work_Sans({ subsets: ["latin"], weight: ["400", "500", "600"] });
@@ -18,29 +19,6 @@ const highlights = [
   { label: "Affiliate payout transparency", value: "100%" },
 ];
 
-const rankingAudit = [
-  {
-    card: "Chase Sapphire Preferred",
-    ourRank: 4,
-    payoutRank: 1,
-    delta: -3,
-    reason: "Lower net value for dining-light spend profiles.",
-  },
-  {
-    card: "Amex Gold",
-    ourRank: 1,
-    payoutRank: 2,
-    delta: 1,
-    reason: "Highest net value for grocery-heavy households.",
-  },
-  {
-    card: "Capital One Venture X",
-    ourRank: 3,
-    payoutRank: 1,
-    delta: -2,
-    reason: "Annual fee drag without travel spend.",
-  },
-];
 
 export default function IndependenceReportPage() {
   return (
@@ -86,10 +64,10 @@ export default function IndependenceReportPage() {
         <section className="mt-12 rounded-3xl border border-white/10 bg-white/5 p-8">
           <div className="flex items-center justify-between">
             <h2 className={`${display.className} text-3xl font-semibold`}>Ranking audit</h2>
-            <span className="text-xs uppercase tracking-[0.3em] text-white/50">Sample</span>
+            <span className="text-xs uppercase tracking-[0.3em] text-white/50">Illustrative dataset</span>
           </div>
           <div className="mt-6 space-y-4">
-            {rankingAudit.map((row) => {
+            {independenceAuditRows.map((row) => {
               const DeltaIcon = row.delta > 0 ? TrendingUp : TrendingDown;
               return (
                 <div key={row.card} className="rounded-2xl border border-white/10 bg-white/5 p-5">
