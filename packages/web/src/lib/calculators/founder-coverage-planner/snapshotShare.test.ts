@@ -55,9 +55,7 @@ describe("snapshotShare", () => {
     const encoded = encodeFounderCoverageSharePayload(payload);
     const decoded = decodeFounderCoverageSharePayload(encoded);
     expect(decoded).toBeTruthy();
-    const parsed = decoded as FounderCoverageSharePayloadV2;
-    expect(parsed.version).toBe(2);
-    expect(parsed.mode).toBe("full");
+    expect(decoded).toEqual(expect.objectContaining({ version: 2, mode: "full" }));
   });
 
   test("stripCurrencyLikeText removes dollar amounts", () => {
