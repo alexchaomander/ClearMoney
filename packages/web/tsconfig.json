@@ -28,6 +28,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@clearmoney/strata-sdk": [
+        "../strata-sdk/src/index.ts"
       ]
     }
   },

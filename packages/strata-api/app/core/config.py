@@ -1,3 +1,4 @@
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -9,6 +10,10 @@ class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:///./strata.db"
     database_echo: bool = False
     credentials_encryption_key: str = ""
+    cors_allow_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    cors_allow_credentials: bool = True
+    cors_allow_methods: list[str] = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+    cors_allow_headers: list[str] = ["Authorization", "Content-Type", "X-Clerk-User-Id", "X-Step-Up-Token"]
 
     # SnapTrade configuration
     snaptrade_client_id: str = ""
@@ -44,6 +49,22 @@ class Settings(BaseSettings):
     auto_consent_on_missing: bool = False
 
     model_config = {"env_prefix": "STRATA_"}
+
+    @field_validator("cors_allow_origins", "cors_allow_methods", "cors_allow_headers", mode="before")
+    @classmethod
+    def _split_csv_values(cls, value: object) -> object:
+        """Allow comma-separated env var values for list settings."""
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
+
+    @model_validator(mode="after")
+    def _validate_cors_policy(self) -> "Settings":
+        if self.cors_allow_credentials and "*" in self.cors_allow_origins:
+            raise ValueError(
+                "STRATA_CORS_ALLOW_ORIGINS cannot contain '*' when STRATA_CORS_ALLOW_CREDENTIALS=true"
+            )
+        return self
 
 
 settings = Settings()

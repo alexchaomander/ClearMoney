@@ -818,25 +818,28 @@ We measure success differently than a typical media company. Revenue matters, bu
 
 ## Immediate Next Steps
 
-### This Week
-1. [ ] Decide on brand name
-2. [ ] Register domain
-3. [ ] Create Next.js project with proper structure
-4. [ ] Migrate Bilt calculator to new platform
+### Launch Readiness Sprint (Current)
+1. [x] Finalize core product branding and public narrative
+2. [x] Build multi-tool Next.js platform and migrate flagship tools
+3. [x] Stand up FastAPI backend with accounts, transactions, banking, and advisor APIs
+4. [x] Ship methodology, transparency, payout disclosure, and corrections hub pages
+5. [ ] Connect transparency pages to live affiliate/recommendation data ingestion
+6. [ ] Finalize production auth + deployment mode (SSR app runtime vs static export mode)
+7. [ ] Complete production hardening checklist (CORS allowlist, secrets, monitoring, incident runbook)
 
-### This Month
-1. [ ] Build shared component library
-2. [ ] Create 2 additional calculators
-3. [ ] Write 3 launch blog posts
-4. [ ] Design and build landing page
-5. [ ] Set up analytics
+### Next 30 Days
+1. [ ] Public beta launch with waitlist and feedback loop
+2. [ ] Implement analytics + funnel instrumentation
+3. [ ] Publish 6 high-signal launch articles
+4. [ ] Complete CI release gates for web + API (lint/test/build)
+5. [ ] Launch social/community distribution cadence
 
-### This Quarter
-1. [ ] Launch publicly
-2. [ ] Begin Reddit/Twitter presence
-3. [ ] Build 5 total tools
-4. [ ] Publish 12 blog posts
-5. [ ] Establish content cadence
+### Next Quarter
+1. [ ] Full public launch
+2. [ ] Grow to 10k monthly users and >30% returning usage
+3. [ ] Expand tools with top requested backlog items
+4. [ ] Publish quarterly independence and methodology update
+5. [ ] Introduce premium workflows once trust KPIs are met
 
 ---
 
@@ -893,4 +896,4 @@ That's the mission. That's why we're doing this.
 
 ---
 
-*Last updated: January 2026*
+*Last updated: February 2026*

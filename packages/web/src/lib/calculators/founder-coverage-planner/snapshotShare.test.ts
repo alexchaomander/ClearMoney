@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { encodeFounderCoverageSharePayload, decodeFounderCoverageSharePayload, stripCurrencyLikeText } from "./snapshotShare";
 import type { CalculatorInputs } from "./types";
+import type { FounderCoverageSharePayloadV2 } from "./snapshotShare";
 
 describe("snapshotShare", () => {
   test("encode/decode roundtrip (v2 full)", () => {
@@ -54,8 +55,7 @@ describe("snapshotShare", () => {
     const encoded = encodeFounderCoverageSharePayload(payload);
     const decoded = decodeFounderCoverageSharePayload(encoded);
     expect(decoded).toBeTruthy();
-    expect((decoded as any).version).toBe(2);
-    expect((decoded as any).mode).toBe("full");
+    expect(decoded).toEqual(expect.objectContaining({ version: 2, mode: "full" }));
   });
 
   test("stripCurrencyLikeText removes dollar amounts", () => {
