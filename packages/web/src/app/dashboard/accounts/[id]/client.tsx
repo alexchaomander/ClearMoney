@@ -131,7 +131,7 @@ export function AccountDetailClient() {
         lastSyncedAt,
       },
     ];
-  }, [accountData, connections?.length, fallbackAccount?.name, lastSyncedAt]);
+  }, [accountData, connections, fallbackAccount?.name, lastSyncedAt]);
 
   async function handleRefresh() {
     if (!hasSyncConsent) {

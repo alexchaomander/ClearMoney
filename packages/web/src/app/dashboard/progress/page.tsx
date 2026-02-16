@@ -164,7 +164,7 @@ export default function ProgressPage() {
       accounts?.debt_accounts
         ? accounts.debt_accounts.reduce((sum, debt) => sum + debt.balance, 0)
         : summary.total_debt_value,
-    [accounts?.debt_accounts, summary.total_debt_value],
+    [accounts, summary.total_debt_value],
   );
 
   const derived = useMemo(() => {
@@ -219,7 +219,7 @@ export default function ProgressPage() {
       maxNetWorth: timeline.reduce((acc, point) => Math.max(acc, point.value), first),
       monthlyBurn,
     };
-  }, [accounts, debtBalance, memory?.monthly_income, summary.net_worth, summary.total_cash_value, spendingSummary.monthly_average, timeline]);
+  }, [accounts, debtBalance, memory, summary, spendingSummary, timeline]);
 
   const isLoading =
     consentLoading ||

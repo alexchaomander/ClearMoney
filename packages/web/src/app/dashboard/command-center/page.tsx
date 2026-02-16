@@ -283,10 +283,11 @@ export default function CommandCenterPage() {
 
   const healthPercent = clamp(
     Math.round(
-      (toPercentSafe(derived.runway / 18) * 0.35 +
+      toPercentSafe(derived.runway / 18) * 0.35 +
         toPercentSafe(derived.reserveCoverage * 2) * 0.25 +
         toPercentSafe(1 - Math.min(1, derived.debtCoverage)) * 0.2 +
-        (derived.profileCompleteness / 6) * 100 * 0.2),
+        (derived.profileCompleteness / 6) * 100 * 0.2
+    ),
     0,
     100,
   );
