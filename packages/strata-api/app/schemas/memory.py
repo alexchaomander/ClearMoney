@@ -57,6 +57,9 @@ class FinancialMemoryUpdate(BaseModel):
     # Freeform
     notes: dict | None = None
 
+    # User preferences & overrides
+    preferences: dict | None = None
+
     # Source tracking (not stored on memory itself, used for event logging)
     source: MemoryEventSource = MemoryEventSource.user_input
     source_context: str | None = None
@@ -109,6 +112,7 @@ class FinancialMemoryResponse(BaseModel):
 
     # Freeform
     notes: dict | None
+    preferences: dict | None
 
     created_at: datetime
     updated_at: datetime

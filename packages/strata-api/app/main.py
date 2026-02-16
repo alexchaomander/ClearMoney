@@ -20,6 +20,7 @@ from app.api.credit_cards import router as credit_cards_router
 from app.api.health import router as health_router
 from app.api.institutions import router as institutions_router
 from app.api.memory import router as memory_router
+from app.api.notifications import router as notifications_router
 from app.api.portfolio import router as portfolio_router
 from app.api.share_reports import router as share_reports_router
 from app.api.skills import router as skills_router
@@ -74,6 +75,7 @@ app.include_router(institutions_router, prefix="/api/v1")
 app.include_router(portfolio_router, prefix="/api/v1")
 app.include_router(transactions_router, prefix="/api/v1")
 app.include_router(memory_router, prefix="/api/v1")
+app.include_router(notifications_router, prefix="/api/v1")
 app.include_router(skills_router, prefix="/api/v1")
 app.include_router(advisor_router, prefix="/api/v1")
 app.include_router(share_reports_router, prefix="/api/v1")

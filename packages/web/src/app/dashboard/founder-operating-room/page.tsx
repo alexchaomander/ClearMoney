@@ -36,6 +36,9 @@ import {
   useConnections,
   useSpendingSummary,
   useSyncAllConnections,
+  useVulnerabilityReport,
+  useRunwayMetrics,
+  useTaxShieldMetrics,
 } from "@/lib/strata/hooks";
 import { formatCurrency, formatMonthsAsYears, formatPercent } from "@/lib/shared/formatters";
 
@@ -205,6 +208,21 @@ export default function FounderOperatingRoomPage() {
     refetch: refetchSpending,
   } = useSpendingSummary(3, { enabled: hasConsent });
   const {
+    data: vulnerabilityReport,
+    isLoading: vulnerabilityLoading,
+    refetch: refetchVulnerability,
+  } = useVulnerabilityReport({ enabled: hasConsent });
+  const {
+    data: runwayMetrics,
+    isLoading: runwayLoading,
+    refetch: refetchRunway,
+  } = useRunwayMetrics({ enabled: hasConsent });
+  const {
+    data: taxShield,
+    isLoading: taxShieldLoading,
+    refetch: refetchTaxShield,
+  } = useTaxShieldMetrics({ enabled: hasConsent });
+  const {
     data: connections,
     isLoading: connectionsLoading,
     isError: connectionsError,
@@ -222,7 +240,10 @@ export default function FounderOperatingRoomPage() {
     bankAccountsLoading ||
     transactionsLoading ||
     memoryLoading ||
-    spendingLoading;
+    spendingLoading ||
+    vulnerabilityLoading ||
+    runwayLoading ||
+    taxShieldLoading;
 
   const isError =
     portfolioError ||
@@ -289,11 +310,14 @@ export default function FounderOperatingRoomPage() {
     const unknownSpend = Math.max(0, trackedSpend - personalSpend - businessSpend);
     const personalShare = trackedSpend > 0 ? personalSpend / trackedSpend : 0;
 
+    // Use backend report if available
+    const riskScore = vulnerabilityReport?.risk_score as number ?? 100;
+    const comminglingBand: RiskBand = (vulnerabilityReport?.status as RiskBand) || bandFromRatio(Math.min(1, personalShare), "lowerIsBetter");
+
     const debtRatio = totalDebt / totalAssets;
     const runwayBand = bandFromRatio(Math.min(1, runway / 12), "higherIsBetter");
     const savingsBand = bandFromRatio(Math.min(1, savingsRate), "higherIsBetter");
     const debtBand = bandFromRatio(debtRatio, "lowerIsBetter");
-    const comminglingBand = bandFromRatio(Math.min(1, personalShare), "lowerIsBetter");
 
     const profileCompleteness = [
       profile.monthly_income,
@@ -308,7 +332,7 @@ export default function FounderOperatingRoomPage() {
       (scoreWeight(runwayBand) * 0.3 +
         scoreWeight(savingsBand) * 0.2 +
         scoreWeight(debtBand) * 0.2 +
-        scoreWeight(comminglingBand) * 0.15 +
+        riskScore * 0.15 +
         (profileCompleteness / 6) * 100 * 0.15),
     );
 
@@ -422,16 +446,28 @@ export default function FounderOperatingRoomPage() {
   const debtBar = toPercent(1 - Math.min(0.9, derived.debtRatio));
   const comminglingBar = toPercent(1 - derived.personalShare);
 
+  const personalRunway = (runwayMetrics?.personal as any)?.runway_months ?? derived.runway;
+  const entityRunway = (runwayMetrics?.entity as any)?.runway_months ?? 0;
+
   const summaryCards = [
     {
-      label: "Runway",
-      value: formatMonthsAsYears(Math.max(0, Math.round(derived.runway))),
-      tone: runwayTone,
-      bar: runwayBar,
+      label: "Personal Runway",
+      value: formatMonthsAsYears(Math.max(0, Math.round(personalRunway))),
+      tone: riskTone(bandFromRatio(Math.min(1, personalRunway / 12), "higherIsBetter")),
+      bar: toPercent(personalRunway / 12),
       detail:
-        derived.runway >= 12
+        personalRunway >= 12
           ? "Over 1 year buffer"
           : "Under 1 year runway; watch spend discipline",
+    },
+    {
+      label: "Entity Runway",
+      value: formatMonthsAsYears(Math.max(0, Math.round(entityRunway))),
+      tone: riskTone(bandFromRatio(Math.min(1, entityRunway / 12), "higherIsBetter")),
+      bar: toPercent(entityRunway / 12),
+      detail: entityRunway > 0 
+        ? (entityRunway >= 12 ? "Solid business runway" : "Monitor entity burn closely")
+        : "No business accounts connected",
     },
     {
       label: "Burn surplus",
@@ -468,6 +504,9 @@ export default function FounderOperatingRoomPage() {
       refetchTransactions();
       refetchMemory();
       refetchSpending();
+      refetchVulnerability();
+      refetchRunway();
+      refetchTaxShield();
       if (hasConnectionsConsent) {
         refetchConnections();
       }
@@ -590,6 +629,30 @@ export default function FounderOperatingRoomPage() {
           <section className="grid lg:grid-cols-3 gap-4 mb-6">
             <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
               <div className="flex items-center justify-between">
+                <h2 className="text-lg text-white font-medium">Tax shield posture</h2>
+                <Percent className="w-4 h-4 text-emerald-300" />
+              </div>
+              <p className="mt-2 text-sm text-neutral-400">
+                Estimated quarterly tax liability based on YTD business income.
+              </p>
+              <p className="mt-3 text-2xl text-white">
+                {formatCurrency(taxShield?.next_quarterly_payment as number ?? 0)}
+              </p>
+              <div className="mt-4 space-y-2 text-sm text-neutral-300">
+                <p>YTD Biz Income: {formatCurrency(taxShield?.ytd_business_income as number ?? 0)}</p>
+                <p>Combined Rate: {formatPercent(taxShield?.estimated_combined_tax_rate as number ?? 0.31, 1)}</p>
+                <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${
+                  taxShield?.safe_harbor_met 
+                    ? "bg-emerald-900/20 text-emerald-400 border border-emerald-800/40" 
+                    : "bg-amber-900/20 text-amber-400 border border-amber-800/40"
+                }`}>
+                  {taxShield?.safe_harbor_met ? "Safe Harbor Met" : "Action Recommended"}
+                </div>
+              </div>
+            </article>
+
+            <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+              <div className="flex items-center justify-between">
                 <h2 className="text-lg text-white font-medium">Commingling signal</h2>
                 <ShieldAlert className={`w-4 h-4 ${comminglingTone.text}`} />
               </div>
@@ -597,18 +660,18 @@ export default function FounderOperatingRoomPage() {
                 Personal spend share across observed transactions.
               </p>
               <p className={`mt-3 text-2xl ${comminglingTone.text}`}>
-                {formatPercent(derived.personalShare, 1)}
+                {vulnerabilityReport?.risk_score as number ?? toPercent(1 - derived.personalShare)}%
               </p>
               <div className="mt-3 h-2 rounded-full bg-neutral-800 overflow-hidden">
                 <div
                   className={`h-full ${comminglingTone.bar}`}
-                  style={{ width: `${comminglingBar}%` }}
+                  style={{ width: `${vulnerabilityReport?.risk_score as number ?? comminglingBar}%` }}
                 />
               </div>
               <div className="mt-4 space-y-2 text-sm text-neutral-300">
-                <p>Personal spend: {formatCurrency(derived.personalSpend)}</p>
-                <p>Business spend: {formatCurrency(derived.businessSpend)}</p>
-                <p>Unclassified: {formatCurrency(derived.unknownSpend)}</p>
+                <p>Personal spend: {formatCurrency(vulnerabilityReport?.commingled_amount as number ?? derived.personalSpend)}</p>
+                <p>Total analyzed: {vulnerabilityReport?.total_analyzed as number ?? transactions.length} txns</p>
+                <p>Alerts: {vulnerabilityReport?.commingled_count as number ?? 0}</p>
               </div>
             </article>
 

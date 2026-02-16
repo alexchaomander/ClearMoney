@@ -146,6 +146,7 @@ async def create_investment_account(
         balance=data.balance,
         currency=data.currency,
         is_tax_advantaged=data.is_tax_advantaged,
+        is_business=data.is_business,
     )
     session.add(account)
     await session.commit()

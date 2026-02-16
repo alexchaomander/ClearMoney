@@ -22,6 +22,9 @@ from app.schemas.portfolio import (
     TopHolding,
 )
 from app.services.portfolio_metrics import get_cash_and_debt_totals, get_investment_total
+from app.services.commingling import ComminglingDetectionEngine
+from app.services.runway import RunwayService
+from app.services.tax_shield import TaxShieldService
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 
@@ -269,3 +272,33 @@ async def get_portfolio_history(
         )
         for snapshot in snapshots
     ]
+
+
+@router.get("/vulnerability-report")
+async def get_vulnerability_report(
+    user: User = Depends(require_scopes(["portfolio:read"])),
+    session: AsyncSession = Depends(get_async_session),
+) -> dict:
+    """Get the commingling vulnerability report for the Founder Operating Room."""
+    engine = ComminglingDetectionEngine(session)
+    return await engine.get_vulnerability_report(user.id)
+
+
+@router.get("/runway")
+async def get_runway_metrics(
+    user: User = Depends(require_scopes(["portfolio:read"])),
+    session: AsyncSession = Depends(get_async_session),
+) -> dict:
+    """Get personal and entity runway metrics for the Founder Operating Room."""
+    service = RunwayService(session)
+    return await service.get_runway_metrics(user.id)
+
+
+@router.get("/tax-shield")
+async def get_tax_shield_metrics(
+    user: User = Depends(require_scopes(["portfolio:read"])),
+    session: AsyncSession = Depends(get_async_session),
+) -> dict:
+    """Get tax shield metrics for founders."""
+    service = TaxShieldService(session)
+    return await service.get_tax_shield_metrics(user.id)
