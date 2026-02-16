@@ -1,7 +1,7 @@
 import uuid
 from typing import Sequence
-
-from fastapi import APIRouter, Depends, HTTPException
+ 
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
  
@@ -14,7 +14,11 @@ from app.schemas.action_intent import (
     ActionIntentResponse,
     ActionIntentUpdate,
 )
+from app.services.pdf_generator import PDFGenerator
+ 
 router = APIRouter(tags=["Action Intents"])
+pdf_service = PDFGenerator()
+
 
 
 @router.post("/action-intents", response_model=ActionIntentResponse)
@@ -111,3 +115,30 @@ async def update_action_intent(
     await db.commit()
     await db.refresh(intent)
     return intent
+
+
+@router.get("/{intent_id}/manifest")
+async def get_intent_manifest(
+    intent_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate and return the PDF manifest for an action intent."""
+    query = select(ActionIntent).where(
+        ActionIntent.id == intent_id, ActionIntent.user_id == current_user.id
+    )
+    result = await db.execute(query)
+    intent = result.scalar_one_or_none()
+    
+    if not intent:
+        raise HTTPException(status_code=404, detail="Action intent not found")
+        
+    pdf_bytes = pdf_service.generate_action_manifest(intent)
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=strata_intent_{intent_id}.pdf"
+        },
+    )

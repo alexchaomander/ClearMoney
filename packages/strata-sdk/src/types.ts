@@ -93,6 +93,16 @@ export interface ActionPolicyResponse {
 // Consent types
 export type ConnectionStatus = 'active' | 'inactive' | 'error' | 'pending';
 
+export type ActionCapability =
+  | 'read_only'
+  | 'ach_transfer'
+  | 'acats_transfer'
+  | 'internal_rebalance'
+  | 'kyc_export'
+  | 'pdf_generation'
+  | 'switch_kit'
+  | 'native_ledger';
+
 export interface Connection {
   id: string;
   user_id: string;
@@ -100,6 +110,7 @@ export interface Connection {
   provider: string;
   provider_user_id: string;
   status: ConnectionStatus;
+  capabilities: ActionCapability[];
   last_synced_at: string | null;
   error_code: string | null;
   error_message: string | null;
@@ -172,6 +183,7 @@ export interface InvestmentAccount {
   currency: string;
   is_tax_advantaged: boolean;
   is_business: boolean;
+  capabilities: ActionCapability[];
   created_at: string;
   updated_at: string;
 }
@@ -1013,6 +1025,7 @@ export interface BankAccount {
   mask: string | null;
   is_manual: boolean;
   is_business: boolean;
+  capabilities: ActionCapability[];
   created_at: string;
   updated_at: string;
 }
@@ -1120,4 +1133,29 @@ export interface ShareReportListItem {
   max_views: number | null;
   view_count: number;
   last_viewed_at: string | null;
+}
+
+// === Action Intents ===
+
+export type ActionIntentStatus = 'draft' | 'pending_approval' | 'processing' | 'executed' | 'failed' | 'cancelled';
+export type ActionIntentType = 'ach_transfer' | 'acats_transfer' | 'rebalance' | 'tax_loss_harvest' | 'open_account' | 'custom';
+
+export interface ActionIntent {
+  id: string;
+  user_id: string;
+  decision_trace_id: string | null;
+  intent_type: ActionIntentType;
+  status: ActionIntentStatus;
+  title: string;
+  description: string | null;
+  payload: Record<string, unknown>;
+  impact_summary: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ActionIntentUpdate {
+  status?: ActionIntentStatus;
+  payload?: Record<string, unknown>;
+  impact_summary?: Record<string, unknown>;
 }
