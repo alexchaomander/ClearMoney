@@ -29,10 +29,10 @@ class PortabilityService:
             "financial_summary": {
                 "net_worth": context.get("portfolio_metrics", {}).get("net_worth"),
                 "total_assets": context.get("portfolio_metrics", {}).get("total_investment_value", 0) + 
-                               context.get("portfolio_metrics", {}).get("total_cash", 0),
-                "total_debt": context.get("portfolio_metrics", {}).get("total_debt"),
+                               context.get("portfolio_metrics", {}).get("total_cash_value", 0),
+                "total_debt": context.get("portfolio_metrics", {}).get("total_debt_value"),
             },
-            "asset_allocation": context.get("portfolio_metrics", {}).get("allocation_pct", {}),
+            "asset_allocation": context.get("portfolio_metrics", {}).get("allocation_by_asset_type", {}),
             "profile_context": context.get("profile", {}),
             "accounts_registry": context.get("accounts", {}),
             "holdings_snapshot": context.get("holdings", []),
@@ -53,7 +53,7 @@ class PortabilityService:
     def _sign_payload(self, claims: dict[str, Any]) -> str:
         """Generate a cryptographic signature for the claims payload."""
         # Standardize the JSON representation for consistent hashing
-        serialized = json.dumps(claims, sort_keys=True, default=str)
+        serialized = json.dumps(claims, sort_keys=True, default=str, separators=(',', ':'))
         
         return hmac.new(
             settings.secret_key.encode(),
