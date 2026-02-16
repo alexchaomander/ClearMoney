@@ -120,17 +120,11 @@ const MOCK_INTENTS: MockIntent[] = [
 export default function ActionLabPage() {
   const [activeIntent, setActiveIntent] = useState<MockIntent | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
-  const [email, setEmail] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const handleWaitlist = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      setIsSubmitted(true);
-    }
-  };
-
-  const handleExecute = () => {
+    const [email, setEmail] = useState("");
+    const [isSubmitted, setIsSubmitted] = useState(false);
+   
+    const handleExecute = () => {
+  
     setIsExecuting(true);
     setTimeout(() => {
       setIsExecuting(false);
@@ -319,11 +313,18 @@ export default function ActionLabPage() {
                   We are building the Action Layer in the open. Join our early access list to help shape the roadmap. 
                   Tell us which actions you want your agent to handle first.
                 </p>
+                {/* TODO: Replace YOUR_GOOGLE_FORM_ID and field IDs with real production values before beta launch */}
                 <form 
                   action="https://docs.google.com/forms/d/e/YOUR_GOOGLE_FORM_ID/formResponse" 
                   method="POST"
                   target="_blank"
-                  onSubmit={() => setIsSubmitted(true)}
+                  onSubmit={(e) => {
+                    if (!email) {
+                      e.preventDefault();
+                    } else {
+                      setIsSubmitted(true);
+                    }
+                  }}
                   className="space-y-4"
                 >
                   <div className="relative group">
