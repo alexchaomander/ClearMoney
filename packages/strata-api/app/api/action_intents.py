@@ -4,16 +4,16 @@ from typing import Sequence
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
+ 
 from app.api.deps import get_current_user, get_db
 from app.models.action_intent import ActionIntent, ActionIntentStatus
+from app.models.decision_trace import DecisionTrace
 from app.models.user import User
 from app.schemas.action_intent import (
     ActionIntentCreate,
     ActionIntentResponse,
     ActionIntentUpdate,
 )
-
 router = APIRouter(tags=["Action Intents"])
 
 
@@ -24,6 +24,15 @@ async def create_action_intent(
     db: AsyncSession = Depends(get_db),
 ) -> ActionIntent:
     """Create a new action intent (Draft)."""
+    if intent_in.decision_trace_id:
+        trace_query = select(DecisionTrace).where(
+            DecisionTrace.id == intent_in.decision_trace_id,
+            DecisionTrace.user_id == current_user.id
+        )
+        trace_result = await db.execute(trace_query)
+        if not trace_result.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Invalid decision_trace_id")
+
     intent = ActionIntent(
         user_id=current_user.id,
         intent_type=intent_in.intent_type,
@@ -94,8 +103,10 @@ async def update_action_intent(
         raise HTTPException(status_code=404, detail="Action intent not found")
         
     update_data = update_in.model_dump(exclude_unset=True)
+    allowed_fields = {"status", "payload", "impact_summary"}
     for field, value in update_data.items():
-        setattr(intent, field, value)
+        if field in allowed_fields:
+            setattr(intent, field, value)
         
     await db.commit()
     await db.refresh(intent)
