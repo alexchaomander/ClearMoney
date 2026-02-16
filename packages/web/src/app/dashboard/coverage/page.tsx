@@ -269,8 +269,8 @@ export default function CoveragePage() {
     ];
   }, [
     allAccounts,
-    bankAccounts?.length,
-    connections?.length,
+    bankAccounts,
+    connections,
     hasConsent,
     lastSyncedAt,
     memory,

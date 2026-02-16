@@ -276,15 +276,15 @@ export default function GraphPage() {
     ];
   }, [
     allAccounts,
-    bankAccounts?.length,
+    bankAccounts,
     usingDemoData,
-    history?.length,
+    history,
     lastSyncedAt,
-    connections?.length,
+    connections,
     portfolio,
     spending,
     spending?.months_analyzed,
-    spending?.categories.length,
+    spending?.categories,
   ]);
 
   const errorDetails =

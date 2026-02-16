@@ -229,10 +229,10 @@ export default function DecisionNarrativePage() {
       },
     ];
   }, [
-    connections?.length,
+    connections,
     lastSyncedAt,
     portfolio,
-    traces?.length,
+    traces,
     profile,
   ]);
 

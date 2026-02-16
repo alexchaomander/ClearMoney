@@ -351,14 +351,13 @@ export default function ScenarioLabPage() {
     ];
   }, [
     accountCount,
-    connections?.length,
+    connections,
+    accounts,
+    spending,
+    spendingSummary,
     lastSyncedAt,
     portfolio,
-    spending,
-    spendingSummary.categories.length,
-    spendingSummary.months_analyzed,
     profile,
-    accounts,
   ]);
 
   function handlePresetSelect(presetId: string) {

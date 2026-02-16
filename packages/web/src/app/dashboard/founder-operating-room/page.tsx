@@ -409,11 +409,12 @@ export default function FounderOperatingRoomPage() {
       },
     ];
   }, [
-    connections?.length,
+    connections,
     connectedBanks.length,
     lastSyncedAt,
     portfolio,
-    transactions.length,
+    connectedBanks,
+    transactions,
   ]);
 
   const runwayBar = toPercent(derived.runway / 12);
