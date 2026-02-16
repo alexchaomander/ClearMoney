@@ -16,6 +16,7 @@ from app.models.agent_session import (
     RecommendationStatus,
     SessionStatus,
 )
+from app.models.action_intent import ActionIntent, ActionIntentStatus
 from app.models.decision_trace import DecisionTrace, DecisionTraceType
 from app.models.financial_memory import FinancialMemory, FilingStatus, RiskTolerance
 from app.models.memory_event import MemoryEvent, MemoryEventSource
@@ -237,6 +238,37 @@ ADVISOR_TOOLS = [
             "required": ["question"],
         },
     },
+    {
+        "name": "draft_action_intent",
+        "description": "Draft a proposed financial action (Intent). Use this when you identify a clear optimization like moving cash to higher yield, rebalancing, or rollovers. Actions appear in the user's Action Lab for review.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "intent_type": {
+                    "type": "string",
+                    "enum": ["ach_transfer", "acats_transfer", "rebalance", "tax_loss_harvest", "open_account", "custom"],
+                    "description": "The type of action being proposed.",
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Short, punchy title for the action (e.g., 'Optimize Cash Yield')",
+                },
+                "description": {
+                    "type": "string",
+                    "description": "1-2 sentence explanation of what the action accomplishes.",
+                },
+                "payload": {
+                    "type": "object",
+                    "description": "Technical details of the action (e.g., { 'source_account_id': '...', 'amount': 5000 }).",
+                },
+                "impact_summary": {
+                    "type": "object",
+                    "description": "The expected benefit (e.g., { 'annual_savings': 450, 'risk_reduction': 'high' }).",
+                },
+            },
+            "required": ["intent_type", "title", "description"],
+        },
+    },
 ]
 
 
@@ -439,6 +471,12 @@ class FinancialAdvisor:
             "- Flag when data is missing or stale",
             "- Monitor 'Emergency Fund Runway' and suggest building cash reserves if < 3 months",
             "- When calling create_recommendation, include data_used, rationale, warnings, and a trace object with rules/assumptions/confidence",
+            "",
+            "STRATA ACTION LAYER (ERA 2):",
+            "- You can now proactively 'Draft' financial actions for the user using the 'draft_action_intent' tool.",
+            "- Use this when you find high-impact optimizations like moving low-yield cash to a 4.5% HYSA, rebalancing an overweight portfolio, or rollover/ACATS transfers.",
+            "- Explain to the user that you have 'Drafted an Action Intent' and that they can review and execute it in the 'Action Lab'.",
+            "- Always prioritize drafting an intent over just giving passive advice when the optimization is clear and quantitative.",
         ]
 
         # Add skill-specific instructions
@@ -497,6 +535,11 @@ class FinancialAdvisor:
 
         elif tool_name == "ask_user":
             return self._handle_ask_user(tool_input)
+
+        elif tool_name == "draft_action_intent":
+            return await self._handle_draft_action_intent(
+                user_id, session_id, tool_input
+            )
 
         return {"error": f"Unknown tool: {tool_name}"}
 
@@ -826,4 +869,57 @@ class FinancialAdvisor:
             "type": "question",
             "question": question,
             "options": options,
+        }
+
+    async def _handle_draft_action_intent(
+        self, user_id: uuid.UUID, session_id: uuid.UUID, tool_input: dict
+    ) -> dict:
+        """Create a drafted action intent in the database."""
+        # Check for active session
+        result = await self._session.execute(
+            select(AgentSession).where(AgentSession.id == session_id)
+        )
+        agent_session = result.scalar_one_or_none()
+        if not agent_session:
+            return {"error": f"Session {session_id} not found"}
+
+        # Extract inputs
+        intent_type = tool_input.get("intent_type")
+        title = tool_input.get("title")
+        description = tool_input.get("description")
+        payload = tool_input.get("payload") or {}
+        impact_summary = tool_input.get("impact_summary") or {}
+
+        # Create the intent
+        intent = ActionIntent(
+            user_id=user_id,
+            intent_type=intent_type,
+            status=ActionIntentStatus.DRAFT,
+            title=title,
+            description=description,
+            payload=payload,
+            impact_summary=impact_summary,
+        )
+        
+        # Link to the latest analysis trace if available
+        trace_result = await self._session.execute(
+            select(DecisionTrace)
+            .where(DecisionTrace.session_id == session_id)
+            .order_by(DecisionTrace.created_at.desc())
+            .limit(1)
+        )
+        latest_trace = trace_result.scalar_one_or_none()
+        if latest_trace:
+            intent.decision_trace_id = latest_trace.id
+
+        self._session.add(intent)
+        await self._session.commit()
+        await self._session.refresh(intent)
+
+        return {
+            "status": "drafted",
+            "intent_id": str(intent.id),
+            "title": intent.title,
+            "type": intent.intent_type,
+            "message": f"Action intent '{intent.title}' has been drafted and is available in the Action Lab for review."
         }
