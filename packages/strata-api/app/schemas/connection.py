@@ -1,10 +1,12 @@
 import uuid
 from datetime import datetime
 from typing import Any
-
-from pydantic import BaseModel
-
+ 
+from pydantic import BaseModel, Field
+ 
 from app.models.connection import ConnectionStatus
+
+from app.schemas.action_capability import ActionCapability
 
 
 class ConnectionCreate(BaseModel):
@@ -29,6 +31,7 @@ class ConnectionResponse(BaseModel):
     provider: str
     provider_user_id: str
     status: ConnectionStatus
+    capabilities: list[ActionCapability] = Field(default_factory=lambda: [ActionCapability.READ_ONLY])
     last_synced_at: datetime | None
     error_code: str | None
     error_message: str | None
