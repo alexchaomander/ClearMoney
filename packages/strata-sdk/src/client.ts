@@ -64,6 +64,7 @@ import type {
   ActionIntent,
   ActionIntentStatus,
   ActionIntentUpdate,
+  FinancialPassport,
 } from './types';
 
 export interface StrataClientInterface {
@@ -180,6 +181,8 @@ export interface StrataClientInterface {
   getActionIntent(intentId: string): Promise<ActionIntent>;
   updateActionIntent(intentId: string, data: ActionIntentUpdate): Promise<ActionIntent>;
   getIntentManifest(intentId: string): Promise<Blob>;
+  // Portability
+  exportFinancialPassport(): Promise<FinancialPassport>;
 }
 
 export interface StrataClientOptions {
@@ -906,5 +909,11 @@ export class StrataClient implements StrataClientInterface {
     });
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);
     return response.blob();
+  }
+
+  // === Portability ===
+
+  async exportFinancialPassport(): Promise<FinancialPassport> {
+    return this.request<FinancialPassport>('/api/v1/portability/export');
   }
 }
