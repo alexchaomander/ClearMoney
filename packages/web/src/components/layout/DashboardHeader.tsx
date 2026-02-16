@@ -23,6 +23,7 @@ export function DashboardHeader({
   const navItems = [
     { label: "Tools", href: "/tools" },
     { label: "Dashboard", href: "/dashboard" },
+    { label: "Action Lab", href: "/dashboard/action-lab", isPreview: true },
     { label: "Connect", href: "/connect" },
     { label: "Advisor", href: "/advisor" },
     { label: "Profile", href: "/profile" },
@@ -46,7 +47,8 @@ export function DashboardHeader({
             <div className="flex items-center gap-1">
               {navItems.map((item) => {
                 const isActive = pathname === item.href ||
-                  (item.href === "/dashboard" && pathname.startsWith("/dashboard")) ||
+                  (item.href === "/dashboard" && pathname === "/dashboard") ||
+                  (item.href === "/dashboard/action-lab" && pathname === "/dashboard/action-lab") ||
                   (item.href === "/connect" && pathname.startsWith("/connect")) ||
                   (item.href === "/settings" && pathname.startsWith("/settings")) ||
                   (item.href === "/profile" && pathname.startsWith("/profile"));
@@ -55,13 +57,18 @@ export function DashboardHeader({
                   <Link
                     key={item.label}
                     href={item.href}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 ${
                       isActive
                         ? "text-emerald-100 bg-emerald-900/60"
                         : "text-neutral-400 hover:text-neutral-200"
                     }`}
                   >
                     {item.label}
+                    {item.isPreview && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">
+                        PREVIEW
+                      </span>
+                    )}
                   </Link>
                 );
               })}

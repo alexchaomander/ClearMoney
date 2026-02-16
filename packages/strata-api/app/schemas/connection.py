@@ -5,6 +5,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from app.models.connection import ConnectionStatus
+from app.schemas.action_capability import ActionCapability
 
 
 class ConnectionCreate(BaseModel):
@@ -29,6 +30,7 @@ class ConnectionResponse(BaseModel):
     provider: str
     provider_user_id: str
     status: ConnectionStatus
+    capabilities: list[ActionCapability] = [ActionCapability.READ_ONLY]
     last_synced_at: datetime | None
     error_code: str | None
     error_message: str | None

@@ -7,6 +7,7 @@ from decimal import Decimal
 from pydantic import BaseModel
 
 from app.models.investment_account import InvestmentAccountType
+from app.schemas.action_capability import ActionCapability
 from app.schemas.holding import HoldingWithSecurityResponse
 
 
@@ -46,6 +47,7 @@ class InvestmentAccountResponse(BaseModel):
     currency: str
     is_tax_advantaged: bool
     is_business: bool
+    capabilities: list[ActionCapability] = [ActionCapability.READ_ONLY]
     created_at: datetime
     updated_at: datetime
 
