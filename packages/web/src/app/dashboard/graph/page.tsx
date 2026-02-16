@@ -24,6 +24,7 @@ import {
   Bar,
   BarChart,
   Cell,
+  type TooltipProps,
 } from "recharts";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { ConsentGate } from "@/components/shared/ConsentGate";
@@ -66,26 +67,24 @@ function formatAxisDate(date: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function ChartTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: Array<{ value: number; dataKey: string }>;
-  label?: string;
-}) {
-  if (!active || !payload?.length || !label) return null;
+function ChartTooltip({ active, payload, label }: TooltipProps<number, string>) {
+  const numericPayload = (payload ?? []).filter(
+    (point): point is { value: number; dataKey?: string | number; name?: string } =>
+      typeof point?.value === "number",
+  );
+  if (!active || !numericPayload.length || !label) return null;
+  const labelText = String(label);
   return (
     <div className="rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs text-neutral-200">
-      <p className="text-neutral-400 mb-1">{formatAxisDate(label)}</p>
-      {payload.map((item) => (
-        <p key={item.dataKey} className="text-sm text-white">
-          {item.dataKey === "value"
-            ? `Net worth: ${formatCurrency(item.value)}`
-            : `${item.dataKey}: ${formatCurrency(item.value)}`}
-        </p>
-      ))}
+      <p className="text-neutral-400 mb-1">{formatAxisDate(labelText)}</p>
+      {numericPayload.map((item) => {
+        const key = String(item.dataKey ?? item.name ?? "value");
+        return (
+          <p key={key} className="text-sm text-white">
+            {item.dataKey === "value" ? `Net worth: ${formatCurrency(item.value)}` : `${key}: ${formatCurrency(item.value)}`}
+          </p>
+        );
+      })}
     </div>
   );
 }
@@ -147,6 +146,7 @@ export default function GraphPage() {
     data: bankAccounts,
     isLoading: bankAccountsLoading,
     isError: bankAccountsError,
+    error: bankAccountsErrorDetails,
     refetch: refetchBankAccounts,
   } = useBankAccounts({ enabled: hasDataConsent });
 
