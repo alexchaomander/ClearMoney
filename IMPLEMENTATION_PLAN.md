@@ -24,7 +24,7 @@ This document tracks the evolution of Strata from a financial data aggregator in
 **Goal:** Remove "Cognitive Friction" by preparing actions for the user. Bridge the gap to legacy banks.
 
 ### 2.1 The Action Intent System (SAL)
-- [ ] **Backend:** Implement the `ActionIntent` model and lifecycle (DRAFT -> PENDING -> EXECUTED).
+- [x] **Backend:** Implement the `ActionIntent` model and lifecycle (DRAFT -> PENDING -> EXECUTED).
 - [ ] **Backend:** Add `capabilities` discovery to `BaseProvider` (e.g., "Supports ACATS", "API-Enabled").
 - [ ] **UI:** "Action Approval Room" - A dedicated UI for reviewing and signing off on agent-proposed actions.
 
