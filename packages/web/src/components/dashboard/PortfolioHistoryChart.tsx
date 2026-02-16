@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { PortfolioHistoryPoint, PortfolioHistoryRange } from "@clearmoney/strata-sdk";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -10,7 +11,6 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import type { PortfolioHistoryRange } from "@clearmoney/strata-sdk";
 import { usePortfolioHistory } from "@/lib/strata/hooks";
 import { formatCurrency } from "@/lib/shared/formatters";
 
@@ -41,6 +41,10 @@ interface CustomTooltipProps {
   label?: string;
 }
 
+interface PortfolioHistoryChartProps {
+  previewHistory?: Partial<Record<PortfolioHistoryRange, PortfolioHistoryPoint[]>>;
+}
+
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length || !label) return null;
   return (
@@ -53,10 +57,17 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   );
 }
 
-export function PortfolioHistoryChart() {
+export function PortfolioHistoryChart({ previewHistory }: PortfolioHistoryChartProps) {
   const [selectedRange, setSelectedRange] =
     useState<PortfolioHistoryRange>("1y");
-  const { data, isLoading } = usePortfolioHistory(selectedRange);
+  const useLiveHistory = Object.keys(previewHistory ?? {}).length === 0;
+  const { data, isLoading } = usePortfolioHistory(selectedRange, { enabled: useLiveHistory });
+  const hasPreview = !useLiveHistory;
+  const historyData =
+    hasPreview && previewHistory?.[selectedRange]
+      ? previewHistory[selectedRange]
+      : data;
+  const isLiveLoading = !hasPreview && isLoading;
 
   return (
     <div className="p-6 rounded-xl bg-neutral-900 border border-neutral-800">
@@ -81,12 +92,12 @@ export function PortfolioHistoryChart() {
         </div>
       </div>
 
-      {isLoading || !data ? (
+      {isLiveLoading || !historyData ? (
         <div className="h-[280px] rounded-lg bg-neutral-800/50 animate-pulse" />
       ) : (
         <ResponsiveContainer width="100%" height={280}>
           <AreaChart
-            data={data}
+            data={historyData}
             margin={{ top: 4, right: 4, bottom: 0, left: 0 }}
           >
             <defs>
