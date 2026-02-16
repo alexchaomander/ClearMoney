@@ -37,6 +37,7 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  type TooltipProps,
   Line,
   ResponsiveContainer,
   Tooltip,
@@ -105,24 +106,24 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function scenarioTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: Array<{ value: number; dataKey: string }>;
-  label?: string;
-}) {
-  if (!active || !payload?.length || !label) return null;
+function scenarioTooltip({ active, payload, label }: TooltipProps<number, string>) {
+  const numericPayload = (payload ?? []).filter(
+    (item): item is { value: number; dataKey?: string | number; name?: string } =>
+      typeof item?.value === "number",
+  );
+  if (!active || !numericPayload.length || !label) return null;
+  const labelText = String(label);
   return (
     <div className="rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs text-neutral-200">
-      <p className="text-neutral-400 mb-2">{label}</p>
-      {payload.map((item) => (
-        <p key={item.dataKey} className="leading-relaxed">
-          {item.dataKey}: {formatCurrency(item.value)}
-        </p>
-      ))}
+      <p className="text-neutral-400 mb-2">{labelText}</p>
+      {numericPayload.map((item) => {
+        const key = String(item.dataKey ?? item.name ?? "value");
+        return (
+          <p key={key} className="leading-relaxed">
+            {key}: {formatCurrency(item.value)}
+          </p>
+        );
+      })}
     </div>
   );
 }
@@ -188,6 +189,10 @@ export default function ScenarioLabPage() {
   const summary = portfolio ?? getPreviewPortfolioSummary();
   const profile = memory ?? FALLBACK_FINANCIAL_MEMORY;
   const spendingSummary = spending ?? FALLBACK_SPENDING_SUMMARY;
+  const accountCount =
+    (accounts?.investment_accounts?.length ?? 0) +
+    (accounts?.cash_accounts?.length ?? 0) +
+    (accounts?.debt_accounts?.length ?? 0);
 
   const debtAccounts = accounts?.debt_accounts ?? [];
   const debtBalance = debtAccounts.length > 0

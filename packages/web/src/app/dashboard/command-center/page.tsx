@@ -50,6 +50,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  type TooltipProps,
 } from "recharts";
 
 type RiskBand = "good" | "watch" | "critical";
@@ -110,27 +111,27 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function ChartTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: Array<{ value: number; dataKey: string }>;
-  label?: string;
-}) {
-  if (!active || !payload?.length || !label) return null;
+function ChartTooltip({ active, payload, label }: TooltipProps<number, string>) {
+  const numericPayload = (payload ?? []).filter(
+    (point): point is { value: number; dataKey?: string | number; name?: string } =>
+      typeof point?.value === "number",
+  );
+  if (!active || !numericPayload.length || !label) return null;
+  const labelText = String(label);
   return (
     <div className="rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs text-neutral-200">
-      <p className="text-neutral-400 mb-1">{label}</p>
-      {payload.map((point) => (
-        <p key={point.dataKey} className="leading-relaxed">
-          {point.dataKey === "value" ? "Net worth" : point.dataKey}:{" "}
+      <p className="text-neutral-400 mb-1">{labelText}</p>
+      {numericPayload.map((point) => {
+        const key = String(point.dataKey ?? point.name ?? "value");
+        return (
+          <p key={key} className="leading-relaxed">
+            {point.dataKey === "value" ? "Net worth" : key}:{" "}
           {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(
             point.value,
           )}
         </p>
-      ))}
+        );
+      })}
     </div>
   );
 }
