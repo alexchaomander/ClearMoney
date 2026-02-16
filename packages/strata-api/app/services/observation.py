@@ -59,7 +59,7 @@ class ObservationService:
                     Notification.is_read == False
                 )
             )
-            if not existing.scalar_one_or_none():
+            if not existing.scalars().first():
                 notification = Notification(
                     user_id=user_id,
                     type=NotificationType.low_emergency_fund,
@@ -89,7 +89,7 @@ class ObservationService:
                     Notification.is_read == False
                 )
             )
-            if not existing.scalar_one_or_none():
+            if not existing.scalars().first():
                 notification = Notification(
                     user_id=user_id,
                     type=NotificationType.data_stale,
@@ -126,7 +126,7 @@ class ObservationService:
                     Notification.is_read == False
                 )
             )
-            if not existing.scalar_one_or_none():
+            if not existing.scalars().first():
                 notification = Notification(
                     user_id=user_id,
                     type=NotificationType.policy_breach,
@@ -157,7 +157,7 @@ class ObservationService:
                     Notification.is_read == False
                 )
             )
-            if not existing.scalar_one_or_none():
+            if not existing.scalars().first():
                 notification = Notification(
                     user_id=user_id,
                     type=NotificationType.tax_loss_harvesting,

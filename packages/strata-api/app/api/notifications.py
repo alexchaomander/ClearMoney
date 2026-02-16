@@ -18,10 +18,6 @@ async def list_notifications(
     user: User = Depends(require_scopes(["notifications:read"])),
     session: AsyncSession = Depends(get_async_session),
 ) -> list[NotificationResponse]:
-    # Refresh observations
-    obs_service = ObservationService(session)
-    await obs_service.run_observations(user.id)
-
     result = await session.execute(
         select(Notification)
         .where(Notification.user_id == user.id)

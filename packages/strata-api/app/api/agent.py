@@ -144,9 +144,11 @@ async def execute_recommendation(
     # Handle specialized execution paths
     if action_type == "savings_transfer" and amount:
         transfer_service = PlaidTransferService(session)
-        # Note: from/to account IDs would come from action_payload in a real scenario
-        from_id = action_payload.get("from_account_id") or "chase_checking"
-        to_id = action_payload.get("to_account_id") or "marcus_savings"
+        from_id = action_payload.get("from_account_id")
+        to_id = action_payload.get("to_account_id")
+        
+        if not from_id or not to_id:
+            raise HTTPException(status_code=400, detail="Missing source or destination account for transfer")
         
         transfer = await transfer_service.initiate_transfer(
             user_id=user.id,
