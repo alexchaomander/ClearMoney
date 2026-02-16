@@ -318,7 +318,9 @@ export default function ActionLabPage() {
                   desc: "Move your entire financial history and context between any AI agent with a single thumbprint.",
                   action: {
                     label: exportPassport.isPending ? "Generating..." : "Export Passport (FPP v1)",
-                    onClick: () => exportPassport.mutate(),
+                    onClick: () => exportPassport.mutate(undefined, {
+                      onError: (error) => console.error("Passport export failed:", error)
+                    }),
                     disabled: exportPassport.isPending
                   }
                 },
