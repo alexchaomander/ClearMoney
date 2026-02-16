@@ -1159,3 +1159,14 @@ export interface ActionIntentUpdate {
   payload?: Record<string, unknown>;
   impact_summary?: Record<string, unknown>;
 }
+
+// === Data Portability ===
+
+export interface FinancialPassport {
+  "@context": string;
+  id: string;
+  issuer: string;
+  issued_at: string;
+  claims: Record<string, unknown>;
+  signature: string | null;
+}

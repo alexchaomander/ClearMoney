@@ -21,6 +21,7 @@ import type {
   ActionIntentStatus,
   ActionIntentType,
   ActionIntentUpdate,
+  FinancialPassport,
 } from "@clearmoney/strata-sdk";
 
 export const queryKeys = {
@@ -867,6 +868,24 @@ export function useDownloadIntentManifest() {
       const a = document.createElement("a");
       a.href = url;
       a.download = `strata_intent_${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
+  });
+}
+
+export function useExportFinancialPassport() {
+  const client = useStrataClient();
+  return useMutation({
+    mutationFn: () => client.exportFinancialPassport(),
+    onSuccess: (data) => {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `financial_passport_${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
