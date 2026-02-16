@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Calculator, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { NotificationCenter } from "@/components/dashboard/NotificationCenter";
 
 interface DashboardHeaderProps {
   onRefresh?: () => void;
@@ -89,7 +90,10 @@ export function DashboardHeader({
               </SignInButton>
             </SignedOut>
             <SignedIn>
-              <UserButton />
+              <div className="flex items-center gap-2">
+                <NotificationCenter />
+                <UserButton />
+              </div>
             </SignedIn>
           </div>
         </nav>

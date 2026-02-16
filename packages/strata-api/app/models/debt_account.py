@@ -40,5 +40,6 @@ class DebtAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Numeric(precision=14, scale=2), default=Decimal("0.00")
     )
     institution_name: Mapped[str | None] = mapped_column(String(255))
+    is_business: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
 
     user: Mapped["User"] = relationship(back_populates="debt_accounts")

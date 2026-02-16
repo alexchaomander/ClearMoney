@@ -48,6 +48,7 @@ class CashAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     mask: Mapped[str | None] = mapped_column(String(10), nullable=True)
     is_manual: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    is_business: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
 
     user: Mapped["User"] = relationship(back_populates="cash_accounts")
     connection: Mapped["Connection | None"] = relationship(back_populates="cash_accounts")

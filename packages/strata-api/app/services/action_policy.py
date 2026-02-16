@@ -28,6 +28,7 @@ class ActionPolicyService:
         allowed_actions: list[str],
         max_amount: float | None,
         require_confirmation: bool,
+        require_mfa: bool,
         status: str,
     ) -> AgentActionPolicy:
         policy = await self.get_policy(user_id)
@@ -38,6 +39,7 @@ class ActionPolicyService:
         policy.allowed_actions = allowed_actions
         policy.max_amount = max_amount
         policy.require_confirmation = require_confirmation
+        policy.require_mfa = require_mfa
         policy.status = ActionPolicyStatus(status)
         await self._session.commit()
         await self._session.refresh(policy)

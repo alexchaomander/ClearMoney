@@ -12,8 +12,10 @@ import {
   RefreshCw,
   Check,
   History,
+  TrendingUp,
 } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
+import { Slider } from "@/components/ui/slider";
 import {
   useFinancialMemory,
   useUpdateMemory,
@@ -32,6 +34,58 @@ import { ConsentGate } from "@/components/shared/ConsentGate";
 // ---------------------------------------------------------------------------
 // Field input components
 // ---------------------------------------------------------------------------
+
+function SliderField({
+  label,
+  memoryKey,
+  memory,
+  onSave,
+  min,
+  max,
+  step = 1,
+  formatValue = (v) => String(v),
+}: {
+  label: string;
+  memoryKey: keyof FinancialMemory;
+  memory: FinancialMemory;
+  onSave: (data: FinancialMemoryUpdate) => void;
+  min: number;
+  max: number;
+  step?: number;
+  formatValue?: (v: number) => string;
+}) {
+  const rawValue = memory[memoryKey];
+  const initialValue = rawValue != null ? Number(rawValue) : min;
+  const [localValue, setLocalValue] = useState(initialValue);
+
+  const handleValueChange = (values: number[]) => {
+    setLocalValue(values[0]);
+  };
+
+  const handleCommit = (values: number[]) => {
+    onSave({ [memoryKey]: values[0] } as unknown as FinancialMemoryUpdate);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <label className="text-sm text-neutral-400">{label}</label>
+        <span className="text-sm font-medium text-emerald-400">
+          {formatValue(localValue)}
+        </span>
+      </div>
+      <Slider
+        value={[localValue]}
+        min={min}
+        max={max}
+        step={step}
+        onValueChange={handleValueChange}
+        onValueCommit={handleCommit}
+        className="py-4"
+      />
+    </div>
+  );
+}
 
 function NumberField({
   label,
@@ -437,61 +491,66 @@ export default function ProfilePage() {
                 Retirement
               </h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <NumberField
-                label="Retirement Age"
+            <div className="space-y-6">
+              <SliderField
+                label="Target Retirement Age"
                 memoryKey="retirement_age"
                 memory={memory}
                 onSave={onSave}
-                min={50}
+                min={45}
                 max={85}
+                formatValue={(v) => `${v} years old`}
               />
-              <NumberField
-                label="Current Retirement Savings"
-                memoryKey="current_retirement_savings"
-                memory={memory}
-                onSave={onSave}
-                prefix="$"
-                min={0}
-                step={1000}
-              />
-              <NumberField
-                label="Monthly Retirement Contribution"
-                memoryKey="monthly_retirement_contribution"
-                memory={memory}
-                onSave={onSave}
-                prefix="$"
-                min={0}
-                step={50}
-              />
-              <NumberField
-                label="Employer Match %"
-                memoryKey="employer_match_pct"
-                memory={memory}
-                onSave={onSave}
-                suffix="%"
-                step={0.01}
-                min={0}
-                max={1}
-              />
-              <NumberField
-                label="Expected Social Security (monthly)"
-                memoryKey="expected_social_security"
-                memory={memory}
-                onSave={onSave}
-                prefix="$"
-                min={0}
-                step={100}
-              />
-              <NumberField
-                label="Desired Retirement Income (annual)"
-                memoryKey="desired_retirement_income"
-                memory={memory}
-                onSave={onSave}
-                prefix="$"
-                min={0}
-                step={1000}
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <NumberField
+                  label="Current Retirement Savings"
+                  memoryKey="current_retirement_savings"
+                  memory={memory}
+                  onSave={onSave}
+                  prefix="$"
+                  min={0}
+                  step={1000}
+                />
+                <NumberField
+                  label="Monthly Retirement Contribution"
+                  memoryKey="monthly_retirement_contribution"
+                  memory={memory}
+                  onSave={onSave}
+                  prefix="$"
+                  min={0}
+                  step={50}
+                />
+                <NumberField
+                  label="Employer Match %"
+                  memoryKey="employer_match_pct"
+                  memory={memory}
+                  onSave={onSave}
+                  suffix="%"
+                  step={0.01}
+                  min={0}
+                  max={1}
+                />
+                <NumberField
+                  label="Expected Social Security (monthly)"
+                  memoryKey="expected_social_security"
+                  memory={memory}
+                  onSave={onSave}
+                  prefix="$"
+                  min={0}
+                  step={100}
+                />
+                <div className="sm:col-span-2">
+                  <NumberField
+                    label="Desired Retirement Income (annual)"
+                    memoryKey="desired_retirement_income"
+                    memory={memory}
+                    onSave={onSave}
+                    prefix="$"
+                    min={0}
+                    step={1000}
+                  />
+                </div>
+              </div>
             </div>
           </motion.div>
 
@@ -560,39 +619,62 @@ export default function ProfilePage() {
                 Goals & Preferences
               </h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <SelectField
-                label="Risk Tolerance"
-                memoryKey="risk_tolerance"
-                memory={memory}
-                onSave={onSave}
-                options={RISK_TOLERANCE_OPTIONS}
-              />
-              <NumberField
-                label="Investment Horizon (years)"
-                memoryKey="investment_horizon_years"
-                memory={memory}
-                onSave={onSave}
-                min={1}
-                max={60}
-              />
-              <NumberField
-                label="Monthly Savings Target"
-                memoryKey="monthly_savings_target"
-                memory={memory}
-                onSave={onSave}
-                prefix="$"
-                min={0}
-                step={100}
-              />
-              <NumberField
-                label="Emergency Fund Target (months)"
-                memoryKey="emergency_fund_target_months"
-                memory={memory}
-                onSave={onSave}
-                min={1}
-                max={24}
-              />
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm text-neutral-400">Risk Tolerance</label>
+                  <span className="text-sm font-medium text-emerald-400 capitalize">
+                    {memory.risk_tolerance || "Not set"}
+                  </span>
+                </div>
+                <Slider
+                  value={[
+                    memory.risk_tolerance === "aggressive" ? 2 :
+                    memory.risk_tolerance === "moderate" ? 1 : 0
+                  ]}
+                  min={0}
+                  max={2}
+                  step={1}
+                  onValueCommit={(values) => {
+                    const mapped: RiskTolerance = values[0] === 2 ? "aggressive" : values[0] === 1 ? "moderate" : "conservative";
+                    onSave({ risk_tolerance: mapped });
+                  }}
+                  className="py-4"
+                />
+                <div className="flex justify-between text-[10px] text-neutral-500 uppercase tracking-widest px-1">
+                  <span>Conservative</span>
+                  <span>Moderate</span>
+                  <span>Aggressive</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                <NumberField
+                  label="Investment Horizon (years)"
+                  memoryKey="investment_horizon_years"
+                  memory={memory}
+                  onSave={onSave}
+                  min={1}
+                  max={60}
+                />
+                <NumberField
+                  label="Monthly Savings Target"
+                  memoryKey="monthly_savings_target"
+                  memory={memory}
+                  onSave={onSave}
+                  prefix="$"
+                  min={0}
+                  step={100}
+                />
+                <NumberField
+                  label="Emergency Fund Target (months)"
+                  memoryKey="emergency_fund_target_months"
+                  memory={memory}
+                  onSave={onSave}
+                  min={1}
+                  max={24}
+                />
+              </div>
             </div>
           </motion.div>
 

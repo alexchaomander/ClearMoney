@@ -58,7 +58,39 @@ export interface ExecuteRecommendationResponse {
   updated_at: string;
 }
 
-// Connection types
+export interface NotificationResponse {
+  id: string;
+  type: string;
+  severity: 'info' | 'warning' | 'critical';
+  title: string;
+  message: string;
+  metadata_json: Record<string, unknown> | null;
+  is_read: boolean;
+  action_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ActionPolicyRequest {
+  allowed_actions: string[];
+  max_amount: number | null;
+  require_confirmation: boolean;
+  require_mfa: boolean;
+  status: string;
+}
+
+export interface ActionPolicyResponse {
+  id: string;
+  allowed_actions: string[];
+  max_amount: number | null;
+  require_confirmation: boolean;
+  require_mfa: boolean;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Consent types
 export type ConnectionStatus = 'active' | 'inactive' | 'error' | 'pending';
 
 export interface Connection {
@@ -139,6 +171,7 @@ export interface InvestmentAccount {
   balance: number;
   currency: string;
   is_tax_advantaged: boolean;
+  is_business: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -157,6 +190,7 @@ export interface CashAccount {
   available_balance: number | null;
   mask: string | null;
   is_manual: boolean;
+  is_business: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -170,6 +204,7 @@ export interface DebtAccount {
   interest_rate: number;
   minimum_payment: number;
   institution_name: string | null;
+  is_business: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -479,6 +514,7 @@ export interface FinancialMemory {
 
   // Freeform
   notes: Record<string, unknown> | null;
+  preferences: Record<string, unknown> | null;
 
   created_at: string;
   updated_at: string;
@@ -528,6 +564,7 @@ export interface FinancialMemoryUpdate {
 
   // Freeform
   notes?: Record<string, unknown> | null;
+  preferences?: Record<string, unknown> | null;
 
   // Source tracking
   source?: MemoryEventSource;
@@ -974,6 +1011,7 @@ export interface BankAccount {
   institution_name: string | null;
   mask: string | null;
   is_manual: boolean;
+  is_business: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -994,6 +1032,7 @@ export interface BankTransaction {
   iso_currency_code: string;
   reimbursed_at: string | null;
   reimbursement_memo: string | null;
+  is_commingled: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -52,6 +52,7 @@ class InvestmentAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     currency: Mapped[str] = mapped_column(String(3), default="USD")
     is_tax_advantaged: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_business: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
 
     user: Mapped["User"] = relationship(back_populates="investment_accounts")
     connection: Mapped["Connection | None"] = relationship(
