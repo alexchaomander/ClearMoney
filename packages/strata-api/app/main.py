@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.advisor import router as advisor_router
 from app.api.agent import router as agent_router
+from app.api.action_intents import router as action_intents_router
 from app.api.action_policy import router as action_policy_router
 from app.api.action_approval import router as action_approval_router
 from app.api.banking import router as banking_router
@@ -81,6 +82,7 @@ app.include_router(skills_router, prefix="/api/v1")
 app.include_router(advisor_router, prefix="/api/v1")
 app.include_router(share_reports_router, prefix="/api/v1")
 app.include_router(agent_router, prefix="/api/v1")
+app.include_router(action_intents_router, prefix="/api/v1")
 app.include_router(action_policy_router, prefix="/api/v1")
 app.include_router(action_approval_router, prefix="/api/v1")
 app.include_router(banking_router, prefix="/api/v1")

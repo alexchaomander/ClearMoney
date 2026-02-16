@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
+    from app.models.action_intent import ActionIntent
     from app.models.cash_account import CashAccount
     from app.models.connection import Connection
     from app.models.debt_account import DebtAccount
@@ -38,5 +39,8 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     portfolio_snapshots: Mapped[list["PortfolioSnapshot"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    action_intents: Mapped[list["ActionIntent"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
