@@ -10,6 +10,7 @@ import type {
   DebtAccountCreate,
   DebtAccountUpdate,
   FinancialMemoryUpdate,
+  ExecuteRecommendationRequest,
   InvestmentAccountCreate,
   LinkSessionRequest,
   PlaidCallbackRequest,
@@ -51,6 +52,8 @@ export const queryKeys = {
   income: ["data", "income"] as const,
   credit: ["data", "credit"] as const,
   protection: ["data", "protection"] as const,
+  dataHealth: ["data", "health"] as const,
+  transparencyPayload: ["data", "transparency"] as const,
   toolPresets: ["data", "toolPresets"] as const,
   consents: ["consents"] as const,
   decisionTraces: (filters?: { sessionId?: string; recommendationId?: string }) =>
@@ -217,6 +220,22 @@ export function useProtectionData() {
   return useQuery({
     queryKey: queryKeys.protection,
     queryFn: () => client.getProtection(),
+  });
+}
+
+export function useDataHealth() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.dataHealth,
+    queryFn: () => client.getDataHealth(),
+  });
+}
+
+export function useTransparencyPayload() {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.transparencyPayload,
+    queryFn: () => client.getTransparencyPayload(),
   });
 }
 
@@ -542,6 +561,25 @@ export function useRecommendations() {
   return useQuery({
     queryKey: queryKeys.recommendations,
     queryFn: () => client.getRecommendations(),
+  });
+}
+
+export function useExecuteRecommendation() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      recommendationId,
+      request,
+    }: {
+      recommendationId: string;
+      request: ExecuteRecommendationRequest;
+    }) => client.executeRecommendation(recommendationId, request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.recommendations });
+      queryClient.invalidateQueries({ queryKey: ["decisionTraces"] });
+    },
   });
 }
 
