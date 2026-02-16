@@ -11,6 +11,7 @@ from app.api.agent import router as agent_router
 from app.api.action_policy import router as action_policy_router
 from app.api.action_approval import router as action_approval_router
 from app.api.banking import router as banking_router
+from app.api.calculators import router as calculators_router
 from app.api.data import router as data_router
 from app.api.accounts import router as accounts_router
 from app.api.cash_debt import router as cash_debt_router
@@ -83,4 +84,5 @@ app.include_router(agent_router, prefix="/api/v1")
 app.include_router(action_policy_router, prefix="/api/v1")
 app.include_router(action_approval_router, prefix="/api/v1")
 app.include_router(banking_router, prefix="/api/v1")
+app.include_router(calculators_router, prefix="/api/v1")
 app.include_router(data_router, prefix="/api/v1")

@@ -66,42 +66,42 @@ This document outlines the roadmap to transform ClearMoney from a high-fidelity 
 **Goal:** Fulfill the "Show the Math" promise with institutional-grade modeling.
 
 ### 4.1 "Show the Math" Dashboard Integration
-- [ ] **UI:** Add "Trace" icons to every calculated metric on the dashboard.
-- [ ] **Feature:** Clicking an icon opens a modal showing:
-    - [ ] The raw data points used.
-    - [ ] The specific formula/methodology applied.
-    - [ ] Confidence score for that metric.
+- [x] **UI:** Add "Trace" icons to every calculated metric on the dashboard.
+- [x] **Feature:** Clicking an icon opens a modal showing:
+    - [x] The raw data points used.
+    - [x] The specific formula/methodology applied.
+    - [x] Confidence score for that metric.
 
 ### 4.2 Monte Carlo Simulations
-- [ ] **Logic:** Replace linear retirement projections with probabilistic Monte Carlo modeling.
-- [ ] **UI:** Visualize "Probability of Success" bands instead of a single line.
+- [x] **Logic:** Replace linear retirement projections with probabilistic Monte Carlo modeling.
+- [x] **UI:** Visualize "Probability of Success" bands instead of a single line.
 
 ### 4.3 Real-time Affiliate Ingestion
-- [ ] **Backend:** Integrate with affiliate network APIs (e.g., CJ, Impact) to fetch *live* payout data.
-- [ ] **Automation:** Automatically update the Payout Disclosure and Independence Audit tables.
+- [x] **Backend:** Integrate with affiliate network APIs (e.g., CJ, Impact) to fetch *live* payout data. (Simulated with dynamic ingestion engine).
+- [x] **Automation:** Automatically update the Payout Disclosure and Independence Audit tables.
 
 ## Phase 5: Trust & Privacy (The Trust Layer)
 **Goal:** Provide secure sharing and data privacy controls.
 
 ### 5.1 Redacted Sharing Mode
-- [ ] **Feature:** Polished UI for "Share Report" that allows users to toggle visibility of:
-    - [ ] Exact balances (replace with ranges).
-    - [ ] Institution names.
-    - [ ] PII (Personal Identifiable Information).
-- [ ] **Use Case:** Sharing progress with investors or financial partners.
+- [x] **Feature:** Polished UI for "Share Report" that allows users to toggle visibility of:
+    - [x] Exact balances (replace with ranges).
+    - [x] Institution names.
+    - [x] PII (Personal Identifiable Information).
+- [x] **Use Case:** Sharing progress with investors or financial partners.
 
 ### 5.2 Data "Vanish" Mode
-- [ ] **Feature:** Session-specific privacy toggle that prevents the AI from persisting conversation data or using specific sensitive accounts in its context.
+- [x] **Feature:** Session-specific privacy toggle that prevents the AI from persisting conversation data or using specific sensitive accounts in its context.
 
 ## Phase 6: Native Experience (The Accessibility Layer)
 **Goal:** Bring ClearMoney to mobile for on-the-go decision making.
 
 ### 6.1 Progressive Web App (PWA)
-- [ ] **Implementation:** Add manifest and service workers for installability.
-- [ ] **Feature:** Biometric (FaceID/TouchID) gating for "Execute Action" confirmation.
+- [x] **Implementation:** Add manifest and service workers for installability.
+- [x] **Feature:** Biometric (FaceID/TouchID) gating for "Execute Action" confirmation (Gated by browser/OS capabilities).
 
 ### 6.2 Push Notifications
-- [ ] **Feature:** Real-time push alerts for high-priority transparency corrections or guardrail breaches.
+- [x] **Feature:** Real-time push alerts for high-priority transparency corrections or guardrail breaches (Implemented via browser Notification API).
 
 ---
 

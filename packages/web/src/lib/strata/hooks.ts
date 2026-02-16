@@ -25,6 +25,7 @@ export const queryKeys = {
   vulnerabilityReport: ["portfolio", "vulnerabilityReport"] as const,
   runwayMetrics: ["portfolio", "runwayMetrics"] as const,
   taxShieldMetrics: ["portfolio", "taxShieldMetrics"] as const,
+  monteCarloRetirement: (params: any) => ["calculators", "monteCarlo", params] as const,
   investmentAccount: (id: string) => ["accounts", "investment", id] as const,
   holdings: ["portfolio", "holdings"] as const,
   transactions: (params?: { accountId?: string; startDate?: string; endDate?: string }) =>
@@ -113,6 +114,18 @@ export function useTaxShieldMetrics(options?: { enabled?: boolean }) {
     queryKey: queryKeys.taxShieldMetrics,
     queryFn: () => client.getTaxShieldMetrics(),
     enabled: options?.enabled ?? true,
+  });
+}
+
+export function useRetirementMonteCarlo(
+  params: Parameters<ReturnType<typeof useStrataClient>["runRetirementMonteCarlo"]>[0],
+  options?: { enabled?: boolean }
+) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.monteCarloRetirement(params),
+    queryFn: () => client.runRetirementMonteCarlo(params),
+    enabled: (options?.enabled ?? true) && !!params.desired_annual_income,
   });
 }
 
@@ -660,7 +673,8 @@ export function useCreateAdvisorSession() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (skillName?: string) => client.createAdvisorSession(skillName),
+    mutationFn: ({ skillName, vanishMode }: { skillName?: string; vanishMode?: boolean } = {}) => 
+      client.createAdvisorSession(skillName, vanishMode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.advisorSessions });
     },

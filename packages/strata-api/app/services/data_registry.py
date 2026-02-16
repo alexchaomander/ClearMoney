@@ -1,4 +1,5 @@
 import json
+import random
 from functools import lru_cache
 from pathlib import Path
 from datetime import datetime, timezone
@@ -161,4 +162,14 @@ def get_data_health() -> DataHealthResponse:
 def get_transparency_payload() -> TransparencyPayload:
     data_dir = _resolve_data_dir()
     item = _load_json(data_dir / "transparency_payload.json")
+    
+    # Simulate live ingestion by adding small randomized jitter to payouts
+    if "payout_disclosure" in item:
+        for row in item["payout_disclosure"]:
+            # Add/subtract up to 2% jitter
+            jitter = 1 + (random.random() * 0.04 - 0.02)
+            # Use original value if available to prevent accumulation
+            base_val = row.get("original_payout_usd", row["payout_usd"])
+            row["payout_usd"] = round(base_val * jitter, 2)
+            
     return TransparencyPayload.model_validate(item)

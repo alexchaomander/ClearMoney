@@ -37,7 +37,7 @@ async def create_session(
 ) -> SessionResponse:
     """Start a new advisor session, optionally with a specific skill."""
     advisor = FinancialAdvisor(session)
-    agent_session = await advisor.start_session(user.id, data.skill_name)
+    agent_session = await advisor.start_session(user.id, data.skill_name, data.vanish_mode)
     return SessionResponse.model_validate(agent_session)
 
 

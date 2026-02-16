@@ -19,6 +19,7 @@ import { ConsentGate } from "@/components/shared/ConsentGate";
 import { ApiErrorState } from "@/components/shared/ApiErrorState";
 import { DashboardLoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { DataSourceStatusStrip, type DataSourceStatusItem } from "@/components/dashboard/DataSourceStatusStrip";
+import { MetricTrace } from "@/components/dashboard/MetricTrace";
 import {
   FALLBACK_BANK_ACCOUNTS,
   FALLBACK_BANK_TRANSACTIONS,
@@ -615,7 +616,11 @@ export default function FounderOperatingRoomPage() {
                 key={item.label}
                 className="rounded-xl border border-neutral-800 bg-neutral-900 p-5"
               >
-                <p className="text-sm text-neutral-400">{item.label}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-neutral-400">{item.label}</p>
+                  {item.label === "Personal Runway" && <MetricTrace metricId="personalRunway" />}
+                  {item.label === "Burn surplus" && <MetricTrace metricId="savingsRate" />}
+                </div>
                 <p className="mt-2 text-2xl font-semibold text-white">{item.value}</p>
                 <p className={`mt-2 text-xs ${item.tone.text}`}>{item.tone.label}</p>
                 <div className="mt-3 h-2 rounded-full bg-neutral-800 overflow-hidden">
