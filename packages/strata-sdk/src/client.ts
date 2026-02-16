@@ -60,6 +60,7 @@ import type {
   ShareReportCreateResponse,
   ShareReportPublicResponse,
   ShareReportListItem,
+  NotificationResponse,
 } from './types';
 
 export interface StrataClientInterface {
@@ -79,6 +80,9 @@ export interface StrataClientInterface {
   searchInstitutions(query?: string, limit?: number): Promise<Institution[]>;
   getPopularInstitutions(limit?: number): Promise<Institution[]>;
   getPortfolioSummary(): Promise<PortfolioSummary>;
+  getVulnerabilityReport(): Promise<Record<string, unknown>>;
+  getRunwayMetrics(): Promise<Record<string, unknown>>;
+  getTaxShieldMetrics(): Promise<Record<string, unknown>>;
   getHoldings(): Promise<HoldingDetail[]>;
   getTransactions(params?: {
     accountId?: string;
@@ -86,6 +90,8 @@ export interface StrataClientInterface {
     endDate?: string;
   }): Promise<Transaction[]>;
   createInvestmentAccount(data: InvestmentAccountCreate): Promise<InvestmentAccount>;
+  updateInvestmentAccount(id: string, data: InvestmentAccountUpdate): Promise<InvestmentAccount>;
+  deleteInvestmentAccount(id: string): Promise<void>;
   createCashAccount(data: CashAccountCreate): Promise<CashAccount>;
   updateCashAccount(id: string, data: CashAccountUpdate): Promise<CashAccount>;
   deleteCashAccount(id: string): Promise<void>;
@@ -99,6 +105,13 @@ export interface StrataClientInterface {
   getMemoryEvents(): Promise<MemoryEvent[]>;
   deriveMemory(): Promise<FinancialMemory>;
   getFinancialContext(format?: 'json' | 'markdown'): Promise<FinancialContext | string>;
+  // Notifications
+  listNotifications(): Promise<NotificationResponse[]>;
+  updateNotification(id: string, data: { is_read: boolean }): Promise<NotificationResponse>;
+  markAllNotificationsRead(): Promise<{ status: string }>;
+  // Action Policy
+  getActionPolicy(): Promise<ActionPolicyResponse>;
+  upsertActionPolicy(data: ActionPolicyRequest): Promise<ActionPolicyResponse>;
   // Skills
   getSkills(): Promise<SkillSummary[]>;
   getAvailableSkills(): Promise<SkillSummary[]>;
@@ -369,6 +382,27 @@ export class StrataClient implements StrataClientInterface {
   }
 
   /**
+   * Get the commingling vulnerability report for the Founder Operating Room.
+   */
+  async getVulnerabilityReport(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/api/v1/portfolio/vulnerability-report');
+  }
+
+  /**
+   * Get personal and entity runway metrics for the Founder Operating Room.
+   */
+  async getRunwayMetrics(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/api/v1/portfolio/runway');
+  }
+
+  /**
+   * Get tax shield metrics for founders.
+   */
+  async getTaxShieldMetrics(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/api/v1/portfolio/tax-shield');
+  }
+
+  /**
    * Get all holdings across all investment accounts.
    */
   async getHoldings(): Promise<HoldingDetail[]> {
@@ -398,6 +432,19 @@ export class StrataClient implements StrataClientInterface {
     return this.request<InvestmentAccount>('/api/v1/accounts/investment', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  }
+
+  async updateInvestmentAccount(id: string, data: InvestmentAccountUpdate): Promise<InvestmentAccount> {
+    return this.request<InvestmentAccount>(`/api/v1/accounts/investment/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteInvestmentAccount(id: string): Promise<void> {
+    await this.request<{ status: string }>(`/api/v1/accounts/investment/${id}`, {
+      method: 'DELETE',
     });
   }
 
@@ -490,6 +537,38 @@ export class StrataClient implements StrataClientInterface {
       return response.text();
     }
     return this.request<FinancialContext>('/api/v1/memory/context');
+  }
+
+  // === Notifications ===
+
+  async listNotifications(): Promise<NotificationResponse[]> {
+    return this.request<NotificationResponse[]>('/api/v1/notifications');
+  }
+
+  async updateNotification(id: string, data: { is_read: boolean }): Promise<NotificationResponse> {
+    return this.request<NotificationResponse>(`/api/v1/notifications/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async markAllNotificationsRead(): Promise<{ status: string }> {
+    return this.request<{ status: string }>('/api/v1/notifications/mark-all-read', {
+      method: 'POST',
+    });
+  }
+
+  // === Action Policy ===
+
+  async getActionPolicy(): Promise<ActionPolicyResponse> {
+    return this.request<ActionPolicyResponse>('/api/v1/agent/action-policy');
+  }
+
+  async upsertActionPolicy(data: ActionPolicyRequest): Promise<ActionPolicyResponse> {
+    return this.request<ActionPolicyResponse>('/api/v1/agent/action-policy', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   }
 
   // === Skills ===

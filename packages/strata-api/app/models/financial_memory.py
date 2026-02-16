@@ -119,3 +119,6 @@ class FinancialMemory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     # Freeform (for agent observations)
     notes: Mapped[dict | None] = mapped_column(JSON, nullable=True, default=None)
+
+    # User preferences & overrides (JSON)
+    preferences: Mapped[dict | None] = mapped_column(JSON, nullable=True, default=None)

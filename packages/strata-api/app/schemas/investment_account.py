@@ -19,6 +19,7 @@ class InvestmentAccountCreate(BaseModel):
     balance: Decimal = Decimal("0.00")
     currency: str = "USD"
     is_tax_advantaged: bool = False
+    is_business: bool = False
 
 
 class InvestmentAccountUpdate(BaseModel):
@@ -30,6 +31,7 @@ class InvestmentAccountUpdate(BaseModel):
     balance: Decimal | None = None
     currency: str | None = None
     is_tax_advantaged: bool | None = None
+    is_business: bool | None = None
 
 
 class InvestmentAccountResponse(BaseModel):
@@ -43,6 +45,7 @@ class InvestmentAccountResponse(BaseModel):
     balance: Decimal
     currency: str
     is_tax_advantaged: bool
+    is_business: bool
     created_at: datetime
     updated_at: datetime
 

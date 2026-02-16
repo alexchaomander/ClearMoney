@@ -14,6 +14,7 @@ class DebtAccountCreate(BaseModel):
     interest_rate: Decimal
     minimum_payment: Decimal = Decimal("0.00")
     institution_name: str | None = None
+    is_business: bool = False
 
 
 class DebtAccountUpdate(BaseModel):
@@ -23,6 +24,7 @@ class DebtAccountUpdate(BaseModel):
     interest_rate: Decimal | None = None
     minimum_payment: Decimal | None = None
     institution_name: str | None = None
+    is_business: bool | None = None
 
 
 class DebtAccountResponse(BaseModel):
@@ -34,6 +36,7 @@ class DebtAccountResponse(BaseModel):
     interest_rate: Decimal
     minimum_payment: Decimal
     institution_name: str | None
+    is_business: bool
     created_at: datetime
     updated_at: datetime
 

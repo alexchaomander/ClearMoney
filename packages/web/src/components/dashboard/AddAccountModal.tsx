@@ -85,7 +85,11 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
   const [investBalance, setInvestBalance] = useState("");
   const [investTaxAdvantaged, setInvestTaxAdvantaged] = useState(false);
 
+  // Common
+  const [isBusiness, setIsBusiness] = useState(false);
+
   function resetForms() {
+    setIsBusiness(false);
     setCashName("");
     setCashType("checking");
     setCashBalance("");
@@ -119,6 +123,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
         balance: cashBalance ? parseFloat(cashBalance) : 0,
         apy: cashApy ? parseFloat(cashApy) : null,
         institution_name: cashInstitution || null,
+        is_business: isBusiness,
       });
     } else if (tab === "debt") {
       await debtMutations.create.mutateAsync({
@@ -128,6 +133,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
         interest_rate: debtRate ? parseFloat(debtRate) : 0,
         minimum_payment: debtMinPayment ? parseFloat(debtMinPayment) : 0,
         institution_name: debtInstitution || null,
+        is_business: isBusiness,
       });
     } else if (tab === "investment") {
       await createInvestment.mutateAsync({
@@ -135,6 +141,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
         account_type: investType,
         balance: investBalance ? parseFloat(investBalance) : 0,
         is_tax_advantaged: investTaxAdvantaged,
+        is_business: isBusiness,
       });
     }
     handleClose();
@@ -221,6 +228,10 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                           <label className={labelClass}>Institution</label>
                           <input className={inputClass} value={cashInstitution} onChange={(e) => setCashInstitution(e.target.value)} placeholder="e.g. Chase" />
                         </div>
+                        <label className="flex items-center gap-2 cursor-pointer pt-2">
+                          <input type="checkbox" checked={isBusiness} onChange={(e) => setIsBusiness(e.target.checked)} className="rounded border-neutral-700 bg-neutral-800 text-emerald-500 focus:ring-emerald-500" />
+                          <span className="text-sm text-neutral-300 font-medium">Business Account</span>
+                        </label>
                       </>
                     )}
 
@@ -256,6 +267,10 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                             <input className={inputClass} value={debtInstitution} onChange={(e) => setDebtInstitution(e.target.value)} placeholder="e.g. Chase" />
                           </div>
                         </div>
+                        <label className="flex items-center gap-2 cursor-pointer pt-2">
+                          <input type="checkbox" checked={isBusiness} onChange={(e) => setIsBusiness(e.target.checked)} className="rounded border-neutral-700 bg-neutral-800 text-emerald-500 focus:ring-emerald-500" />
+                          <span className="text-sm text-neutral-300 font-medium">Business Account</span>
+                        </label>
                       </>
                     )}
 
@@ -275,9 +290,13 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                           <label className={labelClass}>Balance</label>
                           <input className={inputClass} type="number" step="0.01" value={investBalance} onChange={(e) => setInvestBalance(e.target.value)} placeholder="0.00" />
                         </div>
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <label className="flex items-center gap-2 cursor-pointer pt-2">
                           <input type="checkbox" checked={investTaxAdvantaged} onChange={(e) => setInvestTaxAdvantaged(e.target.checked)} className="rounded border-neutral-700 bg-neutral-800 text-emerald-500 focus:ring-emerald-500" />
                           <span className="text-sm text-neutral-300">Tax-advantaged account</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={isBusiness} onChange={(e) => setIsBusiness(e.target.checked)} className="rounded border-neutral-700 bg-neutral-800 text-emerald-500 focus:ring-emerald-500" />
+                          <span className="text-sm text-neutral-300 font-medium">Business Account</span>
                         </label>
                       </>
                     )}

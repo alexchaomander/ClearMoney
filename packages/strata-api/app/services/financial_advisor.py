@@ -62,6 +62,7 @@ _UPDATABLE_MEMORY_FIELDS = {
     "portfolio_summary",
     "equity_compensation",
     "notes",
+    "preferences",
 }
 
 # Type mapping for coercing string values from the LLM into correct Python types.

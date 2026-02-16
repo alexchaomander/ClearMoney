@@ -13,6 +13,7 @@ class CashAccountCreate(BaseModel):
     balance: Decimal = Decimal("0.00")
     apy: Decimal | None = None
     institution_name: str | None = None
+    is_business: bool = False
 
 
 class CashAccountUpdate(BaseModel):
@@ -21,6 +22,7 @@ class CashAccountUpdate(BaseModel):
     balance: Decimal | None = None
     apy: Decimal | None = None
     institution_name: str | None = None
+    is_business: bool | None = None
 
 
 class CashAccountResponse(BaseModel):
@@ -31,6 +33,7 @@ class CashAccountResponse(BaseModel):
     balance: Decimal
     apy: Decimal | None
     institution_name: str | None
+    is_business: bool
     created_at: datetime
     updated_at: datetime
 
