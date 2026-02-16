@@ -21,6 +21,7 @@ class AgentActionPolicy(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     allowed_actions: Mapped[list[str]] = mapped_column(JSON, default=lambda: [])
     max_amount: Mapped[float | None] = mapped_column(Numeric(18, 2), nullable=True)
     require_confirmation: Mapped[bool] = mapped_column(default=True)
+    require_mfa: Mapped[bool] = mapped_column(default=False)
     status: Mapped[ActionPolicyStatus] = mapped_column(
         Enum(ActionPolicyStatus, values_callable=lambda e: [x.value for x in e]),
         default=ActionPolicyStatus.active,

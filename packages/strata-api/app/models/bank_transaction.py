@@ -51,6 +51,7 @@ class BankTransaction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # User annotations for bookkeeping workflows.
     reimbursed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     reimbursement_memo: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    is_commingled: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
 
     # Relationships
     cash_account: Mapped["CashAccount"] = relationship(back_populates="transactions")

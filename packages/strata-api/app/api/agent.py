@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
@@ -20,6 +21,9 @@ from app.schemas.agent import (
 from app.services.agent_guardrails import evaluate_freshness
 from app.services.action_policy import ActionPolicyService
 from app.services.financial_context import build_financial_context
+from app.services.plaid_transfer import PlaidTransferService
+from app.services.brokerage_execution import BrokerageExecutionService
+from app.services.deep_links import DeepLinkService
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 AUDIT_SCOPES = ["decision_traces:read"]
@@ -130,9 +134,46 @@ async def execute_recommendation(
         payload={**action_payload, "action": action_type},
     )
 
-    recommendation.status = RecommendationStatus.accepted
-
     execution_status = "queued"
+    execution_result = {
+        "recommendation_title": recommendation.title,
+        "policy_check": policy_check,
+        "connection_id": str(request.connection_id) if request.connection_id else None,
+    }
+
+    # Handle specialized execution paths
+    if action_type == "savings_transfer" and amount:
+        transfer_service = PlaidTransferService(session)
+        from_id = action_payload.get("from_account_id")
+        to_id = action_payload.get("to_account_id")
+        
+        if not from_id or not to_id:
+            raise HTTPException(status_code=400, detail="Missing source or destination account for transfer")
+        
+        transfer = await transfer_service.initiate_transfer(
+            user_id=user.id,
+            from_account_id=from_id,
+            to_account_id=to_id,
+            amount=Decimal(str(amount))
+        )
+        execution_status = transfer["status"]
+        execution_result["transfer_details"] = transfer
+
+    elif action_type == "rebalance_portfolio":
+        brokerage_service = BrokerageExecutionService(session)
+        account_id = action_payload.get("account_id") or "robinhood_001"
+        trades = await brokerage_service.rebalance_portfolio(user.id, account_id, {})
+        execution_status = "accepted"
+        execution_result["rebalance_trades"] = trades
+
+    elif action_type == "open_account":
+        deep_link_service = DeepLinkService()
+        provider_id = action_payload.get("provider_id") or "amex_gold"
+        link = deep_link_service.generate_referral_link(provider_id, {"user_id": str(user.id)})
+        execution_status = "completed"
+        execution_result["referral_link"] = link
+
+    recommendation.status = RecommendationStatus.accepted
     trace = DecisionTrace(
         user_id=user.id,
         session_id=recommendation.session_id,
@@ -156,16 +197,17 @@ async def execute_recommendation(
     await session.refresh(trace)
     await session.refresh(recommendation)
 
+    execution_result["trace_id"] = str(trace.id)
+    session.add(trace)
+    await session.commit()
+    await session.refresh(trace)
+    await session.refresh(recommendation)
+
     return ExecuteRecommendationResponse(
         recommendation_id=recommendation.id,
         action=action_type,
         status=execution_status,
-        result={
-            "recommendation_title": recommendation.title,
-            "policy_check": policy_check,
-            "connection_id": str(request.connection_id) if request.connection_id else None,
-            "trace_id": str(trace.id),
-        },
+        result=execution_result,
         trace_id=trace.id,
         updated_at=recommendation.updated_at,
     )

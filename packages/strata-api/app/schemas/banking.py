@@ -41,6 +41,7 @@ class BankAccountResponse(BaseModel):
     institution_name: str | None
     mask: str | None
     is_manual: bool
+    is_business: bool
     created_at: datetime
     updated_at: datetime
 
@@ -65,6 +66,7 @@ class BankTransactionResponse(BaseModel):
     iso_currency_code: str
     reimbursed_at: datetime | None
     reimbursement_memo: str | None
+    is_commingled: bool
     created_at: datetime
     updated_at: datetime
 

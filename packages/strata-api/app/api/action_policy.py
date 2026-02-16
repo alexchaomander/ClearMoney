@@ -34,6 +34,7 @@ async def upsert_action_policy(
         allowed_actions=data.allowed_actions,
         max_amount=data.max_amount,
         require_confirmation=data.require_confirmation,
+        require_mfa=data.require_mfa,
         status=data.status,
     )
     return ActionPolicyResponse.model_validate(policy)

@@ -133,7 +133,7 @@ def get_data_health() -> DataHealthResponse:
             _load_json(path)
             details[key] = "ok"
             latest_mtime = max(latest_mtime, path.stat().st_mtime)
-        except (FileNotFoundError, json.JSONDecodeError) as exc:
+        except Exception as exc:
             degraded = True
             details[key] = f"error: {exc}"
 

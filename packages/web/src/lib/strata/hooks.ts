@@ -12,6 +12,7 @@ import type {
   FinancialMemoryUpdate,
   ExecuteRecommendationRequest,
   InvestmentAccountCreate,
+  InvestmentAccountUpdate,
   LinkSessionRequest,
   PlaidCallbackRequest,
   PlaidLinkRequest,
@@ -21,6 +22,9 @@ import type {
 export const queryKeys = {
   portfolioSummary: ["portfolio", "summary"] as const,
   investmentAccounts: ["accounts", "investment"] as const,
+  vulnerabilityReport: ["portfolio", "vulnerabilityReport"] as const,
+  runwayMetrics: ["portfolio", "runwayMetrics"] as const,
+  taxShieldMetrics: ["portfolio", "taxShieldMetrics"] as const,
   investmentAccount: (id: string) => ["accounts", "investment", id] as const,
   holdings: ["portfolio", "holdings"] as const,
   transactions: (params?: { accountId?: string; startDate?: string; endDate?: string }) =>
@@ -34,10 +38,12 @@ export const queryKeys = {
     ["portfolio", "history", range] as const,
   financialMemory: ["memory"] as const,
   memoryEvents: ["memory", "events"] as const,
+  notifications: ["notifications"] as const,
   financialContext: (format: 'json' | 'markdown') =>
     ["memory", "context", format] as const,
   skills: ["skills"] as const,
   availableSkills: ["skills", "available"] as const,
+  actionPolicy: ["agent", "actionPolicy"] as const,
   advisorSessions: ["advisor", "sessions"] as const,
   advisorSession: (id: string) => ["advisor", "sessions", id] as const,
   recommendations: ["advisor", "recommendations"] as const,
@@ -79,6 +85,33 @@ export function useInvestmentAccounts(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.investmentAccounts,
     queryFn: () => client.getInvestmentAccounts(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useVulnerabilityReport(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.vulnerabilityReport,
+    queryFn: () => client.getVulnerabilityReport(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useRunwayMetrics(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.runwayMetrics,
+    queryFn: () => client.getRunwayMetrics(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useTaxShieldMetrics(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.taxShieldMetrics,
+    queryFn: () => client.getTaxShieldMetrics(),
     enabled: options?.enabled ?? true,
   });
 }
@@ -444,6 +477,30 @@ export function useCreateInvestmentAccount() {
   });
 }
 
+export function useInvestmentAccountMutations() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+  const onSuccess = () => invalidateAllPortfolioData(queryClient);
+
+  const create = useMutation({
+    mutationFn: (data: InvestmentAccountCreate) => client.createInvestmentAccount(data),
+    onSuccess,
+  });
+
+  const update = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: InvestmentAccountUpdate }) =>
+      client.updateInvestmentAccount(id, data),
+    onSuccess,
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => client.deleteInvestmentAccount(id),
+    onSuccess,
+  });
+
+  return { create, update, remove };
+}
+
 // === Financial Memory ===
 
 export function useFinancialMemory(options?: { enabled?: boolean }) {
@@ -491,6 +548,43 @@ export function useMemoryEvents(options?: { enabled?: boolean }) {
   });
 }
 
+// === Notifications ===
+
+export function useNotifications(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.notifications,
+    queryFn: () => client.listNotifications(),
+    enabled: options?.enabled ?? true,
+    refetchInterval: 30000, // Refresh every 30s
+  });
+}
+
+export function useUpdateNotification() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { is_read: boolean } }) =>
+      client.updateNotification(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
+    },
+  });
+}
+
+export function useMarkAllNotificationsRead() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => client.markAllNotificationsRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
+    },
+  });
+}
+
 export function useFinancialContext(format: 'json' | 'markdown' = 'json') {
   const client = useStrataClient();
   return useQuery({
@@ -514,6 +608,31 @@ export function useAvailableSkills() {
   return useQuery({
     queryKey: queryKeys.availableSkills,
     queryFn: () => client.getAvailableSkills(),
+  });
+}
+
+// === Action Policy ===
+
+export function useActionPolicy(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.actionPolicy,
+    queryFn: () => client.getActionPolicy(),
+    enabled: options?.enabled ?? true,
+    retry: false, // Don't retry 404s
+  });
+}
+
+export function useUpsertActionPolicy() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: Parameters<typeof client.upsertActionPolicy>[0]) =>
+      client.upsertActionPolicy(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.actionPolicy });
+    },
   });
 }
 
