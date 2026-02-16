@@ -61,6 +61,9 @@ import type {
   ShareReportPublicResponse,
   ShareReportListItem,
   NotificationResponse,
+  ActionIntent,
+  ActionIntentStatus,
+  ActionIntentUpdate,
 } from './types';
 
 export interface StrataClientInterface {
@@ -172,6 +175,11 @@ export interface StrataClientInterface {
   listShareReports(params?: { toolId?: string; limit?: number }): Promise<ShareReportListItem[]>;
   rotateShareReport(reportId: string, params?: { expiresInDays?: number | null }): Promise<ShareReportCreateResponse>;
   revokeShareReport(reportId: string): Promise<{ status: string }>;
+  // Action Intents
+  getActionIntents(status?: ActionIntentStatus): Promise<ActionIntent[]>;
+  getActionIntent(intentId: string): Promise<ActionIntent>;
+  updateActionIntent(intentId: string, data: ActionIntentUpdate): Promise<ActionIntent>;
+  getIntentManifest(intentId: string): Promise<Blob>;
 }
 
 export interface StrataClientOptions {
@@ -860,5 +868,43 @@ export class StrataClient implements StrataClientInterface {
 
   async revokeShareReport(reportId: string): Promise<{ status: string }> {
     return this.request<{ status: string }>(`/api/v1/share-reports/${reportId}`, { method: 'DELETE' });
+  }
+
+  // === Action Intents ===
+
+  async getActionIntents(status?: ActionIntentStatus): Promise<ActionIntent[]> {
+    return this.request<ActionIntent[]>(
+      this.buildUrl('/api/v1/action-intents', { status })
+    );
+  }
+
+  async getActionIntent(intentId: string): Promise<ActionIntent> {
+    return this.request<ActionIntent>(`/api/v1/action-intents/${intentId}`);
+  }
+
+  async updateActionIntent(
+    intentId: string,
+    data: ActionIntentUpdate
+  ): Promise<ActionIntent> {
+    return this.request<ActionIntent>(`/api/v1/action-intents/${intentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getIntentManifest(intentId: string): Promise<Blob> {
+    const headers: Record<string, string> = {};
+    if (this.clerkUserId) {
+      headers['X-Clerk-User-Id'] = this.clerkUserId;
+    }
+    if (this.authToken) {
+      headers.Authorization = `Bearer ${this.authToken}`;
+    }
+
+    const response = await fetch(`${this.baseUrl}/api/v1/action-intents/${intentId}/manifest`, {
+      headers,
+    });
+    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+    return response.blob();
   }
 }

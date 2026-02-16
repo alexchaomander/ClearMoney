@@ -25,15 +25,22 @@ import {
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { 
+  useActionIntents, 
+  useDownloadIntentManifest,
+  useUpdateActionIntent 
+} from "@/lib/strata/hooks";
+import { ActionIntent } from "@clearmoney/strata-sdk";
 
 interface MockIntent {
   id: string;
   title: string;
   description: string;
   impact: string;
-  status: "DRAFT" | "LOCKED" | "COMING SOON";
+  status: string;
   icon: any;
   type: string;
+  isReal?: boolean;
   logic: {
     rule: string;
     reasoning: string;
@@ -120,12 +127,53 @@ const MOCK_INTENTS: MockIntent[] = [
 export default function ActionLabPage() {
   const [activeIntent, setActiveIntent] = useState<MockIntent | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
-    const [email, setEmail] = useState("");
-    const [isSubmitted, setIsSubmitted] = useState(false);
-   
-    const handleExecute = () => {
-  
+  const [email, setEmail] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Real Data Integration
+  const { data: realIntents, isLoading: isLoadingIntents } = useActionIntents();
+  const downloadManifest = useDownloadIntentManifest();
+  const updateIntent = useUpdateActionIntent();
+
+  const allIntents = useMemo(() => {
+    const formattedReal: MockIntent[] = (realIntents || []).map(ri => ({
+      id: ri.id,
+      title: ri.title,
+      description: ri.description || "",
+      impact: Object.values(ri.impact_summary)[0]?.toString() || "Calculating...",
+      status: ri.status.toUpperCase(),
+      icon: ri.intent_type === 'ach_transfer' ? Zap : ri.intent_type === 'rebalance' ? Rocket : Bot,
+      type: ri.intent_type,
+      isReal: true,
+      logic: {
+        rule: "Strata Intent v1",
+        reasoning: ri.description || "Autonomous recommendation based on current data surface.",
+        dataPoints: Object.entries(ri.payload).reduce((acc, [k, v]) => ({ ...acc, [k]: v?.toString() }), {}),
+        steps: ["Draft Manifest", "Review Details", "Biometric Confirmation"]
+      }
+    }));
+
+    return [...formattedReal, ...MOCK_INTENTS];
+  }, [realIntents]);
+
+  const handleExecute = async () => {
+    if (!activeIntent) return;
+    
     setIsExecuting(true);
+    
+    if (activeIntent.isReal) {
+      // For real intents, actually download the PDF Switch Kit
+      try {
+        await downloadManifest.mutateAsync(activeIntent.id);
+        await updateIntent.mutateAsync({ 
+          id: activeIntent.id, 
+          data: { status: 'pending_approval' } 
+        });
+      } catch (err) {
+        console.error("Failed to execute real intent:", err);
+      }
+    }
+
     setTimeout(() => {
       setIsExecuting(false);
       setActiveIntent(null);
@@ -201,49 +249,58 @@ export default function ActionLabPage() {
 
         {/* Action Cards Grid */}
         <div className="grid lg:grid-cols-3 gap-6 mb-24">
-          {MOCK_INTENTS.map((intent, i) => (
-            <motion.div
-              key={intent.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + (i * 0.1) }}
-              className="group relative"
-            >
-              <div className="absolute -inset-0.5 bg-gradient-to-b from-emerald-500/20 to-transparent rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500" />
-              <div className="relative p-6 rounded-2xl bg-neutral-900 border border-neutral-800 group-hover:border-emerald-500/50 transition-all flex flex-col h-full">
-                <div className="flex justify-between items-start mb-6">
-                  <div className="p-3 rounded-xl bg-neutral-800 text-emerald-400 group-hover:scale-110 transition-transform">
-                    <intent.icon className="w-6 h-6" />
+          {isLoadingIntents ? (
+            <div className="col-span-3 py-20 text-center text-neutral-500">
+              <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
+              Loading your data surface...
+            </div>
+          ) : (
+            allIntents.map((intent, i) => (
+              <motion.div
+                key={intent.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + (i * 0.1) }}
+                className="group relative"
+              >
+                <div className="absolute -inset-0.5 bg-gradient-to-b from-emerald-500/20 to-transparent rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500" />
+                <div className="relative p-6 rounded-2xl bg-neutral-900 border border-neutral-800 group-hover:border-emerald-500/50 transition-all flex flex-col h-full">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="p-3 rounded-xl bg-neutral-800 text-emerald-400 group-hover:scale-110 transition-transform">
+                      <intent.icon className="w-6 h-6" />
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-neutral-800 text-emerald-400 border border-emerald-900">
+                        {intent.status}
+                      </span>
+                      <span className="text-[9px] text-neutral-500 uppercase tracking-tighter">
+                        {intent.isReal ? "REAL INTENT" : `MOCK ID: ${intent.id}`}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-neutral-800 text-emerald-400 border border-emerald-900">
-                      {intent.status}
-                    </span>
-                    <span className="text-[9px] text-neutral-500 uppercase tracking-tighter">ID: {intent.id}</span>
+
+                  <h3 className="text-xl font-serif text-white mb-2">{intent.title}</h3>
+                  <p className="text-sm text-neutral-400 leading-relaxed mb-6 flex-grow">
+                    {intent.description}
+                  </p>
+
+                  <div className="flex items-center justify-between pt-6 border-t border-neutral-800">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Est. Impact</span>
+                      <span className="text-emerald-400 font-bold">{intent.impact}</span>
+                    </div>
+                    <button
+                      onClick={() => setActiveIntent(intent)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-neutral-950 text-xs font-bold hover:bg-emerald-400 transition-colors"
+                    >
+                      Review Intent
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
                   </div>
                 </div>
-
-                <h3 className="text-xl font-serif text-white mb-2">{intent.title}</h3>
-                <p className="text-sm text-neutral-400 leading-relaxed mb-6 flex-grow">
-                  {intent.description}
-                </p>
-
-                <div className="flex items-center justify-between pt-6 border-t border-neutral-800">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Est. Impact</span>
-                    <span className="text-emerald-400 font-bold">{intent.impact}</span>
-                  </div>
-                  <button
-                    onClick={() => setActiveIntent(intent)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-neutral-950 text-xs font-bold hover:bg-emerald-400 transition-colors"
-                  >
-                    Review Intent
-                    <ArrowRight className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          )}
         </div>
 
         {/* Feature Teasers */}

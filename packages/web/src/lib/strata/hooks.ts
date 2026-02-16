@@ -17,6 +17,10 @@ import type {
   PlaidCallbackRequest,
   PlaidLinkRequest,
   PortfolioHistoryRange,
+  ActionIntent,
+  ActionIntentStatus,
+  ActionIntentType,
+  ActionIntentUpdate,
 } from "@clearmoney/strata-sdk";
 
 export const queryKeys = {
@@ -71,6 +75,8 @@ export const queryKeys = {
     ["banking", "transactions", params ?? {}] as const,
   spendingSummary: (months?: number) => ["banking", "spending-summary", months ?? 3] as const,
   subscriptions: ["banking", "subscriptions"] as const,
+  actionIntents: (status?: ActionIntentStatus) => ["actionIntents", status ?? "all"] as const,
+  actionIntent: (id: string) => ["actionIntents", id] as const,
 };
 
 export function usePortfolioSummary(options?: { enabled?: boolean }) {
@@ -816,5 +822,55 @@ export function useSubscriptions(options?: { enabled?: boolean }) {
     queryKey: queryKeys.subscriptions,
     queryFn: () => client.getSubscriptions(),
     enabled: options?.enabled ?? true,
+  });
+}
+
+// === Action Intents ===
+
+export function useActionIntents(status?: ActionIntentStatus, options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.actionIntents(status),
+    queryFn: () => client.getActionIntents(status),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useActionIntent(id: string, options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.actionIntent(id),
+    queryFn: () => client.getActionIntent(id),
+    enabled: (options?.enabled ?? true) && !!id,
+  });
+}
+
+export function useUpdateActionIntent() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ActionIntentUpdate }) =>
+      client.updateActionIntent(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["actionIntents"] });
+    },
+  });
+}
+
+export function useDownloadIntentManifest() {
+  const client = useStrataClient();
+  return useMutation({
+    mutationFn: (id: string) => client.getIntentManifest(id),
+    onSuccess: (blob, id) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `strata_intent_${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
   });
 }
