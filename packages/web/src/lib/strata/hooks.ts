@@ -402,11 +402,15 @@ export function useRevokeConsent() {
 
 // === Decision Traces ===
 
-export function useDecisionTraces(filters?: { sessionId?: string; recommendationId?: string }) {
+export function useDecisionTraces(
+  filters?: { sessionId?: string; recommendationId?: string },
+  options?: { enabled?: boolean }
+) {
   const client = useStrataClient();
   return useQuery({
     queryKey: queryKeys.decisionTraces(filters),
     queryFn: () => client.getDecisionTraces(filters),
+    enabled: options?.enabled ?? true,
   });
 }
 
