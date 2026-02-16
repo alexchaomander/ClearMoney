@@ -26,14 +26,15 @@ This document tracks the evolution of Strata from a financial data aggregator in
 ### 2.1 The Action Intent System (SAL)
 - [x] **Backend:** Implement the `ActionIntent` model and lifecycle (DRAFT -> PENDING -> EXECUTED).
 - [x] **Backend:** Add `capabilities` discovery to `BaseProvider` (e.g., "Supports ACATS", "API-Enabled").
-- [ ] **UI:** "Action Approval Room" - A dedicated UI for reviewing and signing off on agent-proposed actions.
+- [x] **UI:** "Action Approval Room" - Integrate Action Lab with real backend intents.
 
 ### 2.2 Legacy Paperwork Automation (Switch Kits)
 - [ ] **Feature:** "One-Click Rollover" - AI pre-fills ACATS transfer PDFs for 401k/IRA migrations.
 - [ ] **Integration:** Integrate e-signature (DocuSign/HelloSign) for instant paperwork execution.
-- [ ] **Feature:** "Switch Kit" generator for changing primary checking accounts (ACH redirection).
+- [x] **Feature:** "Switch Kit" generator - PDF manifest engine for action intents.
 
-### 2.3 Ghost Action Navigation
+### 2.3 Agent Intelligence (Action Awareness)
+- [x] **Intelligence:** Empower Advisor to proactively draft intents via `draft_action_intent` tool.
 - [ ] **UI:** "Guided Execution" sidebar in the web app for manual actions on legacy sites.
 - [ ] **Tooling:** Browser-based agent to auto-fill fields on legacy bank transfer pages based on Strata Action Intents.
 
