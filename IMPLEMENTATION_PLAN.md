@@ -25,7 +25,7 @@ This document tracks the evolution of Strata from a financial data aggregator in
 
 ### 2.1 The Action Intent System (SAL)
 - [x] **Backend:** Implement the `ActionIntent` model and lifecycle (DRAFT -> PENDING -> EXECUTED).
-- [ ] **Backend:** Add `capabilities` discovery to `BaseProvider` (e.g., "Supports ACATS", "API-Enabled").
+- [x] **Backend:** Add `capabilities` discovery to `BaseProvider` (e.g., "Supports ACATS", "API-Enabled").
 - [ ] **UI:** "Action Approval Room" - A dedicated UI for reviewing and signing off on agent-proposed actions.
 
 ### 2.2 Legacy Paperwork Automation (Switch Kits)
@@ -71,8 +71,8 @@ This document tracks the evolution of Strata from a financial data aggregator in
 ## Technical Roadmap & Gaps
 
 ### Gaps to Close (Short Term)
-1.  **Action Intent API:** Create endpoints for `POST /api/v1/actions/intent` and `GET /api/v1/actions/room`.
-2.  **Capabilities Tagging:** Audit current providers (SnapTrade, manual) and tag their action capabilities.
+1.  **Action Intent API:** [x] Create endpoints for `POST /api/v1/actions/intent` and `GET /api/v1/actions/room`.
+2.  **Capabilities Tagging:** [x] Audit current providers (SnapTrade, manual) and tag their action capabilities.
 3.  **The Drafting UX:** Build the frontend "Intent Preview" component that shows the **Logic Trace** (why this action?).
 
 ### Tech Stack Evolution

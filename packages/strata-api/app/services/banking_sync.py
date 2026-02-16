@@ -95,6 +95,7 @@ async def upsert_bank_account(
             institution_name=normalized.institution_name,
             mask=normalized.mask,
             is_manual=False,
+            capabilities=[c.value for c in (normalized.capabilities or [])],
         )
         session.add(account)
     else:
@@ -105,6 +106,8 @@ async def upsert_bank_account(
         account.available_balance = normalized.available_balance
         account.institution_name = normalized.institution_name
         account.mask = normalized.mask
+        if normalized.capabilities:
+            account.capabilities = [c.value for c in normalized.capabilities]
 
     await session.flush()
     return account

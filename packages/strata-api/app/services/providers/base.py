@@ -7,6 +7,7 @@ from app.models.connection import Connection
 from app.models.investment_account import InvestmentAccountType
 from app.models.security import SecurityType
 from app.models.transaction import TransactionType
+from app.schemas.action_capability import ActionCapability
 
 
 @dataclass
@@ -56,6 +57,7 @@ class NormalizedAccount:
     is_tax_advantaged: bool = False
     institution_name: str | None = None
     institution_id: str | None = None
+    capabilities: list[ActionCapability] | None = None
 
 
 @dataclass
@@ -79,6 +81,11 @@ class BaseProvider(ABC):
     """Base class for investment data providers."""
 
     provider_name: str = "base"
+
+    @abstractmethod
+    def get_capabilities(self) -> list[ActionCapability]:
+        """Return list of supported actions for this provider."""
+        ...
 
     @abstractmethod
     async def create_link_session(
