@@ -148,7 +148,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
                   <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                   <div>
                     <p className="font-semibold">Execution Failed</p>
-                    <p className="text-[10px] opacity-80">{(error as any)?.message || "An unexpected error occurred during execution."}</p>
+                    <p className="text-[10px] opacity-80">{error instanceof Error ? error.message : "An unexpected error occurred during execution."}</p>
                   </div>
                 </div>
               )}
@@ -160,7 +160,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
                     Success
                   </p>
                   <p className="text-[10px] opacity-80 mt-1">
-                    Trace ID: {(data as any).trace_id}
+                    Trace ID: {data.trace_id}
                   </p>
                 </div>
               )}

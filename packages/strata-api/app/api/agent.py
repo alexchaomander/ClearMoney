@@ -97,11 +97,7 @@ async def execute_recommendation(
 
     action_payload = request.payload or {}
     action_type = request.action
-    amount = None
-
-    if isinstance(action_payload, dict):
-        action_type = action_payload.get("type") or action_payload.get("action_type") or request.action
-        amount = action_payload.get("amount")
+    amount = action_payload.get("amount") if isinstance(action_payload, dict) else None
 
     if action_type is not None and not isinstance(action_type, str):
         raise HTTPException(
@@ -125,19 +121,14 @@ async def execute_recommendation(
         except (TypeError, ValueError) as exc:
             raise HTTPException(status_code=400, detail="Invalid amount in recommendation payload") from exc
         amount = amount_value
-    policy_check = "skipped"
-
-    if action_type:
-        policy = ActionPolicyService(session)
-        existing_policy = await policy.get_policy(user.id)
-        if existing_policy:
-            policy_check = "completed"
-            await policy.validate_action(
-                user_id=user.id,
-                action_type=action_type,
-                amount=amount,
-                payload={"action": action_type, **action_payload},
-            )
+    policy_check = "completed"
+    policy = ActionPolicyService(session)
+    await policy.validate_action(
+        user_id=user.id,
+        action_type=action_type,
+        amount=amount,
+        payload={**action_payload, "action": action_type},
+    )
 
     recommendation.status = RecommendationStatus.accepted
 

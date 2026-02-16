@@ -73,7 +73,7 @@ export default function DataHealthPage() {
                     <span className="text-sm font-medium text-white/60 uppercase tracking-wider">Overall Status</span>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                    health?.status === "healthy" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                    health?.status === "ok" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                   }`}>
                     {health?.status || "Unknown"}
                   </span>
@@ -82,7 +82,7 @@ export default function DataHealthPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-white/60">Core Database</span>
                     <span className="flex items-center gap-2 text-sm">
-                      {health?.database === "connected" ? (
+                      {health?.database === "ok" ? (
                         <><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Operational</>
                       ) : (
                         <><AlertTriangle className="h-4 w-4 text-amber-400" /> Degraded</>
@@ -92,7 +92,7 @@ export default function DataHealthPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-white/60">Data Catalog</span>
                     <span className="flex items-center gap-2 text-sm">
-                      {health?.catalog === "indexed" ? (
+                      {health?.catalog === "ok" ? (
                         <><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Synchronized</>
                       ) : (
                         <><Clock className="h-4 w-4 text-amber-400" /> Reindexing</>
