@@ -11,6 +11,9 @@ import {
   Loader2,
   Lightbulb,
   MessageSquare,
+  EyeOff,
+  Shield,
+  Check,
 } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { ConsentGate } from "@/components/shared/ConsentGate";
@@ -111,6 +114,7 @@ export default function AdvisorPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [vanishMode, setVanishMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -119,11 +123,11 @@ export default function AdvisorPage() {
 
   const startSession = useCallback(
     async (skillName?: string) => {
-      const session = await createSession.mutateAsync(skillName);
+      const session = await createSession.mutateAsync({ skillName, vanishMode });
       setActiveSession(session);
       setMessages([]);
     },
-    [createSession]
+    [createSession, vanishMode]
   );
 
   const sendMessage = useCallback(async () => {
@@ -268,6 +272,24 @@ export default function AdvisorPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
+              <div className="flex items-center justify-between mb-6 p-4 rounded-2xl bg-neutral-900 border border-neutral-800">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${vanishMode ? "bg-purple-500/20 text-purple-400" : "bg-neutral-800 text-neutral-500"}`}>
+                    <EyeOff className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-neutral-200">Vanish Mode</p>
+                    <p className="text-[10px] text-neutral-500">Conversations are not saved to your history.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setVanishMode(!vanishMode)}
+                  className={`relative w-10 h-6 rounded-full transition-colors ${vanishMode ? "bg-purple-600" : "bg-neutral-700"}`}
+                >
+                  <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${vanishMode ? "translate-x-4" : ""}`} />
+                </button>
+              </div>
+
               <button
                 onClick={() => startSession()}
                 className="w-full mb-6 p-4 rounded-xl bg-emerald-900/20 border border-emerald-800/40 text-emerald-300 hover:bg-emerald-900/30 transition-all flex items-center justify-center gap-2 text-sm font-medium"
@@ -332,9 +354,17 @@ export default function AdvisorPage() {
                   <Bot className="w-4 h-4 text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-neutral-100">
-                    Financial Advisor
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-neutral-100">
+                      Financial Advisor
+                    </p>
+                    {activeSession.vanish_mode && (
+                      <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 text-[8px] font-black uppercase tracking-tighter border border-purple-500/30">
+                        <EyeOff className="w-2 h-2" />
+                        Vanish
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-neutral-500">
                     {activeSession.skill_name
                       ? activeSession.skill_name.replace(/_/g, " ")

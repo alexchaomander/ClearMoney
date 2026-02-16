@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { formatCurrency } from "@/lib/shared/formatters";
+import { MetricTrace } from "./MetricTrace";
 
 interface NetWorthCardProps {
   totalAssets: number;
@@ -26,7 +27,10 @@ export function NetWorthCard({
       className="p-6 rounded-2xl bg-gradient-to-br from-emerald-900/50 to-neutral-900 border border-emerald-800/50"
     >
       <div className="mb-6">
-        <p className="text-sm font-medium text-emerald-300 mb-1">Net Worth</p>
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-sm font-medium text-emerald-300">Net Worth</p>
+          <MetricTrace metricId="netWorth" />
+        </div>
         <h2 className="font-serif text-4xl lg:text-5xl text-white">
           {formatCurrency(netWorth)}
         </h2>
@@ -34,7 +38,10 @@ export function NetWorthCard({
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="p-4 rounded-xl bg-neutral-900/50 border border-neutral-800">
-          <p className="text-xs text-neutral-400 mb-1">Total Assets</p>
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-xs text-neutral-400">Total Assets</p>
+            <MetricTrace metricId="totalAssets" />
+          </div>
           <p className="font-serif text-xl text-emerald-300">
             {formatCurrency(totalAssets)}
           </p>

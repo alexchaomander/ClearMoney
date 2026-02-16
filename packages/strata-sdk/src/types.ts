@@ -642,6 +642,7 @@ export interface AdvisorSession {
   user_id: string;
   skill_name: string | null;
   status: SessionStatus;
+  vanish_mode: boolean;
   messages: AdvisorMessage[];
   created_at: string;
   updated_at: string;

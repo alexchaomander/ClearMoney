@@ -43,7 +43,15 @@ export function NotificationCenter() {
     }
   }, [isOpen]);
 
-  const toggleOpen = () => setIsOpen(!isOpen);
+  const toggleOpen = () => {
+    setIsOpen(!isOpen);
+    // Request browser notification permission if supported
+    if (!isOpen && typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    }
+  };
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {

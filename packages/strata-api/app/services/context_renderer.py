@@ -1,6 +1,16 @@
 """Renders a financial context dict as markdown optimized for LLM system prompts."""
 
 
+def _sanitize(value: str | None) -> str:
+    """Strip newlines and escape potential markdown control characters from untrusted strings."""
+    if value is None:
+        return "—"
+    # Convert to string and remove newlines to prevent prompt structure breaking
+    cleaned = str(value).replace("\n", " ").replace("\r", " ")
+    # Simple escape for common markdown/control characters if they appear at start of line
+    return cleaned.replace("|", "\\|")
+
+
 def render_context_as_markdown(context: dict) -> str:
     """Convert the structured financial context into readable markdown."""
     sections: list[str] = []
@@ -81,7 +91,7 @@ def render_context_as_markdown(context: dict) -> str:
             if a.get("interest_rate"):
                 extra = f" @ {a['interest_rate'] * 100:.1f}%"
             account_lines.append(
-                f"| {a['name']} | {a['type']}{extra} | ${bal:,.2f} |"
+                f"| {_sanitize(a.get('name'))} | {a['type']}{extra} | ${bal:,.2f} |"
             )
 
     if has_accounts:
@@ -94,12 +104,12 @@ def render_context_as_markdown(context: dict) -> str:
         lines.append("| Ticker | Name | Type | Qty | Market Value | Account |")
         lines.append("|--------|------|------|-----|-------------|---------|")
         for h in holdings[:15]:
-            ticker = h.get("ticker") or "—"
+            ticker = _sanitize(h.get("ticker"))
             mv = h.get("market_value") or 0
             qty = h.get("quantity", 0)
             lines.append(
-                f"| {ticker} | {h['name']} | {h['security_type']} "
-                f"| {qty:,.2f} | ${mv:,.2f} | {h['account']} |"
+                f"| {ticker} | {_sanitize(h.get('name'))} | {h['security_type']} "
+                f"| {qty:,.2f} | ${mv:,.2f} | {_sanitize(h.get('account'))} |"
             )
         sections.append("\n".join(lines))
 
