@@ -70,6 +70,7 @@ export const queryKeys = {
   bankTransactions: (params?: BankTransactionQuery) =>
     ["banking", "transactions", params ?? {}] as const,
   spendingSummary: (months?: number) => ["banking", "spending-summary", months ?? 3] as const,
+  subscriptions: ["banking", "subscriptions"] as const,
 };
 
 export function usePortfolioSummary(options?: { enabled?: boolean }) {
@@ -805,6 +806,15 @@ export function useSpendingSummary(months?: number, options?: { enabled?: boolea
   return useQuery({
     queryKey: queryKeys.spendingSummary(months),
     queryFn: () => client.getSpendingSummary(months),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useSubscriptions(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.subscriptions,
+    queryFn: () => client.getSubscriptions(),
     enabled: options?.enabled ?? true,
   });
 }

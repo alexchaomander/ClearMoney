@@ -31,6 +31,8 @@ from app.services.user_refresh import refresh_user_financials
 
 logger = logging.getLogger(__name__)
 
+from app.services.subscriptions import SubscriptionService
+
 router = APIRouter(prefix="/banking", tags=["banking"])
 
 
@@ -382,3 +384,13 @@ async def delete_banking_connection(
     )
 
     return {"status": "deleted"}
+
+
+@router.get("/subscriptions")
+async def get_subscriptions(
+    user: User = Depends(require_scopes(["accounts:read"])),
+    session: AsyncSession = Depends(get_async_session),
+) -> dict:
+    """Detect recurring subscriptions from transactions."""
+    service = SubscriptionService(session)
+    return await service.detect_subscriptions(user.id)

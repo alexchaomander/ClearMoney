@@ -103,6 +103,21 @@ This document outlines the roadmap to transform ClearMoney from a high-fidelity 
 ### 6.2 Push Notifications
 - [x] **Feature:** Real-time push alerts for high-priority transparency corrections or guardrail breaches (Implemented via browser Notification API).
 
+## Phase 7: Deep Analysis & Intelligence (The "Insight" Layer)
+**Goal:** Enhance the platform's analytical depth and turning data into actionable founder-first signals.
+
+### 7.1 The "What-If" Engine
+- [x] **UI:** Assumption toggle strip on the main Dashboard.
+- [x] **Feature:** Real-time re-calculation of Net Worth projections and Monte Carlo success rates based on toggled assumptions (Inflation, Market Return).
+
+### 7.2 Subscription Audit (Burn Optimization)
+- [x] **Backend:** Logic to detect recurring transaction patterns (SaaS, Utilities, Subscriptions).
+- [x] **UI:** "Burn Breakdown" in the Founder Operating Room flagging potential "leaky" subscriptions.
+
+### 7.3 High-Fidelity Service Integration
+- [x] **Feature:** "Bridge" UI for Deep Links that explains the referral intent and data privacy. (Integrated into ShareModal and Execution paths).
+- [x] **Registry:** Implementation of a verified provider registry for HYSA, Insurance, and Tax services.
+
 ---
 
 ## Technical Requirements
