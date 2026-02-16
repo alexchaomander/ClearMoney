@@ -117,7 +117,7 @@ export interface StrataClientInterface {
   getAvailableSkills(): Promise<SkillSummary[]>;
   getSkill(name: string): Promise<SkillDetail>;
   // Advisor
-  createAdvisorSession(skillName?: string): Promise<AdvisorSession>;
+  createAdvisorSession(skillName?: string, vanishMode?: boolean): Promise<AdvisorSession>;
   getAdvisorSessions(): Promise<AdvisorSessionSummary[]>;
   getAdvisorSession(sessionId: string): Promise<AdvisorSession>;
   sendAdvisorMessage(sessionId: string, content: string): Promise<ReadableStream<Uint8Array>>;
@@ -157,6 +157,14 @@ export interface StrataClientInterface {
   getBankTransactions(params?: BankTransactionQuery): Promise<PaginatedBankTransactions>;
   getSpendingSummary(months?: number): Promise<SpendingSummary>;
   updateBankTransactionReimbursement(transactionId: string, data: BankTransactionReimbursementUpdate): Promise<BankTransaction>;
+  // Calculators
+  runRetirementMonteCarlo(params: {
+    current_savings: number;
+    monthly_contribution: number;
+    years_to_retirement: number;
+    retirement_duration_years: number;
+    desired_annual_income: number;
+  }): Promise<Record<string, unknown>>;
   // Share Reports (public and owner)
   createShareReport(data: ShareReportCreateRequest): Promise<ShareReportCreateResponse>;
   getShareReport(reportId: string, token: string): Promise<ShareReportPublicResponse>;
@@ -587,10 +595,13 @@ export class StrataClient implements StrataClientInterface {
 
   // === Advisor ===
 
-  async createAdvisorSession(skillName?: string): Promise<AdvisorSession> {
+  async createAdvisorSession(skillName?: string, vanishMode: boolean = false): Promise<AdvisorSession> {
     return this.request<AdvisorSession>('/api/v1/advisor/sessions', {
       method: 'POST',
-      body: JSON.stringify({ skill_name: skillName ?? null }),
+      body: JSON.stringify({ 
+        skill_name: skillName ?? null,
+        vanish_mode: vanishMode
+      }),
     });
   }
 
@@ -798,6 +809,20 @@ export class StrataClient implements StrataClientInterface {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
+  }
+
+  // === Calculators ===
+
+  async runRetirementMonteCarlo(params: {
+    current_savings: number;
+    monthly_contribution: number;
+    years_to_retirement: number;
+    retirement_duration_years: number;
+    desired_annual_income: number;
+  }): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(
+      this.buildUrl('/api/v1/calculators/retirement-monte-carlo', params)
+    );
   }
 
   // === Share Reports ===

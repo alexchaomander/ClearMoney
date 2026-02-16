@@ -267,12 +267,14 @@ class FinancialAdvisor:
         self,
         user_id: uuid.UUID,
         skill_name: str | None = None,
+        vanish_mode: bool = False,
     ) -> AgentSession:
         """Start a new advisor session."""
         agent_session = AgentSession(
             user_id=user_id,
             skill_name=skill_name,
             status=SessionStatus.active,
+            vanish_mode=vanish_mode,
             messages=[],
         )
         self._session.add(agent_session)
@@ -377,13 +379,19 @@ class FinancialAdvisor:
                 messages.append({"role": "assistant", "content": assistant_content})
                 break
 
-        # Save messages to session
-        agent_session.messages = messages
-        if response.get("stop_reason") == "end_turn":
-            agent_session.status = SessionStatus.active
-        await self._session.commit()
+        # Save messages to session if not in vanish mode
+        if not agent_session.vanish_mode:
+            agent_session.messages = messages
+            if response.get("stop_reason") == "end_turn":
+                agent_session.status = SessionStatus.active
+            await self._session.commit()
+        else:
+            # Still update status in memory if needed, but don't commit messages
+            if response.get("stop_reason") == "end_turn":
+                agent_session.status = SessionStatus.active
+            # No commit for messages
 
-        if not created_recommendation and full_response.strip():
+        if not agent_session.vanish_mode and not created_recommendation and full_response.strip():
             context = await build_financial_context(user_id, self._session)
             freshness_status = evaluate_freshness(context)
             warning = freshness_status.get("warning")

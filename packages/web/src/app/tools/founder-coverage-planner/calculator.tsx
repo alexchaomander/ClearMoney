@@ -36,6 +36,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InputSection } from "./components/InputSection";
 import { useActionPlan } from "./useActionPlan";
 import { useDemoMode } from "@/lib/strata/demo-context";
+import { ShareModal, type RedactionSettings } from "@/components/shared/ShareModal";
 import { useToast } from "@/components/shared/toast";
 import {
   markFounderDemoStep,
@@ -237,6 +238,27 @@ const METHODOLOGY_ITEMS = [
   "Cashflow alerts flag commingling risk and missing reimbursement policies.",
   "All outputs are educational estimates and not tax or legal advice.",
 ];
+
+function redactFounderPayload(payload: Record<string, any>, settings: RedactionSettings): Record<string, any> {
+  const result = { ...payload };
+  if (settings.redactExactBalances) {
+    if (result.inputs) {
+      // Approximate annualNetIncome
+      if (result.inputs.annualNetIncome) {
+        const val = result.inputs.annualNetIncome;
+        result.inputs.annualNetIncome = `${Math.floor(val / 50000) * 50}k - ${Math.ceil(val / 50000) * 50}k`;
+      }
+    }
+    // Redact action item details that contain currency
+    if (result.actionItems) {
+      result.actionItems = result.actionItems.map((item: any) => ({
+        ...item,
+        detail: stripCurrencyLikeText(item.detail),
+      }));
+    }
+  }
+  return result;
+}
 
 export function Calculator(): ReactElement {
   const client = useStrataClient();
@@ -1170,15 +1192,26 @@ export function Calculator(): ReactElement {
                     >
                       Open report
                     </Link>
-                    <button
-                      type="button"
-                      onClick={() => void openRedactedReport()}
-                      disabled={shareBusy}
-                      className="rounded-xl bg-emerald-300 px-3 py-2 text-xs font-semibold text-neutral-950 disabled:opacity-50"
-                      data-testid="demo-open-redacted-report"
-                    >
-                      {shareBusy ? "Opening..." : "Open redacted report"}
-                    </button>
+                    <ShareModal 
+                      toolId="founder-coverage-planner"
+                      payload={{
+                        version: 2,
+                        mode: "full",
+                        savedAt: new Date().toISOString(),
+                        inputs,
+                        checklist: completed,
+                      }}
+                      onRedact={redactFounderPayload}
+                      trigger={
+                        <button
+                          type="button"
+                          className="rounded-xl bg-emerald-300 px-3 py-2 text-xs font-semibold text-neutral-950 hover:bg-emerald-200 transition-all"
+                          data-testid="demo-open-redacted-report"
+                        >
+                          Redacted Share
+                        </button>
+                      }
+                    />
                   </div>
 
                   {!isDemo && (

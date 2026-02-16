@@ -10,6 +10,7 @@ from app.models.agent_session import RecommendationStatus, SessionStatus
 
 class SessionCreateRequest(BaseModel):
     skill_name: str | None = None
+    vanish_mode: bool = False
 
 
 class SessionResponse(BaseModel):
@@ -17,6 +18,7 @@ class SessionResponse(BaseModel):
     user_id: uuid.UUID
     skill_name: str | None
     status: SessionStatus
+    vanish_mode: bool
     messages: list
     created_at: datetime
     updated_at: datetime
