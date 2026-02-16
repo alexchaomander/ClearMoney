@@ -3,7 +3,18 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Link2, PenLine } from "lucide-react";
+import {
+  BarChart3,
+  CheckCircle2,
+  Compass,
+  Plus,
+  PenLine,
+  Route,
+  Sparkles,
+  FlaskConical,
+  Link2,
+  RefreshCw,
+} from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { NetWorthCard } from "@/components/dashboard/NetWorthCard";
 import { AccountsList } from "@/components/dashboard/AccountsList";
@@ -13,11 +24,11 @@ import { ConcentrationAlert } from "@/components/dashboard/ConcentrationAlert";
 import { PortfolioHistoryChart } from "@/components/dashboard/PortfolioHistoryChart";
 import { CashDebtSection } from "@/components/dashboard/CashDebtSection";
 import { AddAccountModal } from "@/components/dashboard/AddAccountModal";
-import { EmptyState } from "@/components/dashboard/EmptyState";
 import { DecisionTracePanel } from "@/components/dashboard/DecisionTracePanel";
 import { ConsentGate } from "@/components/shared/ConsentGate";
 import { DashboardLoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ApiErrorState } from "@/components/shared/ApiErrorState";
+import { DataSourceStatusStrip, type DataSourceStatusItem } from "@/components/dashboard/DataSourceStatusStrip";
 import {
   usePortfolioSummary,
   useInvestmentAccounts,
@@ -29,7 +40,13 @@ import {
   useConsentStatus,
   useSyncAllConnections,
 } from "@/lib/strata/hooks";
-import type { HoldingDetail } from "@clearmoney/strata-sdk";
+import { type PortfolioHistoryRange, type HoldingDetail } from "@clearmoney/strata-sdk";
+import {
+  getPreviewAccounts,
+  getPreviewHoldings,
+  getPreviewPortfolioHistory,
+  getPreviewPortfolioSummary,
+} from "./_shared/preview-data";
 
 function mapHoldings(details: HoldingDetail[]) {
   return details.map((h) => ({
@@ -49,6 +66,16 @@ export default function DashboardPage() {
   const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const previewPortfolioSummary = useMemo(() => getPreviewPortfolioSummary(), []);
+  const previewAccounts = useMemo(() => getPreviewAccounts(), []);
+  const previewHoldings = useMemo(() => getPreviewHoldings(), []);
+  const previewHistory = useMemo<Record<PortfolioHistoryRange, ReturnType<typeof getPreviewPortfolioHistory>>>(() => ({
+    "30d": getPreviewPortfolioHistory("30d"),
+    "90d": getPreviewPortfolioHistory("90d"),
+    "1y": getPreviewPortfolioHistory("1y"),
+    all: getPreviewPortfolioHistory("all"),
+  }), []);
 
   const cashMutations = useCashAccountMutations();
   const debtMutations = useDebtAccountMutations();
@@ -106,15 +133,27 @@ export default function DashboardPage() {
     refetch: refetchAllAccounts,
   } = useAccounts({ enabled: hasPortfolioConsent });
 
-  const { data: connections } = useConnections({ enabled: hasPortfolioConsent });
+  const {
+    data: connections,
+    isLoading: connectionsLoading,
+    isError: connectionsError,
+    error: connectionsErrorDetails,
+    refetch: refetchConnections,
+  } = useConnections({ enabled: hasPortfolioConsent });
 
-  const isLoading = portfolioLoading || accountsLoading || holdingsLoading || allAccountsLoading;
-  const isError = portfolioError || accountsError || holdingsError || allAccountsError;
+  const isLoading =
+    portfolioLoading ||
+    accountsLoading ||
+    holdingsLoading ||
+    allAccountsLoading ||
+    connectionsLoading;
+  const isError = portfolioError || accountsError || holdingsError || allAccountsError || connectionsError;
   const errorDetails =
     portfolioErrorDetails ||
     accountsErrorDetails ||
     holdingsErrorDetails ||
-    allAccountsErrorDetails;
+    allAccountsErrorDetails ||
+    connectionsErrorDetails;
 
   async function handleRefresh() {
     if (hasSyncConsent) {
@@ -124,20 +163,119 @@ export default function DashboardPage() {
     refetchAccounts();
     refetchHoldings();
     refetchAllAccounts();
+    if (connections) {
+      refetchConnections();
+    }
   }
 
-  const hasAccounts = accounts && accounts.length > 0;
-  const holdings = holdingsData ? mapHoldings(holdingsData) : [];
+  const usingDemoData = !portfolio || !accounts || !holdingsData || !allAccountsData;
+  const effectivePortfolio = portfolio ?? previewPortfolioSummary;
+  const effectiveInvestmentAccounts = accounts ?? previewAccounts.investment_accounts;
+  const effectiveAllAccounts = allAccountsData ?? previewAccounts;
+  const effectiveHoldingsRows = useMemo(() => mapHoldings(holdingsData ?? previewHoldings), [holdingsData, previewHoldings]);
+  const hasLivePortfolio = Boolean(portfolio);
+  const hasLiveAccounts = Boolean(accounts || allAccountsData);
+  const hasLiveHoldings = Boolean(holdingsData);
+  const accountCount =
+    effectiveAllAccounts.investment_accounts.length +
+    effectiveAllAccounts.cash_accounts.length +
+    effectiveAllAccounts.debt_accounts.length;
+  const holdingsCount = effectiveHoldingsRows.length;
+  const hasAccounts = accountCount > 0;
+
+  const intelligenceCards = [
+    {
+      href: "/dashboard/founder-operating-room",
+      icon: Compass,
+      label: "Founder Operating Room",
+      description: "Monitor cash runway, founder spending discipline, and commingling risk.",
+    },
+    {
+      href: "/dashboard/scenario-lab",
+      icon: FlaskConical,
+      label: "Scenario Lab",
+      description: "Model market, savings, and debt assumptions across 12-month futures.",
+    },
+    {
+      href: "/dashboard/progress",
+      icon: Route,
+      label: "Progress",
+      description: "Track runway, savings momentum, and debt pressure over time.",
+    },
+    {
+      href: "/dashboard/command-center",
+      icon: CheckCircle2,
+      label: "Command Center",
+      description: "One place to reconcile readiness signals and prioritize action.",
+    },
+  ];
 
   const lastSyncedAt = useMemo(() => {
     if (!connections?.length) return null;
     const syncDates = connections
       .map((c) => c.last_synced_at)
-      .filter((d): d is string => !!d)
+      .filter((d): d is string => Boolean(d))
       .map((d) => new Date(d).getTime());
     if (!syncDates.length) return null;
     return new Date(Math.max(...syncDates));
   }, [connections]);
+
+  const sourceItems = useMemo<DataSourceStatusItem[]>(() => [
+    {
+      id: "portfolio",
+      title: "Portfolio summary",
+      value: hasLivePortfolio ? "Live" : "Demo",
+      detail: hasLivePortfolio
+        ? "Portfolio summary is connected from Strata."
+        : "Synthetic summary is active until connected.",
+      tone: hasLivePortfolio ? "live" : "warning",
+      href: "/dashboard/coverage",
+      actionLabel: "Review coverage",
+      lastSyncedAt: lastSyncedAt?.toISOString(),
+    },
+    {
+      id: "accounts",
+      title: "Accounts",
+      value: `${accountCount} source${accountCount === 1 ? "" : "s"}`,
+      detail: hasLiveAccounts
+        ? `${effectiveAllAccounts.investment_accounts.length} investment, ${effectiveAllAccounts.cash_accounts.length} cash, ${effectiveAllAccounts.debt_accounts.length} debt`
+        : "Demo account set is active while you connect live links.",
+      tone: hasLiveAccounts ? "live" : "warning",
+      href: "/connect",
+      actionLabel: "Link accounts",
+    },
+    {
+      id: "holdings",
+      title: "Holdings",
+      value: `${holdingsCount} position${holdingsCount === 1 ? "" : "s"}`,
+      detail: hasLiveHoldings
+        ? "Holdings stream is connected."
+        : "Holdings list uses realistic preview fixtures.",
+      tone: hasLiveHoldings ? "live" : "warning",
+    },
+    {
+      id: "connections",
+      title: "Connection sync",
+      value: connections?.length ? `${connections.length} active` : "No active links",
+      detail: connections?.length
+        ? "Connector metadata is connected."
+        : "No live connector metadata yet.",
+      tone: connections?.length ? "live" : "warning",
+      href: "/connect",
+      actionLabel: "Manage links",
+    },
+  ], [
+    accountCount,
+    connections?.length,
+    effectiveAllAccounts.cash_accounts.length,
+    effectiveAllAccounts.debt_accounts.length,
+    effectiveAllAccounts.investment_accounts.length,
+    hasLiveAccounts,
+    hasLiveHoldings,
+    hasLivePortfolio,
+    holdingsCount,
+    lastSyncedAt,
+  ]);
 
   function renderContent() {
     if (isLoading) {
@@ -147,19 +285,23 @@ export default function DashboardPage() {
     if (isError) {
       return (
         <ApiErrorState
-          message="We couldn't load your portfolio data. Please check that the API is running and try again."
+          message="We couldn't load your dashboard. Please check that the API is running and try again."
           error={errorDetails}
           onRetry={handleRefresh}
         />
       );
     }
 
-    if (!hasAccounts) {
-      return <EmptyState />;
-    }
-
     return (
       <>
+        <DataSourceStatusStrip items={sourceItems} usingDemoData={usingDemoData} />
+        {usingDemoData ? (
+          <p className="mb-4 text-xs text-amber-300 inline-flex items-center gap-2">
+            <RefreshCw className="w-3 h-3" />
+            Running synthetic preview data until live Strata connections are available.
+          </p>
+        ) : null}
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -232,17 +374,18 @@ export default function DashboardPage() {
                 </div>
               </ConsentGate>
             )}
-            {portfolio && (
-              <NetWorthCard
-                totalAssets={portfolio.total_investment_value + portfolio.total_cash_value}
-                totalLiabilities={portfolio.total_debt_value}
-                netWorth={portfolio.net_worth}
-                taxAdvantagedValue={portfolio.tax_advantaged_value}
-                taxableValue={portfolio.taxable_value}
-              />
-            )}
 
-            <PortfolioHistoryChart />
+            <NetWorthCard
+              totalAssets={effectivePortfolio.total_investment_value + effectivePortfolio.total_cash_value}
+              totalLiabilities={effectivePortfolio.total_debt_value}
+              netWorth={effectivePortfolio.net_worth}
+              taxAdvantagedValue={effectivePortfolio.tax_advantaged_value}
+              taxableValue={effectivePortfolio.taxable_value}
+            />
+
+            <PortfolioHistoryChart
+              previewHistory={usingDemoData ? previewHistory : undefined}
+            />
 
             <ConsentGate
               scopes={["decision_traces:read"]}
@@ -251,69 +394,57 @@ export default function DashboardPage() {
               <DecisionTracePanel />
             </ConsentGate>
 
-            {portfolio && portfolio.concentration_alerts.length > 0 && (
-              <ConcentrationAlert alerts={portfolio.concentration_alerts} />
-            )}
+            <ConcentrationAlert alerts={effectivePortfolio.concentration_alerts} />
 
-            {portfolio && (
-              <HoldingsTable
-                holdings={holdings}
-                totalValue={portfolio.total_investment_value}
-              />
-            )}
+            <HoldingsTable
+              holdings={effectiveHoldingsRows}
+              totalValue={effectivePortfolio.total_investment_value}
+            />
           </div>
 
           {/* Right column */}
           <div className="space-y-6">
-            {portfolio && (
-              <AllocationChart
-                allocations={portfolio.allocation_by_asset_type}
-                title="Asset Allocation"
-              />
-            )}
+            <AllocationChart
+              allocations={effectivePortfolio.allocation_by_asset_type}
+              title="Asset Allocation"
+            />
 
-            {portfolio && (
-              <AllocationChart
-                allocations={portfolio.allocation_by_account_type}
-                title="By Account Type"
-              />
-            )}
+            <AllocationChart
+              allocations={effectivePortfolio.allocation_by_account_type}
+              title="By Account Type"
+            />
 
-            {allAccountsData && (
-              <CashDebtSection
-                cashAccounts={allAccountsData.cash_accounts}
-                debtAccounts={allAccountsData.debt_accounts}
-                onDeleteCashAccount={(id) => cashMutations.remove.mutate(id)}
-                onDeleteDebtAccount={(id) => debtMutations.remove.mutate(id)}
-              />
-            )}
+            <CashDebtSection
+              cashAccounts={effectiveAllAccounts.cash_accounts}
+              debtAccounts={effectiveAllAccounts.debt_accounts}
+              onDeleteCashAccount={(id) => cashMutations.remove.mutate(id)}
+              onDeleteDebtAccount={(id) => debtMutations.remove.mutate(id)}
+            />
 
-            {accounts && (
-              <div className="p-6 rounded-xl bg-neutral-900 border border-neutral-800">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-serif text-xl text-neutral-100">
-                    Linked Accounts
-                  </h3>
-                  <Link
-                    href="/connect"
-                    className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
-                  >
-                    + Add
-                  </Link>
-                </div>
-                <AccountsList
-                  accounts={accounts.map((a) => ({
-                    id: a.id,
-                    name: a.name,
-                    balance: a.balance,
-                    account_type: a.account_type,
-                    is_tax_advantaged: a.is_tax_advantaged,
-                    last_synced_at: a.updated_at,
-                    status: "active" as const,
-                  }))}
-                />
+            <div className="p-6 rounded-xl bg-neutral-900 border border-neutral-800">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-serif text-xl text-neutral-100">
+                  Linked Accounts
+                </h3>
+                <Link
+                  href="/connect"
+                  className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+                >
+                  + Add
+                </Link>
               </div>
-            )}
+              <AccountsList
+                accounts={effectiveInvestmentAccounts.map((a) => ({
+                  id: a.id,
+                  name: a.name,
+                  balance: a.balance,
+                  account_type: a.account_type,
+                  is_tax_advantaged: a.is_tax_advantaged,
+                  last_synced_at: a.updated_at,
+                  status: "active" as const,
+                }))}
+              />
+            </div>
           </div>
         </div>
       </>
@@ -325,7 +456,8 @@ export default function DashboardPage() {
       <div
         className="fixed inset-0 opacity-30 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 60%)",
+          background:
+            "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 60%)",
         }}
       />
 
@@ -336,7 +468,61 @@ export default function DashboardPage() {
       />
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-8">
-        {renderContent()}
+        {isLoading || isError ? (
+          <>
+            <DataSourceStatusStrip items={sourceItems} usingDemoData={usingDemoData} />
+            {isLoading ? <DashboardLoadingSkeleton /> : (
+              <ApiErrorState
+                message="We couldn't load your portfolio data. Please check that the API is running and try again."
+                error={errorDetails}
+                onRetry={handleRefresh}
+              />
+            )}
+          </>
+        ) : (
+          renderContent()
+        )}
+
+        {!isLoading && !isError && hasAccounts && (
+          <section className="mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm uppercase tracking-[0.25em] text-emerald-400">Intelligence Hub</p>
+                <h2 className="font-serif text-2xl text-white mt-2">
+                  Founder-first execution layers built on your data surface
+                </h2>
+              </div>
+              <div className="hidden sm:flex items-center gap-2 text-xs text-neutral-500">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                Decision-ready context
+              </div>
+            </div>
+
+            <div className="grid lg:grid-cols-3 gap-4">
+              {intelligenceCards.map((card) => (
+                <Link
+                  key={card.href}
+                  href={card.href}
+                  className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 hover:border-emerald-700 transition-colors"
+                >
+                  <div className="inline-flex rounded-lg border border-neutral-700 p-2 text-emerald-300">
+                    <card.icon className="w-4 h-4" />
+                  </div>
+                  <h3 className="mt-3 text-sm text-white font-medium">{card.label}</h3>
+                  <p className="mt-2 text-xs text-neutral-400 leading-relaxed">{card.description}</p>
+                </Link>
+              ))}
+            </div>
+
+            <Link
+              href="/dashboard/coverage"
+              className="inline-flex items-center gap-2 mt-4 text-sm text-emerald-300 hover:text-emerald-200"
+            >
+              <BarChart3 className="w-4 h-4" />
+              Open data coverage map
+            </Link>
+          </section>
+        )}
       </main>
 
       <AddAccountModal open={showAddModal} onOpenChange={setShowAddModal} />
