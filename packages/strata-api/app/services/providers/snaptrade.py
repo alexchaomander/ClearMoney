@@ -12,6 +12,7 @@ from app.core.config import settings
 from app.models.connection import Connection
 from app.models.investment_account import InvestmentAccountType
 from app.models.security import SecurityType
+from app.schemas.action_capability import ActionCapability
 from app.services.providers.base import (
     BaseProvider,
     LinkSession,
@@ -36,6 +37,10 @@ class SnapTradeProvider(BaseProvider):
     """SnapTrade provider implementation."""
 
     provider_name: str = "snaptrade"
+
+    def get_capabilities(self) -> list[ActionCapability]:
+        """Return SnapTrade capabilities."""
+        return [ActionCapability.READ_ONLY, ActionCapability.INTERNAL_REBALANCE]
 
     # Account type mappings
     _ACCOUNT_TYPE_MAP = {
@@ -168,6 +173,21 @@ class SnapTradeProvider(BaseProvider):
 
         return snaptrade_user_id, user_secret
 
+    def _get_account_capabilities(self, account_type: InvestmentAccountType) -> list[ActionCapability]:
+        """Determine capabilities based on account type."""
+        caps = [ActionCapability.READ_ONLY]
+        
+        # Any brokerage account can theoretically be rebalanced via SnapTrade
+        if account_type in {InvestmentAccountType.brokerage, InvestmentAccountType.ira, InvestmentAccountType.roth_ira}:
+            caps.append(ActionCapability.INTERNAL_REBALANCE)
+            
+        # IRAs are candidates for ACATS rollovers (Era 2 bridge)
+        if account_type in {InvestmentAccountType.ira, InvestmentAccountType.roth_ira, InvestmentAccountType.k401}:
+            caps.append(ActionCapability.ACATS_TRANSFER)
+            caps.append(ActionCapability.PDF_GENERATION)
+            
+        return caps
+
     async def get_accounts(
         self,
         connection: Connection,
@@ -196,6 +216,7 @@ class SnapTradeProvider(BaseProvider):
                     is_tax_advantaged=account_type in self._TAX_ADVANTAGED_TYPES,
                     institution_name=_safe_getattr(brokerage, "name"),
                     institution_id=str(brokerage.id) if brokerage and hasattr(brokerage, "id") else None,
+                    capabilities=self._get_account_capabilities(account_type),
                 )
             )
 

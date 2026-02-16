@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from app.models.cash_account import CashAccountType
 from app.models.connection import Connection
+from app.schemas.action_capability import ActionCapability
 
 
 @dataclass
@@ -27,6 +28,7 @@ class NormalizedBankAccount:
     currency: str = "USD"
     institution_name: str | None = None
     mask: str | None = None
+    capabilities: list[ActionCapability] | None = None
 
 
 @dataclass
@@ -51,6 +53,11 @@ class BaseBankingProvider(ABC):
     """Base class for banking data providers (e.g., Plaid)."""
 
     provider_name: str = "base_banking"
+
+    @abstractmethod
+    def get_capabilities(self) -> list[ActionCapability]:
+        """Return list of supported actions for this provider."""
+        ...
 
     @abstractmethod
     async def create_link_token(
