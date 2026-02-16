@@ -30,6 +30,7 @@ class AgentSession(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Enum(SessionStatus, values_callable=lambda e: [x.value for x in e]),
         default=SessionStatus.active,
     )
+    vanish_mode: Mapped[bool] = mapped_column(default=False)
     messages: Mapped[list] = mapped_column(JSON, default=lambda: [])
 
 
