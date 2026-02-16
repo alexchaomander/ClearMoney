@@ -367,137 +367,32 @@ Premium features should provide genuine value, not gate essential information.
 
 ## Strata Roadmap (Platform + ClearMoney)
 
-Inspired by Foundation Capital’s “Stratas” thesis: the durable asset is the decision trace—what data was used, what policy applied, which exceptions were granted, who approved, and why. Our goal is to build a Strata by becoming the execution path for user decisions and capturing decision traces across accounts, transactions, holdings, liabilities, and recommendations. citeturn0view0
+Inspired by Foundation Capital’s “Stratas” thesis: the durable asset is the decision trace. Our goal is to build the Strata Action Layer (SAL), moving from a "Read-Only" aggregator to an "Autonomous Execution" ledger.
 
-This roadmap splits into two parallel tracks:
-- **Connect Platform**: The Plaid-like connectivity layer + normalized finance graph + decision trace store.
-- **ClearMoney App**: The advisor experience built on top of the platform APIs.
+### Era 1: The Context Graph (0–6 months)
+*Goal: Build the foundation of radical transparency.*
+- **Platform:** Unified API abstraction for SnapTrade/Plaid. Token vault + consent ledger.
+- **ClearMoney:** Investment dashboard with "Show the Math" decision traces.
+- **Milestone:** Link brokerage → normalize holdings → show allocation → generate 3 recommendations with "why" trace.
 
-### Phase A — Investment-Focused MVP (0–3 months)
+### Era 2: The Drafting Layer (6–12 months)
+*Goal: Remove cognitive friction and bridge legacy systems.*
+- **Action Intents:** Standard primitives for ACATS rollovers and ACH transfers.
+- **Switch Kits:** Automated PDF generation for rollovers and account migrations.
+- **Ghost Navigation:** Guided sidebar for execution on legacy bank UIs.
+- **Milestone:** First user rollover executed via AI-drafted paperwork.
 
-> **Strategic choice:** We start with investments rather than banking because:
-> 1. Direct brokerage APIs are free (Schwab, IBKR, Alpaca)
-> 2. Investment-specialized aggregators (SnapTrade) cost 50-70% less than Plaid
-> 3. Higher-value use cases (tax optimization, asset allocation)
-> 4. Less competitive market positioning
-
-**Platform**
-- Provider abstraction interface supporting direct APIs + aggregators.
-- Direct Schwab API integration (free, covers former TD Ameritrade users).
-- SnapTrade integration for other brokerages (Fidelity, Vanguard, Robinhood, etc.).
-- Token vault + consent ledger (scopes, freshness, revocation).
-- Core schema: user, connection, institution, account, holdings, positions, tax lots.
-- Sync pipeline + webhook ingestion.
-- Data provenance: each record tagged with provider + timestamp + confidence.
-
-**ClearMoney**
-- Investment account connect flow using platform link token.
-- Portfolio allocation + concentration view.
-- Basic decision traces for top 3 investment actions:
-  - Asset allocation drift
-  - Concentration risk alerts
-  - Tax-loss harvesting candidates
-
-**Milestone**
-- End-to-end: link brokerage → normalize holdings → show allocation → generate 3 recommendations with "why" trace.
+### Era 3: The Agentic Ledger (12–24 months)
+*Goal: Autonomous economic citizens and programmable money.*
+- **Smart Accounts:** Every user gets a Safe (Smart Account) managed by their agent.
+- **Agent Economy:** Integration with Skyfire/L402 for agent-to-agent transactions.
+- **Native Ledger:** Strata becomes the primary system of record for assets.
+- **Milestone:** 80% of routine rebalancing executed autonomously by the agent.
 
 ---
 
-### Phase B — Complete Net Worth (3–6 months)
-
-**Platform**
-- Add bank account connectivity via Plaid.
-- Add liabilities (mortgage, student loans, auto) via Plaid Liabilities + Method Financial.
-- Add real estate (home values via Zillow/manual entry).
-- Net-worth graph (assets/liabilities) with category rollups.
-- "Context events" table for decision traces (input set, rules applied, approvals, outcome).
-
-**ClearMoney**
-- Net worth dashboard with all account types.
-- Cash flow analysis from bank transactions.
-- Debt strategy recommendations (snowball/avalanche).
-- Emergency fund adequacy check.
-- First "decision replay" UI: show inputs, rules, and outcome for a recommendation.
-
-**Milestone**
-- Full net-worth view across investments, bank, debt, real estate + 5–7 recommendations with traceable rationale.
-
----
-
-### Phase C — Advisor-Grade Decisions (6–12 months)
-
-**Platform**
-- Add income verification + payroll data (if available).
-- Add tax context (brackets, realized gains from holdings, withholding).
-- Multi-provider routing per institution.
-- Confidence scoring model (coverage, freshness, provenance).
-
-**ClearMoney**
-- Tax-aware recommendations:
-  - Roth vs Traditional
-  - Tax-loss harvesting candidates
-  - Contribution order optimization
-- Personalized “decision history” timeline.
-
-**Milestone**
-- Advisor-grade recommendations for tax + retirement with replayable traces.
-
----
-
-### Founder Coverage Track (parallel, 6–18 months)
-
-**Platform**
-- Add business entity + tax election records (LLC/S-Corp/C-Corp).
-- Add owner compensation records (salary vs distributions).
-- Add compliance task engine (federal + state filings, payroll reports, 1099s).
-- Add founder equity records (issuance, vesting, 83(b), QSBS status).
-
-**ClearMoney**
-- Founder onboarding: entity selection + S-Corp election guidance.
-- S-Corp savings estimator + election checklist.
-- Quarterly estimated tax planner with safe-harbor guidance.
-- Founder payroll + distribution planner with reasonable-comp guardrails.
-- Compliance hub + document vault + reminders.
-- Founder equity planner (83(b) deadline, QSBS eligibility).
-- Business vs personal cashflow separation warnings.
-
-**Milestone**
-- End-to-end founder coverage: entity selection → payroll setup → tax planner → compliance reminders → equity tracking.
-
----
-
-### Phase D — Strata Flywheel (12–18 months)
-
-**Platform**
-- Decision trace library becomes searchable “precedent.”
-- Graph queries: “when did we recommend X and why?”
-- “Explainability as API”: expose trace, rule IDs, and precedent links.
-- Incremental enrichment: categorization improvements + merchant normalization.
-
-**ClearMoney**
-- Proactive recommendations triggered by context changes.
-- Quarterly “advisor review” with timeline of decisions + outcomes.
-- Confidence-based nudges (“Connect X to improve accuracy by Y%”).
-
-**Milestone**
-- Strata becomes the source of truth for “why” across financial decisions.
-
----
-
-### Phase E — Platform Expansion (18+ months)
-
-**Platform**
-- Add insurance, crypto, alternative assets, and employer benefits.
-- Partner APIs for fee-only advisors.
-- Enterprise API tier for other fintechs.
-
-**ClearMoney**
-- “Life event” workflows (job change, home purchase, equity windfall).
-- Scalable advisor marketplace using Strata + consented data.
-
----
-
-### Operating Principles
+## Operating Principles
+...
 
 - **Execution path first**: To build Strata, we must be in the decision loop, not just reading data after the fact. citeturn0view0
 - **Decision traces are product**: Every recommendation writes a trace that captures inputs, policy, and rationale.

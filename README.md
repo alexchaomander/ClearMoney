@@ -30,6 +30,12 @@ A specialized intelligence layer for startup founders:
 *   **Vanish Mode**: Chat with the advisor in private sessions where no data is persisted.
 *   **Redacted Sharing**: Securely share financial reports with PII, institutions, and exact balances redacted.
 
+### 6. Strata Action Layer (Experimental)
+The foundation for autonomous personal finance:
+*   **Action Intents**: Standardized primitives for drafting financial actions (ACATS rollovers, ACH transfers).
+*   **Capabilities Discovery**: Intelligent provider tagging to identify "Action-Ready" accounts.
+*   **Action Lab**: An interactive preview of the autonomous agentic economy.
+
 ---
 
 ## 🛠 Technical Architecture
@@ -76,6 +82,9 @@ pnpm dev
 ---
 
 ## 📜 Documentation
+*   [The Action Layer Vision](./docs/vision/the-action-layer.md)
+*   [Action Layer Technical Spec](./docs/platform/strata-action-layer-spec.md)
+*   [Financial Portability Protocol (FPP)](./docs/platform/financial-portability-protocol.md)
 *   [Implementation Roadmap](./IMPLEMENTATION_PLAN.md)
 *   [Agent Guardrails](./docs/platform/PRD.md)
 *   [Data Model](./docs/platform/data-model.md)

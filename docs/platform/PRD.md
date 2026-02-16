@@ -55,61 +55,16 @@ This creates significant engineering overhead and inconsistent user experiences 
 
 ### Goals (in priority order)
 
-1. **G1: Unified Multi-Provider API**
-   - Provide a single API that abstracts Plaid, MX, Finicity, and FDX
-   - Measurable outcome: Apps can integrate in <1 day with a single SDK
-   - Success metric: 95% of integrations complete within 8 hours
-
-2. **G2: Multi-Tenant Data Isolation**
-   - Complete separation of data between apps (tenants)
-   - Measurable outcome: Zero cross-tenant data leakage incidents
-   - Success metric: 100% data isolation verified by quarterly security audits
-
-3. **G3: Improved Recommendation Accuracy**
-   - Enable apps to use real financial data instead of user estimates
-   - Measurable outcome: Recommendation accuracy improves by 40%
-   - Success metric: User-reported recommendation relevance >4.0/5.0
-
-4. **G4: Decision Transparency**
-   - Every recommendation includes a full decision trace showing inputs, rules, and assumptions
-   - Measurable outcome: Users understand why they received a recommendation
-   - Success metric: "Why this?" click-through rate >15%
-
-5. **G5: Connection Reliability**
-   - Automatic failover between providers, health-based routing, and graceful degradation
-   - Measurable outcome: >99.5% connection success rate
-   - Success metric: <2% of users experience connection failures that require re-authentication
-
-6. **G6: Compliance by Default**
-   - Built-in consent ledger, audit logging, and data lifecycle management
-   - Measurable outcome: Apps achieve SOC 2 compliance faster
-   - Success metric: 100% of API calls auditable with user consent verified
+1. **G1: Unified Multi-Provider API**: Abstracting Plaid, SnapTrade, and others.
+2. **G2: Strata Action Layer (SAL)**: Standardizing financial actions (ACH, ACATS) as programmable primitives.
+3. **G3: Radical Transparency**: Decision trace system for trust and auditability.
+4. **G4: Agentic Interoperability**: Financial Portability Protocol (FPP) for cross-agent data mobility.
 
 ### Non-Goals (explicitly out of scope)
 
-- **NG1: Building a competing aggregator**
-  - We use existing providers (Plaid, MX, Finicity, FDX) rather than building direct bank integrations
-  - Rationale: This would require 10x investment and regulatory licensing; providers already have this infrastructure
-
-- **NG2: Storing raw transaction descriptions**
-  - We normalize and categorize transactions but don't store verbatim merchant descriptions
-  - Rationale: Raw descriptions contain PII and aren't needed for recommendations
-
-- **NG3: Supporting non-US institutions in MVP**
-  - Phase 1 focuses on US financial institutions only
-  - Rationale: Provider coverage, regulatory requirements, and data formats differ significantly by country
-
-- **NG4: Real-time trading or payment initiation**
-  - The platform is read-only; no money movement capabilities
-  - Rationale: Payment initiation requires different licensing, liability model, and security posture
-
-- **NG5: Building consumer-facing UI**
-  - We provide APIs and SDKs; consumer UX is the app's responsibility
-  - Rationale: Each app has unique branding and UX requirements; a one-size-fits-all UI wouldn't serve them well
-
-- **NG6: Financial advice or fiduciary responsibility**
-  - The platform provides data and decision traces; apps interpret and present to users
-  - Rationale: Fiduciary responsibility requires licensing and creates liability that apps must manage
+- **NG1: Building a competing aggregator**: We use Plaid/SnapTrade.
+- **NG2: Storing raw transaction descriptions**: We prioritize privacy and normalization.
+- **NG3: Non-US support in MVP**.
 
 ---
 
