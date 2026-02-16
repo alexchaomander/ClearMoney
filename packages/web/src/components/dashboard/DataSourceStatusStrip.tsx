@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  Activity,
   AlertTriangle,
   CheckCircle2,
   CircleAlert,
@@ -287,7 +288,16 @@ function DataSourceStrip({ items, usingDemoData }: DataSourceStatusStripProps) {
     <section className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm uppercase tracking-[0.16em] text-neutral-400">Data sources</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-sm uppercase tracking-[0.16em] text-neutral-400">Data sources</p>
+            <Link 
+              href="/data-health" 
+              className="text-[10px] uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1.5"
+            >
+              <Activity className="w-3 h-3" />
+              Full Health Report
+            </Link>
+          </div>
           <p className="text-xs text-neutral-500 mt-1">
             {connectedCount}/{items.length} live sources ({completionRate}% readiness)
           </p>

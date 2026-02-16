@@ -17,6 +17,7 @@ import type {
   DebtAccountUpdate,
   FinancialMemory,
   FinancialMemoryUpdate,
+  DataHealthResponse,
   HealthResponse,
   HoldingDetail,
   Institution,
@@ -42,7 +43,10 @@ import type {
   ConsentCreateRequest,
   ConsentResponse,
   DecisionTrace,
+  ExecuteRecommendationRequest,
+  ExecuteRecommendationResponse,
   PointsProgram,
+  TransparencyPayload,
   CreditCardData,
   SavingsProduct,
   InvestmentData,
@@ -62,6 +66,7 @@ export interface StrataClientInterface {
   setClerkUserId(userId: string | null): void;
   setAuthToken(token: string | null): void;
   healthCheck(): Promise<HealthResponse>;
+  getDataHealth(): Promise<DataHealthResponse>;
   createLinkSession(request?: LinkSessionRequest): Promise<LinkSessionResponse>;
   handleConnectionCallback(request: ConnectionCallbackRequest): Promise<Connection>;
   getConnections(): Promise<Connection[]>;
@@ -104,6 +109,10 @@ export interface StrataClientInterface {
   getAdvisorSession(sessionId: string): Promise<AdvisorSession>;
   sendAdvisorMessage(sessionId: string, content: string): Promise<ReadableStream<Uint8Array>>;
   getRecommendations(): Promise<AdvisorRecommendation[]>;
+  executeRecommendation(
+    recommendationId: string,
+    request: ExecuteRecommendationRequest
+  ): Promise<ExecuteRecommendationResponse>;
   getDecisionTraces(params?: {
     sessionId?: string;
     recommendationId?: string;
@@ -127,6 +136,7 @@ export interface StrataClientInterface {
   getCredit(): Promise<CreditData>;
   getProtection(): Promise<ProtectionData>;
   getToolPresets(): Promise<ToolPresetBundle>;
+  getTransparencyPayload(): Promise<TransparencyPayload>;
   // Banking (Plaid)
   createPlaidLinkToken(request?: PlaidLinkRequest): Promise<PlaidLinkResponse>;
   handlePlaidCallback(request: PlaidCallbackRequest): Promise<Connection>;
@@ -216,6 +226,10 @@ export class StrataClient implements StrataClientInterface {
   // Health check
   async healthCheck(): Promise<HealthResponse> {
     return this.request<HealthResponse>('/api/v1/health');
+  }
+
+  async getDataHealth(): Promise<DataHealthResponse> {
+    return this.request<DataHealthResponse>('/api/v1/data/health');
   }
 
   // === Connections ===
@@ -538,6 +552,19 @@ export class StrataClient implements StrataClientInterface {
     return this.request<AdvisorRecommendation[]>('/api/v1/advisor/recommendations');
   }
 
+  async executeRecommendation(
+    recommendationId: string,
+    request: ExecuteRecommendationRequest
+  ): Promise<ExecuteRecommendationResponse> {
+    return this.request<ExecuteRecommendationResponse>(
+      `/api/v1/agent/recommendations/${recommendationId}/execute`,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
+  }
+
   async getDecisionTraces(params?: {
     sessionId?: string;
     recommendationId?: string;
@@ -624,6 +651,10 @@ export class StrataClient implements StrataClientInterface {
 
   async getToolPresets(): Promise<ToolPresetBundle> {
     return this.request<ToolPresetBundle>('/api/v1/data/tool-presets');
+  }
+
+  async getTransparencyPayload(): Promise<TransparencyPayload> {
+    return this.request<TransparencyPayload>('/api/v1/data/transparency');
   }
 
   // === Banking (Plaid) ===
