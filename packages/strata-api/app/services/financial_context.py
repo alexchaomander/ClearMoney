@@ -165,6 +165,20 @@ async def build_financial_context(
     )
     taxable = total_investment - tax_advantaged
 
+    # Calculate allocation by asset type
+    allocation_by_asset_type = {}
+    if total_investment > 0:
+        for holding, security in holdings:
+            asset_type = security.security_type.value
+            val = float(holding.market_value) if holding.market_value else 0.0
+            allocation_by_asset_type[asset_type] = allocation_by_asset_type.get(asset_type, 0.0) + val
+        
+        # Convert to percentages
+        allocation_by_asset_type = {
+            k: round(v / total_investment * 100, 1) 
+            for k, v in allocation_by_asset_type.items()
+        }
+
     runway_months = None
     if memory and memory.average_monthly_expenses and memory.average_monthly_expenses > 0:
         runway_months = total_cash / float(memory.average_monthly_expenses)
@@ -176,6 +190,7 @@ async def build_financial_context(
         "total_debt_value": round(total_debt, 2),
         "tax_advantaged_value": round(tax_advantaged, 2),
         "taxable_value": round(taxable, 2),
+        "allocation_by_asset_type": allocation_by_asset_type,
         "runway_months": round(runway_months, 1) if runway_months is not None else None,
     }
 
