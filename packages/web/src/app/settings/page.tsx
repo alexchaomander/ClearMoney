@@ -25,7 +25,6 @@ import type { Institution, FinancialMemoryUpdate, ActionPolicyRequest } from "@c
 import { ConsentGate } from "@/components/shared/ConsentGate";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Shield, Lock, AlertCircle } from "lucide-react";
 
 const CONSENT_SCOPES = [
   "connections:read",

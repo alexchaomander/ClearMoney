@@ -78,7 +78,8 @@ class ComminglingDetectionEngine:
         commingled_count = sum(1 for tx in transactions if tx.is_commingled)
         commingled_amount = sum(abs(tx.amount) for tx in transactions if tx.is_commingled)
         
-        risk_score = 100 - (min(100, (commingled_count / total_count * 500)) if total_count > 0 else 0)
+        penalty = min(100, (commingled_count / total_count * 500)) if total_count > 0 else 0
+        risk_score = max(0, 100 - penalty)
 
         return {
             "risk_score": round(risk_score, 1),
