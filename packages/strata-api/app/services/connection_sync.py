@@ -40,6 +40,7 @@ async def sync_connection_accounts(
                 balance=normalized_account.balance,
                 currency=normalized_account.currency,
                 is_tax_advantaged=normalized_account.is_tax_advantaged,
+                capabilities=[c.value for c in (normalized_account.capabilities or [])],
             )
             session.add(account)
         else:
@@ -47,6 +48,8 @@ async def sync_connection_accounts(
             account.balance = normalized_account.balance
             account.account_type = normalized_account.account_type
             account.is_tax_advantaged = normalized_account.is_tax_advantaged
+            if normalized_account.capabilities:
+                account.capabilities = [c.value for c in normalized_account.capabilities]
 
         await session.flush()
 
