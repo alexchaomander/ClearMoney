@@ -22,6 +22,11 @@ import type {
   ProtectionData,
   ToolPreset,
   ToolPresetBundle,
+  DataHealthResponse,
+  TransparencyPayload,
+  TransparencyPayoutDisclosureRow,
+  TransparencyIndependenceAuditRow,
+  TransparencyCorrectionRow,
 } from "@clearmoney/strata-sdk";
 
 const NOW = "2026-01-15T12:00:00Z";
@@ -1025,6 +1030,105 @@ export const DEMO_TOOL_PRESETS: ToolPresetBundle = {
     ...preset,
     updated_at: NOW,
   })),
+};
+
+export const DEMO_DATA_HEALTH: DataHealthResponse = {
+  status: "ok",
+  database: "ok",
+  catalog: "ok",
+  last_updated: "2026-02-01T00:00:00Z",
+  details: {
+    points_programs: "ok",
+    credit_cards: "ok",
+    liquid_assets: "ok",
+    investments: "ok",
+    real_assets: "ok",
+    liabilities: "ok",
+    income: "ok",
+    credit: "ok",
+    protection: "ok",
+    tool_presets: "ok",
+    transparency_payload: "ok",
+  },
+};
+
+const DEMO_TRANSP_PAYOUT_ROWS: TransparencyPayoutDisclosureRow[] = [
+  {
+    card: "Chase Sapphire Preferred",
+    payout_usd: 175,
+    recommendation_rank: 4,
+    reason: "Net value trails no-fee alternatives for low travel spend profiles.",
+    source: "Affiliate network midpoint range",
+    updated_at: "2026-02-01",
+  },
+  {
+    card: "Amex Platinum",
+    payout_usd: 450,
+    recommendation_rank: 6,
+    reason: "Statement credit utilization assumptions reduce realistic net value.",
+    source: "Affiliate network midpoint range",
+    updated_at: "2026-02-01",
+  },
+  {
+    card: "Capital One Venture X",
+    payout_usd: 350,
+    recommendation_rank: 3,
+    reason: "Strong travel value but weaker for low-frequency travelers.",
+    source: "Affiliate network midpoint range",
+    updated_at: "2026-02-01",
+  },
+];
+
+const DEMO_TRANSP_INDEPENDENCE_ROWS: TransparencyIndependenceAuditRow[] = [
+  {
+    card: "Chase Sapphire Preferred",
+    our_rank: 4,
+    payout_rank: 1,
+    delta: -3,
+    reason: "Lower net value for dining-light spend profiles.",
+  },
+  {
+    card: "Amex Gold",
+    our_rank: 1,
+    payout_rank: 2,
+    delta: 1,
+    reason: "Highest net value for grocery-heavy households.",
+  },
+  {
+    card: "Capital One Venture X",
+    our_rank: 3,
+    payout_rank: 1,
+    delta: -2,
+    reason: "Annual fee drag without travel spend.",
+  },
+];
+
+const DEMO_TRANSP_CORRECTIONS: TransparencyCorrectionRow[] = [
+  {
+    date: "2026-01-19",
+    type: "Correction",
+    summary: "Updated Hilton valuation after program devaluation notice.",
+    impact: "-0.05 cpp",
+  },
+  {
+    date: "2026-01-12",
+    type: "Update",
+    summary: "Adjusted Amex Platinum credit usability defaults based on user surveys.",
+    impact: "No change to net value for median user",
+  },
+  {
+    date: "2026-01-05",
+    type: "Correction",
+    summary: "Fixed Chase Freedom Flex 5x category mapping bug.",
+    impact: "+$24/year average",
+  },
+];
+
+export const DEMO_TRANSPARENCY_PAYLOAD: TransparencyPayload = {
+  last_updated: "2026-02-01",
+  payout_disclosure: DEMO_TRANSP_PAYOUT_ROWS,
+  independence_audit: DEMO_TRANSP_INDEPENDENCE_ROWS,
+  corrections: DEMO_TRANSP_CORRECTIONS,
 };
 
 // === Shared Data (Points + Cards) ===
