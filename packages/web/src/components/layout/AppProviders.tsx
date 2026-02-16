@@ -9,6 +9,7 @@ import { StrataProvider } from "@/lib/strata/client";
 import { DemoBanner } from "@/components/shared/DemoBanner";
 import { StrataAuthSync } from "@/lib/strata/auth";
 import { ToastProvider } from "@/components/shared/toast";
+import { AssumptionProvider } from "@/components/dashboard/AssumptionControl";
 
 const hasClerkKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -19,11 +20,13 @@ function ProvidersContent({ children }: { children: ReactNode }) {
         <QueryProvider>
           <StrataProvider>
             <ToastProvider>
-              {hasClerkKey ? <StrataAuthSync /> : null}
-              <DemoBanner />
-              <div className="flex min-h-screen flex-col">
-                <main className="flex-1">{children}</main>
-              </div>
+              <AssumptionProvider>
+                {hasClerkKey ? <StrataAuthSync /> : null}
+                <DemoBanner />
+                <div className="flex min-h-screen flex-col">
+                  <main className="flex-1">{children}</main>
+                </div>
+              </AssumptionProvider>
             </ToastProvider>
           </StrataProvider>
         </QueryProvider>

@@ -156,6 +156,7 @@ export interface StrataClientInterface {
   getBankAccounts(): Promise<BankAccount[]>;
   getBankTransactions(params?: BankTransactionQuery): Promise<PaginatedBankTransactions>;
   getSpendingSummary(months?: number): Promise<SpendingSummary>;
+  getSubscriptions(): Promise<Record<string, unknown>>;
   updateBankTransactionReimbursement(transactionId: string, data: BankTransactionReimbursementUpdate): Promise<BankTransaction>;
   // Calculators
   runRetirementMonteCarlo(params: {
@@ -799,6 +800,10 @@ export class StrataClient implements StrataClientInterface {
     return this.request<SpendingSummary>(
       this.buildUrl('/api/v1/banking/spending-summary', { months })
     );
+  }
+
+  async getSubscriptions(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/api/v1/banking/subscriptions');
   }
 
   async updateBankTransactionReimbursement(

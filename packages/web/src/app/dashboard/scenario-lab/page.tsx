@@ -5,6 +5,7 @@ import { FlaskConical, ArrowLeft, Target, TrendingUp, ShieldCheck } from "lucide
 import Link from "next/link";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { RetirementMonteCarloChart } from "@/components/dashboard/RetirementMonteCarloChart";
+import { AssumptionControl } from "@/components/dashboard/AssumptionControl";
 import { ConsentGate } from "@/components/shared/ConsentGate";
 
 export default function ScenarioLabPage() {
@@ -45,6 +46,7 @@ export default function ScenarioLabPage() {
           purpose="Run advanced simulations using your portfolio and profile data."
         >
           <div className="grid gap-8">
+            <AssumptionControl />
             <RetirementMonteCarloChart />
 
             <div className="grid md:grid-cols-2 gap-6">

@@ -40,6 +40,7 @@ import {
   useVulnerabilityReport,
   useRunwayMetrics,
   useTaxShieldMetrics,
+  useSubscriptions,
 } from "@/lib/strata/hooks";
 import { formatCurrency, formatMonthsAsYears, formatPercent } from "@/lib/shared/formatters";
 
@@ -224,6 +225,11 @@ export default function FounderOperatingRoomPage() {
     refetch: refetchTaxShield,
   } = useTaxShieldMetrics({ enabled: hasConsent });
   const {
+    data: subscriptionData,
+    isLoading: subscriptionsLoading,
+    refetch: refetchSubscriptions,
+  } = useSubscriptions({ enabled: hasConsent });
+  const {
     data: connections,
     isLoading: connectionsLoading,
     isError: connectionsError,
@@ -244,7 +250,8 @@ export default function FounderOperatingRoomPage() {
     spendingLoading ||
     vulnerabilityLoading ||
     runwayLoading ||
-    taxShieldLoading;
+    taxShieldLoading ||
+    subscriptionsLoading;
 
   const isError =
     portfolioError ||
@@ -508,6 +515,7 @@ export default function FounderOperatingRoomPage() {
       refetchVulnerability();
       refetchRunway();
       refetchTaxShield();
+      refetchSubscriptions();
       if (hasConnectionsConsent) {
         refetchConnections();
       }
@@ -632,6 +640,37 @@ export default function FounderOperatingRoomPage() {
           </section>
 
           <section className="grid lg:grid-cols-3 gap-4 mb-6">
+            <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg text-white font-medium">Subscription audit</h2>
+                <div className="px-2 py-0.5 rounded bg-emerald-900/20 text-emerald-400 border border-emerald-800/40 text-[10px] font-bold">
+                  { (subscriptionData as any)?.subscription_count ?? 0 } ACTIVE
+                </div>
+              </div>
+              <p className="mt-2 text-sm text-neutral-400">
+                Monthly burn from recurring SaaS and services.
+              </p>
+              <p className="mt-3 text-2xl text-white">
+                {formatCurrency((subscriptionData as any)?.total_monthly_subscription_burn ?? 0)}/mo
+              </p>
+              <div className="mt-4 space-y-2 max-h-40 overflow-y-auto pr-2">
+                {((subscriptionData as any)?.subscriptions ?? []).slice(0, 5).map((s: any) => (
+                  <div key={s.merchant} className="flex items-center justify-between py-2 border-b border-neutral-800 last:border-0">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium text-neutral-200 truncate">{s.merchant}</p>
+                      <p className="text-[10px] text-neutral-500 uppercase">{s.frequency}</p>
+                    </div>
+                    <span className="text-xs font-bold text-neutral-300">
+                      {formatCurrency(s.amount)}
+                    </span>
+                  </div>
+                ))}
+                {(!subscriptionData || (subscriptionData as any)?.subscriptions.length === 0) && (
+                  <p className="text-xs text-neutral-600 italic">No recurring patterns detected.</p>
+                )}
+              </div>
+            </article>
+
             <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg text-white font-medium">Tax shield posture</h2>

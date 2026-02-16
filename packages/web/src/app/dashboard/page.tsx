@@ -29,6 +29,7 @@ import { ConsentGate } from "@/components/shared/ConsentGate";
 import { DashboardLoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ApiErrorState } from "@/components/shared/ApiErrorState";
 import { DataSourceStatusStrip, type DataSourceStatusItem } from "@/components/dashboard/DataSourceStatusStrip";
+import { AssumptionControl } from "@/components/dashboard/AssumptionControl";
 import {
   usePortfolioSummary,
   useInvestmentAccounts,
@@ -295,6 +296,7 @@ export default function DashboardPage() {
     return (
       <>
         <DataSourceStatusStrip items={sourceItems} usingDemoData={usingDemoData} />
+        <AssumptionControl />
         {usingDemoData ? (
           <p className="mb-4 text-xs text-amber-300 inline-flex items-center gap-2">
             <RefreshCw className="w-3 h-3" />
