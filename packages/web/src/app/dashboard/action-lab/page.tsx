@@ -28,7 +28,8 @@ import { cn } from "@/lib/utils";
 import { 
   useActionIntents, 
   useDownloadIntentManifest,
-  useUpdateActionIntent 
+  useUpdateActionIntent,
+  useExportFinancialPassport 
 } from "@/lib/strata/hooks";
 import { ActionIntent } from "@clearmoney/strata-sdk";
 
@@ -134,6 +135,7 @@ export default function ActionLabPage() {
   const { data: realIntents, isLoading: isLoadingIntents } = useActionIntents();
   const downloadManifest = useDownloadIntentManifest();
   const updateIntent = useUpdateActionIntent();
+  const exportPassport = useExportFinancialPassport();
 
   const allIntents = useMemo(() => {
     const formattedReal: MockIntent[] = (realIntents || []).map(ri => ({
@@ -310,7 +312,16 @@ export default function ActionLabPage() {
             <div className="grid gap-6">
               {[
                 { icon: Wallet, title: "Programmable Accounts", desc: "Your agent gets a secure Smart Account (Safe) to execute actions instantly without waiting for banking hours." },
-                { icon: Globe, title: "Financial Data Passports", desc: "Move your entire financial history and context between any AI agent with a single thumbprint." },
+                { 
+                  icon: Globe, 
+                  title: "Financial Data Passports", 
+                  desc: "Move your entire financial history and context between any AI agent with a single thumbprint.",
+                  action: {
+                    label: exportPassport.isPending ? "Generating..." : "Export Passport (FPP v1)",
+                    onClick: () => exportPassport.mutate(),
+                    disabled: exportPassport.isPending
+                  }
+                },
                 { icon: Fingerprint, title: "Biometric Verification", desc: "No passwords. High-value agent actions are verified via FaceID or TouchID directly on your device." }
               ].map((f, i) => (
                 <motion.div 
@@ -318,14 +329,24 @@ export default function ActionLabPage() {
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="flex gap-4 p-4 rounded-xl hover:bg-neutral-900/50 transition-colors"
+                  className="flex gap-4 p-4 rounded-xl hover:bg-neutral-900/50 transition-colors group/teaser"
                 >
                   <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-emerald-950/50 flex items-center justify-center text-emerald-400 border border-emerald-900/50">
                     <f.icon className="w-6 h-6" />
                   </div>
-                  <div>
+                  <div className="flex-grow">
                     <h4 className="font-medium text-neutral-200">{f.title}</h4>
                     <p className="text-sm text-neutral-400 mt-1 leading-relaxed">{f.desc}</p>
+                    {f.action && (
+                      <button
+                        onClick={f.onClick}
+                        disabled={f.disabled}
+                        className="mt-3 text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors disabled:opacity-50"
+                      >
+                        {f.label}
+                        <ArrowRight className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               ))}
