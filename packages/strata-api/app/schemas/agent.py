@@ -1,6 +1,8 @@
 from datetime import datetime
 from uuid import UUID
 
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -30,5 +32,22 @@ class DecisionTraceResponse(BaseModel):
     warnings: list
     source: str
     created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ExecuteRecommendationRequest(BaseModel):
+    action: str
+    connection_id: UUID | None = None
+    payload: dict[str, Any] | None = None
+
+
+class ExecuteRecommendationResponse(BaseModel):
+    recommendation_id: UUID
+    action: str
+    status: str
+    result: dict[str, Any]
+    trace_id: UUID
+    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

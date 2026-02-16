@@ -17,6 +17,13 @@ from app.schemas.debt_account import (
     DebtAccountResponse,
     DebtAccountUpdate,
 )
+from app.schemas.data import (
+    DataHealthResponse,
+    TransparencyCorrectionRow,
+    TransparencyIndependenceAuditRow,
+    TransparencyPayload,
+    TransparencyPayoutDisclosureRow,
+)
 from app.schemas.holding import (
     HoldingCreate,
     HoldingResponse,
@@ -39,7 +46,13 @@ from app.schemas.investment_account import (
     InvestmentAccountUpdate,
     InvestmentAccountWithHoldingsResponse,
 )
-from app.schemas.agent import AgentContextResponse, DecisionTraceResponse, FreshnessStatus
+from app.schemas.agent import (
+    AgentContextResponse,
+    DecisionTraceResponse,
+    ExecuteRecommendationRequest,
+    ExecuteRecommendationResponse,
+    FreshnessStatus,
+)
 from app.schemas.action_approval import ActionApprovalResponse
 from app.schemas.action_policy import ActionPolicyRequest, ActionPolicyResponse
 from app.schemas.portfolio import AssetAllocation, PortfolioSummary
@@ -79,6 +92,8 @@ __all__ = [
     "AgentContextResponse",
     "DecisionTraceResponse",
     "FreshnessStatus",
+    "ExecuteRecommendationRequest",
+    "ExecuteRecommendationResponse",
     "ActionPolicyRequest",
     "ActionPolicyResponse",
     "ActionApprovalResponse",
@@ -88,4 +103,9 @@ __all__ = [
     "SecurityUpdate",
     "UserCreate",
     "UserResponse",
+    "DataHealthResponse",
+    "TransparencyCorrectionRow",
+    "TransparencyIndependenceAuditRow",
+    "TransparencyPayoutDisclosureRow",
+    "TransparencyPayload",
 ]

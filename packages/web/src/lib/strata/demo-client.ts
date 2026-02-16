@@ -42,6 +42,10 @@ import type {
   SkillSummary,
   SpendingSummary,
   FinancialMemoryUpdate,
+  DataHealthResponse,
+  TransparencyPayload,
+  ExecuteRecommendationRequest,
+  ExecuteRecommendationResponse,
   HealthResponse,
   HoldingDetail,
   Institution,
@@ -78,6 +82,8 @@ import {
   DEMO_CREDIT_DATA,
   DEMO_PROTECTION_DATA,
   DEMO_TOOL_PRESETS,
+  DEMO_DATA_HEALTH,
+  DEMO_TRANSPARENCY_PAYLOAD,
 } from "./demo-data";
 
 function delay(ms: number): Promise<void> {
@@ -98,6 +104,11 @@ export class DemoStrataClient implements StrataClientInterface {
   async healthCheck(): Promise<HealthResponse> {
     await delay(100);
     return { status: "ok", database: "ok" };
+  }
+
+  async getDataHealth(): Promise<DataHealthResponse> {
+    await delay(120);
+    return { ...DEMO_DATA_HEALTH };
   }
 
   async createLinkSession(
@@ -690,6 +701,26 @@ export class DemoStrataClient implements StrataClientInterface {
     ];
   }
 
+  async executeRecommendation(
+    recommendationId: string,
+    request: ExecuteRecommendationRequest
+  ): Promise<ExecuteRecommendationResponse> {
+    await delay(500);
+    return {
+      recommendation_id: recommendationId,
+      action: request.action,
+      status: "queued",
+      result: {
+        action: request.action,
+        connection_id: request.connection_id ?? null,
+        payload: request.payload ?? {},
+        source: "demo",
+      },
+      trace_id: crypto.randomUUID(),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
   async getDecisionTraces(): Promise<DecisionTrace[]> {
     await delay(200);
     return [];
@@ -815,6 +846,11 @@ export class DemoStrataClient implements StrataClientInterface {
   async getToolPresets(): Promise<ToolPresetBundle> {
     await delay(200);
     return DEMO_TOOL_PRESETS;
+  }
+
+  async getTransparencyPayload(): Promise<TransparencyPayload> {
+    await delay(150);
+    return DEMO_TRANSPARENCY_PAYLOAD;
   }
 
   // === Banking (Plaid) ===

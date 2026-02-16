@@ -11,6 +11,8 @@ from app.schemas.data import (
     CreditData,
     ProtectionData,
     ToolPresetBundle,
+    DataHealthResponse,
+    TransparencyPayload,
 )
 from app.services.data_registry import (
     get_credit_card_data,
@@ -23,9 +25,16 @@ from app.services.data_registry import (
     get_credit_data,
     get_protection_data,
     get_tool_presets,
+    get_data_health,
+    get_transparency_payload,
 )
 
 router = APIRouter(prefix="/data", tags=["data"])
+
+
+@router.get("/health", response_model=DataHealthResponse)
+async def get_data_health_status() -> DataHealthResponse:
+    return get_data_health()
 
 
 @router.get("/points-programs", response_model=list[PointsProgram])
@@ -76,3 +85,8 @@ async def get_protection() -> ProtectionData:
 @router.get("/tool-presets", response_model=ToolPresetBundle)
 async def get_presets() -> ToolPresetBundle:
     return get_tool_presets()
+
+
+@router.get("/transparency", response_model=TransparencyPayload)
+async def get_transparency() -> TransparencyPayload:
+    return get_transparency_payload()

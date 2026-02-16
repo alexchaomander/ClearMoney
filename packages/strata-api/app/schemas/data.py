@@ -216,3 +216,42 @@ class ToolPreset(BaseModel):
 class ToolPresetBundle(BaseModel):
     last_updated: str | None = None
     presets: list[ToolPreset] = []
+
+
+class DataHealthResponse(BaseModel):
+    status: str
+    database: str
+    catalog: str
+    last_updated: str
+    details: dict[str, str] | None = None
+
+
+class TransparencyPayoutDisclosureRow(BaseModel):
+    card: str
+    payout_usd: float
+    recommendation_rank: int
+    reason: str
+    source: str
+    updated_at: str
+
+
+class TransparencyIndependenceAuditRow(BaseModel):
+    card: str
+    our_rank: int
+    payout_rank: int
+    delta: int
+    reason: str
+
+
+class TransparencyCorrectionRow(BaseModel):
+    date: str
+    type: str
+    summary: str
+    impact: str
+
+
+class TransparencyPayload(BaseModel):
+    last_updated: str
+    payout_disclosure: list[TransparencyPayoutDisclosureRow]
+    independence_audit: list[TransparencyIndependenceAuditRow]
+    corrections: list[TransparencyCorrectionRow]

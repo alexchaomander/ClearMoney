@@ -20,6 +20,7 @@ import {
   useRecommendations,
 } from "@/lib/strata/hooks";
 import { useStrataClient } from "@/lib/strata/client";
+import { RecommendationCard } from "@/components/advisor/RecommendationCard";
 import type { AdvisorSession, SkillSummary } from "@clearmoney/strata-sdk";
 
 interface ChatMessage {
@@ -313,24 +314,9 @@ export default function AdvisorPage() {
                 <p className="text-xs uppercase tracking-wider text-neutral-500 mb-3">
                   Recent Recommendations
                 </p>
-                <div className="space-y-2">
-                  {recommendations.slice(0, 3).map((rec) => (
-                    <div
-                      key={rec.id}
-                      className="p-4 rounded-xl bg-neutral-900 border border-neutral-800"
-                    >
-                      <div className="flex items-start gap-2">
-                        <Lightbulb className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium text-neutral-100">
-                            {rec.title}
-                          </p>
-                          <p className="text-xs text-neutral-400 mt-0.5">
-                            {rec.summary}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                <div className="space-y-3">
+                  {recommendations.slice(0, 5).map((rec) => (
+                    <RecommendationCard key={rec.id} recommendation={rec} />
                   ))}
                 </div>
               </motion.div>

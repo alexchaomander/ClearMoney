@@ -4,6 +4,60 @@ export interface HealthResponse {
   database: string;
 }
 
+export interface DataHealthResponse {
+  status: string;
+  database: string;
+  catalog: string;
+  last_updated: string;
+  details: Record<string, string> | null;
+}
+
+export interface TransparencyPayoutDisclosureRow {
+  card: string;
+  payout_usd: number;
+  recommendation_rank: number;
+  reason: string;
+  source: string;
+  updated_at: string;
+}
+
+export interface TransparencyIndependenceAuditRow {
+  card: string;
+  our_rank: number;
+  payout_rank: number;
+  delta: number;
+  reason: string;
+}
+
+export interface TransparencyCorrectionRow {
+  date: string;
+  type: string;
+  summary: string;
+  impact: string;
+}
+
+export interface TransparencyPayload {
+  last_updated: string;
+  payout_disclosure: TransparencyPayoutDisclosureRow[];
+  independence_audit: TransparencyIndependenceAuditRow[];
+  corrections: TransparencyCorrectionRow[];
+}
+
+export interface ExecuteRecommendationRequest {
+  action: string;
+  connection_id?: string | null;
+  payload?: Record<string, unknown> | null;
+}
+
+export interface ExecuteRecommendationResponse {
+  recommendation_id: string;
+  action: string;
+  status: string;
+  result: Record<string, unknown>;
+  trace_id: string;
+  updated_at: string;
+}
+
 // Connection types
 export type ConnectionStatus = 'active' | 'inactive' | 'error' | 'pending';
 
