@@ -27,6 +27,12 @@ export default function VerificationPortalPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
+      // Security: Limit file size to 1MB
+      if (selectedFile.size > 1024 * 1024) {
+        setError("File is too large. Max size is 1MB.");
+        return;
+      }
+
       if (selectedFile.type !== "application/json" && !selectedFile.name.endsWith(".json")) {
         setError("Please upload a valid JSON attestation file.");
         return;

@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.cash_account import CashAccount
@@ -165,19 +165,27 @@ async def build_financial_context(
     )
     taxable = total_investment - tax_advantaged
 
-    # Calculate allocation by asset type
+    # Calculate allocation by asset type (Optimized DB-level aggregation)
     allocation_by_asset_type = {}
-    if total_investment > 0:
-        for holding, security in holdings:
-            asset_type = security.security_type.value
-            val = float(holding.market_value) if holding.market_value else 0.0
-            allocation_by_asset_type[asset_type] = allocation_by_asset_type.get(asset_type, 0.0) + val
+    if account_ids:
+        alloc_query = (
+            select(Security.security_type, func.sum(Holding.market_value))
+            .join(Security, Holding.security_id == Security.id)
+            .where(Holding.account_id.in_(account_ids))
+            .group_by(Security.security_type)
+        )
+        alloc_result = await session.execute(alloc_query)
+        
+        for asset_type, val in alloc_result.all():
+            if asset_type and val:
+                allocation_by_asset_type[asset_type.value] = float(val)
         
         # Convert to percentages
-        allocation_by_asset_type = {
-            k: round(v / total_investment * 100, 1) 
-            for k, v in allocation_by_asset_type.items()
-        }
+        if total_investment > 0:
+            allocation_by_asset_type = {
+                k: round(v / total_investment * 100, 1) 
+                for k, v in allocation_by_asset_type.items()
+            }
 
     runway_months = None
     if memory and memory.average_monthly_expenses and memory.average_monthly_expenses > 0:

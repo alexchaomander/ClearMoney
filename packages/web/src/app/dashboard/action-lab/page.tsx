@@ -166,26 +166,29 @@ export default function ActionLabPage() {
     
     setIsExecuting(true);
     
-    if (activeIntent.isReal) {
-      // For real intents, actually download the PDF Switch Kit
-      try {
+    try {
+      if (activeIntent.isReal) {
+        // For real intents, actually download the PDF Switch Kit
         await downloadManifest.mutateAsync(activeIntent.id);
         await updateIntent.mutateAsync({ 
           id: activeIntent.id, 
           data: { status: 'pending_approval' } 
         });
-      } catch (err) {
-        console.error("Failed to execute real intent:", err);
       }
-    }
 
-    setTimeout(() => {
-      setIsExecuting(false);
+      // Simulate ledger processing time for both real and mock intents
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      
       setActiveIntent(null);
       // Trigger waitlist focus
       const el = document.getElementById("waitlist-section");
       el?.scrollIntoView({ behavior: "smooth" });
-    }, 2500);
+    } catch (err) {
+      console.error("Failed to execute intent:", err);
+      // In a production app, we would show a toast error here
+    } finally {
+      setIsExecuting(false);
+    }
   };
 
   return (
