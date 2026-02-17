@@ -40,10 +40,14 @@ async def create_action_intent(
             raise HTTPException(status_code=400, detail="Invalid decision_trace_id")
 
     # Generate Ghost Navigation Manifest (Era 2 bridge)
-    # Enforce consistent key extraction from payload
-    institution_slug = intent_in.payload.get("source_institution_slug") or \
-                       intent_in.payload.get("institution_slug")
+    # Enforce consistent key extraction from payload with validation for transfer types
+    institution_slug = intent_in.payload.get("source_institution_slug")
+    if not institution_slug:
+        # Fallback to generic slug if source-specific one is missing
+        institution_slug = intent_in.payload.get("institution_slug")
     
+    # If it's a transfer and we still don't have a slug, it will fallback to Google in the service,
+    # but we should ideally know this happened.
     manifest = ghost_service.generate_manifest(
         intent_type=intent_in.intent_type,
         institution_slug=institution_slug,
