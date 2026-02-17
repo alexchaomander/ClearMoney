@@ -29,7 +29,8 @@ import {
   useActionIntents, 
   useDownloadIntentManifest,
   useUpdateActionIntent,
-  useExportFinancialPassport 
+  useExportFinancialPassport,
+  useGenerateProofOfFunds
 } from "@/lib/strata/hooks";
 import { ActionIntent } from "@clearmoney/strata-sdk";
 
@@ -136,6 +137,8 @@ export default function ActionLabPage() {
   const downloadManifest = useDownloadIntentManifest();
   const updateIntent = useUpdateActionIntent();
   const exportPassport = useExportFinancialPassport();
+  const generateProof = useGenerateProofOfFunds();
+  const [proofThreshold, setProofThreshold] = useState("50000");
 
   const allIntents = useMemo(() => {
     const formattedReal: MockIntent[] = (realIntents || []).map(ri => ({
@@ -303,6 +306,90 @@ export default function ActionLabPage() {
               </motion.div>
             ))
           )}
+        </div>
+
+        {/* Privacy Proofs (SVP) Section */}
+        <div className="mb-24">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2 rounded-lg bg-emerald-950/50 border border-emerald-800/50 text-emerald-400">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-serif text-white">Privacy-Preserving Proofs (SVP)</h2>
+              <p className="text-sm text-neutral-500">Prove financial facts to 3rd parties without revealing raw data.</p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="p-8 rounded-3xl bg-neutral-900 border border-neutral-800 hover:border-emerald-500/30 transition-all group">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h3 className="text-xl font-medium text-white mb-2">Proof of Funds</h3>
+                  <p className="text-sm text-neutral-400 leading-relaxed max-w-sm">
+                    Generate a signed attestation that your liquid assets exceed a specific dollar amount.
+                  </p>
+                </div>
+                <div className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-900">
+                  SVP-1
+                </div>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800">
+                  <label className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider mb-2 block">
+                    Verification Threshold (USD)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl font-serif text-neutral-500">$</span>
+                    <input 
+                      type="number" 
+                      value={proofThreshold}
+                      onChange={(e) => setProofThreshold(e.target.value)}
+                      className="bg-transparent text-2xl font-serif text-white focus:outline-none w-full"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] text-neutral-500">
+                  <Info className="w-3 h-3" />
+                  Proof valid for 24 hours. Includes liveness metadata.
+                </div>
+              </div>
+
+              <button
+                onClick={() => generateProof.mutate(parseFloat(proofThreshold))}
+                disabled={generateProof.isPending}
+                className="w-full py-4 rounded-xl bg-white text-neutral-950 font-bold hover:bg-emerald-400 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+              >
+                {generateProof.isPending ? (
+                  <>
+                    <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
+                      <RefreshCw className="w-4 h-4" />
+                    </motion.div>
+                    Signing Attestation...
+                  </>
+                ) : (
+                  <>
+                    Generate Proof of Funds
+                    <ShieldCheck className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
+
+            <Link href="/verify" className="p-8 rounded-3xl bg-neutral-900/50 border border-neutral-800 hover:border-neutral-700 transition-all flex flex-col justify-center items-center text-center group">
+              <div className="w-16 h-16 rounded-2xl bg-neutral-800 text-neutral-500 mb-6 flex items-center justify-center group-hover:bg-emerald-950 group-hover:text-emerald-400 transition-colors">
+                <Search className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-medium text-white mb-2">Verification Portal</h3>
+              <p className="text-sm text-neutral-500 leading-relaxed max-w-xs mb-6">
+                Are you a landlord or lender? Verify a Strata-signed attestation here.
+              </p>
+              <div className="text-xs font-bold text-neutral-400 group-hover:text-white flex items-center gap-1 transition-colors">
+                Open Portal
+                <ArrowRight className="w-3 h-3" />
+              </div>
+            </Link>
+          </div>
         </div>
 
         {/* Feature Teasers */}
