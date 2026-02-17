@@ -26,6 +26,7 @@ from app.services.action_policy import ActionPolicyService
 from app.services.context_renderer import render_context_as_markdown
 from app.services.decision_engine import run_deterministic_checks
 from app.services.financial_context import build_financial_context
+from app.services.ghost_service import GhostService
 from app.services.skill_registry import get_skill_registry
 
 logger = logging.getLogger(__name__)
@@ -259,7 +260,7 @@ ADVISOR_TOOLS = [
                 },
                 "payload": {
                     "type": "object",
-                    "description": "Technical details of the action (e.g., { 'source_account_id': '...', 'amount': 5000 }).",
+                    "description": "Technical details of the action (e.g., { 'source_account_id': '...', 'amount': 5000, 'source_institution_slug': 'fidelity' }). Provide 'source_institution_slug' if known to enable Ghost Navigation.",
                 },
                 "impact_summary": {
                     "type": "object",
@@ -899,6 +900,15 @@ class FinancialAdvisor:
             description=description,
             payload=payload,
             impact_summary=impact_summary,
+        )
+
+        # Generate Ghost Navigation Manifest (Era 2 bridge)
+        institution_slug = payload.get("source_institution_slug") or payload.get("institution_slug")
+        ghost_service = GhostService()
+        intent.execution_manifest = ghost_service.generate_manifest(
+            intent_type=intent.intent_type,
+            institution_slug=institution_slug,
+            payload=payload
         )
         
         # Link to the latest analysis trace if available

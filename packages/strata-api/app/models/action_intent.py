@@ -59,6 +59,9 @@ class ActionIntent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # Logic/Impact (Snapshot of why we are doing this, e.g. { estimated_savings: 500 })
     impact_summary: Mapped[dict[str, Any]] = mapped_column(JSON, default=lambda: {})
 
+    # Ghost Navigation Manifest (Steps, Deep Links, Snippets)
+    execution_manifest: Mapped[dict[str, Any]] = mapped_column(JSON, default=lambda: {})
+
     # Relationships
     user = relationship("User", back_populates="action_intents")
     decision_trace = relationship("DecisionTrace")
