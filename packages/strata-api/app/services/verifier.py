@@ -24,8 +24,9 @@ class VerifierService:
         context = await build_financial_context(user_id, db)
         
         # 2. Extract metrics
-        total_liquid = context.get("portfolio_metrics", {}).get("total_investment_value", 0) + 
-                       context.get("portfolio_metrics", {}).get("total_cash_value", 0)
+        metrics = context.get("portfolio_metrics", {})
+        total_liquid = (metrics.get("total_investment_value") or 0) + \
+                       (metrics.get("total_cash_value") or 0)
         
         # 3. Check threshold
         is_verified = total_liquid >= threshold
@@ -67,7 +68,7 @@ class VerifierService:
         """Generate HMAC signature for the attestation object."""
         # Canonicalize the credential payload for hashing
         # Use explicit json.dumps with canonical separators and sorted keys
-        data = attestation.credential.model_dump(mode="json")
+        data = attestation.credential.model_dump(mode="json", exclude_none=True)
         payload = json.dumps(data, sort_keys=True, separators=(',', ':'))
         
         return hmac.new(
