@@ -51,6 +51,8 @@ async def validate_attestation(
     """
     Public endpoint to verify an SVP attestation's signature and expiration.
     Used by 3rd parties (landlords, lenders) to validate a claim.
+    
+    TODO: Add rate-limiting to this public endpoint to prevent brute-force attacks.
     """
     is_valid = verifier_service.verify_attestation(attestation)
     return {
