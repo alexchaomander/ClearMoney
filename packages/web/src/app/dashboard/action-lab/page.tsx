@@ -32,6 +32,7 @@ import {
   useExportFinancialPassport,
   useGenerateProofOfFunds
 } from "@/lib/strata/hooks";
+import { useActionExecution } from "@/lib/strata/action-execution-context";
 import { ActionIntent } from "@clearmoney/strata-sdk";
 
 interface MockIntent {
@@ -139,6 +140,7 @@ export default function ActionLabPage() {
   const exportPassport = useExportFinancialPassport();
   const generateProof = useGenerateProofOfFunds();
   const [proofThreshold, setProofThreshold] = useState("50000");
+  const { startExecution } = useActionExecution();
 
   const allIntents = useMemo(() => {
     const formattedReal: MockIntent[] = (realIntents || []).map(ri => ({
@@ -168,15 +170,14 @@ export default function ActionLabPage() {
     
     try {
       if (activeIntent.isReal) {
-        // For real intents, actually download the PDF Switch Kit
-        await downloadManifest.mutateAsync(activeIntent.id);
-        await updateIntent.mutateAsync({ 
-          id: activeIntent.id, 
-          data: { status: 'pending_approval' } 
-        });
+        // Launch Ghost Navigation Copilot
+        startExecution(activeIntent.id);
+        setActiveIntent(null);
+        setIsExecuting(false);
+        return;
       }
 
-      // Simulate ledger processing time for both real and mock intents
+      // Simulate ledger processing time for mock intents
       await new Promise(resolve => setTimeout(resolve, 2500));
       
       setActiveIntent(null);
@@ -359,7 +360,10 @@ export default function ActionLabPage() {
               </div>
 
               <button
-                onClick={() => generateProof.mutate(parseFloat(proofThreshold))}
+                onClick={() => {
+                  const val = parseFloat(proofThreshold);
+                  if (!isNaN(val)) generateProof.mutate(val);
+                }}
                 disabled={generateProof.isPending}
                 className="w-full py-4 rounded-xl bg-white text-neutral-950 font-bold hover:bg-emerald-400 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
               >

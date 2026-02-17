@@ -15,9 +15,11 @@ from app.schemas.action_intent import (
     ActionIntentUpdate,
 )
 from app.services.pdf_generator import PDFGenerator
+from app.services.ghost_service import GhostService
  
 router = APIRouter(tags=["Action Intents"])
 pdf_service = PDFGenerator()
+ghost_service = GhostService()
 
 
 
@@ -37,6 +39,17 @@ async def create_action_intent(
         if not trace_result.scalar_one_or_none():
             raise HTTPException(status_code=400, detail="Invalid decision_trace_id")
 
+    # Generate Ghost Navigation Manifest (Era 2 bridge)
+    # Enforce consistent key extraction from payload
+    institution_slug = intent_in.payload.get("source_institution_slug") or \
+                       intent_in.payload.get("institution_slug")
+    
+    manifest = ghost_service.generate_manifest(
+        intent_type=intent_in.intent_type,
+        institution_slug=institution_slug,
+        payload=intent_in.payload
+    )
+
     intent = ActionIntent(
         user_id=current_user.id,
         intent_type=intent_in.intent_type,
@@ -46,6 +59,7 @@ async def create_action_intent(
         payload=intent_in.payload,
         impact_summary=intent_in.impact_summary,
         decision_trace_id=intent_in.decision_trace_id,
+        execution_manifest=manifest,
     )
     db.add(intent)
     await db.commit()
@@ -107,7 +121,7 @@ async def update_action_intent(
         raise HTTPException(status_code=404, detail="Action intent not found")
         
     update_data = update_in.model_dump(exclude_unset=True)
-    allowed_fields = {"status", "payload", "impact_summary"}
+    allowed_fields = {"status", "payload", "impact_summary", "execution_manifest"}
     for field, value in update_data.items():
         if field in allowed_fields:
             setattr(intent, field, value)
