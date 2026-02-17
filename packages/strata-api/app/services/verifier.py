@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import json
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -34,7 +35,8 @@ class VerifierService:
         freshness_hours = 24
         if last_sync_str:
             try:
-                last_sync = datetime.fromisoformat(last_sync_str.replace("Z", "+00:00"))
+                # Python 3.11+ fromisoformat handles 'Z' suffix correctly
+                last_sync = datetime.fromisoformat(last_sync_str)
                 delta = datetime.now(timezone.utc) - last_sync
                 freshness_hours = int(delta.total_seconds() / 3600)
             except ValueError:
@@ -64,7 +66,9 @@ class VerifierService:
     def _sign_attestation(self, attestation: SVPAttestation) -> str:
         """Generate HMAC signature for the attestation object."""
         # Canonicalize the credential payload for hashing
-        payload = attestation.credential.model_dump_json()
+        # Use explicit json.dumps with canonical separators and sorted keys
+        data = attestation.credential.model_dump(mode="json")
+        payload = json.dumps(data, sort_keys=True, separators=(',', ':'))
         
         return hmac.new(
             settings.secret_key.encode(),

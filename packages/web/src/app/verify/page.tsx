@@ -38,9 +38,15 @@ export default function VerificationPortalPage() {
       reader.onload = (event) => {
         try {
           const content = JSON.parse(event.target?.result as string);
+          
+          // Basic schema validation
+          if (!content.type || content.type !== "FinancialAttestation" || !content.credential) {
+            throw new Error("Invalid attestation format. Please upload a Strata-signed JSON file.");
+          }
+          
           setJsonContent(content);
-        } catch (err) {
-          setError("Failed to parse JSON file.");
+        } catch (err: any) {
+          setError(err.message || "Failed to parse JSON file.");
         }
       };
       reader.readAsText(selectedFile);
@@ -49,7 +55,9 @@ export default function VerificationPortalPage() {
 
   const handleVerify = () => {
     if (jsonContent) {
-      validateMutation.mutate(jsonContent);
+      validateMutation.mutate(jsonContent, {
+        onError: (err) => setError("An error occurred during verification. Please ensure the file is a valid Strata attestation.")
+      });
     }
   };
 
