@@ -1,11 +1,13 @@
 import uuid
 from decimal import Decimal
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.bank_transaction import BankTransaction
 from app.models.cash_account import CashAccount
 from app.models.financial_memory import FinancialMemory
-from app.models.bank_transaction import BankTransaction
+
 
 class RunwayService:
     def __init__(self, session: AsyncSession):
@@ -18,7 +20,7 @@ class RunwayService:
             select(CashAccount).where(CashAccount.user_id == user_id)
         )
         accounts = result.scalars().all()
-        
+
         personal_cash = sum((a.balance for a in accounts if not a.is_business), Decimal("0.00"))
         business_cash = sum((a.balance for a in accounts if a.is_business), Decimal("0.00"))
 
@@ -67,6 +69,6 @@ class RunwayService:
         transactions = result.scalars().all()
         if not transactions:
             return Decimal("0.00")
-            
+
         total_burn = sum((abs(tx.amount) for tx in transactions), Decimal("0.00"))
         return total_burn / Decimal("3.0") # Average over 3 months

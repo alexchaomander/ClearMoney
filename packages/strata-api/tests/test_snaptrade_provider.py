@@ -1,7 +1,6 @@
-from datetime import datetime
+import uuid
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
-import uuid
 
 import pytest
 

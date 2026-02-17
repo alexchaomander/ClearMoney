@@ -1,3 +1,12 @@
+from app.schemas.action_approval import ActionApprovalResponse
+from app.schemas.action_policy import ActionPolicyRequest, ActionPolicyResponse
+from app.schemas.agent import (
+    AgentContextResponse,
+    DecisionTraceResponse,
+    ExecuteRecommendationRequest,
+    ExecuteRecommendationResponse,
+    FreshnessStatus,
+)
 from app.schemas.cash_account import (
     CashAccountCreate,
     CashAccountResponse,
@@ -12,17 +21,17 @@ from app.schemas.connection import (
     LinkSessionResponse,
 )
 from app.schemas.consent import ConsentCreateRequest, ConsentResponse
-from app.schemas.debt_account import (
-    DebtAccountCreate,
-    DebtAccountResponse,
-    DebtAccountUpdate,
-)
 from app.schemas.data import (
     DataHealthResponse,
     TransparencyCorrectionRow,
     TransparencyIndependenceAuditRow,
     TransparencyPayload,
     TransparencyPayoutDisclosureRow,
+)
+from app.schemas.debt_account import (
+    DebtAccountCreate,
+    DebtAccountResponse,
+    DebtAccountUpdate,
 )
 from app.schemas.holding import (
     HoldingCreate,
@@ -46,15 +55,6 @@ from app.schemas.investment_account import (
     InvestmentAccountUpdate,
     InvestmentAccountWithHoldingsResponse,
 )
-from app.schemas.agent import (
-    AgentContextResponse,
-    DecisionTraceResponse,
-    ExecuteRecommendationRequest,
-    ExecuteRecommendationResponse,
-    FreshnessStatus,
-)
-from app.schemas.action_approval import ActionApprovalResponse
-from app.schemas.action_policy import ActionPolicyRequest, ActionPolicyResponse
 from app.schemas.portfolio import AssetAllocation, PortfolioSummary
 from app.schemas.security import SecurityCreate, SecurityResponse, SecurityUpdate
 from app.schemas.user import UserCreate, UserResponse

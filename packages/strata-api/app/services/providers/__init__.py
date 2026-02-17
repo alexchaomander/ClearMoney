@@ -6,9 +6,11 @@ from app.services.providers.base import (
 )
 from app.services.providers.base_banking import (
     BaseBankingProvider,
-    LinkSession as BankingLinkSession,
     NormalizedBankAccount,
     NormalizedBankTransaction,
+)
+from app.services.providers.base_banking import (
+    LinkSession as BankingLinkSession,
 )
 from app.services.providers.plaid import PlaidProvider
 from app.services.providers.snaptrade import SnapTradeProvider

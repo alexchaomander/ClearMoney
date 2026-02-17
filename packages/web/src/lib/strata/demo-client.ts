@@ -1,4 +1,9 @@
 import type {
+  ActionIntent,
+  ActionIntentStatus,
+  ActionIntentUpdate,
+  ActionPolicyRequest,
+  ActionPolicyResponse,
   AllAccountsResponse,
   BankAccount,
   BankTransaction,
@@ -20,6 +25,7 @@ import type {
   DecisionTrace,
   FinancialContext,
   FinancialMemory,
+  FinancialPassport,
   PaginatedBankTransactions,
   PlaidCallbackRequest,
   PlaidLinkRequest,
@@ -51,15 +57,22 @@ import type {
   Institution,
   InvestmentAccount,
   InvestmentAccountCreate,
+  InvestmentAccountUpdate,
   InvestmentAccountWithHoldings,
   LinkSessionRequest,
   LinkSessionResponse,
   MemoryEvent,
+  NotificationResponse,
   PortfolioHistoryPoint,
   PortfolioHistoryRange,
   PortfolioSummary,
+  RunwayMetrics,
+  SVPAttestation,
   StrataClientInterface,
+  SubscriptionSummary,
+  TaxShieldMetrics,
   Transaction,
+  VulnerabilityReport,
   CreditCard,
 } from "@clearmoney/strata-sdk";
 
@@ -97,7 +110,8 @@ export class DemoStrataClient implements StrataClientInterface {
     // no-op in demo mode
   }
 
-  setAuthToken(): void {
+  setAuthToken(_token: string | null): void {
+    void _token;
     // no-op in demo mode
   }
 
@@ -204,6 +218,36 @@ export class DemoStrataClient implements StrataClientInterface {
     return getDemoPortfolioSummary();
   }
 
+  async getVulnerabilityReport(): Promise<VulnerabilityReport> {
+    await delay(150);
+    return {
+      risk_score: 26,
+      commingled_count: 1,
+      commingled_amount: 320,
+      total_analyzed: 42,
+      status: "warning",
+    };
+  }
+
+  async getRunwayMetrics(): Promise<RunwayMetrics> {
+    await delay(150);
+    return {
+      personal: { liquid_cash: 120000, monthly_burn: 7000, runway_months: 17.1 },
+      entity: { liquid_cash: 410000, monthly_burn: 28000, runway_months: 14.6 },
+    };
+  }
+
+  async getTaxShieldMetrics(): Promise<TaxShieldMetrics> {
+    await delay(150);
+    return {
+      ytd_business_income: 184000,
+      estimated_combined_tax_rate: 0.32,
+      estimated_tax_ytd: 58880,
+      next_quarterly_payment: 14600,
+      safe_harbor_met: false,
+    };
+  }
+
   async getHoldings(): Promise<HoldingDetail[]> {
     await delay(300);
     return getDemoHoldings();
@@ -215,6 +259,28 @@ export class DemoStrataClient implements StrataClientInterface {
     void _params;
     await delay(300);
     return [];
+  }
+
+  async runRetirementMonteCarlo(params: {
+    current_savings: number;
+    monthly_contribution: number;
+    years_to_retirement: number;
+    retirement_duration_years: number;
+    desired_annual_income: number;
+  }): Promise<Record<string, unknown>> {
+    await delay(200);
+    const projected =
+      params.current_savings +
+      params.monthly_contribution * 12 * params.years_to_retirement;
+    return {
+      success_probability:
+        projected > params.desired_annual_income * 15 ? 0.84 : 0.62,
+      projected_balance: projected,
+      assumptions: {
+        years_to_retirement: params.years_to_retirement,
+        retirement_duration_years: params.retirement_duration_years,
+      },
+    };
   }
 
   // === Investment Account CRUD ===
@@ -234,9 +300,39 @@ export class DemoStrataClient implements StrataClientInterface {
       balance: data.balance ?? 0,
       currency: "USD",
       is_tax_advantaged: data.is_tax_advantaged ?? false,
+      is_business: data.is_business ?? false,
       created_at: now,
       updated_at: now,
     };
+  }
+
+  async updateInvestmentAccount(
+    id: string,
+    data: InvestmentAccountUpdate
+  ): Promise<InvestmentAccount> {
+    await delay(300);
+    const now = new Date().toISOString();
+    return {
+      id,
+      user_id: "demo-user-001",
+      connection_id: null,
+      institution_id: null,
+      institution_name: null,
+      name: data.name ?? "Updated Investment Account",
+      account_type: data.account_type ?? "brokerage",
+      provider_account_id: null,
+      balance: data.balance ?? 0,
+      currency: "USD",
+      is_tax_advantaged: data.is_tax_advantaged ?? false,
+      is_business: data.is_business ?? false,
+      created_at: now,
+      updated_at: now,
+    };
+  }
+
+  async deleteInvestmentAccount(_id: string): Promise<void> {
+    void _id;
+    await delay(250);
   }
 
   // === Cash Account CRUD ===
@@ -580,6 +676,36 @@ export class DemoStrataClient implements StrataClientInterface {
     return context;
   }
 
+  async listNotifications(): Promise<NotificationResponse[]> {
+    await delay(120);
+    return [];
+  }
+
+  async updateNotification(
+    id: string,
+    data: { is_read: boolean }
+  ): Promise<NotificationResponse> {
+    await delay(120);
+    const now = new Date().toISOString();
+    return {
+      id,
+      type: "info",
+      severity: "info",
+      title: "Demo Notification",
+      message: "Demo notification updated.",
+      metadata_json: null,
+      is_read: data.is_read,
+      action_url: null,
+      created_at: now,
+      updated_at: now,
+    };
+  }
+
+  async markAllNotificationsRead(): Promise<{ status: string }> {
+    await delay(120);
+    return { status: "ok" };
+  }
+
   // === Skills ===
 
   private static readonly DEMO_SKILLS: SkillSummary[] = [
@@ -619,13 +745,17 @@ export class DemoStrataClient implements StrataClientInterface {
 
   private demoSessions: AdvisorSession[] = [];
 
-  async createAdvisorSession(skillName?: string): Promise<AdvisorSession> {
+  async createAdvisorSession(
+    skillName?: string,
+    vanishMode?: boolean
+  ): Promise<AdvisorSession> {
     await delay(300);
     const session: AdvisorSession = {
       id: crypto.randomUUID(),
       user_id: "demo-user-001",
       skill_name: skillName ?? null,
       status: "active",
+      vanish_mode: vanishMode ?? false,
       messages: [],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -699,6 +829,38 @@ export class DemoStrataClient implements StrataClientInterface {
         updated_at: new Date().toISOString(),
       },
     ];
+  }
+
+  async getActionPolicy(): Promise<ActionPolicyResponse> {
+    await delay(100);
+    const now = new Date().toISOString();
+    return {
+      id: "demo-action-policy",
+      allowed_actions: ["savings_transfer"],
+      max_amount: 500,
+      require_confirmation: true,
+      require_mfa: false,
+      status: "active",
+      created_at: now,
+      updated_at: now,
+    };
+  }
+
+  async upsertActionPolicy(
+    data: ActionPolicyRequest
+  ): Promise<ActionPolicyResponse> {
+    await delay(120);
+    const now = new Date().toISOString();
+    return {
+      id: "demo-action-policy",
+      allowed_actions: data.allowed_actions,
+      max_amount: data.max_amount,
+      require_confirmation: data.require_confirmation,
+      require_mfa: data.require_mfa,
+      status: data.status,
+      created_at: now,
+      updated_at: now,
+    };
   }
 
   async executeRecommendation(
@@ -1145,6 +1307,15 @@ export class DemoStrataClient implements StrataClientInterface {
     };
   }
 
+  async getSubscriptions(): Promise<SubscriptionSummary> {
+    await delay(150);
+    return {
+      subscriptions: [],
+      total_monthly_subscription_burn: 0,
+      subscription_count: 0,
+    };
+  }
+
   // === Share Reports ===
 
   private static readonly SHARE_REPORTS_STORAGE_KEY = "clearmoney-demo-share-reports.v1";
@@ -1289,6 +1460,98 @@ export class DemoStrataClient implements StrataClientInterface {
       created_at: row.report.created_at,
       expires_at: row.report.expires_at,
       max_views: row.report.max_views ?? null,
+    };
+  }
+
+  async getActionIntents(_status?: ActionIntentStatus): Promise<ActionIntent[]> {
+    void _status;
+    await delay(120);
+    return [];
+  }
+
+  async getActionIntent(intentId: string): Promise<ActionIntent> {
+    await delay(120);
+    return {
+      id: intentId,
+      user_id: "demo-user-001",
+      decision_trace_id: null,
+      intent_type: "custom",
+      status: "draft",
+      title: "Demo Intent",
+      description: "Demo action intent",
+      payload: {},
+      impact_summary: {},
+      execution_manifest: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  async updateActionIntent(
+    intentId: string,
+    data: ActionIntentUpdate
+  ): Promise<ActionIntent> {
+    const current = await this.getActionIntent(intentId);
+    return {
+      ...current,
+      ...data,
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  async getIntentManifest(_intentId: string): Promise<Blob> {
+    void _intentId;
+    await delay(100);
+    return new Blob(["Demo action manifest"], { type: "application/pdf" });
+  }
+
+  async exportFinancialPassport(): Promise<FinancialPassport> {
+    await delay(150);
+    return {
+      "@context": "https://clearmoney.dev/fpp/v1",
+      id: crypto.randomUUID(),
+      issuer: "did:web:demo.clearmoney.ai",
+      issued_at: new Date().toISOString(),
+      claims: {
+        version: "demo",
+        portfolio_summary: getDemoPortfolioSummary(),
+      },
+      signature: null,
+    };
+  }
+
+  async generateProofOfFunds(threshold: number): Promise<SVPAttestation> {
+    await delay(150);
+    return {
+      "@context": "https://clearmoney.dev/svp/v1",
+      type: "ProofOfFundsAttestation",
+      id: crypto.randomUUID(),
+      issuer: "did:web:demo.clearmoney.ai",
+      issued_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      credential: {
+        claim_type: "proof_of_funds",
+        statement: `Liquid assets exceed $${threshold.toLocaleString()}.`,
+        verification_status: "verified",
+        as_of: new Date().toISOString(),
+        data_freshness_hours: 1,
+      },
+      signature: null,
+    };
+  }
+
+  async validateAttestation(attestation: SVPAttestation): Promise<{
+    valid: boolean;
+    statement: string | null;
+    issued_at: string;
+    expires_at: string;
+  }> {
+    await delay(120);
+    return {
+      valid: true,
+      statement: attestation.credential.statement,
+      issued_at: attestation.issued_at,
+      expires_at: attestation.expires_at,
     };
   }
 

@@ -4,10 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
 from app.models.user import User
-from app.services.portability import PortabilityService
-from app.services.verifier import VerifierService
 from app.schemas.portability import FinancialPassport
 from app.schemas.verifier import SVPAttestation
+from app.services.portability import PortabilityService
+from app.services.verifier import VerifierService
 
 router = APIRouter(prefix="/portability", tags=["Data Portability"])
 portability_service = PortabilityService()

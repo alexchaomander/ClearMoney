@@ -8,14 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.main import app
 from app.models import (
-    FinancialMemory,
-    InvestmentAccount,
-    Institution,
-    User,
     DebtAccount,
+    Institution,
+    InvestmentAccount,
+    User,
 )
-from app.models.investment_account import InvestmentAccountType
 from app.models.debt_account import DebtType
+from app.models.investment_account import InvestmentAccountType
 
 
 @pytest.fixture

@@ -1,9 +1,11 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, Query
-from typing import Dict, List
 from pydantic import BaseModel
-from app.services.monte_carlo import MonteCarloService
+
 from app.api.deps import require_scopes
 from app.models.user import User
+from app.services.monte_carlo import MonteCarloService
 
 router = APIRouter(prefix="/calculators", tags=["calculators"])
 

@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.db.session import get_async_session
-from app.models.user import User
 from app.models.consent import ConsentGrant, ConsentStatus
+from app.models.user import User
 from app.services.consent import ConsentService
 
 logger = logging.getLogger(__name__)

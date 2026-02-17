@@ -12,6 +12,7 @@ import {
   useDeleteConnection,
   useCashAccountMutations,
   useDebtAccountMutations,
+  useInvestmentAccountMutations,
   useConsentStatus,
   useConsents,
   useRevokeConsent,
@@ -111,7 +112,7 @@ function ActionPolicySettings() {
 
   const toggleAction = (action: string) => {
     const nextActions = currentPolicy.allowed_actions.includes(action)
-      ? currentPolicy.allowed_actions.filter((a) => a !== action)
+      ? currentPolicy.allowed_actions.filter((a: string) => a !== action)
       : [...currentPolicy.allowed_actions, action];
     upsertPolicy.mutate({ ...currentPolicy, allowed_actions: nextActions });
   };

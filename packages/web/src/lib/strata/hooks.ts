@@ -17,11 +17,8 @@ import type {
   PlaidCallbackRequest,
   PlaidLinkRequest,
   PortfolioHistoryRange,
-  ActionIntent,
   ActionIntentStatus,
-  ActionIntentType,
   ActionIntentUpdate,
-  FinancialPassport,
   SVPAttestation,
 } from "@clearmoney/strata-sdk";
 
@@ -31,7 +28,7 @@ export const queryKeys = {
   vulnerabilityReport: ["portfolio", "vulnerabilityReport"] as const,
   runwayMetrics: ["portfolio", "runwayMetrics"] as const,
   taxShieldMetrics: ["portfolio", "taxShieldMetrics"] as const,
-  monteCarloRetirement: (params: any) => ["calculators", "monteCarlo", params] as const,
+  monteCarloRetirement: (params: unknown) => ["calculators", "monteCarlo", params] as const,
   investmentAccount: (id: string) => ["accounts", "investment", id] as const,
   holdings: ["portfolio", "holdings"] as const,
   transactions: (params?: { accountId?: string; startDate?: string; endDate?: string }) =>
@@ -899,7 +896,7 @@ export function useGenerateProofOfFunds() {
   const client = useStrataClient();
   return useMutation({
     mutationFn: (threshold: number) => client.generateProofOfFunds(threshold),
-    onSuccess: (data) => {
+    onSuccess: (data: SVPAttestation) => {
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");

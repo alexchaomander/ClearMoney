@@ -1,6 +1,7 @@
 import logging
 import uuid
 from decimal import Decimal
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
@@ -10,10 +11,10 @@ class BrokerageExecutionService:
         self._session = session
 
     async def execute_trade(
-        self, 
-        user_id: uuid.UUID, 
-        account_id: str, 
-        symbol: str, 
+        self,
+        user_id: uuid.UUID,
+        account_id: str,
+        symbol: str,
         quantity: Decimal,
         side: str = "buy"
     ) -> dict:
@@ -22,7 +23,7 @@ class BrokerageExecutionService:
         High-level placeholder.
         """
         logger.info(f"Executing {side} order for {user_id}: {quantity} shares of {symbol} in account {account_id}")
-        
+
         return {
             "order_id": f"ord_{uuid.uuid4().hex[:12]}",
             "status": "accepted",

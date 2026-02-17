@@ -21,8 +21,11 @@ from app.schemas.portfolio import (
     PortfolioSummary,
     TopHolding,
 )
-from app.services.portfolio_metrics import get_cash_and_debt_totals, get_investment_total
 from app.services.commingling import ComminglingDetectionEngine
+from app.services.portfolio_metrics import (
+    get_cash_and_debt_totals,
+    get_investment_total,
+)
 from app.services.runway import RunwayService
 from app.services.tax_shield import TaxShieldService
 

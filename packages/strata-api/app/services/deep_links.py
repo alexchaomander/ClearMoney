@@ -1,5 +1,6 @@
 import uuid
 
+
 class DeepLinkService:
     @staticmethod
     def generate_referral_link(provider_id: str, user_data: dict = None) -> str:

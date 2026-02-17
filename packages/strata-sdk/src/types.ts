@@ -110,7 +110,7 @@ export interface Connection {
   provider: string;
   provider_user_id: string;
   status: ConnectionStatus;
-  capabilities: ActionCapability[];
+  capabilities?: ActionCapability[];
   last_synced_at: string | null;
   error_code: string | null;
   error_message: string | null;
@@ -182,8 +182,8 @@ export interface InvestmentAccount {
   balance: number;
   currency: string;
   is_tax_advantaged: boolean;
-  is_business: boolean;
-  capabilities: ActionCapability[];
+  is_business?: boolean;
+  capabilities?: ActionCapability[];
   created_at: string;
   updated_at: string;
 }
@@ -202,7 +202,7 @@ export interface CashAccount {
   available_balance: number | null;
   mask: string | null;
   is_manual: boolean;
-  is_business: boolean;
+  is_business?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -216,7 +216,7 @@ export interface DebtAccount {
   interest_rate: number;
   minimum_payment: number;
   institution_name: string | null;
-  is_business: boolean;
+  is_business?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -362,6 +362,7 @@ export interface CashAccountCreate {
   balance?: number;
   apy?: number | null;
   institution_name?: string | null;
+  is_business?: boolean;
 }
 export interface CashAccountUpdate {
   name?: string;
@@ -369,6 +370,7 @@ export interface CashAccountUpdate {
   balance?: number;
   apy?: number | null;
   institution_name?: string | null;
+  is_business?: boolean;
 }
 export interface DebtAccountCreate {
   name: string;
@@ -377,6 +379,7 @@ export interface DebtAccountCreate {
   interest_rate: number;
   minimum_payment?: number;
   institution_name?: string | null;
+  is_business?: boolean;
 }
 export interface DebtAccountUpdate {
   name?: string;
@@ -385,6 +388,7 @@ export interface DebtAccountUpdate {
   interest_rate?: number;
   minimum_payment?: number;
   institution_name?: string | null;
+  is_business?: boolean;
 }
 
 // Investment Account CRUD
@@ -393,6 +397,15 @@ export interface InvestmentAccountCreate {
   account_type: InvestmentAccountType;
   balance?: number;
   is_tax_advantaged?: boolean;
+  is_business?: boolean;
+}
+
+export interface InvestmentAccountUpdate {
+  name?: string;
+  account_type?: InvestmentAccountType;
+  balance?: number;
+  is_tax_advantaged?: boolean;
+  is_business?: boolean;
 }
 
 // Portfolio history
@@ -526,7 +539,7 @@ export interface FinancialMemory {
 
   // Freeform
   notes: Record<string, unknown> | null;
-  preferences: Record<string, unknown> | null;
+  preferences?: Record<string, unknown> | null;
 
   created_at: string;
   updated_at: string;
@@ -654,7 +667,7 @@ export interface AdvisorSession {
   user_id: string;
   skill_name: string | null;
   status: SessionStatus;
-  vanish_mode: boolean;
+  vanish_mode?: boolean;
   messages: AdvisorMessage[];
   created_at: string;
   updated_at: string;
@@ -1024,8 +1037,8 @@ export interface BankAccount {
   institution_name: string | null;
   mask: string | null;
   is_manual: boolean;
-  is_business: boolean;
-  capabilities: ActionCapability[];
+  is_business?: boolean;
+  capabilities?: ActionCapability[];
   created_at: string;
   updated_at: string;
 }
@@ -1046,7 +1059,7 @@ export interface BankTransaction {
   iso_currency_code: string;
   reimbursed_at: string | null;
   reimbursement_memo: string | null;
-  is_commingled: boolean;
+  is_commingled?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -1087,6 +1100,21 @@ export interface SpendingSummary {
   start_date: string;
   end_date: string;
   months_analyzed: number;
+}
+
+export interface Subscription {
+  merchant: string;
+  amount: number;
+  frequency: 'weekly' | 'monthly' | 'quarterly' | 'unknown';
+  last_date: string;
+  monthly_impact: number;
+  category: string | null;
+}
+
+export interface SubscriptionSummary {
+  subscriptions: Subscription[];
+  total_monthly_subscription_burn: number;
+  subscription_count: number;
 }
 
 // === Share Reports ===
@@ -1150,6 +1178,7 @@ export interface ActionIntent {
   description: string | null;
   payload: Record<string, unknown>;
   impact_summary: Record<string, unknown>;
+  execution_manifest?: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }
@@ -1172,6 +1201,35 @@ export interface FinancialPassport {
 }
 
 // === Strata Verification Protocol (SVP) ===
+
+export interface RunwayMetrics {
+  personal: {
+    liquid_cash: number;
+    monthly_burn: number;
+    runway_months: number;
+  };
+  entity: {
+    liquid_cash: number;
+    monthly_burn: number;
+    runway_months: number;
+  };
+}
+
+export interface VulnerabilityReport {
+  risk_score: number;
+  commingled_count: number;
+  commingled_amount: number;
+  total_analyzed: number;
+  status: 'critical' | 'warning' | 'strong';
+}
+
+export interface TaxShieldMetrics {
+  ytd_business_income: number;
+  estimated_combined_tax_rate: number;
+  estimated_tax_ytd: number;
+  next_quarterly_payment: number;
+  safe_harbor_met: boolean;
+}
 
 export interface SVPCredential {
   claim_type: string;

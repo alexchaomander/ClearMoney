@@ -7,8 +7,8 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.services.financial_context import build_financial_context
 from app.schemas.portability import FinancialPassport
+from app.services.financial_context import build_financial_context
 
 
 class PortabilityService:
@@ -18,7 +18,7 @@ class PortabilityService:
         self, user_id: uuid.UUID, db: AsyncSession
     ) -> FinancialPassport:
         """Aggregate all user financial data into a signed FPP Passport."""
-        
+
         # 1. Build the complete financial context
         # This includes profile, accounts, holdings, and portfolio metrics
         context = await build_financial_context(user_id, db)
@@ -29,7 +29,7 @@ class PortabilityService:
         claims = {
             "financial_summary": {
                 "net_worth": metrics.get("net_worth"),
-                "total_assets": (metrics.get("total_investment_value") or 0) + 
+                "total_assets": (metrics.get("total_investment_value") or 0) +
                                (metrics.get("total_cash_value") or 0),
                 "total_debt": metrics.get("total_debt_value"),
             },
@@ -56,7 +56,7 @@ class PortabilityService:
         # Standardize the JSON representation for consistent hashing
         # Use separators and exclude_none for stability
         serialized = json.dumps(claims, sort_keys=True, default=str, separators=(',', ':'))
-        
+
         return hmac.new(
             settings.secret_key.encode(),
             serialized.encode(),
@@ -67,6 +67,6 @@ class PortabilityService:
         """Verify that a passport was issued by this platform and hasn't been tampered with."""
         if not passport.signature:
             return False
-            
+
         expected_signature = self._sign_payload(passport.claims)
         return hmac.compare_digest(passport.signature, expected_signature)

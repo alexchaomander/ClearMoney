@@ -5,6 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+
 class CardCreditBase(BaseModel):
     name: str
     value: Decimal
@@ -17,7 +18,7 @@ class CardCredit(CardCreditBase):
     card_id: UUID
     created_at: datetime
     updated_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 class CardBenefitBase(BaseModel):
@@ -31,7 +32,7 @@ class CardBenefit(CardBenefitBase):
     card_id: UUID
     created_at: datetime
     updated_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 class CreditCardBase(BaseModel):
@@ -47,5 +48,5 @@ class CreditCard(CreditCardBase):
     updated_at: datetime
     credits: list[CardCredit] = []
     benefits: list[CardBenefit] = []
-    
+
     model_config = ConfigDict(from_attributes=True)

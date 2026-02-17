@@ -1,14 +1,14 @@
 import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_scopes
 from app.db.session import get_async_session
-from app.models.user import User
 from app.models.notification import Notification
+from app.models.user import User
 from app.schemas.notification import NotificationResponse, NotificationUpdate
-from app.services.observation import ObservationService
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
