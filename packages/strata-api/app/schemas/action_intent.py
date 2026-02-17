@@ -13,6 +13,7 @@ class ActionIntentCreate(BaseModel):
     description: str | None = None
     payload: dict[str, Any] = Field(default_factory=dict)
     impact_summary: dict[str, Any] = Field(default_factory=dict)
+    execution_manifest: dict[str, Any] = Field(default_factory=dict)
     decision_trace_id: uuid.UUID | None = None
 
 
@@ -20,6 +21,7 @@ class ActionIntentUpdate(BaseModel):
     status: ActionIntentStatus | None = None
     payload: dict[str, Any] | None = None
     impact_summary: dict[str, Any] | None = None
+    execution_manifest: dict[str, Any] | None = None
 
 
 class ActionIntentResponse(BaseModel):
@@ -32,6 +34,7 @@ class ActionIntentResponse(BaseModel):
     description: str | None
     payload: dict[str, Any]
     impact_summary: dict[str, Any]
+    execution_manifest: dict[str, Any]
     created_at: datetime
     updated_at: datetime
 
