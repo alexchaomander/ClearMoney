@@ -11,13 +11,17 @@ try:
     from plaid.model.accounts_get_request import AccountsGetRequest
     from plaid.model.country_code import CountryCode
     from plaid.model.institutions_get_by_id_request import InstitutionsGetByIdRequest
-    from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
+    from plaid.model.item_public_token_exchange_request import (
+        ItemPublicTokenExchangeRequest,
+    )
     from plaid.model.item_remove_request import ItemRemoveRequest
     from plaid.model.link_token_create_request import LinkTokenCreateRequest
     from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
     from plaid.model.products import Products
     from plaid.model.transactions_get_request import TransactionsGetRequest
-    from plaid.model.transactions_get_request_options import TransactionsGetRequestOptions
+    from plaid.model.transactions_get_request_options import (
+        TransactionsGetRequestOptions,
+    )
 except ModuleNotFoundError:  # pragma: no cover
     # Plaid is an optional dependency for development/test environments.
     plaid_api = None  # type: ignore[assignment]
@@ -207,16 +211,16 @@ class PlaidProvider(BaseBankingProvider):
     def _get_account_capabilities(self, account_type: CashAccountType) -> list[ActionCapability]:
         """Determine capabilities based on bank account type."""
         caps = [ActionCapability.READ_ONLY]
-        
+
         # Most depository accounts can do ACH
         if account_type in {CashAccountType.checking, CashAccountType.savings, CashAccountType.money_market}:
             caps.append(ActionCapability.ACH_TRANSFER)
-            
+
         # Depository accounts are also candidates for switch kits (Era 2 bridge)
         if account_type == CashAccountType.checking:
             caps.append(ActionCapability.SWITCH_KIT)
             caps.append(ActionCapability.PDF_GENERATION)
-            
+
         return caps
 
     async def get_accounts(

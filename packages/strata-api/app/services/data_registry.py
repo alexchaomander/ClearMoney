@@ -1,22 +1,22 @@
 import json
 import random
+from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
-from datetime import datetime, timezone
 
 from app.core.config import settings
 from app.schemas.data import (
     CreditCardData,
-    PointsProgram,
-    SavingsProduct,
-    InvestmentData,
-    RealAssetData,
-    LiabilityData,
-    IncomeData,
     CreditData,
-    ProtectionData,
-    ToolPresetBundle,
     DataHealthResponse,
+    IncomeData,
+    InvestmentData,
+    LiabilityData,
+    PointsProgram,
+    ProtectionData,
+    RealAssetData,
+    SavingsProduct,
+    ToolPresetBundle,
     TransparencyPayload,
 )
 
@@ -162,7 +162,7 @@ def get_data_health() -> DataHealthResponse:
 def get_transparency_payload() -> TransparencyPayload:
     data_dir = _resolve_data_dir()
     item = _load_json(data_dir / "transparency_payload.json")
-    
+
     # Simulate live ingestion by adding small randomized jitter to payouts
     if "payout_disclosure" in item:
         for row in item["payout_disclosure"]:
@@ -171,5 +171,5 @@ def get_transparency_payload() -> TransparencyPayload:
             # Use original value if available to prevent accumulation
             base_val = row.get("original_payout_usd", row["payout_usd"])
             row["payout_usd"] = round(base_val * jitter, 2)
-            
+
     return TransparencyPayload.model_validate(item)

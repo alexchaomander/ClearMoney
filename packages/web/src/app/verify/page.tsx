@@ -17,10 +17,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useValidateAttestation } from "@/lib/strata/hooks";
 import { cn } from "@/lib/utils";
+import { SVPAttestation } from "@clearmoney/strata-sdk";
 
 export default function VerificationPortalPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [jsonContent, setJsonContent] = useState<any>(null);
+  const [jsonContent, setJsonContent] = useState<SVPAttestation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const validateMutation = useValidateAttestation();
 
@@ -51,8 +52,9 @@ export default function VerificationPortalPage() {
           }
           
           setJsonContent(content);
-        } catch (err: any) {
-          setError(err.message || "Failed to parse JSON file.");
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : "Failed to parse JSON file.";
+          setError(message);
         }
       };
       reader.readAsText(selectedFile);
@@ -62,7 +64,7 @@ export default function VerificationPortalPage() {
   const handleVerify = () => {
     if (jsonContent) {
       validateMutation.mutate(jsonContent, {
-        onError: (err) => setError("An error occurred during verification. Please ensure the file is a valid Strata attestation.")
+        onError: () => setError("An error occurred during verification. Please ensure the file is a valid Strata attestation.")
       });
     }
   };

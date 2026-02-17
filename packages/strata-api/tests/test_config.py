@@ -1,5 +1,6 @@
-from app.core.config import Settings
 import pytest
+
+from app.core.config import Settings
 
 
 def test_cors_csv_settings_parsed() -> None:

@@ -18,14 +18,15 @@ from sqlalchemy.ext.asyncio import (
 
 from app.db.base import Base
 from app.db.session import get_async_session
+from app.main import app
 
 # Import all models so Base.metadata is populated
 from app.models import (  # noqa: F401
     AgentSession,
     BankTransaction,
     CashAccount,
-    ConsentGrant,
     Connection,
+    ConsentGrant,
     DebtAccount,
     FinancialMemory,
     Holding,
@@ -40,7 +41,6 @@ from app.models import (  # noqa: F401
     Transaction,
     User,
 )
-from app.main import app
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 

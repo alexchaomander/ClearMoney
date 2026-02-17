@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.agent_action_policy import AgentActionPolicy, ActionPolicyStatus
+from app.models.agent_action_policy import ActionPolicyStatus, AgentActionPolicy
 from app.services.action_approval import ActionApprovalService
 
 

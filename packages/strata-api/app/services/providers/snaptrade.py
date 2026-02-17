@@ -12,6 +12,7 @@ from app.core.config import settings
 from app.models.connection import Connection
 from app.models.investment_account import InvestmentAccountType
 from app.models.security import SecurityType
+from app.models.transaction import TransactionType
 from app.schemas.action_capability import ActionCapability
 from app.services.providers.base import (
     BaseProvider,
@@ -21,7 +22,6 @@ from app.services.providers.base import (
     NormalizedSecurity,
     NormalizedTransaction,
 )
-from app.models.transaction import TransactionType
 
 
 def _safe_getattr(obj: Any, *attrs: str, default: Any = None) -> Any:
@@ -176,16 +176,16 @@ class SnapTradeProvider(BaseProvider):
     def _get_account_capabilities(self, account_type: InvestmentAccountType) -> list[ActionCapability]:
         """Determine capabilities based on account type."""
         caps = [ActionCapability.READ_ONLY]
-        
+
         # Any brokerage account can theoretically be rebalanced via SnapTrade
         if account_type in {InvestmentAccountType.brokerage, InvestmentAccountType.ira, InvestmentAccountType.roth_ira}:
             caps.append(ActionCapability.INTERNAL_REBALANCE)
-            
+
         # IRAs are candidates for ACATS rollovers (Era 2 bridge)
         if account_type in {InvestmentAccountType.ira, InvestmentAccountType.roth_ira, InvestmentAccountType.k401}:
             caps.append(ActionCapability.ACATS_TRANSFER)
             caps.append(ActionCapability.PDF_GENERATION)
-            
+
         return caps
 
     async def get_accounts(
