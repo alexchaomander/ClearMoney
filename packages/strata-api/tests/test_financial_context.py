@@ -20,8 +20,8 @@ from app.models.debt_account import DebtType
 from app.models.financial_memory import FilingStatus
 from app.models.investment_account import InvestmentAccountType
 from app.models.security import SecurityType
-from app.services.financial_context import build_financial_context
 from app.services.context_renderer import render_context_as_markdown
+from app.services.financial_context import build_financial_context
 
 
 @pytest.fixture
@@ -177,7 +177,7 @@ async def test_context_portfolio_metrics(
     # Runway = 5000 (cash) / 5000 (expenses) = 1.0 month
     # Note: Using the fixtures defined above
     assert metrics.get("runway_months") == 1.0
-    
+
     profile = ctx["profile"]
     assert profile.get("average_monthly_expenses") == 5000.00
 

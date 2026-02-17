@@ -1,15 +1,15 @@
-import uuid
 import json
+import uuid
 from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.cash_account import CashAccount
-from app.models.holding import Holding
-from app.models.financial_memory import FinancialMemory
-from app.models.investment_account import InvestmentAccount
 from app.models.debt_account import DebtAccount, DebtType
+from app.models.financial_memory import FinancialMemory
+from app.models.holding import Holding
+from app.models.investment_account import InvestmentAccount
 from app.models.memory_event import MemoryEvent, MemoryEventSource
 from app.models.security import Security
 
@@ -39,7 +39,7 @@ async def _derive_retirement_savings(
     session: AsyncSession,
 ) -> list[str]:
     updated_fields = []
-    
+
     # Derive current_retirement_savings from tax-advantaged accounts
     result = await session.execute(
         select(InvestmentAccount).where(
@@ -71,7 +71,7 @@ async def _derive_retirement_savings(
                     context="Derived from sum of tax-advantaged account balances",
                 )
             )
-            
+
     return updated_fields
 
 
@@ -284,7 +284,7 @@ async def _derive_mortgage_details(
     session: AsyncSession,
 ) -> list[str]:
     updated_fields = []
-    
+
     # Derive mortgage balance and rate from debt accounts
     result = await session.execute(
         select(DebtAccount).where(
@@ -293,14 +293,14 @@ async def _derive_mortgage_details(
         )
     )
     mortgage_accounts = result.scalars().all()
-    
+
     # If we have multiple mortgages, we sum balances and average rates (weighted?)
     # For MVP, we'll just take the primary (largest balance) one or sum balances.
     if mortgage_accounts:
         total_balance = sum(
             (a.balance for a in mortgage_accounts), Decimal("0.00")
         )
-        
+
         # Weighted average interest rate
         weighted_rate_sum = Decimal("0.00")
         total_balance_with_rates = Decimal("0.00")
@@ -315,7 +315,7 @@ async def _derive_mortgage_details(
             if total_balance_with_rates > 0
             else None
         )
-        
+
         # Update Balance
         old_balance = (
             str(memory.mortgage_balance)
@@ -335,7 +335,7 @@ async def _derive_mortgage_details(
                     context="Derived from linked mortgage accounts",
                 )
             )
-            
+
         # Update Rate (only if we calculated one)
         if avg_rate is not None:
              old_rate = (

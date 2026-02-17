@@ -9,6 +9,7 @@ import {
   CircleDollarSign,
   CircleDot,
   Compass,
+  Percent,
   RefreshCw,
   ShieldAlert,
   Target,
@@ -42,6 +43,15 @@ import {
   useTaxShieldMetrics,
   useSubscriptions,
 } from "@/lib/strata/hooks";
+import { 
+  ActionCapability,
+  AllAccountsResponse,
+  CashAccount,
+  DebtAccount,
+  InvestmentAccount,
+  SubscriptionSummary,
+  Subscription,
+} from "@clearmoney/strata-sdk";
 import { formatCurrency, formatMonthsAsYears, formatPercent } from "@/lib/shared/formatters";
 
 type RiskBand = "good" | "watch" | "critical";
@@ -380,6 +390,8 @@ export default function FounderOperatingRoomPage() {
     summary.total_investment_value,
     spendingSummary.monthly_average,
     transactions,
+    vulnerabilityReport?.risk_score,
+    vulnerabilityReport?.status,
   ]);
 
   const usingDemoData = !portfolio || !allAccounts || !bankAccounts || !transactionPage || !memory || !spending;
@@ -454,8 +466,8 @@ export default function FounderOperatingRoomPage() {
   const debtBar = toPercent(1 - Math.min(0.9, derived.debtRatio));
   const comminglingBar = toPercent(1 - derived.personalShare);
 
-  const personalRunway = (runwayMetrics?.personal as any)?.runway_months ?? derived.runway;
-  const entityRunway = (runwayMetrics?.entity as any)?.runway_months ?? 0;
+  const personalRunway = runwayMetrics?.personal.runway_months ?? derived.runway;
+  const entityRunway = runwayMetrics?.entity.runway_months ?? 0;
 
   const summaryCards = [
     {
@@ -643,18 +655,18 @@ export default function FounderOperatingRoomPage() {
             <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg text-white font-medium">Subscription audit</h2>
-                <div className="px-2 py-0.5 rounded bg-emerald-900/20 text-emerald-400 border border-emerald-800/40 text-[10px] font-bold">
-                  { (subscriptionData as any)?.subscription_count ?? 0 } ACTIVE
+                <div className="px-2 py-0.5 rounded bg-emerald-950/50 text-emerald-400 border border-emerald-800/40 text-[10px] font-bold">
+                  { subscriptionData?.subscription_count ?? 0 } ACTIVE
                 </div>
               </div>
               <p className="mt-2 text-sm text-neutral-400">
                 Monthly burn from recurring SaaS and services.
               </p>
               <p className="mt-3 text-2xl text-white">
-                {formatCurrency((subscriptionData as any)?.total_monthly_subscription_burn ?? 0)}/mo
+                {formatCurrency(subscriptionData?.total_monthly_subscription_burn ?? 0)}/mo
               </p>
               <div className="mt-4 space-y-2 max-h-40 overflow-y-auto pr-2">
-                {((subscriptionData as any)?.subscriptions ?? []).slice(0, 5).map((s: any) => (
+                {(subscriptionData?.subscriptions ?? []).slice(0, 5).map((s: Subscription) => (
                   <div key={s.merchant} className="flex items-center justify-between py-2 border-b border-neutral-800 last:border-0">
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-medium text-neutral-200 truncate">{s.merchant}</p>
@@ -665,7 +677,7 @@ export default function FounderOperatingRoomPage() {
                     </span>
                   </div>
                 ))}
-                {(!subscriptionData || (subscriptionData as any)?.subscriptions.length === 0) && (
+                {(!subscriptionData || subscriptionData.subscriptions.length === 0) && (
                   <p className="text-xs text-neutral-600 italic">No recurring patterns detected.</p>
                 )}
               </div>

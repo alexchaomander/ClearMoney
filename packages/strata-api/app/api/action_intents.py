@@ -1,10 +1,10 @@
 import uuid
 from typing import Sequence
- 
+
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
- 
+
 from app.api.deps import get_current_user, get_db
 from app.models.action_intent import ActionIntent, ActionIntentStatus
 from app.models.decision_trace import DecisionTrace
@@ -14,9 +14,9 @@ from app.schemas.action_intent import (
     ActionIntentResponse,
     ActionIntentUpdate,
 )
-from app.services.pdf_generator import PDFGenerator
 from app.services.ghost_service import GhostService
- 
+from app.services.pdf_generator import PDFGenerator
+
 router = APIRouter(tags=["Action Intents"])
 pdf_service = PDFGenerator()
 ghost_service = GhostService()
@@ -45,7 +45,7 @@ async def create_action_intent(
     if not institution_slug:
         # Fallback to generic slug if source-specific one is missing
         institution_slug = intent_in.payload.get("institution_slug")
-    
+
     # If it's a transfer and we still don't have a slug, it will fallback to Google in the service,
     # but we should ideally know this happened.
     manifest = ghost_service.generate_manifest(
@@ -79,10 +79,10 @@ async def list_action_intents(
 ) -> Sequence[ActionIntent]:
     """List all action intents for the user."""
     query = select(ActionIntent).where(ActionIntent.user_id == current_user.id)
-    
+
     if status:
         query = query.where(ActionIntent.status == status)
-        
+
     query = query.order_by(ActionIntent.created_at.desc())
     result = await db.execute(query)
     return result.scalars().all()
@@ -100,10 +100,10 @@ async def get_action_intent(
     )
     result = await db.execute(query)
     intent = result.scalar_one_or_none()
-    
+
     if not intent:
         raise HTTPException(status_code=404, detail="Action intent not found")
-        
+
     return intent
 
 
@@ -120,16 +120,16 @@ async def update_action_intent(
     )
     result = await db.execute(query)
     intent = result.scalar_one_or_none()
-    
+
     if not intent:
         raise HTTPException(status_code=404, detail="Action intent not found")
-        
+
     update_data = update_in.model_dump(exclude_unset=True)
     allowed_fields = {"status", "payload", "impact_summary", "execution_manifest"}
     for field, value in update_data.items():
         if field in allowed_fields:
             setattr(intent, field, value)
-        
+
     await db.commit()
     await db.refresh(intent)
     return intent
@@ -147,12 +147,12 @@ async def get_intent_manifest(
     )
     result = await db.execute(query)
     intent = result.scalar_one_or_none()
-    
+
     if not intent:
         raise HTTPException(status_code=404, detail="Action intent not found")
-        
+
     pdf_bytes = pdf_service.generate_action_manifest(intent)
-    
+
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",

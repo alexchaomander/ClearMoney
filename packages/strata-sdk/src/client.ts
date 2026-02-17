@@ -23,6 +23,7 @@ import type {
   Institution,
   InvestmentAccount,
   InvestmentAccountCreate,
+  InvestmentAccountUpdate,
   InvestmentAccountWithHoldings,
   LinkSessionRequest,
   LinkSessionResponse,
@@ -33,12 +34,17 @@ import type {
   PlaidLinkRequest,
   PlaidLinkResponse,
   PortfolioHistoryPoint,
+  RunwayMetrics,
+  Security,
   SkillDetail,
   SkillSummary,
   PortfolioHistoryRange,
   PortfolioSummary,
   SpendingSummary,
+  SubscriptionSummary,
+  TaxShieldMetrics,
   Transaction,
+  VulnerabilityReport,
   CreditCard,
   ConsentCreateRequest,
   ConsentResponse,
@@ -61,6 +67,8 @@ import type {
   ShareReportPublicResponse,
   ShareReportListItem,
   NotificationResponse,
+  ActionPolicyRequest,
+  ActionPolicyResponse,
   ActionIntent,
   ActionIntentStatus,
   ActionIntentUpdate,
@@ -85,9 +93,9 @@ export interface StrataClientInterface {
   searchInstitutions(query?: string, limit?: number): Promise<Institution[]>;
   getPopularInstitutions(limit?: number): Promise<Institution[]>;
   getPortfolioSummary(): Promise<PortfolioSummary>;
-  getVulnerabilityReport(): Promise<Record<string, unknown>>;
-  getRunwayMetrics(): Promise<Record<string, unknown>>;
-  getTaxShieldMetrics(): Promise<Record<string, unknown>>;
+  getVulnerabilityReport(): Promise<VulnerabilityReport>;
+  getRunwayMetrics(): Promise<RunwayMetrics>;
+  getTaxShieldMetrics(): Promise<TaxShieldMetrics>;
   getHoldings(): Promise<HoldingDetail[]>;
   getTransactions(params?: {
     accountId?: string;
@@ -161,7 +169,7 @@ export interface StrataClientInterface {
   getBankAccounts(): Promise<BankAccount[]>;
   getBankTransactions(params?: BankTransactionQuery): Promise<PaginatedBankTransactions>;
   getSpendingSummary(months?: number): Promise<SpendingSummary>;
-  getSubscriptions(): Promise<Record<string, unknown>>;
+  getSubscriptions(): Promise<SubscriptionSummary>;
   updateBankTransactionReimbursement(transactionId: string, data: BankTransactionReimbursementUpdate): Promise<BankTransaction>;
   // Calculators
   runRetirementMonteCarlo(params: {
@@ -413,22 +421,22 @@ export class StrataClient implements StrataClientInterface {
   /**
    * Get the commingling vulnerability report for the Founder Operating Room.
    */
-  async getVulnerabilityReport(): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('/api/v1/portfolio/vulnerability-report');
+  async getVulnerabilityReport(): Promise<VulnerabilityReport> {
+    return this.request<VulnerabilityReport>('/api/v1/portfolio/vulnerability-report');
   }
 
   /**
    * Get personal and entity runway metrics for the Founder Operating Room.
    */
-  async getRunwayMetrics(): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('/api/v1/portfolio/runway');
+  async getRunwayMetrics(): Promise<RunwayMetrics> {
+    return this.request<RunwayMetrics>('/api/v1/portfolio/runway');
   }
 
   /**
    * Get tax shield metrics for founders.
    */
-  async getTaxShieldMetrics(): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('/api/v1/portfolio/tax-shield');
+  async getTaxShieldMetrics(): Promise<TaxShieldMetrics> {
+    return this.request<TaxShieldMetrics>('/api/v1/portfolio/tax-shield');
   }
 
   /**
@@ -822,8 +830,8 @@ export class StrataClient implements StrataClientInterface {
     );
   }
 
-  async getSubscriptions(): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('/api/v1/banking/subscriptions');
+  async getSubscriptions(): Promise<SubscriptionSummary> {
+    return this.request<SubscriptionSummary>('/api/v1/banking/subscriptions');
   }
 
   async updateBankTransactionReimbursement(

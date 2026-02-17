@@ -6,25 +6,25 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.advisor import router as advisor_router
-from app.api.agent import router as agent_router
+from app.api.accounts import router as accounts_router
+from app.api.action_approval import router as action_approval_router
 from app.api.action_intents import router as action_intents_router
 from app.api.action_policy import router as action_policy_router
-from app.api.action_approval import router as action_approval_router
+from app.api.advisor import router as advisor_router
+from app.api.agent import router as agent_router
 from app.api.banking import router as banking_router
 from app.api.calculators import router as calculators_router
-from app.api.data import router as data_router
-from app.api.accounts import router as accounts_router
 from app.api.cash_debt import router as cash_debt_router
-from app.api.consent import router as consent_router
 from app.api.connections import router as connections_router
+from app.api.consent import router as consent_router
 from app.api.credit_cards import router as credit_cards_router
+from app.api.data import router as data_router
 from app.api.health import router as health_router
 from app.api.institutions import router as institutions_router
 from app.api.memory import router as memory_router
 from app.api.notifications import router as notifications_router
-from app.api.portfolio import router as portfolio_router
 from app.api.portability import router as portability_router
+from app.api.portfolio import router as portfolio_router
 from app.api.share_reports import router as share_reports_router
 from app.api.skills import router as skills_router
 from app.api.transactions import router as transactions_router

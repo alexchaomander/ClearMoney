@@ -1,4 +1,3 @@
-import uuid
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import PlainTextResponse
@@ -15,8 +14,8 @@ from app.schemas.memory import (
     FinancialMemoryUpdate,
     MemoryEventResponse,
 )
-from app.services.financial_context import build_financial_context
 from app.services.context_renderer import render_context_as_markdown
+from app.services.financial_context import build_financial_context
 from app.services.memory_derivation import derive_memory_from_accounts
 from app.services.user_refresh import get_or_create_memory
 

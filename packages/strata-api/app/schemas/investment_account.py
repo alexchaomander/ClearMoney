@@ -3,11 +3,10 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from decimal import Decimal
- 
-from pydantic import BaseModel, Field
- 
-from app.models.investment_account import InvestmentAccountType
 
+from pydantic import BaseModel, Field
+
+from app.models.investment_account import InvestmentAccountType
 from app.schemas.action_capability import ActionCapability
 from app.schemas.holding import HoldingWithSecurityResponse
 

@@ -3,9 +3,9 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.agent_session import AgentSession, Recommendation
+from app.models.connection import Connection, ConnectionStatus
 from app.models.consent import ConsentGrant, ConsentStatus
 from app.models.decision_trace import DecisionTrace
-from app.models.connection import Connection, ConnectionStatus
 
 
 class ConsentService:

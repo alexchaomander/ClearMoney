@@ -1,15 +1,14 @@
 import logging
 import uuid
-from datetime import datetime, timezone, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.notification import Notification, NotificationType, NotificationSeverity
 from app.models.financial_memory import FinancialMemory
-from app.services.financial_context import build_financial_context
+from app.models.notification import Notification, NotificationSeverity, NotificationType
 from app.services.agent_guardrails import evaluate_freshness
 from app.services.commingling import ComminglingDetectionEngine
+from app.services.financial_context import build_financial_context
 from app.services.tax_shield import TaxShieldService
 
 logger = logging.getLogger(__name__)
@@ -22,13 +21,13 @@ class ObservationService:
     async def run_observations(self, user_id: uuid.UUID):
         """Run a suite of automated checks to trigger proactive notifications."""
         context = await build_financial_context(user_id, self._session)
-        
+
         # Load memory
         result = await self._session.execute(
             select(FinancialMemory).where(FinancialMemory.user_id == user_id)
         )
         memory = result.scalar_one_or_none()
-        
+
         if not memory:
             return
 
@@ -43,7 +42,7 @@ class ObservationService:
         """Alert if liquid cash is below the user's stated emergency fund target."""
         target_months = memory.emergency_fund_target_months
         monthly_expenses = memory.average_monthly_expenses
-        
+
         if not target_months or not monthly_expenses:
             return
 
@@ -79,7 +78,7 @@ class ObservationService:
     async def _check_data_freshness(self, user_id: uuid.UUID, context: dict):
         """Alert if data sync is stale."""
         freshness = evaluate_freshness(context)
-        
+
         if not freshness["is_fresh"] and freshness["age_hours"] > 72:
             # Alert for stale data
             existing = await self._session.execute(
@@ -116,7 +115,7 @@ class ObservationService:
         engine = ComminglingDetectionEngine(self._session)
         await engine.scan_and_flag(user_id)
         report = await engine.get_vulnerability_report(user_id)
-        
+
         if report["status"] == "critical" or (report["commingled_count"] > 5):
             # Check for unread notification
             existing = await self._session.execute(
@@ -147,7 +146,7 @@ class ObservationService:
         """Alert if quarterly tax payment is recommended."""
         service = TaxShieldService(self._session)
         metrics = await service.get_tax_shield_metrics(user_id)
-        
+
         if metrics["next_quarterly_payment"] > 1000 and not metrics["safe_harbor_met"]:
              # Check for unread notification
             existing = await self._session.execute(
