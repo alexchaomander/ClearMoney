@@ -30,6 +30,14 @@ Most fintech today is a "dead end." You connect your accounts, you see a pretty 
     *   **The Agent Economy:** Agents pay other agents for services (tax prep, alpha research, risk analysis) using protocols like L402 or Skyfire.
     *   **Strata as the Clearing House:** We become the verifiable truth for the "Agent-to-Agent" economy.
 
+### Era 2.5: The Trust Protocol (SVP)
+*   **Focus:** Financial Identity & Privacy-Preserving Attestations.
+*   **Goal:** Replace the legacy "Bank Statement PDF" with verifiable digital claims.
+*   **Mechanics:**
+    *   **SVP Claims:** Users generate signed proofs (e.g., "Liquid assets > $50k") for 3rd parties.
+    *   **Verification Portal:** A public-facing gateway for instant validation of Strata-signed attestations.
+    *   **Privacy Sovereignty:** Proving facts without revealing raw history or account numbers.
+
 ---
 
 ## Core Principles

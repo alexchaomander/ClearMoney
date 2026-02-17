@@ -1170,3 +1170,27 @@ export interface FinancialPassport {
   claims: Record<string, unknown>;
   signature: string | null;
 }
+
+// === Strata Verification Protocol (SVP) ===
+
+export interface SVPCredential {
+  claim_type: string;
+  statement: string;
+  verification_status: string;
+  as_of: string;
+  data_freshness_hours: number;
+}
+
+export interface SVPAttestation {
+  "@context": string;
+  type: string;
+  id: string;
+  issuer: string;
+  issued_at: string;
+  expires_at: string;
+  credential: SVPCredential;
+  signature: {
+    type: string;
+    proof_value: string;
+  } | null;
+}

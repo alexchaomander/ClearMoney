@@ -12,3 +12,4 @@ class ActionCapability(str, Enum):
     PDF_GENERATION = "pdf_generation"
     SWITCH_KIT = "switch_kit"
     NATIVE_LEDGER = "native_ledger"
+    FINANCIAL_ATTESTATION = "financial_attestation"

@@ -36,6 +36,12 @@ The foundation for autonomous personal finance:
 *   **Capabilities Discovery**: Intelligent provider tagging to identify "Action-Ready" accounts.
 *   **Action Lab**: An interactive preview of the autonomous agentic economy.
 
+### 7. Privacy-Preserving Proofs (SVP)
+Securely prove your financial standing without revealing sensitive data:
+*   **Proof of Funds**: Generate a cryptographically signed attestation that your liquid assets exceed a specific threshold.
+*   **Verification Portal**: A public gateway for landlords and lenders to verify Strata-signed claims instantly.
+*   **Data Minimization**: Share only the "Green Checkmark," never your account numbers or history.
+
 ---
 
 ## 🛠 Technical Architecture
