@@ -22,6 +22,7 @@ import type {
   ActionIntentType,
   ActionIntentUpdate,
   FinancialPassport,
+  SVPAttestation,
 } from "@clearmoney/strata-sdk";
 
 export const queryKeys = {
@@ -891,5 +892,30 @@ export function useExportFinancialPassport() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     },
+  });
+}
+
+export function useGenerateProofOfFunds() {
+  const client = useStrataClient();
+  return useMutation({
+    mutationFn: (threshold: number) => client.generateProofOfFunds(threshold),
+    onSuccess: (data) => {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `strata_proof_of_funds_${data.id.slice(0, 8)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
+  });
+}
+
+export function useValidateAttestation() {
+  const client = useStrataClient();
+  return useMutation({
+    mutationFn: (attestation: SVPAttestation) => client.validateAttestation(attestation),
   });
 }

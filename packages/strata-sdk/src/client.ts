@@ -65,6 +65,7 @@ import type {
   ActionIntentStatus,
   ActionIntentUpdate,
   FinancialPassport,
+  SVPAttestation,
 } from './types';
 
 export interface StrataClientInterface {
@@ -183,6 +184,14 @@ export interface StrataClientInterface {
   getIntentManifest(intentId: string): Promise<Blob>;
   // Portability
   exportFinancialPassport(): Promise<FinancialPassport>;
+  // Verification (SVP)
+  generateProofOfFunds(threshold: number): Promise<SVPAttestation>;
+  validateAttestation(attestation: SVPAttestation): Promise<{ 
+    valid: boolean; 
+    statement: string | null;
+    issued_at: string;
+    expires_at: string;
+  }>;
 }
 
 export interface StrataClientOptions {
@@ -915,5 +924,24 @@ export class StrataClient implements StrataClientInterface {
 
   async exportFinancialPassport(): Promise<FinancialPassport> {
     return this.request<FinancialPassport>('/api/v1/portability/export');
+  }
+
+  async generateProofOfFunds(threshold: number): Promise<SVPAttestation> {
+    return this.request<SVPAttestation>('/api/v1/portability/verify/proof-of-funds', {
+      method: 'POST',
+      body: JSON.stringify({ threshold }),
+    });
+  }
+
+  async validateAttestation(attestation: SVPAttestation): Promise<{ 
+    valid: boolean; 
+    statement: string | null;
+    issued_at: string;
+    expires_at: string;
+  }> {
+    return this.request('/api/v1/portability/verify/validate', {
+      method: 'POST',
+      body: JSON.stringify(attestation),
+    });
   }
 }
