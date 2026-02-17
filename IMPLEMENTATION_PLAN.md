@@ -40,6 +40,20 @@ This document tracks the evolution of Strata from a financial data aggregator in
 
 ---
 
+## Era 2.5: The Trust Protocol (SVP)
+**Goal:** Transform Strata from a "data scraper" into a "Financial Identity Layer."
+
+### 2.5.1 Verifiable Claim Engine
+- [ ] **Backend:** Implement `SVPService` to generate cryptographically signed attestations.
+- [ ] **Backend:** Support `THRESHOLD_PROOF_OF_FUNDS` and `INCOME_STABILITY` claims.
+- [ ] **UI:** "Privacy Proofs" tab in the Action Lab for generating attestations.
+
+### 2.5.2 Public Verification Portal
+- [ ] **UI:** Build the `/verify` portal for 3rd-party validation of signed JSON-LD claims.
+- [ ] **API:** Implement public verification endpoint for signature validation.
+
+---
+
 ## Era 3: The Agentic Ledger (Long-Term Bet)
 **Goal:** Establish Strata as the primary System of Record with programmable, autonomous accounts.
 
