@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.main import app
 from app.models.credit_cards import CardBenefit, CardCredit, CreditCard
 
+
 @pytest.mark.asyncio
 async def test_list_credit_cards_empty() -> None:
     transport = ASGITransport(app=app)
@@ -71,7 +72,7 @@ async def test_credit_card_relations(session: AsyncSession) -> None:
         response = await client.get(f"/api/v1/credit-cards/{card.id}")
     assert response.status_code == 200
     data = response.json()
-    
+
     assert len(data["credits"]) == 1
     assert data["credits"][0]["name"] == "Travel Credit"
     assert len(data["benefits"]) == 1

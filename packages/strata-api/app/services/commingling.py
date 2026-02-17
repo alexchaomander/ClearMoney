@@ -1,5 +1,5 @@
 import uuid
-from decimal import Decimal
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -37,13 +37,13 @@ class ComminglingDetectionEngine:
         debt_accounts = await self._session.execute(
             select(DebtAccount).where(DebtAccount.user_id == user_id)
         )
-        
+
         all_accounts = list(cash_accounts.scalars().all()) + list(debt_accounts.scalars().all())
         biz_account_ids = {a.id for a in all_accounts if getattr(a, "is_business", False)}
         pers_account_ids = {a.id for a in all_accounts if not getattr(a, "is_business", False)}
 
         # 2. Fetch transactions for these accounts
-        # Note: Current BankTransaction model only links to cash_accounts. 
+        # Note: Current BankTransaction model only links to cash_accounts.
         # In a full implementation, it would link to all account types.
         transactions_result = await self._session.execute(
             select(BankTransaction).where(BankTransaction.cash_account_id.in_(biz_account_ids | pers_account_ids))
@@ -60,7 +60,7 @@ class ComminglingDetectionEngine:
                 # Personal account: check for business spend
                 if tx.primary_category in BUSINESS_SPEND_CATEGORIES:
                     is_commingled = True
-            
+
             tx.is_commingled = is_commingled
 
         await self._session.commit()
@@ -73,11 +73,11 @@ class ComminglingDetectionEngine:
             .where(CashAccount.user_id == user_id)
         )
         transactions = result.scalars().all()
-        
+
         total_count = len(transactions)
         commingled_count = sum(1 for tx in transactions if tx.is_commingled)
         commingled_amount = sum(abs(tx.amount) for tx in transactions if tx.is_commingled)
-        
+
         penalty = min(100, (commingled_count / total_count * 500)) if total_count > 0 else 0
         risk_score = max(0, 100 - penalty)
 

@@ -61,10 +61,10 @@ async def seed_amex_platinum(
     """
     if not settings.debug:
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="Seeding is only available in debug mode"
         )
-    
+
     # Check if exists
     query = (
         select(CreditCard)
@@ -73,7 +73,7 @@ async def seed_amex_platinum(
     )
     result = await db.execute(query)
     existing = result.scalar_one_or_none()
-    
+
     if existing:
         return existing
 
@@ -97,15 +97,15 @@ async def seed_amex_platinum(
         CardCredit(card_id=card.id, name="Equinox Credit", value=300.00, period="annual", description="Get up to $300 back each year on eligible Equinox memberships when you pay with your Platinum Card®."),
         CardCredit(card_id=card.id, name="CLEAR® Plus Credit", value=199.00, period="annual", description="Get up to $199 back per calendar year on your CLEAR® Plus Membership.")
     ]
-    
+
     db.add_all(credits)
-        
+
     benefits = [
         CardBenefit(card_id=card.id, name="Global Lounge Collection", description="Access to Centurion Lounges, Priority Pass, and more.", valuation_method="subjective", default_value=400.00),
         CardBenefit(card_id=card.id, name="Marriott & Hilton Gold Status", description="Complimentary Gold status with Marriott Bonvoy and Hilton Honors.", valuation_method="subjective", default_value=100.00),
         CardBenefit(card_id=card.id, name="Travel Insurance", description="Trip Delay, Cancellation, and Interruption Insurance.", valuation_method="subjective", default_value=50.00)
     ]
-    
+
     db.add_all(benefits)
 
     await db.commit()

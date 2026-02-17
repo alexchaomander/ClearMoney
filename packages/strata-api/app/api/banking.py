@@ -1,8 +1,9 @@
 import logging
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from math import ceil
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,8 +16,8 @@ from app.models.connection import Connection, ConnectionStatus
 from app.models.user import User
 from app.schemas.banking import (
     BankAccountResponse,
-    BankTransactionResponse,
     BankTransactionReimbursementUpdate,
+    BankTransactionResponse,
     ConnectionResponse,
     PaginatedBankTransactions,
     PlaidCallbackRequest,

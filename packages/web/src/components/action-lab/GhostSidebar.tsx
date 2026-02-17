@@ -2,9 +2,7 @@
 
 import React, { useState } from "react";
 import { 
-  ShieldCheck, 
   X, 
-  ChevronRight, 
   ExternalLink, 
   CheckCircle2, 
   Circle,
@@ -12,10 +10,27 @@ import {
   Bot,
   ArrowRight
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ActionIntent } from "@clearmoney/strata-sdk";
 import { ExecutionSnippet } from "./ExecutionSnippet";
 import { cn } from "@/lib/utils";
+
+interface GhostStep {
+  order: number;
+  type: "NAVIGATION" | "COPY_DATA" | "VERIFICATION";
+  label: string;
+  url?: string;
+  instruction: string;
+  snippets?: {
+    label: string;
+    value: string;
+    copy_value: string;
+  }[];
+}
+
+interface GhostManifest {
+  steps: GhostStep[];
+}
 
 interface GhostSidebarProps {
   intent: ActionIntent;
@@ -24,7 +39,7 @@ interface GhostSidebarProps {
 }
 
 export function GhostSidebar({ intent, onClose, onComplete }: GhostSidebarProps) {
-  const manifest = intent.execution_manifest as any;
+  const manifest = intent.execution_manifest as unknown as GhostManifest;
   const steps = manifest?.steps || [];
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
 
@@ -87,7 +102,7 @@ export function GhostSidebar({ intent, onClose, onComplete }: GhostSidebarProps)
         <div className="space-y-4">
           <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Execution Path</div>
           {steps.length > 0 ? (
-            steps.map((step: any, i: number) => {
+            steps.map((step, i) => {
               const isDone = completedSteps.includes(step.order);
               const isCurrent = !isDone && (i === 0 || completedSteps.includes(steps[i-1].order));
 
@@ -136,7 +151,7 @@ export function GhostSidebar({ intent, onClose, onComplete }: GhostSidebarProps)
                   {/* Step Snippets */}
                   {step.snippets && step.snippets.length > 0 && isCurrent && (
                     <div className="grid gap-2">
-                      {step.snippets.map((snippet: any, j: number) => (
+                      {step.snippets.map((snippet, j) => (
                         <ExecutionSnippet 
                           key={j} 
                           label={snippet.label} 

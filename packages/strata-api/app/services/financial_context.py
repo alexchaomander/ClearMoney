@@ -175,15 +175,15 @@ async def build_financial_context(
             .group_by(Security.security_type)
         )
         alloc_result = await session.execute(alloc_query)
-        
+
         for asset_type, val in alloc_result.all():
             if asset_type and val:
                 allocation_by_asset_type[asset_type.value] = float(val)
-        
+
         # Convert to percentages
         if total_investment > 0:
             allocation_by_asset_type = {
-                k: round(v / total_investment * 100, 1) 
+                k: round(v / total_investment * 100, 1)
                 for k, v in allocation_by_asset_type.items()
             }
 

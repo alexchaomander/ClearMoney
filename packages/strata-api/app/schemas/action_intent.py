@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.models.action_intent import ActionIntentStatus, ActionIntentType
 
@@ -22,6 +22,15 @@ class ActionIntentUpdate(BaseModel):
     payload: dict[str, Any] | None = None
     impact_summary: dict[str, Any] | None = None
     execution_manifest: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def validate_execution_manifest_not_null(self) -> "ActionIntentUpdate":
+        if (
+            "execution_manifest" in self.model_fields_set
+            and self.execution_manifest is None
+        ):
+            raise ValueError("execution_manifest cannot be null")
+        return self
 
 
 class ActionIntentResponse(BaseModel):

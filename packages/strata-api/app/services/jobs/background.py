@@ -7,8 +7,8 @@ from sqlalchemy import or_, select
 from app.core.config import settings
 from app.db.session import async_session_factory
 from app.models.connection import Connection, ConnectionStatus
-from app.services.connection_sync import sync_connection_accounts
 from app.services.banking_sync import sync_banking_connection
+from app.services.connection_sync import sync_connection_accounts
 from app.services.portfolio_snapshots import create_daily_snapshots
 from app.services.providers.base import BaseProvider
 from app.services.providers.base_banking import BaseBankingProvider

@@ -3,7 +3,7 @@
 import json
 import logging
 import uuid
-from datetime import date, timedelta
+from datetime import date
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession

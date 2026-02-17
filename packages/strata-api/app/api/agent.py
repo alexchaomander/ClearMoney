@@ -7,10 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_scopes
 from app.db.session import get_async_session
+from app.models.agent_session import Recommendation, RecommendationStatus
 from app.models.connection import Connection
 from app.models.decision_trace import DecisionTrace, DecisionTraceType
 from app.models.user import User
-from app.models.agent_session import Recommendation, RecommendationStatus
 from app.schemas.agent import (
     AgentContextResponse,
     DecisionTraceResponse,
@@ -18,12 +18,12 @@ from app.schemas.agent import (
     ExecuteRecommendationResponse,
     FreshnessStatus,
 )
-from app.services.agent_guardrails import evaluate_freshness
 from app.services.action_policy import ActionPolicyService
-from app.services.financial_context import build_financial_context
-from app.services.plaid_transfer import PlaidTransferService
+from app.services.agent_guardrails import evaluate_freshness
 from app.services.brokerage_execution import BrokerageExecutionService
 from app.services.deep_links import DeepLinkService
+from app.services.financial_context import build_financial_context
+from app.services.plaid_transfer import PlaidTransferService
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 AUDIT_SCOPES = ["decision_traces:read"]
@@ -146,10 +146,10 @@ async def execute_recommendation(
         transfer_service = PlaidTransferService(session)
         from_id = action_payload.get("from_account_id")
         to_id = action_payload.get("to_account_id")
-        
+
         if not from_id or not to_id:
             raise HTTPException(status_code=400, detail="Missing source or destination account for transfer")
-        
+
         transfer = await transfer_service.initiate_transfer(
             user_id=user.id,
             from_account_id=from_id,

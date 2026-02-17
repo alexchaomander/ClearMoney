@@ -3,13 +3,12 @@ import hmac
 import json
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.services.financial_context import build_financial_context
 from app.schemas.verifier import SVPAttestation, SVPCredential
+from app.services.financial_context import build_financial_context
 
 
 class VerifierService:
@@ -19,18 +18,18 @@ class VerifierService:
         self, user_id: uuid.UUID, threshold: float, db: AsyncSession
     ) -> SVPAttestation:
         """Verify if liquid assets exceed a threshold and issue a signed attestation."""
-        
+
         # 1. Fetch current context
         context = await build_financial_context(user_id, db)
-        
+
         # 2. Extract metrics
         metrics = context.get("portfolio_metrics", {})
         total_liquid = (metrics.get("total_investment_value") or 0) + \
                        (metrics.get("total_cash_value") or 0)
-        
+
         # 3. Check threshold
         is_verified = total_liquid >= threshold
-        
+
         # 4. Determine data freshness (in hours)
         last_sync_str = context.get("data_freshness", {}).get("last_sync")
         freshness_hours = 24
@@ -70,7 +69,7 @@ class VerifierService:
         # Use explicit json.dumps with canonical separators and sorted keys
         data = attestation.credential.model_dump(mode="json", exclude_none=True)
         payload = json.dumps(data, sort_keys=True, separators=(',', ':'))
-        
+
         return hmac.new(
             settings.secret_key.encode(),
             payload.encode(),
@@ -82,9 +81,9 @@ class VerifierService:
         # Check expiration
         if attestation.expires_at < datetime.now(timezone.utc):
             return False
-            
+
         if not attestation.signature or "proof_value" not in attestation.signature:
             return False
-            
+
         expected_sig = self._sign_attestation(attestation)
         return hmac.compare_digest(attestation.signature["proof_value"], expected_sig)

@@ -5,24 +5,24 @@ import logging
 import uuid
 from collections.abc import AsyncGenerator
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
 
 from app.core.config import settings
+from app.models.action_intent import ActionIntent, ActionIntentStatus
 from app.models.agent_session import (
     AgentSession,
     Recommendation,
     RecommendationStatus,
     SessionStatus,
 )
-from app.models.action_intent import ActionIntent, ActionIntentStatus
 from app.models.decision_trace import DecisionTrace, DecisionTraceType
-from app.models.financial_memory import FinancialMemory, FilingStatus, RiskTolerance
+from app.models.financial_memory import FilingStatus, FinancialMemory, RiskTolerance
 from app.models.memory_event import MemoryEvent, MemoryEventSource
+from app.services.action_policy import ActionPolicyService
 from app.services.agent_guardrails import evaluate_freshness
 from app.services.agent_runtime import AgentRuntime
-from app.services.action_policy import ActionPolicyService
 from app.services.context_renderer import render_context_as_markdown
 from app.services.decision_engine import run_deterministic_checks
 from app.services.financial_context import build_financial_context
@@ -900,7 +900,7 @@ class FinancialAdvisor:
             payload=payload,
             impact_summary=impact_summary,
         )
-        
+
         # Link to the latest analysis trace if available
         trace_result = await self._session.execute(
             select(DecisionTrace)

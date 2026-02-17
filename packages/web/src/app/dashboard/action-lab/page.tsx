@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from "react";
 import { 
-  Sparkles, 
   Rocket, 
   ShieldCheck, 
   Zap, 
@@ -16,24 +15,21 @@ import {
   Info,
   ChevronRight,
   Activity,
-  ArrowDownRight,
   Fingerprint,
   Layers,
   Search,
-  Plus
+  LucideIcon
 } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 import { 
   useActionIntents, 
-  useDownloadIntentManifest,
-  useUpdateActionIntent,
   useExportFinancialPassport,
   useGenerateProofOfFunds
 } from "@/lib/strata/hooks";
 import { useActionExecution } from "@/lib/strata/action-execution-context";
-import { ActionIntent } from "@clearmoney/strata-sdk";
 
 interface MockIntent {
   id: string;
@@ -41,7 +37,7 @@ interface MockIntent {
   description: string;
   impact: string;
   status: string;
-  icon: any;
+  icon: LucideIcon;
   type: string;
   isReal?: boolean;
   logic: {
@@ -130,13 +126,11 @@ const MOCK_INTENTS: MockIntent[] = [
 export default function ActionLabPage() {
   const [activeIntent, setActiveIntent] = useState<MockIntent | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
-  const [email, setEmail] = useState("");
+  const [email] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Real Data Integration
   const { data: realIntents, isLoading: isLoadingIntents } = useActionIntents();
-  const downloadManifest = useDownloadIntentManifest();
-  const updateIntent = useUpdateActionIntent();
   const exportPassport = useExportFinancialPassport();
   const generateProof = useGenerateProofOfFunds();
   const [proofThreshold, setProofThreshold] = useState("50000");
@@ -232,8 +226,8 @@ export default function ActionLabPage() {
               transition={{ delay: 0.1 }}
               className="text-neutral-400 leading-relaxed"
             >
-              Experience Era 3 of Strata. Below are live "Action Intents" drafted by your agent based on your current data surface. 
-              Review the logic, see the math, and join the waitlist for autonomous execution.
+            Experience Era 3 of Strata. Below are live &quot;Action Intents&quot; drafted by your agent based on your current data surface. 
+            Review the logic, see the math, and join the waitlist for autonomous execution.
             </motion.p>
           </div>
 
@@ -435,11 +429,11 @@ export default function ActionLabPage() {
                     <p className="text-sm text-neutral-400 mt-1 leading-relaxed">{f.desc}</p>
                     {f.action && (
                       <button
-                        onClick={f.onClick}
-                        disabled={f.disabled}
+                        onClick={f.action.onClick}
+                        disabled={f.action.disabled}
                         className="mt-3 text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors disabled:opacity-50"
                       >
-                        {f.label}
+                        {f.action.label}
                         <ArrowRight className="w-3 h-3" />
                       </button>
                     )}
@@ -456,7 +450,7 @@ export default function ActionLabPage() {
                 <Bot className="w-10 h-10" />
               </div>
               <p className="text-2xl font-serif text-neutral-200 leading-snug mb-8">
-                "I stopped managing my money and started <span className="text-emerald-400">managing my agent</span>. ClearMoney doesn't just show me a graph; it shows me an exit strategy for my legacy high-fee accounts."
+                &quot;I stopped managing my money and started <span className="text-emerald-400">managing my agent</span>. ClearMoney doesn&apos;t just show me a graph; it shows me an exit strategy for my legacy high-fee accounts.&quot;
               </p>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-emerald-500 to-emerald-900" />
@@ -543,9 +537,9 @@ export default function ActionLabPage() {
                 <div className="w-20 h-20 rounded-full bg-emerald-900/40 flex items-center justify-center mx-auto mb-8 text-emerald-400">
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
-                <h2 className="text-4xl font-serif mb-4 text-white">You're in.</h2>
+                <h2 className="text-4xl font-serif mb-4 text-white">You&apos;re in.</h2>
                 <p className="text-neutral-400 text-lg">
-                  We'll notify you when the first **Action Intents** are ready for your data surface. 
+                  We&apos;ll notify you when the first **Action Intents** are ready for your data surface. 
                   Welcome to the future of sovereign finance.
                 </p>
               </motion.div>
@@ -605,7 +599,7 @@ export default function ActionLabPage() {
                       <div className="text-[10px] text-neutral-500">Deterministic Confidence: 99.8%</div>
                     </div>
                     <p className="text-neutral-300 leading-relaxed italic">
-                      "{activeIntent.logic.reasoning}"
+                      &quot;{activeIntent.logic.reasoning}&quot;
                     </p>
                   </div>
                 </section>

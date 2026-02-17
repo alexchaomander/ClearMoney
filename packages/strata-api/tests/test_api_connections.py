@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.connections import _pending_link_sessions, get_provider
 from app.main import app
 from app.models import Connection, InvestmentAccountType, SecurityType, User
+from app.models.transaction import TransactionType
 from app.services.providers.base import (
     LinkSession,
     NormalizedAccount,
@@ -16,7 +17,6 @@ from app.services.providers.base import (
     NormalizedSecurity,
     NormalizedTransaction,
 )
-from app.models.transaction import TransactionType
 
 
 class MockProvider:

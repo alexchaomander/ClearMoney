@@ -1,11 +1,11 @@
-from typing import TYPE_CHECKING
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import String, Numeric, Text, ForeignKey
+from sqlalchemy import ForeignKey, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+
 
 class CreditCard(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "credit_cards"

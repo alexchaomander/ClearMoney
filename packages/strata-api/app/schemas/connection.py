@@ -1,11 +1,10 @@
 import uuid
 from datetime import datetime
 from typing import Any
- 
-from pydantic import BaseModel, Field
- 
-from app.models.connection import ConnectionStatus
 
+from pydantic import BaseModel, Field
+
+from app.models.connection import ConnectionStatus
 from app.schemas.action_capability import ActionCapability
 
 

@@ -1,7 +1,8 @@
 import logging
 import uuid
-from decimal import Decimal
 from collections import defaultdict
+from decimal import Decimal
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,7 +28,7 @@ class SubscriptionService:
             .order_by(BankTransaction.transaction_date.desc())
         )
         transactions = result.scalars().all()
-        
+
         # 2. Group by merchant/name
         merchant_groups = defaultdict(list)
         for tx in transactions:
@@ -41,21 +42,21 @@ class SubscriptionService:
         for merchant, txs in merchant_groups.items():
             if len(txs) < 2:
                 continue
-            
+
             # Sort by date
             txs.sort(key=lambda x: x.transaction_date)
-            
+
             # Check intervals
             intervals = []
             for i in range(len(txs) - 1):
                 delta = (txs[i+1].transaction_date - txs[i].transaction_date).days
                 intervals.append(delta)
-            
+
             # Simple check for monthly (25-35 days) or weekly (6-8 days) patterns
             avg_interval = sum(intervals) / len(intervals)
             is_recurring = False
             frequency = "unknown"
-            
+
             if 25 <= avg_interval <= 35:
                 is_recurring = True
                 frequency = "monthly"
@@ -69,7 +70,7 @@ class SubscriptionService:
             if is_recurring:
                 latest_amount = abs(txs[-1].amount)
                 monthly_impact = latest_amount if frequency == "monthly" else (latest_amount * 4 if frequency == "weekly" else latest_amount / 3)
-                
+
                 subscriptions.append({
                     "merchant": txs[-1].merchant_name or txs[-1].name,
                     "amount": float(latest_amount),

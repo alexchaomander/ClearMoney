@@ -2,7 +2,7 @@ import enum
 import uuid
 from typing import Any
 
-from sqlalchemy import Enum, ForeignKey, JSON, String
+from sqlalchemy import JSON, Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -32,7 +32,7 @@ class ActionIntent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
-    
+
     # Traceability: Link to the specific logic trace that generated this intent
     decision_trace_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("decision_traces.id", ondelete="SET NULL"), nullable=True
@@ -42,7 +42,7 @@ class ActionIntent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Enum(ActionIntentType, values_callable=lambda e: [x.value for x in e]),
         nullable=False,
     )
-    
+
     status: Mapped[ActionIntentStatus] = mapped_column(
         Enum(ActionIntentStatus, values_callable=lambda e: [x.value for x in e]),
         default=ActionIntentStatus.DRAFT,
@@ -52,10 +52,10 @@ class ActionIntent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # Core details
     title: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
-    
+
     # Execution Payload (e.g. { source_account_id: "...", target_account_id: "...", amount: 1000 })
     payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=lambda: {})
-    
+
     # Logic/Impact (Snapshot of why we are doing this, e.g. { estimated_savings: 500 })
     impact_summary: Mapped[dict[str, Any]] = mapped_column(JSON, default=lambda: {})
 
