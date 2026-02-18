@@ -31,7 +31,7 @@ export function RetirementMonteCarloChart() {
   const chartData = useMemo(() => {
     if (!simulation) return [];
     
-    const percentiles = simulation.percentiles as any;
+    const percentiles = simulation.percentiles as Record<string, number[]>;
     const years = simulation.years as number[];
     
     return years.map((year, i) => ({

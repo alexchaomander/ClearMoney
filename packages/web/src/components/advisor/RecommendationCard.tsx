@@ -23,7 +23,9 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
   const [isExpanded, setIsExpanded] = useState(false);
   const { mutate: execute, isPending, isSuccess, isError, error, data } = useExecuteRecommendation();
 
-  const details = recommendation.details as any;
+  const details = recommendation.details as
+    | { action?: { type: string; connection_id?: string; [k: string]: unknown }; rationale?: string[] }
+    | undefined;
   const action = details?.action;
   const hasAction = !!action && !!action.type;
 
@@ -121,7 +123,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
                 <div>
                   <p className="text-slate-500 uppercase tracking-widest text-[10px] mb-2 font-bold">Rationale</p>
                   <ul className="space-y-1.5">
-                    {details.rationale.map((step: string, i: number) => (
+                    {details.rationale?.map((step: string, i: number) => (
                       <li key={i} className="flex gap-2 text-slate-300">
                         <span className="text-emerald-500 shrink-0">•</span>
                         {step}
