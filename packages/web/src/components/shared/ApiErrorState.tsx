@@ -35,21 +35,21 @@ export function ApiErrorState({
       <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
         <AlertTriangle className="w-7 h-7 text-red-400" />
       </div>
-      <h3 className="font-serif text-xl text-neutral-100 mb-2">
+      <h3 className="font-serif text-xl text-slate-900 dark:text-white mb-2">
         Unable to Load Data
       </h3>
-      <p className={`text-neutral-400 max-w-md ${detail ? "mb-2" : "mb-6"}`}>
+      <p className={`text-slate-600 dark:text-slate-400 max-w-md ${detail ? "mb-2" : "mb-6"}`}>
         {message}
       </p>
       {detail && (
-        <p className="text-xs text-neutral-500 mb-6">
+        <p className="text-xs text-slate-500 mb-6">
           {detail}
         </p>
       )}
       {onRetry && (
         <button
           onClick={onRetry}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-medium transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-medium transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           Try Again

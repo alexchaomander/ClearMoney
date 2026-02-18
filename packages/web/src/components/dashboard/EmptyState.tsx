@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Wallet, ArrowRight, Shield, TrendingUp, PieChart } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function EmptyState() {
   return (
@@ -49,13 +50,12 @@ export function EmptyState() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.5 }}
       >
-        <Link
-          href="/connect"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-colors"
-        >
-          Connect Accounts
-          <ArrowRight className="w-4 h-4" />
-        </Link>
+        <Button asChild size="lg">
+          <Link href="/connect">
+            Connect Accounts
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Link>
+        </Button>
       </motion.div>
 
       {/* Features */}
@@ -87,7 +87,7 @@ export function EmptyState() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.7 + index * 0.1 }}
-            className="p-4 rounded-xl bg-neutral-900/50 border border-neutral-800"
+            className="p-4 rounded-xl bg-slate-900/50 border border-slate-800"
           >
             <feature.icon className="w-6 h-6 text-emerald-400 mb-3" />
             <h3 className="text-white font-medium mb-1">{feature.title}</h3>

@@ -173,7 +173,7 @@ export function MemoryWizard({ isOpen, onClose }: MemoryWizardProps) {
                         autoFocus
                         type="number"
                         placeholder="Enter amount..."
-                        value={values[currentStep.field] ?? memory?.[currentStep.field] ?? ""}
+                        value={(values[currentStep.field] ?? memory?.[currentStep.field] ?? "") as string | number}
                         onChange={(e) => updateValue(currentStep.field, e.target.value === "" ? null : Number(e.target.value))}
                         className={cn(
                           "w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all text-xl font-mono text-white",

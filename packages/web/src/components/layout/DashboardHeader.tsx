@@ -83,6 +83,7 @@ export function DashboardHeader({
                 onClick={onRefresh}
                 disabled={isRefreshing}
                 className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+                aria-label="Refresh data"
                 title="Refresh data"
               >
                 <motion.div

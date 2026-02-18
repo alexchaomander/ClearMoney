@@ -75,12 +75,12 @@ function ChartTooltip({ active, payload, label }: TooltipProps<number, string>) 
   if (!active || !numericPayload.length || !label) return null;
   const labelText = String(label);
   return (
-    <div className="rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs text-neutral-200">
-      <p className="text-neutral-400 mb-1">{formatAxisDate(labelText)}</p>
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs text-slate-700 dark:text-slate-200">
+      <p className="text-slate-500 dark:text-slate-400 mb-1">{formatAxisDate(labelText)}</p>
       {numericPayload.map((item) => {
         const key = String(item.dataKey ?? item.name ?? "value");
         return (
-          <p key={key} className="text-sm text-white">
+          <p key={key} className="text-sm text-slate-900 dark:text-white">
             {item.dataKey === "value" ? `Net worth: ${formatCurrency(item.value)}` : `${key}: ${formatCurrency(item.value)}`}
           </p>
         );
@@ -100,10 +100,10 @@ function ScoreBadge({
 }) {
   const toneClass =
     tone === "positive"
-      ? "text-emerald-300 bg-emerald-900/40"
+      ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/40"
       : tone === "warn"
-        ? "text-amber-300 bg-amber-900/30"
-        : "text-neutral-300 bg-neutral-800";
+        ? "text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30"
+        : "text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800";
 
   return (
     <span
@@ -400,7 +400,7 @@ export default function GraphPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-neutral-950">
+      <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
         <DashboardHeader
           onRefresh={handleRefresh}
           isRefreshing={syncAllConnections.isPending}
@@ -416,7 +416,7 @@ export default function GraphPage() {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-neutral-950">
+      <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
         <DashboardHeader
           onRefresh={handleRefresh}
           isRefreshing={syncAllConnections.isPending}
@@ -435,9 +435,9 @@ export default function GraphPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
       <div
-        className="fixed inset-0 opacity-30 pointer-events-none"
+        className="fixed inset-0 opacity-0 dark:opacity-30 pointer-events-none"
         style={{
           background:
             "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 60%)",
@@ -458,14 +458,14 @@ export default function GraphPage() {
           className="flex flex-wrap items-start justify-between gap-4 mb-6"
         >
           <div>
-            <p className="text-sm uppercase tracking-[0.25em] text-emerald-400">Data Graph</p>
-            <h1 className="mt-2 font-serif text-3xl text-white">Money Graph Workspace</h1>
-            <p className="mt-2 text-neutral-400 max-w-xl">
+            <p className="text-sm uppercase tracking-[0.25em] text-emerald-600 dark:text-emerald-400">Data Graph</p>
+            <h1 className="mt-2 font-serif text-3xl text-slate-900 dark:text-white">Money Graph Workspace</h1>
+            <p className="mt-2 text-slate-600 dark:text-slate-400 max-w-xl">
               Build a clear picture of how your accounts, cash flow, and debt shape cash movement
               over time.
             </p>
             {usingDemoData ? (
-              <p className="mt-2 text-xs text-amber-300 inline-flex items-center gap-2">
+              <p className="mt-2 text-xs text-amber-600 dark:text-amber-300 inline-flex items-center gap-2">
                 <RefreshCw className="w-3 h-3" />
                 Synthetic graph timeline is active until live snapshots and transactions are connected.
               </p>
@@ -473,7 +473,7 @@ export default function GraphPage() {
           </div>
           <Link
             href="/dashboard/coverage"
-            className="inline-flex items-center gap-2 rounded-lg border border-neutral-700 px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-900 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
           >
             Improve data coverage
             <Link2 className="w-4 h-4" />
@@ -493,48 +493,48 @@ export default function GraphPage() {
         >
           <div className="space-y-6">
             <section className="grid md:grid-cols-4 gap-4">
-              <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-                <p className="text-sm text-neutral-400">Net Worth</p>
-                <p className="mt-2 text-2xl font-semibold text-white">
+              <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+                <p className="text-sm text-slate-600 dark:text-slate-400">Net Worth</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
                   {formatCurrency(effectiveSummary.net_worth)}
                 </p>
                 <div className="mt-3 flex items-center gap-2">
                   {change >= 0 ? (
-                    <TrendingUp className="w-4 h-4 text-emerald-400" />
+                    <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   ) : (
                     <TrendingDown className="w-4 h-4 text-rose-400" />
                   )}
                   <span
-                    className={`text-sm ${change >= 0 ? "text-emerald-300" : "text-rose-300"}`}
+                    className={`text-sm ${change >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-600 dark:text-rose-300"}`}
                   >
                     {formatCurrency(change)} ({formatPercent(changePercent / 100, 1, true)})
                   </span>
                 </div>
               </article>
 
-              <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-                <p className="text-sm text-neutral-400">Investments</p>
-                <p className="mt-2 text-2xl font-semibold text-white">
+              <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+                <p className="text-sm text-slate-600 dark:text-slate-400">Investments</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
                   {formatCurrency(effectiveSummary.total_investment_value)}
                 </p>
-                <p className="mt-3 text-xs text-neutral-500">
+                <p className="mt-3 text-xs text-slate-500">
                   Tax advantaged: {formatCurrency(effectiveSummary.tax_advantaged_value)}
                 </p>
               </article>
 
-              <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-                <p className="text-sm text-neutral-400">Cash Position</p>
-                <p className="mt-2 text-2xl font-semibold text-white">
+              <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+                <p className="text-sm text-slate-600 dark:text-slate-400">Cash Position</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
                   {formatCurrency(effectiveSummary.total_cash_value)}
                 </p>
-                <p className="mt-3 text-xs text-neutral-500">
+                <p className="mt-3 text-xs text-slate-500">
                   Last 3 months spend: {formatCurrency(effectiveSpending.total_spending)}
                 </p>
               </article>
 
-              <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-                <p className="text-sm text-neutral-400">Debt</p>
-                <p className="mt-2 text-2xl font-semibold text-white">
+              <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+                <p className="text-sm text-slate-600 dark:text-slate-400">Debt</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
                   {formatCurrency(effectiveSummary.total_debt_value)}
                 </p>
                 <p className="mt-3">
@@ -554,10 +554,10 @@ export default function GraphPage() {
             </section>
 
             <section className="grid lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+              <div className="lg:col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-serif text-xl text-white">Portfolio trajectory</h2>
-                  <div className="flex gap-1 rounded-lg bg-neutral-950 p-1">
+                  <h2 className="font-serif text-xl text-slate-900 dark:text-white">Portfolio trajectory</h2>
+                  <div className="flex gap-1 rounded-lg bg-slate-50 dark:bg-slate-950 p-1">
                     {RANGES.map((range) => (
                       <button
                         key={range.value}
@@ -565,7 +565,7 @@ export default function GraphPage() {
                         className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
                           selectedRange === range.value
                             ? "bg-emerald-600 text-white"
-                            : "text-neutral-400 hover:text-neutral-200"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                         }`}
                       >
                         {range.label}
@@ -585,7 +585,7 @@ export default function GraphPage() {
                         <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid stroke="#262626" strokeDasharray="3 3" vertical={false} />
+                    <CartesianGrid stroke="currentColor" className="text-slate-200 dark:text-[#262626]" strokeDasharray="3 3" vertical={false} />
                     <XAxis
                       dataKey="date"
                       tickFormatter={formatAxisDate}
@@ -610,17 +610,17 @@ export default function GraphPage() {
                   </AreaChart>
                 </ResponsiveContainer>
 
-                <p className="mt-2 text-xs text-neutral-500">
+                <p className="mt-2 text-xs text-slate-500">
                   Showing {selectedRange} trend from {effectiveHistory.length} points, built from account
                   snapshots and transaction activity.
                 </p>
               </div>
 
               <div className="space-y-4">
-                <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-medium text-white">Money Flow Nodes</h3>
-                    <CircleDollarSign className="w-4 h-4 text-emerald-400" />
+                    <h3 className="font-medium text-slate-900 dark:text-white">Money Flow Nodes</h3>
+                    <CircleDollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div className="space-y-4">
                     {financialNodes.map((node) => {
@@ -632,10 +632,10 @@ export default function GraphPage() {
                       return (
                         <div key={node.label}>
                           <div className="mb-1 flex items-center justify-between">
-                            <p className="text-sm text-neutral-300">{node.label}</p>
-                            <p className="text-sm text-white">{formatCurrency(node.value)}</p>
+                            <p className="text-sm text-slate-700 dark:text-slate-300">{node.label}</p>
+                            <p className="text-sm text-slate-900 dark:text-white">{formatCurrency(node.value)}</p>
                           </div>
-                          <div className="h-2 rounded-full bg-neutral-800">
+                          <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-800">
                             <div
                               className={`h-full rounded-full ${
                                 node.type === "asset" ? "bg-emerald-500" : "bg-rose-500"
@@ -643,7 +643,7 @@ export default function GraphPage() {
                               style={{ width: `${Math.min(100, Math.abs(percent))}%` }}
                             />
                           </div>
-                          <ul className="mt-2 text-xs text-neutral-400 space-y-1">
+                          <ul className="mt-2 text-xs text-slate-600 dark:text-slate-400 space-y-1">
                             {node.details.map((detail) => (
                               <li key={detail} className="truncate">
                                 {detail}
@@ -656,9 +656,9 @@ export default function GraphPage() {
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
-                  <h3 className="font-medium text-white mb-3 flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-emerald-400" />
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6">
+                  <h3 className="font-medium text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     Account bucketing
                   </h3>
                   <ResponsiveContainer width="100%" height={150}>
@@ -675,7 +675,8 @@ export default function GraphPage() {
                       <Tooltip
                         formatter={(value: number) => formatCurrency(value)}
                         labelFormatter={(label) => formatTitleCase(String(label))}
-                        contentStyle={{ backgroundColor: "#0a0a0a", borderColor: "#262626" }}
+                        contentStyle={{ borderRadius: "0.5rem" }}
+                        wrapperClassName="!bg-white dark:!bg-slate-900 !border-slate-200 dark:!border-slate-700"
                       />
                       <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                         {topAllocations.map((entry, index) => (
@@ -688,9 +689,9 @@ export default function GraphPage() {
               </div>
             </section>
 
-            <section className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
-              <h2 className="font-serif text-xl text-white mb-4">Next-step pathways</h2>
-              <p className="text-sm text-neutral-400 max-w-3xl">
+            <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6">
+              <h2 className="font-serif text-xl text-slate-900 dark:text-white mb-4">Next-step pathways</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400 max-w-3xl">
                 This graph is live when real accounts and transaction consent are enabled. If you
                 already have connections, you can refine each view with richer category tags and full
                 historical transaction depth.
@@ -707,7 +708,7 @@ export default function GraphPage() {
                   <Link
                     key={route.href}
                     href={route.href}
-                    className="inline-flex items-center gap-2 rounded-lg border border-emerald-800 bg-emerald-900/20 px-4 py-2 text-sm text-emerald-200 hover:bg-emerald-900/40 transition-colors"
+                    className="inline-flex items-center gap-2 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 px-4 py-2 text-sm text-emerald-700 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
                   >
                     <RefreshCw className="w-4 h-4" />
                     {route.label}

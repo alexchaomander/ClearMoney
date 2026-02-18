@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -16,6 +16,9 @@ import { VALUATIONS } from "@/lib/constants";
 import type { PostMeta } from "@/lib/content/types";
 
 export function BlogPageClient({ posts }: { posts: PostMeta[] }) {
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
+
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 selection:bg-emerald-500/30">
       {/* Editorial Header */}
@@ -124,16 +127,35 @@ export function BlogPageClient({ posts }: { posts: PostMeta[] }) {
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 leading-relaxed">
                 Weekly experiments in financial portability, yield optimization, and market math.
               </p>
-              <form className="space-y-3">
-                <input
-                  type="email"
-                  placeholder="Email address"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
-                />
-                <button className="w-full py-3 rounded-xl bg-slate-900 dark:bg-emerald-600 text-white font-bold text-sm hover:bg-slate-800 dark:hover:bg-emerald-500 transition-all">
-                  Subscribe
-                </button>
-              </form>
+              {newsletterSubmitted ? (
+                <p className="text-emerald-600 dark:text-emerald-400 font-medium text-sm">
+                  Thanks! We&apos;ll be in touch.
+                </p>
+              ) : (
+                // TODO: Wire up to a real newsletter API endpoint
+                <form
+                  className="space-y-3"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    setNewsletterSubmitted(true);
+                  }}
+                >
+                  <input
+                    type="email"
+                    placeholder="Email address"
+                    required
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                  />
+                  <button
+                    type="submit"
+                    className="w-full py-3 rounded-xl bg-slate-900 dark:bg-emerald-600 text-white font-bold text-sm hover:bg-slate-800 dark:hover:bg-emerald-500 transition-all"
+                  >
+                    Subscribe
+                  </button>
+                </form>
+              )}
             </div>
 
             {/* Categories */}
