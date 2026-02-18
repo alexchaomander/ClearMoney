@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Fingerprint, CheckCircle2, ShieldCheck, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -153,9 +154,10 @@ function DialogPortal({ children }: { children: React.ReactNode }) {
   }, []);
 
   if (!mounted) return null;
-  return (
+  return createPortal(
     <div id="biometric-portal">
       {children}
-    </div>
+    </div>,
+    document.body
   );
 }

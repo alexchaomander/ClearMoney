@@ -471,52 +471,43 @@ export default function FounderOperatingRoomPage() {
   const personalRunway = runwayMetrics?.personal.runway_months ?? derived.runway;
   const entityRunway = runwayMetrics?.entity.runway_months ?? 0;
 
-  const summaryCards = [
+  const metricConfigs = useMemo(() => [
     {
+      id: "personalRunway",
       label: "Personal Runway",
       value: formatMonthsAsYears(Math.max(0, Math.round(personalRunway))),
-      tone: riskTone(bandFromRatio(Math.min(1, personalRunway / 12), "higherIsBetter")),
-      bar: toPercent(personalRunway / 12),
-      detail:
-        personalRunway >= 12
-          ? "Over 1 year buffer"
-          : "Under 1 year runway; watch spend discipline",
+      subValue: personalRunway >= 12 ? "Over 1 year buffer" : "Under 1 year runway",
+      intent: derived.runwayBand === "good" ? "emerald" as const : derived.runwayBand === "watch" ? "amber" as const : "error" as const,
+      confidence: derived.confidence / 100,
+      metricId: "personalRunway",
     },
     {
+      id: "entityRunway",
       label: "Entity Runway",
       value: formatMonthsAsYears(Math.max(0, Math.round(entityRunway))),
-      tone: riskTone(bandFromRatio(Math.min(1, entityRunway / 12), "higherIsBetter")),
-      bar: toPercent(entityRunway / 12),
-      detail: entityRunway > 0 
-        ? (entityRunway >= 12 ? "Solid business runway" : "Monitor entity burn closely")
-        : "No business accounts connected",
+      subValue: entityRunway >= 12 ? "Solid business runway" : entityRunway > 0 ? "Monitor burn closely" : "No business accounts",
+      intent: entityRunway >= 12 ? "emerald" as const : entityRunway > 3 ? "amber" as const : "error" as const,
+      confidence: derived.confidence / 100,
     },
     {
-      label: "Burn surplus",
+      id: "savingsRate",
+      label: "Burn Surplus",
       value: formatPercent(derived.savingsRate, 1),
-      tone: savingsTone,
-      bar: savingsBar,
-      detail:
-        derived.savingsRate > 0.2 ? "Cash generation is healthy" : "Improve pricing or expense control",
+      subValue: derived.savingsRate > 0.2 ? "Healthy cash generation" : "Tight margins",
+      intent: derived.savingsBand === "good" ? "emerald" as const : derived.savingsBand === "watch" ? "amber" as const : "error" as const,
+      confidence: derived.confidence / 100,
+      metricId: "savingsRate",
     },
     {
-      label: "Debt load",
+      id: "debtLoad",
+      label: "Debt Load",
       value: formatPercent(derived.debtRatio, 1),
-      tone: debtTone,
-      bar: debtBar,
-      detail:
-        derived.debtRatio > 0.45
-          ? "Debt is materially impacting risk posture"
-          : "Debt remains controlled at current snapshot",
+      subValue: derived.debtRatio > 0.45 ? "High leverage" : "Controlled debt",
+      intent: derived.debtBand === "good" ? "emerald" as const : derived.debtBand === "watch" ? "amber" as const : "error" as const,
+      confidence: derived.confidence / 100,
+      metricId: "netWorth",
     },
-    {
-      label: "Execution confidence",
-      value: `${derived.confidence}%`,
-      tone: riskTone(derived.confidence >= 72 ? "good" : derived.confidence >= 48 ? "watch" : "critical"),
-      bar: Math.max(12, derived.confidence),
-      detail: "Signal reliability across accounts, memory, and transactions",
-    },
-  ];
+  ], [personalRunway, entityRunway, derived]);
 
   async function handleRefresh() {
     if (!hasSyncConsent) {
@@ -642,36 +633,23 @@ export default function FounderOperatingRoomPage() {
               </>
             ) : (
               <>
+                {metricConfigs.map((config) => (
+                  <MetricCard
+                    key={config.id}
+                    label={config.label}
+                    value={config.value}
+                    subValue={config.subValue}
+                    intent={config.intent}
+                    confidence={config.confidence}
+                    metricId={config.metricId}
+                  />
+                ))}
                 <MetricCard
-                  label="Personal Runway"
-                  value={formatMonthsAsYears(Math.max(0, Math.round(personalRunway)))}
-                  subValue={personalRunway >= 12 ? "Over 1 year buffer" : "Under 1 year runway"}
-                  intent={derived.runwayBand === "good" ? "emerald" : derived.runwayBand === "watch" ? "amber" : "error"}
-                  confidence={derived.confidence / 100}
-                  metricId="personalRunway"
-                />
-                <MetricCard
-                  label="Entity Runway"
-                  value={formatMonthsAsYears(Math.max(0, Math.round(entityRunway)))}
-                  subValue={entityRunway >= 12 ? "Solid business runway" : entityRunway > 0 ? "Monitor burn closely" : "No business accounts"}
-                  intent={entityRunway >= 12 ? "emerald" : entityRunway > 3 ? "amber" : "error"}
-                  confidence={derived.confidence / 100}
-                />
-                <MetricCard
-                  label="Burn Surplus"
-                  value={formatPercent(derived.savingsRate, 1)}
-                  subValue={derived.savingsRate > 0.2 ? "Healthy cash generation" : "Tight margins"}
-                  intent={derived.savingsBand === "good" ? "emerald" : derived.savingsBand === "watch" ? "amber" : "error"}
-                  confidence={derived.confidence / 100}
-                  metricId="savingsRate"
-                />
-                <MetricCard
-                  label="Debt Load"
-                  value={formatPercent(derived.debtRatio, 1)}
-                  subValue={derived.debtRatio > 0.45 ? "High leverage" : "Controlled debt"}
-                  intent={derived.debtBand === "good" ? "emerald" : derived.debtBand === "watch" ? "amber" : "error"}
-                  confidence={derived.confidence / 100}
-                  metricId="netWorth"
+                  label="Execution Confidence"
+                  value={`${derived.confidence}%`}
+                  subValue="Signal reliability"
+                  intent={derived.confidence >= 72 ? "emerald" : derived.confidence >= 48 ? "amber" : "error"}
+                  confidence={1.0}
                 />
               </>
             )}
