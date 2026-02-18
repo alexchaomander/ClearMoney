@@ -8,13 +8,30 @@
 
 **Build the most transparent, actionable, and founder-aware financial operating system on the planet.**
 
-ClearMoney is not another portfolio tracker. It is the institutional-grade financial intelligence layer that treats every number as auditable, every recommendation as traceable, and every action as executable -- with the user in full control.
+ClearMoney is the financial operating system for people who want to see the math. While AI advisors give you answers in a black box, ClearMoney shows you the inputs, the formula, and the confidence score behind every number. While traditional advisors charge 1% and work for their commissions, ClearMoney proves its independence with published payout data and open methodology. And while every other platform stops at "here's what you should do," ClearMoney drafts the paperwork, generates the switch kit, and executes the action -- with you in control at every step.
 
 We exist because the financial advisory industry has two failure modes:
 1. **Black-box AI advisors** (CFO Silvia, Wealthfront, Betterment) that give you answers without showing the math
 2. **Affiliate-driven content mills** (The Points Guy, NerdWallet, Bankrate) that optimize for ad revenue, not outcomes
 
-ClearMoney rejects both. We show our work, prove our independence, and move from "here's what you should do" to "here's the paperwork, ready to sign."
+ClearMoney rejects both.
+
+---
+
+## Brand Identity
+
+> For the full brand guide -- including voice examples, visual identity, messaging framework, competitive positioning one-liners, and marketing channel strategy -- see [BRANDING.md](./BRANDING.md).
+
+**Name:** ClearMoney -- clarity applied to money.
+
+**Tagline:** *See the math. Make the move.*
+
+**Pillars:** Radical Transparency | Financial Empowerment | Intellectual Honesty | Action Over Advice | Respect for Intelligence
+
+**Target Audience:**
+- **Primary:** Startup founders (seed to Series B) managing personal + company finances
+- **Secondary:** HNW individuals with $250k-$5M+ across multiple institutions
+- **Tertiary:** Informed consumers tired of affiliate-driven financial content
 
 ---
 
@@ -103,15 +120,60 @@ Track everything, not just financial accounts.
 - **Debt Complete Picture**: Student loans, mortgages, auto loans, credit cards with payoff strategies
 - **Tax Documents**: Upload W-2s, 1099s, K-1s, tax returns for comprehensive tax planning
 
-### Pillar 6: Content & Trust Engine (Distribution Moat)
+### Pillar 6: Publication & Distribution Engine (Organic Growth Moat)
 
-Original from our Anti-Points-Guy DNA. Silvia has zero content strategy.
+ClearMoney's publication arm is our primary distribution channel. Silvia relies on Pompliano's personal brand for distribution. We build organic, compounding reach through independent financial content that earns trust and drives product adoption.
 
-- **Independent Research**: Unbiased analysis on credit cards, points, financial products
-- **Blog with Methodology**: Every opinion backed by open math
-- **Short-Form Education**: TikTok/Reels/YouTube Shorts for financial literacy
-- **Newsletter**: Weekly intelligence briefing
-- **Community**: Discord/forum for peer education and crowdsourced data
+**The ClearMoney Publication** operates as an editorially independent arm of the platform. It covers the full spectrum of personal finance -- from credit card rewards and points optimization to portfolio strategy, tax planning, and founder finance. Every piece applies the same "show the math" standard as the product itself.
+
+**Content Verticals:**
+
+| Vertical | Audience | Examples |
+|----------|----------|---------|
+| **Credit Cards & Rewards** | Broad consumer (SEO + social) | Card comparisons, points valuations, rewards math, industry criticism |
+| **Portfolio & Tax Strategy** | Investors, HNW individuals | Tax-loss harvesting explainers, allocation frameworks, fee analysis |
+| **Founder Finance** | Startup founders | Runway planning, equity comp, 409A decisions, fundraising math |
+| **Industry Accountability** | Everyone | Exposing affiliate conflicts, black-box AI criticism, devaluation tracking |
+| **Tool Explainers** | ClearMoney users + prospects | Calculator walkthroughs, methodology deep-dives, feature tutorials |
+
+**Content Principles:**
+- Every opinion backed by open, verifiable math
+- Take clear positions -- no hedge language ("it depends")
+- Keep it concise (800-1,200 words max for written, 5-8 min for video)
+- Call out bad actors by name when warranted
+- Admit uncertainty when it exists
+- Never recommend a product because of its affiliate payout
+
+**Distribution Channels:**
+
+| Channel | Format | Cadence |
+|---------|--------|---------|
+| Blog (clearmoney.com/blog) | Long-form analysis, tool explainers, methodology docs | 2x/week |
+| Newsletter ("Show the Math") | Weekly digest: 1 featured piece, 3 market takes, community highlights | Weekly |
+| YouTube | Tool walkthroughs, market analysis, founder finance, industry criticism | 1x/week |
+| TikTok / Reels / Shorts | "60-second math" series, myth busting, hot takes | 3x/week |
+| Twitter/X | Quick takes, tool announcements, data drops, threads | Daily |
+| Podcast ("Show the Math") | Long-form interviews with founders about their financial operating systems | 2x/month |
+| Reddit | Genuine, helpful participation in r/personalfinance, r/creditcards, r/startups, r/fatFIRE | Ongoing |
+
+**Credit Card & Rewards Coverage (Specific Niche)**
+
+This vertical deserves special attention because it's a high-traffic, high-intent space dominated by affiliate-compromised content (The Points Guy, NerdWallet, Bankrate). ClearMoney's publication is uniquely positioned to be the honest alternative:
+
+- **Card comparison calculators** that use the reader's actual spending, not inflated valuations
+- **Points valuation methodology** that's open and conservative (vs. TPG's inflated estimates)
+- **"Is it worth it?" verdicts** that take clear stances, including "no" for popular high-fee cards
+- **Devaluation tracking** with real dollar-impact analysis
+- **Affiliate payout disclosure** on every recommendation, proving editorial independence
+- **Contrarian takes** that other publications won't publish because they'd hurt affiliate revenue
+
+This content drives top-of-funnel awareness (SEO + social) and builds trust that converts readers into ClearMoney product users.
+
+**Community:**
+- Discord server for peer discussion, knowledge sharing, and product feedback
+- Crowdsourced data (card approval odds, redemption values, bonus data points)
+- Community-powered accountability (users hold us to our independence pledge)
+- Open methodology (community can suggest and vote on calculation improvements)
 
 ---
 
@@ -276,22 +338,25 @@ What we've already built:
 | Public verification portal | `/verify` endpoint for third parties to validate ClearMoney-signed claims |
 | Privacy-preserving sharing | ZK-proof generation for financial claims |
 
-#### 3.3 Content & Distribution Engine
+#### 3.3 Publication Launch (Full Scale)
+
+Scale the ClearMoney publication from blog-only to full multi-channel content operation:
 
 | Initiative | Details |
 |------------|---------|
-| YouTube channel | Weekly 5-8 min videos: tool walkthroughs, market analysis, founder finance |
-| Short-form content | TikTok/Reels: "60-second math" series, myth busting, industry callouts |
-| Newsletter | Weekly intelligence briefing with 1 featured tool, 3 market takes, community highlights |
+| YouTube channel | Weekly 5-8 min videos: tool walkthroughs, market analysis, founder finance, industry criticism |
+| Short-form content | TikTok/Reels: "60-second math" series, myth busting, credit card hot takes |
+| Newsletter | "Show the Math" weekly: 1 featured analysis, 3 market takes, community highlights |
 | Podcast | "Show the Math" podcast: interviews with founders about their financial operating systems |
-| SEO content engine | Programmatic pages for card comparisons, investment product analysis |
+| SEO content engine | Programmatic card comparison pages, investment product analysis, points valuation dashboards |
+| Credit card vertical | Full launch of the honest card reviews, points valuations, and rewards math content |
 
 #### 3.4 Community Platform
 
 | Feature | Purpose |
 |---------|---------|
-| Discord server | Peer discussion, help, knowledge sharing |
-| Data point submissions | Crowdsource approval odds, redemption values, bonus data |
+| Discord server | Peer discussion: #founders, #credit-cards, #portfolio-strategy, #tax, #feature-requests |
+| Data point submissions | Crowdsource card approval odds, redemption values, bonus data |
 | User reviews | Real experiences with financial products and strategies |
 | Independence watchdog | Community holds us accountable to our transparency pledge |
 | Open methodology | Community can suggest and vote on calculation improvements |
@@ -302,6 +367,7 @@ What we've already built:
 - 10,000+ newsletter subscribers
 - YouTube channel at 5,000+ subscribers
 - Community with 500+ active members
+- 6+ SEO-optimized credit card articles published targeting specific long-tail keywords, with top-3 ranking for at least 2 long-tail terms
 
 ---
 
@@ -430,6 +496,14 @@ WE WILL ALWAYS:
 - Operates the Financial Portability Protocol used by 10+ platforms
 - Is the default financial OS for startup founders
 - Has saved users $100M+ through optimized decisions and avoided fees
+
+**The ClearMoney Publication is the trusted independent voice that:**
+
+- Is the go-to alternative to affiliate-compromised financial media
+- Reaches 1M+ monthly readers across blog, video, and social
+- Has published the industry's most cited points valuation methodology
+- Drives 40%+ of new product signups through organic content
+- Has forced competitors to disclose affiliate payouts and show their math
 
 **Success is not** maximizing our revenue. **Success is** people making measurably better financial decisions because every number they see is auditable, every recommendation is traceable, and every action is executable.
 
