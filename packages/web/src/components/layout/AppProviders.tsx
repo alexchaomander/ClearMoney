@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, type ReactNode } from "react";
+import { MotionConfig } from "framer-motion";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/lib/strata/query-provider";
@@ -31,7 +32,7 @@ function ProvidersContent({ children }: { children: ReactNode }) {
                       {hasClerkKey ? <StrataAuthSync /> : null}
                       <DemoBanner />
                       <div className="flex min-h-screen flex-col">
-                        <main className="flex-1">{children}</main>
+                        <main id="main-content" className="flex-1">{children}</main>
                       </div>
                       <AdvisorSidebar />
                     </HighlightProvider>
@@ -48,6 +49,7 @@ function ProvidersContent({ children }: { children: ReactNode }) {
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
+    <MotionConfig reducedMotion="user">
     <ThemeProvider>
       {hasClerkKey ? (
         <ClerkProvider>
@@ -57,5 +59,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <ProvidersContent>{children}</ProvidersContent>
       )}
     </ThemeProvider>
+    </MotionConfig>
   );
 }

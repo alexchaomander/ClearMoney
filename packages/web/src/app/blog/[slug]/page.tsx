@@ -49,7 +49,16 @@ export default async function BlogPostPage({ params }: PageProps) {
     (found, tag) => found || categories.find((c) => c.id === tag.toLowerCase().replace(/\s+/g, "-")),
     undefined,
   ) || categories[0];
-  const accentColor = category?.primaryColor || "#10b981";
+  const colorMap: Record<string, string> = {
+    brand: "#0ea5e9",
+    emerald: "#10b981",
+    violet: "#8b5cf6",
+    sky: "#0ea5e9",
+    amber: "#f59e0b",
+    rose: "#f43f5e",
+    purple: "#a855f7",
+  };
+  const accentColor = (category?.color && colorMap[category.color]) || "#10b981";
   const categoryName = category?.name || post.tags[0] || "General";
 
   return (

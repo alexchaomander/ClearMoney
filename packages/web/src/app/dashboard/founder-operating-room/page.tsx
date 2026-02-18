@@ -18,7 +18,7 @@ import {
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { ConsentGate } from "@/components/shared/ConsentGate";
 import { ApiErrorState } from "@/components/shared/ApiErrorState";
-import { DashboardLoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+
 import { DataSourceStatusStrip, type DataSourceStatusItem } from "@/components/dashboard/DataSourceStatusStrip";
 import { MetricTrace } from "@/components/dashboard/MetricTrace";
 import { MetricCard } from "@/components/dashboard/MetricCard";
@@ -55,6 +55,7 @@ import {
   Subscription,
 } from "@clearmoney/strata-sdk";
 import { formatCurrency, formatMonthsAsYears, formatPercent } from "@/lib/shared/formatters";
+import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
 
 type RiskBand = "good" | "watch" | "critical";
 
@@ -251,22 +252,6 @@ export default function FounderOperatingRoomPage() {
     error: connectionsErrorDetails,
     refetch: refetchConnections,
   } = useConnections({ enabled: hasConnectionsConsent });
-
-  const isLoading =
-    consentLoading ||
-    syncConsentLoading ||
-    connectionsConsentLoading ||
-    connectionsLoading ||
-    portfolioLoading ||
-    allAccountsLoading ||
-    bankAccountsLoading ||
-    transactionsLoading ||
-    memoryLoading ||
-    spendingLoading ||
-    vulnerabilityLoading ||
-    runwayLoading ||
-    taxShieldLoading ||
-    subscriptionsLoading;
 
   const isError =
     portfolioError ||
@@ -536,22 +521,6 @@ export default function FounderOperatingRoomPage() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
-        <DashboardHeader
-          showRefresh={hasSyncConsent}
-          isRefreshing={syncAllConnections.isPending}
-          onRefresh={handleRefresh}
-        />
-        <main className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-8">
-          <DataSourceStatusStrip items={sourceItems} usingDemoData={usingDemoData} />
-          <DashboardLoadingSkeleton />
-        </main>
-      </div>
-    );
-  }
-
   if (isError) {
     return (
       <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
@@ -589,6 +558,7 @@ export default function FounderOperatingRoomPage() {
       />
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-8">
+        <Breadcrumbs items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Founder OS" }]} />
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -621,7 +591,7 @@ export default function FounderOperatingRoomPage() {
           purpose="Analyze founder runway, operating discipline, and commingling risk with connected data"
         >
           <section className="grid lg:grid-cols-4 gap-4 mb-6">
-            {isLoading ? (
+            {(portfolioLoading || allAccountsLoading || memoryLoading || spendingLoading || transactionsLoading || vulnerabilityLoading || runwayLoading) ? (
               <>
                 <MetricCardSkeleton />
                 <MetricCardSkeleton />
@@ -653,98 +623,114 @@ export default function FounderOperatingRoomPage() {
           </section>
 
           <section className="grid lg:grid-cols-3 gap-4 mb-6">
-            <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg text-slate-900 dark:text-white font-medium">Subscription audit</h2>
-                <div className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40 text-[10px] font-bold">
-                  { subscriptionData?.subscription_count ?? 0 } ACTIVE
-                </div>
-              </div>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                Monthly burn from recurring SaaS and services.
-              </p>
-              <p className="mt-3 text-2xl text-slate-900 dark:text-white font-display">
-                {formatCurrency(subscriptionData?.total_monthly_subscription_burn ?? 0)}/mo
-              </p>
-              <div className="mt-4 space-y-2 max-h-40 overflow-y-auto pr-2">
-                {(subscriptionData?.subscriptions ?? []).slice(0, 5).map((s: Subscription) => (
-                  <div key={s.merchant} className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-slate-700 dark:text-neutral-200 truncate">{s.merchant}</p>
-                      <p className="text-[10px] text-slate-400 dark:text-neutral-500 uppercase">{s.frequency}</p>
-                    </div>
-                    <span className="text-xs font-bold text-slate-600 dark:text-neutral-300 font-mono">
-                      {formatCurrency(s.amount)}
-                    </span>
+            {subscriptionsLoading ? (
+              <div className="h-48 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
+            ) : (
+              <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg text-slate-900 dark:text-white font-medium">Subscription audit</h2>
+                  <div className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40 text-[10px] font-bold">
+                    { subscriptionData?.subscription_count ?? 0 } ACTIVE
                   </div>
-                ))}
-                {(!subscriptionData || subscriptionData.subscriptions.length === 0) && (
-                  <p className="text-xs text-slate-400 dark:text-neutral-600 italic">No recurring patterns detected.</p>
-                )}
-              </div>
-            </article>
-
-            <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg text-slate-900 dark:text-white font-medium">Tax shield posture</h2>
-                <Percent className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
-              </div>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                Estimated quarterly tax liability based on YTD business income.
-              </p>
-              <p className="mt-3 text-2xl text-slate-900 dark:text-white font-display">
-                {formatCurrency(taxShield?.next_quarterly_payment as number ?? 0)}
-              </p>
-              <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-neutral-300">
-                <p>YTD Biz Income: {formatCurrency(taxShield?.ytd_business_income as number ?? 0)}</p>
-                <p>Combined Rate: {formatPercent(taxShield?.estimated_combined_tax_rate as number ?? 0.31, 1)}</p>
-                <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${
-                  taxShield?.safe_harbor_met 
-                    ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40" 
-                    : "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/40"
-                }`}>
-                  {taxShield?.safe_harbor_met ? "Safe Harbor Met" : "Action Recommended"}
                 </div>
-              </div>
-            </article>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  Monthly burn from recurring SaaS and services.
+                </p>
+                <p className="mt-3 text-2xl text-slate-900 dark:text-white font-display">
+                  {formatCurrency(subscriptionData?.total_monthly_subscription_burn ?? 0)}/mo
+                </p>
+                <div className="mt-4 space-y-2 max-h-40 overflow-y-auto pr-2">
+                  {(subscriptionData?.subscriptions ?? []).slice(0, 5).map((s: Subscription) => (
+                    <div key={s.merchant} className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{s.merchant}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase">{s.frequency}</p>
+                      </div>
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300 font-mono">
+                        {formatCurrency(s.amount)}
+                      </span>
+                    </div>
+                  ))}
+                  {(!subscriptionData || subscriptionData.subscriptions.length === 0) && (
+                    <p className="text-xs text-slate-400 dark:text-slate-600 italic">No recurring patterns detected.</p>
+                  )}
+                </div>
+              </article>
+            )}
 
-            <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg text-slate-900 dark:text-white font-medium">Commingling signal</h2>
-                <ShieldAlert className={`w-4 h-4 ${comminglingTone.icon}`} />
-              </div>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                Personal spend share across observed transactions.
-              </p>
-              <p className={`mt-3 text-2xl font-display ${comminglingTone.text}`}>
-                {vulnerabilityReport?.risk_score as number ?? toPercent(1 - derived.personalShare)}%
-              </p>
-              <div className="mt-3 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                <div
-                  className={`h-full ${comminglingTone.bar}`}
-                  style={{ width: `${vulnerabilityReport?.risk_score as number ?? comminglingBar}%` }}
-                />
-              </div>
-              <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-neutral-300">
-                <p>Personal spend: {formatCurrency(vulnerabilityReport?.commingled_amount as number ?? derived.personalSpend)}</p>
-                <p>Total analyzed: {vulnerabilityReport?.total_analyzed as number ?? transactions.length} txns</p>
-                <p>Alerts: {vulnerabilityReport?.commingled_count as number ?? 0}</p>
-              </div>
-            </article>
+            {taxShieldLoading ? (
+              <div className="h-48 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
+            ) : (
+              <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg text-slate-900 dark:text-white font-medium">Tax shield posture</h2>
+                  <Percent className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
+                </div>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  Estimated quarterly tax liability based on YTD business income.
+                </p>
+                <p className="mt-3 text-2xl text-slate-900 dark:text-white font-display">
+                  {formatCurrency(taxShield?.next_quarterly_payment as number ?? 0)}
+                </p>
+                <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                  <p>YTD Biz Income: {formatCurrency(taxShield?.ytd_business_income as number ?? 0)}</p>
+                  <p>Combined Rate: {formatPercent(taxShield?.estimated_combined_tax_rate as number ?? 0.31, 1)}</p>
+                  <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${
+                    taxShield?.safe_harbor_met
+                      ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40"
+                      : "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/40"
+                  }`}>
+                    {taxShield?.safe_harbor_met ? "Safe Harbor Met" : "Action Recommended"}
+                  </div>
+                </div>
+              </article>
+            )}
 
-            <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg text-slate-900 dark:text-white font-medium">Account posture</h2>
-                <CircleDot className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
-              </div>
-              <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-neutral-300">
-                <p>{derived.investmentAccounts} investment account(s)</p>
-                <p>{derived.cashAccounts} cash account(s)</p>
-                <p>{derived.debtAccounts} debt account(s)</p>
-                <p>{derived.connectedBankCount} bank source(s)</p>
-                <p>Monthly spend observed: {formatCurrency(derived.monthlySpend)}</p>
-              </div>
-            </article>
+            {(vulnerabilityLoading || transactionsLoading) ? (
+              <div className="h-48 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
+            ) : (
+              <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg text-slate-900 dark:text-white font-medium">Commingling signal</h2>
+                  <ShieldAlert className={`w-4 h-4 ${comminglingTone.icon}`} />
+                </div>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  Personal spend share across observed transactions.
+                </p>
+                <p className={`mt-3 text-2xl font-display ${comminglingTone.text}`}>
+                  {vulnerabilityReport?.risk_score as number ?? toPercent(1 - derived.personalShare)}%
+                </p>
+                <div className="mt-3 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  <div
+                    className={`h-full ${comminglingTone.bar}`}
+                    style={{ width: `${vulnerabilityReport?.risk_score as number ?? comminglingBar}%` }}
+                  />
+                </div>
+                <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                  <p>Personal spend: {formatCurrency(vulnerabilityReport?.commingled_amount as number ?? derived.personalSpend)}</p>
+                  <p>Total analyzed: {vulnerabilityReport?.total_analyzed as number ?? transactions.length} txns</p>
+                  <p>Alerts: {vulnerabilityReport?.commingled_count as number ?? 0}</p>
+                </div>
+              </article>
+            )}
+
+            {(allAccountsLoading || bankAccountsLoading || portfolioLoading || spendingLoading) ? (
+              <div className="h-48 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
+            ) : (
+              <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg text-slate-900 dark:text-white font-medium">Account posture</h2>
+                  <CircleDot className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
+                </div>
+                <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                  <p>{derived.investmentAccounts} investment account(s)</p>
+                  <p>{derived.cashAccounts} cash account(s)</p>
+                  <p>{derived.debtAccounts} debt account(s)</p>
+                  <p>{derived.connectedBankCount} bank source(s)</p>
+                  <p>Monthly spend observed: {formatCurrency(derived.monthlySpend)}</p>
+                </div>
+              </article>
+            )}
 
             <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
               <div className="flex items-center justify-between">
@@ -756,10 +742,10 @@ export default function FounderOperatingRoomPage() {
                   href="/dashboard/scenario-lab"
                   className="rounded-lg border border-slate-100 dark:border-slate-700 p-3 block hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
                 >
-                  <p className="text-sm text-slate-900 dark:text-neutral-100 flex items-center gap-2 font-bold">
+                  <p className="text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2 font-bold">
                     <Target className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />Run 12-month scenarios
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Stress-test runway and debt strategy under upside and downside paths.
                   </p>
                 </Link>
@@ -768,10 +754,10 @@ export default function FounderOperatingRoomPage() {
                   href="/dashboard/progress"
                   className="rounded-lg border border-slate-100 dark:border-slate-700 p-3 block hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
                 >
-                  <p className="text-sm text-slate-900 dark:text-neutral-100 flex items-center gap-2 font-bold">
+                  <p className="text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2 font-bold">
                     <CircleDollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />Track founder progress
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Watch trajectory with trend and milestone cards.
                   </p>
                 </Link>
@@ -792,11 +778,11 @@ export default function FounderOperatingRoomPage() {
                   href="/dashboard/command-center"
                   className="rounded-lg border border-slate-100 dark:border-slate-700 p-3 block hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
                 >
-                  <p className="text-sm text-slate-900 dark:text-neutral-100 flex items-center gap-2 font-bold">
+                  <p className="text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2 font-bold">
                     <Compass className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
                     Return to command center
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Consolidate operating posture and route the highest-priority execution action.
                   </p>
                 </Link>
@@ -804,34 +790,38 @@ export default function FounderOperatingRoomPage() {
             </article>
           </section>
 
-          <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-colors duration-500">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg text-slate-900 dark:text-white">Execution bridge</h2>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  Connect this operating posture to concrete founder-level decisions.
+          {(portfolioLoading || allAccountsLoading || memoryLoading || spendingLoading) ? (
+            <div className="h-48 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
+          ) : (
+            <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-colors duration-500">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg text-slate-900 dark:text-white">Execution bridge</h2>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    Connect this operating posture to concrete founder-level decisions.
+                  </p>
+                </div>
+                <Link
+                  href="/dashboard/decision-narrative"
+                  className="inline-flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/25 px-3 py-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all shadow-sm"
+                >
+                  Review decision rationale
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+              <div className="mt-4 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-4">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Current portfolio cash: <span className="text-slate-900 dark:text-white font-mono font-bold">{formatCurrency(derived.totalCash)}</span>
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                  Current debt: <span className="text-slate-900 dark:text-white font-mono font-bold">{formatCurrency(derived.totalDebt)}</span>
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                  Monthly income: <span className="text-slate-900 dark:text-white font-mono font-bold">{formatCurrency(derived.monthlyIncome)}</span>
                 </p>
               </div>
-              <Link
-                href="/dashboard/decision-narrative"
-                className="inline-flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/25 px-3 py-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all shadow-sm"
-              >
-                Review decision rationale
-                <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-            <div className="mt-4 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-4">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Current portfolio cash: <span className="text-slate-900 dark:text-white font-mono font-bold">{formatCurrency(derived.totalCash)}</span>
-              </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-                Current debt: <span className="text-slate-900 dark:text-white font-mono font-bold">{formatCurrency(derived.totalDebt)}</span>
-              </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-                Monthly income: <span className="text-slate-900 dark:text-white font-mono font-bold">{formatCurrency(derived.monthlyIncome)}</span>
-              </p>
-            </div>
-          </section>
+            </section>
+          )}
         </ConsentGate>
       </main>
     </div>

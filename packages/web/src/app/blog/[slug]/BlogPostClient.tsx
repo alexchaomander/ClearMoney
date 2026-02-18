@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useCallback } from "react";
 import Link from "next/link";
 import { motion, useScroll, useSpring } from "framer-motion";
 import {
@@ -27,12 +27,29 @@ interface BlogPostClientProps {
 }
 
 export function BlogPostClient({ post, accentColor, categoryName }: BlogPostClientProps) {
+  const [copied, setCopied] = useState(false);
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
     restDelta: 0.001
   });
+
+  const handleShare = useCallback(async () => {
+    const url = window.location.href;
+    const title = post.title;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, url });
+      } catch {
+        // User cancelled - no action needed
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [post.title]);
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 selection:bg-emerald-500/30">
@@ -140,12 +157,14 @@ export function BlogPostClient({ post, accentColor, categoryName }: BlogPostClie
             {/* Sidebar Left: Engagement */}
             <aside className="hidden lg:block lg:col-span-1 pt-4">
               <div className="sticky top-32 flex flex-col items-center gap-8">
-                <div className="flex flex-col items-center gap-2 group cursor-pointer">
+                <button onClick={handleShare} className="flex flex-col items-center gap-2 group cursor-pointer" aria-label="Share this article">
                   <div className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-emerald-500 group-hover:border-emerald-500/50 transition-all">
                     <Share2 className="w-4 h-4" />
                   </div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Share</span>
-                </div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    {copied ? "Copied!" : "Share"}
+                  </span>
+                </button>
                 <div className="w-px h-20 bg-slate-200 dark:bg-slate-800" />
               </div>
             </aside>
@@ -164,9 +183,6 @@ export function BlogPostClient({ post, accentColor, categoryName }: BlogPostClie
                   remarkPlugins={[remarkGfm]}
                   components={{
                     h1: () => null,
-                    h2: ({ children }) => <h2 className="font-display tracking-tight text-slate-900 dark:text-white">{children}</h2>,
-                    h3: ({ children }) => <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-10 mb-4">{children}</h3>,
-                    ul: ({ children }) => <ul className="list-disc pl-6 my-6 space-y-2">{children}</ul>,
                     hr: () => <hr className="my-16 border-slate-200 dark:border-slate-800" />,
                   }}
                 >

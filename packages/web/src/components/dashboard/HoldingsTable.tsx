@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown, ChevronUp, ArrowUpDown } from "lucide-react";
+import { ChevronDown, ChevronUp, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatCurrency, formatTitleCase } from "@/lib/shared/formatters";
 
 interface Holding {
@@ -21,6 +21,8 @@ interface HoldingsTableProps {
   holdings: Holding[];
   totalValue: number;
 }
+
+const PAGE_SIZE = 20;
 
 type SortKey = "name" | "market_value" | "quantity" | "account_name";
 type SortDirection = "asc" | "desc";
@@ -63,6 +65,7 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("market_value");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [expandedHolding, setExpandedHolding] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -71,6 +74,7 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
       setSortKey(key);
       setSortDirection("desc");
     }
+    setCurrentPage(0);
   };
 
   const sortedHoldings = [...holdings].sort((a, b) => {
@@ -108,6 +112,15 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
       ? (aValue as number) - (bValue as number)
       : (bValue as number) - (aValue as number);
   });
+
+  const totalPages = Math.ceil(sortedHoldings.length / PAGE_SIZE);
+  const paginatedHoldings = sortedHoldings.slice(
+    currentPage * PAGE_SIZE,
+    (currentPage + 1) * PAGE_SIZE
+  );
+  const showPagination = holdings.length > PAGE_SIZE;
+  const rangeStart = currentPage * PAGE_SIZE + 1;
+  const rangeEnd = Math.min((currentPage + 1) * PAGE_SIZE, sortedHoldings.length);
 
   function formatSecurityType(type: string): string {
     const typeMap: Record<string, string> = {
@@ -184,7 +197,7 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
 
       {/* Table Body */}
       <div className="divide-y divide-neutral-800">
-        {sortedHoldings.map((holding) => {
+        {paginatedHoldings.map((holding) => {
           const percentOfPortfolio = totalValue > 0
             ? (holding.market_value / totalValue) * 100
             : 0;
@@ -312,6 +325,32 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
           );
         })}
       </div>
+
+      {showPagination && (
+        <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-800">
+          <span className="text-sm text-neutral-400">
+            Showing {rangeStart}-{rangeEnd} of {sortedHoldings.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => p - 1)}
+              disabled={currentPage === 0}
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-neutral-800 text-neutral-300 hover:bg-neutral-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </button>
+            <button
+              onClick={() => setCurrentPage((p) => p + 1)}
+              disabled={currentPage >= totalPages - 1}
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-neutral-800 text-neutral-300 hover:bg-neutral-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

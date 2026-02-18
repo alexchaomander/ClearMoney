@@ -62,7 +62,7 @@ export function MetricCard({
 
   if (loading) {
     return (
-      <div className={cn("rounded-xl border border-slate-800 bg-slate-900 p-5 animate-pulse", className)}>
+      <div className={cn("rounded-2xl border border-slate-800 bg-slate-900 p-5 animate-pulse", className)}>
         <div className="h-4 w-24 bg-slate-800 rounded mb-4" />
         <div className="h-8 w-32 bg-slate-800 rounded mb-2" />
         <div className="h-3 w-40 bg-slate-800 rounded" />
@@ -82,7 +82,7 @@ export function MetricCard({
         boxShadow: isHighlighted ? "0 0 20px rgba(16, 185, 129, 0.2)" : undefined
       }}
       className={cn(
-        "relative rounded-xl border p-5 overflow-hidden group transition-all duration-300",
+        "relative rounded-2xl border p-5 overflow-hidden group transition-all duration-300",
         intentStyles[intent],
         isCompact ? "p-3" : "p-5",
         isFresh && !isHighlighted && "shadow-[0_0_15px_-5px_rgba(16,185,129,0.1)]", 

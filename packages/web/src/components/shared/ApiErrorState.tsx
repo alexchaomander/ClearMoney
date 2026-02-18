@@ -49,7 +49,7 @@ export function ApiErrorState({
       {onRetry && (
         <button
           onClick={onRetry}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-medium transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-neutral-200 font-medium transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           Try Again

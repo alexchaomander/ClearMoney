@@ -5,10 +5,82 @@ import { motion } from "framer-motion";
 function SkeletonLine({ className = "" }: { className?: string }) {
   return (
     <motion.div
-      className={`rounded-lg bg-neutral-800 ${className}`}
+      className={`rounded-lg bg-slate-800 ${className}`}
       animate={{ opacity: [0.3, 0.6, 0.3] }}
       transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
     />
+  );
+}
+
+export function WarRoomLoadingSkeleton() {
+  return (
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950">
+      <div className="max-w-6xl mx-auto px-6 lg:px-8 py-12 space-y-8">
+        {/* Header area */}
+        <div className="flex items-end justify-between">
+          <div className="space-y-3">
+            <div className="h-4 w-32 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+            <div className="h-10 w-64 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse" />
+          </div>
+          <div className="flex gap-3">
+            <div className="h-20 w-32 rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
+            <div className="h-20 w-32 rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
+          </div>
+        </div>
+        {/* Filter tabs */}
+        <div className="h-12 w-80 rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
+        {/* Cards */}
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-32 rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ProgressLoadingSkeleton() {
+  return (
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950">
+      <div className="max-w-6xl mx-auto px-6 lg:px-8 py-12 space-y-8">
+        <div className="space-y-3">
+          <div className="h-4 w-32 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+          <div className="h-10 w-48 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse" />
+        </div>
+        {/* Chart area */}
+        <div className="h-72 rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
+        {/* Metric cards */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-40 rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function FounderORLoadingSkeleton() {
+  return (
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12 space-y-8">
+        <div className="space-y-3">
+          <div className="h-4 w-40 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+          <div className="h-10 w-56 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse" />
+        </div>
+        <div className="grid lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-28 rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
+          ))}
+        </div>
+        <div className="grid lg:grid-cols-2 gap-6">
+          {[1, 2].map(i => (
+            <div key={i} className="h-64 rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -28,7 +100,7 @@ export function DashboardLoadingSkeleton() {
         {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
           {/* Net worth card */}
-          <div className="p-6 rounded-xl bg-neutral-900 border border-neutral-800">
+          <div className="p-6 rounded-xl bg-slate-900 border border-slate-800">
             <SkeletonLine className="h-5 w-32 mb-4" />
             <SkeletonLine className="h-10 w-48 mb-6" />
             <div className="grid grid-cols-3 gap-4">
@@ -39,8 +111,8 @@ export function DashboardLoadingSkeleton() {
           </div>
 
           {/* Holdings table */}
-          <div className="rounded-xl bg-neutral-900 border border-neutral-800 overflow-hidden">
-            <div className="p-4 border-b border-neutral-800">
+          <div className="rounded-xl bg-slate-900 border border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-800">
               <SkeletonLine className="h-6 w-24 mb-2" />
               <SkeletonLine className="h-4 w-40" />
             </div>
@@ -59,7 +131,7 @@ export function DashboardLoadingSkeleton() {
 
         {/* Right column */}
         <div className="space-y-6">
-          <div className="p-6 rounded-xl bg-neutral-900 border border-neutral-800">
+          <div className="p-6 rounded-xl bg-slate-900 border border-slate-800">
             <SkeletonLine className="h-6 w-36 mb-4" />
             <SkeletonLine className="h-40 w-40 rounded-full mx-auto mb-4" />
             <div className="space-y-2">
@@ -72,7 +144,7 @@ export function DashboardLoadingSkeleton() {
             </div>
           </div>
 
-          <div className="p-6 rounded-xl bg-neutral-900 border border-neutral-800">
+          <div className="p-6 rounded-xl bg-slate-900 border border-slate-800">
             <SkeletonLine className="h-6 w-36 mb-4" />
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (

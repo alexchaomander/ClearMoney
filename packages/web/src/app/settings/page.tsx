@@ -26,6 +26,7 @@ import type { Institution, FinancialMemoryUpdate, ActionPolicyRequest } from "@c
 import { ConsentGate } from "@/components/shared/ConsentGate";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/shared/toast";
 
 const CONSENT_SCOPES = [
   "connections:read",
@@ -99,6 +100,7 @@ function PreferenceField({
 function ActionPolicySettings() {
   const { data: policy, isLoading, isError } = useActionPolicy();
   const upsertPolicy = useUpsertActionPolicy();
+  const { pushToast } = useToast();
 
   const defaultPolicy: ActionPolicyRequest = {
     allowed_actions: ["savings_transfer"],
@@ -114,11 +116,15 @@ function ActionPolicySettings() {
     const nextActions = currentPolicy.allowed_actions.includes(action)
       ? currentPolicy.allowed_actions.filter((a: string) => a !== action)
       : [...currentPolicy.allowed_actions, action];
-    upsertPolicy.mutate({ ...currentPolicy, allowed_actions: nextActions });
+    upsertPolicy.mutate({ ...currentPolicy, allowed_actions: nextActions }, {
+      onSuccess: () => pushToast({ title: "Preference saved", variant: "success" }),
+    });
   };
 
   const updatePolicy = (patch: Partial<ActionPolicyRequest>) => {
-    upsertPolicy.mutate({ ...currentPolicy, ...patch });
+    upsertPolicy.mutate({ ...currentPolicy, ...patch }, {
+      onSuccess: () => pushToast({ title: "Preference saved", variant: "success" }),
+    });
   };
 
   if (isLoading) return <div className="h-48 rounded-xl bg-neutral-800/50 animate-pulse" />;
@@ -204,6 +210,9 @@ function ActionPolicySettings() {
 }
 
 export default function SettingsPage() {
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const { pushToast } = useToast();
+
   const { hasConsent: hasSettingsConsent } = useConsentStatus([
     "connections:read",
     "connections:write",
@@ -230,16 +239,18 @@ export default function SettingsPage() {
   const savePreference = (key: string, value: any) => {
     updateMemory.mutate({
       preferences: { ...preferences, [key]: value },
+    }, {
+      onSuccess: () => pushToast({ title: "Preference saved", variant: "success" }),
     });
   };
 
-  const sectionClass = "p-6 rounded-xl bg-neutral-900 border border-neutral-800";
-  const rowClass = "flex items-center gap-3 p-3 rounded-xl bg-neutral-900 border border-neutral-800";
+  const sectionClass = "p-6 rounded-xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800";
+  const rowClass = "flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800";
 
   return (
-    <div className="min-h-screen bg-neutral-950">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-neutral-950">
       <div
-        className="fixed inset-0 opacity-30 pointer-events-none"
+        className="fixed inset-0 opacity-0 dark:opacity-30 pointer-events-none"
         style={{
           background:
             "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 60%)",
@@ -306,17 +317,39 @@ export default function SettingsPage() {
                         disabled={syncConnection.isPending}
                         className="p-2 rounded-lg text-neutral-400 hover:text-emerald-400 hover:bg-emerald-400/10 transition-all"
                         title="Sync"
+                        aria-label="Sync connection"
                       >
                         <RefreshCw className={`w-4 h-4 ${syncConnection.isPending ? "animate-spin" : ""}`} />
                       </button>
-                      <button
-                        onClick={() => deleteConnection.mutate(conn.id)}
-                        disabled={deleteConnection.isPending}
-                        className="p-2 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-400/10 transition-all"
-                        title="Disconnect"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {pendingDeleteId === conn.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-neutral-400">Delete?</span>
+                          <button
+                            onClick={() => {
+                              deleteConnection.mutate(conn.id);
+                              setPendingDeleteId(null);
+                            }}
+                            className="text-xs font-medium px-2 py-0.5 rounded-md text-red-400 hover:bg-red-400/10 transition-all"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            onClick={() => setPendingDeleteId(null)}
+                            className="text-xs font-medium px-2 py-0.5 rounded-md text-neutral-400 hover:bg-neutral-700 transition-all"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setPendingDeleteId(conn.id)}
+                          className="p-2 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                          title="Disconnect"
+                          aria-label="Disconnect account"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -373,13 +406,35 @@ export default function SettingsPage() {
                       >
                         {account.is_business ? "Business" : "Personal"}
                       </button>
-                      <button
-                        onClick={() => cashMutations.remove.mutate(account.id)}
-                        className="p-2 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {pendingDeleteId === account.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-neutral-400">Delete?</span>
+                          <button
+                            onClick={() => {
+                              cashMutations.remove.mutate(account.id);
+                              setPendingDeleteId(null);
+                            }}
+                            className="text-xs font-medium px-2 py-0.5 rounded-md text-red-400 hover:bg-red-400/10 transition-all"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            onClick={() => setPendingDeleteId(null)}
+                            className="text-xs font-medium px-2 py-0.5 rounded-md text-neutral-400 hover:bg-neutral-700 transition-all"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setPendingDeleteId(account.id)}
+                          className="p-2 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
+                          title="Delete"
+                          aria-label="Delete cash account"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -409,13 +464,35 @@ export default function SettingsPage() {
                       >
                         {account.is_business ? "Business" : "Personal"}
                       </button>
-                      <button
-                        onClick={() => debtMutations.remove.mutate(account.id)}
-                        className="p-2 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {pendingDeleteId === account.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-neutral-400">Delete?</span>
+                          <button
+                            onClick={() => {
+                              debtMutations.remove.mutate(account.id);
+                              setPendingDeleteId(null);
+                            }}
+                            className="text-xs font-medium px-2 py-0.5 rounded-md text-red-400 hover:bg-red-400/10 transition-all"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            onClick={() => setPendingDeleteId(null)}
+                            className="text-xs font-medium px-2 py-0.5 rounded-md text-neutral-400 hover:bg-neutral-700 transition-all"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setPendingDeleteId(account.id)}
+                          className="p-2 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
+                          title="Delete"
+                          aria-label="Delete debt account"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -444,13 +521,34 @@ export default function SettingsPage() {
                       >
                         {account.is_business ? "Business" : "Personal"}
                       </button>
-                      <button
-                        onClick={() => investmentMutations.remove.mutate(account.id)}
-                        className="p-2 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {pendingDeleteId === account.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-neutral-400">Delete?</span>
+                          <button
+                            onClick={() => {
+                              investmentMutations.remove.mutate(account.id);
+                              setPendingDeleteId(null);
+                            }}
+                            className="text-xs font-medium px-2 py-0.5 rounded-md text-red-400 hover:bg-red-400/10 transition-all"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            onClick={() => setPendingDeleteId(null)}
+                            className="text-xs font-medium px-2 py-0.5 rounded-md text-neutral-400 hover:bg-neutral-700 transition-all"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setPendingDeleteId(account.id)}
+                          className="p-2 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

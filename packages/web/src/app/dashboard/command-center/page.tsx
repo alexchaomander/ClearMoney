@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import { motion } from "framer-motion";
+
+const CommandCenterTrajectoryChart = dynamic(
+  () => import("@/components/dashboard/CommandCenterTrajectoryChart").then(m => m.CommandCenterTrajectoryChart),
+  { ssr: false, loading: () => <div className="lg:col-span-2 h-44 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" /> }
+);
 import {
   ArrowRight,
-  CalendarClock,
   CheckCircle2,
   CircleDashed,
   Flag,
@@ -34,6 +39,7 @@ import {
   useSyncAllConnections,
 } from "@/lib/strata/hooks";
 import { formatCurrency, formatMonthsAsYears, formatPercent } from "@/lib/shared/formatters";
+import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
 import {
   FALLBACK_BANK_ACCOUNTS,
   FALLBACK_BANK_TRANSACTIONS,
@@ -42,16 +48,6 @@ import {
   getPreviewPortfolioHistory,
   getPreviewPortfolioSummary,
 } from "../_shared/preview-data";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  type TooltipProps,
-} from "recharts";
 
 type RiskBand = "good" | "watch" | "critical";
 
@@ -66,23 +62,23 @@ function scoreStyle(level: RiskBand) {
   if (level === "good") {
     return {
       border: "border-emerald-700",
-      badge: "text-emerald-200 bg-emerald-900/25",
-      value: "text-emerald-200",
+      badge: "text-emerald-700 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-900/25",
+      value: "text-emerald-700 dark:text-emerald-200",
       icon: TrendingUp,
     };
   }
   if (level === "watch") {
     return {
       border: "border-amber-700",
-      badge: "text-amber-200 bg-amber-900/25",
-      value: "text-amber-200",
+      badge: "text-amber-700 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/25",
+      value: "text-amber-700 dark:text-amber-200",
       icon: CircleDashed,
     };
   }
   return {
     border: "border-rose-700",
-    badge: "text-rose-200 bg-rose-900/25",
-    value: "text-rose-200",
+    badge: "text-rose-700 dark:text-rose-200 bg-rose-50 dark:bg-rose-900/25",
+    value: "text-rose-700 dark:text-rose-200",
     icon: TrendingDown,
   };
 }
@@ -109,31 +105,6 @@ function toPercentSafe(value: number): number {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
-}
-
-function ChartTooltip({ active, payload, label }: TooltipProps<number, string>) {
-  const numericPayload = (payload ?? []).filter(
-    (point): point is { value: number; dataKey?: string | number; name?: string } =>
-      typeof point?.value === "number",
-  );
-  if (!active || !numericPayload.length || !label) return null;
-  const labelText = String(label);
-  return (
-    <div className="rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs text-neutral-200">
-      <p className="text-neutral-400 mb-1">{labelText}</p>
-      {numericPayload.map((point) => {
-        const key = String(point.dataKey ?? point.name ?? "value");
-        return (
-          <p key={key} className="leading-relaxed">
-            {point.dataKey === "value" ? "Net worth" : key}:{" "}
-          {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(
-            point.value,
-          )}
-        </p>
-        );
-      })}
-    </div>
-  );
 }
 
 export default function CommandCenterPage() {
@@ -511,7 +482,7 @@ export default function CommandCenterPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-neutral-950">
+      <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
         <DashboardHeader
           showRefresh={hasSyncConsent}
           isRefreshing={syncAllConnections.isPending}
@@ -527,7 +498,7 @@ export default function CommandCenterPage() {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-neutral-950">
+      <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
         <DashboardHeader
           showRefresh={hasSyncConsent}
           isRefreshing={syncAllConnections.isPending}
@@ -554,9 +525,9 @@ export default function CommandCenterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
       <div
-        className="fixed inset-0 opacity-30 pointer-events-none"
+        className="fixed inset-0 opacity-0 dark:opacity-30 pointer-events-none"
         style={{
           background:
             "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 60%)",
@@ -570,6 +541,7 @@ export default function CommandCenterPage() {
       />
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-8">
+        <Breadcrumbs items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Command Center" }]} />
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -577,12 +549,12 @@ export default function CommandCenterPage() {
           className="mb-6"
         >
           <p className="text-sm uppercase tracking-[0.25em] text-emerald-400">Command center</p>
-          <h1 className="mt-2 font-serif text-3xl text-white">Founder Command Center</h1>
-          <p className="mt-2 text-neutral-400 max-w-3xl">
+          <h1 className="mt-2 font-serif text-3xl text-slate-900 dark:text-white">Founder Command Center</h1>
+          <p className="mt-2 text-slate-600 dark:text-slate-400 max-w-3xl">
             The single pane for execution readiness, risk posture, and next actions before advisor decisions.
           </p>
           {usingDemoData ? (
-                <p className="mt-2 text-xs text-amber-300 inline-flex items-center gap-2">
+                <p className="mt-2 text-xs text-amber-600 dark:text-amber-300 inline-flex items-center gap-2">
                   <RefreshCw className="w-3 h-3" />
                   Synthetic foundation is active until live Strata surfaces are connected.
                 </p>
@@ -602,61 +574,24 @@ export default function CommandCenterPage() {
           purpose="Synthesize operating posture and route high-signal execution actions."
         >
           <section className="grid lg:grid-cols-3 gap-4 mb-6">
-            <article className="lg:col-span-1 rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+            <article className="lg:col-span-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm text-neutral-400">Execution health</h2>
-                <ShieldCheck className="w-4 h-4 text-emerald-300" />
+                <h2 className="text-sm text-slate-600 dark:text-slate-400">Execution health</h2>
+                <ShieldCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-300" />
               </div>
-              <p className="mt-3 text-4xl text-white">{healthPercent}%</p>
-              <div className="mt-4 h-2 rounded-full bg-neutral-800">
+              <p className="mt-3 text-4xl text-slate-900 dark:text-white">{healthPercent}%</p>
+              <div className="mt-4 h-2 rounded-full bg-slate-200 dark:bg-slate-800">
                 <div className={`h-full rounded-full ${healthPercent >= 70 ? "bg-emerald-500" : healthPercent >= 45 ? "bg-amber-500" : "bg-rose-500"}`} style={{ width: `${healthPercent}%` }} />
               </div>
-              <p className="mt-3 text-xs text-neutral-400">
+              <p className="mt-3 text-xs text-slate-600 dark:text-slate-400">
                 Based on runway, reserve posture, debt pressure, and profile completeness.
               </p>
             </article>
 
-            <article className="lg:col-span-2 rounded-xl border border-neutral-800 bg-neutral-900 p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-white">Net worth trajectory</h2>
-                <CalendarClock className="w-4 h-4 text-emerald-300" />
-              </div>
-              <p className="mt-2 text-xs text-neutral-400">Last 90d baseline</p>
-              <div className="mt-4 h-44 rounded-lg border border-neutral-800 bg-neutral-950 p-3">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={trajectory}>
-                    <defs>
-                      <linearGradient id="commandFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#34d399" stopOpacity={0.25} />
-                        <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid stroke="#262626" strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="date" tick={{ fill: "#737373", fontSize: 11 }} />
-                    <YAxis
-                      tickFormatter={(value) => formatCurrency(Number(value), 0)}
-                      tick={{ fill: "#737373", fontSize: 11 }}
-                      width={84}
-                    />
-                    <Tooltip content={ChartTooltip} />
-                    <Area
-                      type="monotone"
-                      dataKey="value"
-                      stroke="#34d399"
-                      fill="url(#commandFill)"
-                      strokeWidth={2}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-              <p className="mt-2 text-xs text-neutral-500">
-                Trend delta:{" "}
-                <span className={derived.trajectoryDelta >= 0 ? "text-emerald-300" : "text-rose-300"}>
-                  {formatCurrency(Math.abs(derived.trajectoryDelta))}
-                </span>
-                {derived.trajectoryDelta >= 0 ? " gain" : " loss"} over this window.
-              </p>
-            </article>
+            <CommandCenterTrajectoryChart
+              trajectory={trajectory}
+              trajectoryDelta={derived.trajectoryDelta}
+            />
           </section>
 
           <section className="grid lg:grid-cols-2 gap-4 mb-6">
@@ -666,11 +601,11 @@ export default function CommandCenterPage() {
               return (
                 <article
                   key={alert.title}
-                  className={`rounded-xl border ${style.border} bg-neutral-900 p-5`}
+                  className={`rounded-xl border ${style.border} bg-white dark:bg-slate-900 p-5`}
                 >
                   <div className="flex items-center gap-2">
-                    <Icon className="w-4 h-4 text-emerald-300" />
-                    <p className="text-sm text-white">{alert.title}</p>
+                    <Icon className="w-4 h-4 text-emerald-500 dark:text-emerald-300" />
+                    <p className="text-sm text-slate-900 dark:text-white">{alert.title}</p>
                   </div>
                   <p className={`mt-2 text-2xl ${style.value}`}>{alert.value}</p>
                   <p className={`mt-2 text-xs ${style.value}`}>{alert.note}</p>
@@ -682,10 +617,10 @@ export default function CommandCenterPage() {
             })}
           </section>
 
-          <section className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+          <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg text-white font-medium">Execution queue</h2>
-              <Sparkles className="w-4 h-4 text-emerald-300" />
+              <h2 className="text-lg text-slate-900 dark:text-white font-medium">Execution queue</h2>
+              <Sparkles className="w-4 h-4 text-emerald-500 dark:text-emerald-300" />
             </div>
             <div className="mt-4 grid md:grid-cols-2 gap-3">
               {actions.map((action) => {
@@ -694,16 +629,16 @@ export default function CommandCenterPage() {
                   <Link
                     key={action.href}
                     href={action.href}
-                    className={`rounded-lg border ${tone.border} p-4 bg-neutral-950 hover:bg-neutral-900/80`}
+                    className={`rounded-lg border ${tone.border} p-4 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900/80`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm text-white">{action.title}</p>
-                        <p className="text-xs text-neutral-400 mt-2">{action.description}</p>
+                        <p className="text-sm text-slate-900 dark:text-white">{action.title}</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">{action.description}</p>
                       </div>
                       <span className={`text-xs rounded-full border px-2 py-1 ${tone.badge}`}>{action.tone}</span>
                     </div>
-                    <p className="mt-3 text-xs text-neutral-400 inline-flex items-center gap-1">
+                    <p className="mt-3 text-xs text-slate-600 dark:text-slate-400 inline-flex items-center gap-1">
                       <ArrowRight className="w-3 h-3" />
                       Open workflow
                     </p>
@@ -713,29 +648,29 @@ export default function CommandCenterPage() {
             </div>
 
             <div className="mt-6 grid md:grid-cols-2 gap-3">
-              <div className="rounded-lg border border-neutral-800 bg-neutral-950 p-4">
+              <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-4">
                 <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-emerald-300" />
-                  <p className="text-sm text-white">Connected sources</p>
+                  <Target className="w-4 h-4 text-emerald-500 dark:text-emerald-300" />
+                  <p className="text-sm text-slate-900 dark:text-white">Connected sources</p>
                 </div>
-                <p className="text-xs text-neutral-400 mt-2">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
                   {derived.investmentAccounts} investment account(s), {derived.cashAccounts} cash account(s),{" "}
                   {derived.debtAccounts} debt account(s), {derived.bankCount} bank source(s).
                 </p>
               </div>
-              <div className="rounded-lg border border-neutral-800 bg-neutral-950 p-4">
+              <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-4">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                  <p className="text-sm text-white">Financial memory</p>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-300" />
+                  <p className="text-sm text-slate-900 dark:text-white">Financial memory</p>
                 </div>
-                <p className="text-xs text-neutral-400 mt-2">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
                   {derived.profileCompleteness}/6 fields complete. Tracked spend snapshot: {formatCurrency(derived.trackedSpend)}.
                 </p>
               </div>
             </div>
           </section>
 
-          <section className="mt-4 rounded-xl border border-neutral-800 bg-neutral-900 p-4 flex items-center justify-between gap-3 text-sm text-neutral-300">
+          <section className="mt-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 flex items-center justify-between gap-3 text-sm text-slate-700 dark:text-slate-300">
             <p>
               Missing a signal? Open coverage and strengthen the underlying data for better recommendations.
             </p>

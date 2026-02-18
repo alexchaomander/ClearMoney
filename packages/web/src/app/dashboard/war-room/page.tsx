@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ShieldAlert, 
@@ -27,7 +28,8 @@ import {
   useDecisionTraces
 } from "@/lib/strata/hooks";
 import { METRIC_METHODOLOGY } from "@/lib/strata/metrics-methodology";
-import { toast } from "@/components/shared/toast";
+import { useToast } from "@/components/shared/toast";
+import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
 import type { ActionIntentStatus } from "@clearmoney/strata-sdk";
 
 // Helper to map backend status to frontend display status
@@ -49,6 +51,8 @@ export default function WarRoomPage() {
   const [isTraceOpen, setIsTraceOpen] = useState(false);
   const [executingIntentId, setExecutingIntentId] = useState<string | null>(null);
   const [isBiometricOpen, setIsBiometricOpen] = useState(false);
+
+  const { pushToast } = useToast();
 
   // Data fetching
   const { data: intents, isLoading, refetch } = useActionIntents();
@@ -77,7 +81,7 @@ export default function WarRoomPage() {
       setSelectedTraceId(traceId);
       setIsTraceOpen(true);
     } else {
-      toast.error("No logic trace associated with this intent.");
+      pushToast({ title: "No logic trace associated with this intent.", variant: "error" });
     }
   };
 
@@ -94,12 +98,12 @@ export default function WarRoomPage() {
         id: executingIntentId,
         data: { status: "executed" as any }
       });
-      toast.success("Maneuver authorized and processing.");
+      pushToast({ title: "Maneuver authorized and processing.", variant: "success" });
       setIsBiometricOpen(false);
       setExecutingIntentId(null);
       refetch();
     } catch (err) {
-      toast.error("Failed to authorize maneuver.");
+      pushToast({ title: "Failed to authorize maneuver.", variant: "error" });
     }
   };
 
@@ -120,11 +124,11 @@ export default function WarRoomPage() {
     if (realTrace) {
       return {
         metricId: realTrace.id,
-        label: realTrace.title,
-        description: realTrace.summary,
-        formula: (realTrace.details as any)?.formula || "Custom AI Logic",
-        dataPoints: (realTrace.details as any)?.inputs || [],
-        confidenceScore: realTrace.confidence_score
+        label: realTrace.trace_type,
+        description: realTrace.source,
+        formula: (realTrace.outputs as any)?.formula || "Custom AI Logic",
+        dataPoints: Object.entries(realTrace.input_data).map(([k, v]) => ({ label: k, value: String(v) })),
+        confidenceScore: 0
       };
     }
     
@@ -143,6 +147,7 @@ export default function WarRoomPage() {
       <DashboardHeader />
 
       <main className="relative z-10 max-w-6xl mx-auto px-6 lg:px-8 py-12">
+        <Breadcrumbs items={[{ label: "Dashboard", href: "/dashboard" }, { label: "War Room" }]} />
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div>
@@ -175,7 +180,7 @@ export default function WarRoomPage() {
         >
           {/* Controls */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-            <div className="flex items-center gap-2 bg-white dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div role="tablist" aria-label="Filter intents" className="flex items-center gap-2 bg-white dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
               {[
                 { id: "all" as const, label: "All Intents" },
                 { id: "ready" as ActionStatus, label: "Ready" },
@@ -184,11 +189,13 @@ export default function WarRoomPage() {
               ].map((t) => (
                 <button
                   key={t.id}
+                  role="tab"
+                  aria-selected={filter === t.id}
                   onClick={() => setFilter(t.id)}
                   className={cn(
                     "px-4 py-2 text-xs font-bold rounded-lg transition-all",
-                    filter === t.id 
-                      ? "bg-slate-900 dark:bg-slate-800 text-white shadow-sm" 
+                    filter === t.id
+                      ? "bg-slate-900 dark:bg-slate-800 text-white shadow-sm"
                       : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-300"
                   )}
                 >
@@ -242,7 +249,7 @@ export default function WarRoomPage() {
                     status={getStatusLabel(intent.status)}
                     type={intent.intent_type}
                     impact={Object.values(intent.impact_summary)[0]?.toString()}
-                    onReview={() => handleReview(intent.decision_trace_id)}
+                    onReview={() => handleReview(intent.decision_trace_id ?? undefined)}
                     onExecute={() => handleExecuteRequest(intent.id)}
                     onDownload={() => handleDownload(intent.id)}
                   />
@@ -270,7 +277,7 @@ export default function WarRoomPage() {
         title="Authorize Maneuver"
         amount={
           executingIntentId 
-            ? intents?.find(i => i.id === executingIntentId)?.payload?.amount?.toLocaleString("en-US", { style: 'currency', currency: 'USD' })
+            ? Number(intents?.find(i => i.id === executingIntentId)?.payload?.amount ?? 0).toLocaleString("en-US", { style: 'currency', currency: 'USD' })
             : undefined
         }
       />
