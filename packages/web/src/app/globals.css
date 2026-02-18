@@ -52,7 +52,7 @@
   --color-error-500: #ef4444;
   --color-error-600: #dc2626;
 
-  /* Neutral - Dark mode focused */
+  /* Neutral - Dark mode focused (Sovereign Slate) */
   --color-neutral-50: #fafafa;
   --color-neutral-100: #f4f4f5;
   --color-neutral-200: #e4e4e7;
@@ -64,7 +64,7 @@
   --color-neutral-800: #27272a;
   --color-neutral-850: #1f1f23;
   --color-neutral-900: #18181b;
-  --color-neutral-950: #09090b;
+  --color-neutral-950: #020617;
 
   /* Font */
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
@@ -79,13 +79,13 @@ html {
 
 /* Dark mode (default) */
 html.dark body {
-  @apply bg-neutral-950 text-neutral-100 antialiased;
+  @apply bg-slate-950 text-slate-100 antialiased;
   font-family: var(--font-sans);
 }
 
 /* Light mode */
 html.light body {
-  @apply bg-white text-neutral-900 antialiased;
+  @apply bg-[#fafafa] text-slate-900 antialiased;
   font-family: var(--font-sans);
 }
 
@@ -100,19 +100,20 @@ body {
   font-family: var(--font-display);
 }
 
-/* Subtle grid background for containers */
+/* Subtle grid background */
 .bg-grid {
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 32px 32px;
+    linear-gradient(currentColor 1px, transparent 1px),
+    linear-gradient(90deg, currentColor 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
-.bg-grid-light {
-  background-image:
-    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
-  background-size: 32px 32px;
+html.dark .bg-grid {
+  color: rgba(255, 255, 255, 0.03);
+}
+
+html.light .bg-grid {
+  color: rgba(0, 0, 0, 0.03);
 }
 
 /* Subtle noise texture overlay */
