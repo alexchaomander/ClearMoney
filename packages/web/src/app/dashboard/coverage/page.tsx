@@ -29,6 +29,7 @@ import {
   useSyncAllConnections,
 } from "@/lib/strata/hooks";
 import { formatCurrency, formatPercent } from "@/lib/shared/formatters";
+import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
 import { FALLBACK_SPENDING_SUMMARY, getPreviewPortfolioSummary } from "../_shared/preview-data";
 
 type CoverageStatus = "critical" | "warning" | "good";
@@ -46,22 +47,22 @@ interface CoverageItem {
 function statusStyles(status: CoverageStatus): { icon: string; bar: string; text: string } {
   if (status === "good") {
     return {
-      icon: "text-emerald-300",
+      icon: "text-emerald-600 dark:text-emerald-300",
       bar: "bg-emerald-500",
-      text: "text-emerald-100",
+      text: "text-emerald-700 dark:text-emerald-300",
     };
   }
   if (status === "warning") {
     return {
-      icon: "text-amber-300",
+      icon: "text-amber-600 dark:text-amber-300",
       bar: "bg-amber-500",
-      text: "text-amber-100",
+      text: "text-amber-700 dark:text-amber-300",
     };
   }
   return {
-    icon: "text-rose-300",
+    icon: "text-rose-600 dark:text-rose-300",
     bar: "bg-rose-500",
-    text: "text-rose-100",
+    text: "text-rose-700 dark:text-rose-300",
   };
 }
 
@@ -389,7 +390,7 @@ export default function CoveragePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-neutral-950">
+      <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
         <DashboardHeader
           showRefresh={hasSyncConsent}
           isRefreshing={syncAllConnections.isPending}
@@ -405,7 +406,7 @@ export default function CoveragePage() {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-neutral-950">
+      <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
         <DashboardHeader
           showRefresh={hasSyncConsent}
           isRefreshing={syncAllConnections.isPending}
@@ -424,9 +425,9 @@ export default function CoveragePage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
       <div
-        className="fixed inset-0 opacity-30 pointer-events-none"
+        className="fixed inset-0 opacity-0 dark:opacity-30 pointer-events-none"
         style={{
           background:
             "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 60%)",
@@ -440,20 +441,21 @@ export default function CoveragePage() {
       />
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-8">
+        <Breadcrumbs items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Coverage" }]} />
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="mb-6"
         >
-          <p className="text-sm uppercase tracking-[0.25em] text-emerald-400">Coverage</p>
-          <h1 className="mt-2 font-serif text-3xl text-white">Data Coverage Hub</h1>
-          <p className="mt-2 text-neutral-400 max-w-3xl">
+          <p className="text-sm uppercase tracking-[0.25em] text-emerald-600 dark:text-emerald-400">Coverage</p>
+          <h1 className="mt-2 font-serif text-3xl text-slate-900 dark:text-white">Data Coverage Hub</h1>
+          <p className="mt-2 text-slate-600 dark:text-slate-400 max-w-3xl">
             See where your financial signal is strong, where it is thin, and exactly what to connect
             next to unlock higher-confidence recommendations.
           </p>
           {usingDemoData ? (
-            <p className="mt-2 text-xs text-amber-300 inline-flex items-center gap-2">
+            <p className="mt-2 text-xs text-amber-600 dark:text-amber-300 inline-flex items-center gap-2">
               <RefreshCw className="w-3 h-3" />
               Synthetic coverage data is active until live account, spend, and profile sources are connected.
             </p>
@@ -473,18 +475,18 @@ export default function CoveragePage() {
           purpose="Load your connected financial profile and transaction coverage for a complete analysis"
         >
           <section className="grid lg:grid-cols-3 gap-6 mb-8">
-            <article className="lg:col-span-1 rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+            <article className="lg:col-span-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-neutral-400">Coverage score</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Coverage score</p>
                 <span className={`rounded-full px-3 py-1 text-xs ${overallStatusStyles.text} ${overallStatusStyles.bar} bg-opacity-25`}>
                   {overallStatus}
                 </span>
               </div>
-              <p className="mt-4 text-4xl font-semibold text-white">{overallScore}%</p>
-              <p className="mt-2 text-sm text-neutral-400">
+              <p className="mt-4 text-4xl font-semibold text-slate-900 dark:text-white">{overallScore}%</p>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
                 Your confidence layer across all advisor-grade inputs.
               </p>
-              <div className="mt-4 h-2 rounded-full bg-neutral-800 overflow-hidden">
+              <div className="mt-4 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                 <div
                   className={`h-full ${overallStatusStyles.bar}`}
                   style={{ width: `${overallScore}%` }}
@@ -492,9 +494,9 @@ export default function CoveragePage() {
               </div>
             </article>
 
-            <article className="lg:col-span-2 rounded-xl border border-neutral-800 bg-neutral-900 p-6">
-              <h2 className="text-lg text-white font-medium mb-3 flex items-center gap-2">
-                <Signal className="w-4 h-4 text-emerald-300" />
+            <article className="lg:col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6">
+              <h2 className="text-lg text-slate-900 dark:text-white font-medium mb-3 flex items-center gap-2">
+                <Signal className="w-4 h-4 text-emerald-500 dark:text-emerald-300" />
                 Top blockers to better recommendations
               </h2>
               <ul className="space-y-3">
@@ -505,15 +507,15 @@ export default function CoveragePage() {
                     return (
                       <li
                         key={item.key}
-                        className={`rounded-lg border border-neutral-800 bg-neutral-950 p-3 flex items-center justify-between gap-4 ${st.text}`}
+                        className={`rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-3 flex items-center justify-between gap-4 ${st.text}`}
                       >
                         <div>
                           <p className="font-medium text-sm">{item.name}</p>
-                          <p className="text-xs text-neutral-400 mt-1">{item.detail}</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{item.detail}</p>
                         </div>
                         <Link
                           href={item.actionHref}
-                          className={`text-xs rounded-full px-3 py-1 ${st.text} ${st.bar} ${st.bar === "bg-emerald-500" ? "bg-emerald-900/30" : st.bar === "bg-amber-500" ? "bg-amber-900/30" : "bg-rose-900/30"}`}
+                          className={`text-xs rounded-full px-3 py-1 ${st.text} ${st.bar} ${st.bar === "bg-emerald-500" ? "bg-emerald-100 dark:bg-emerald-900/30" : st.bar === "bg-amber-500" ? "bg-amber-100 dark:bg-amber-900/30" : "bg-rose-100 dark:bg-rose-900/30"}`}
                         >
                           {item.actionLabel}
                         </Link>
@@ -522,7 +524,7 @@ export default function CoveragePage() {
                   })}
               </ul>
               {checks.every((item) => item.status === "good") && (
-                <p className="text-sm text-emerald-300 flex items-center gap-2 mt-2">
+                <p className="text-sm text-emerald-600 dark:text-emerald-300 flex items-center gap-2 mt-2">
                   <CheckCircle className="w-4 h-4" />
                   All key data dimensions are live.
                 </p>
@@ -536,12 +538,12 @@ export default function CoveragePage() {
               return (
                 <article
                   key={item.key}
-                  className={`rounded-xl border border-neutral-800 bg-neutral-900 p-5 ${item.status === "good" ? "" : ""}`}
+                  className={`rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 ${item.status === "good" ? "" : ""}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className={`text-sm font-semibold ${st.text}`}>{item.name}</h3>
-                      <p className="text-xs text-neutral-400 mt-1">{item.detail}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{item.detail}</p>
                     </div>
                     <span
                       className={`rounded-full text-xs px-2 py-1 ${st.text} ${st.bar} bg-opacity-20`}
@@ -550,7 +552,7 @@ export default function CoveragePage() {
                     </span>
                   </div>
 
-                  <div className="mt-4 h-2 rounded-full bg-neutral-800 overflow-hidden">
+                  <div className="mt-4 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                     <div
                       className={`h-full ${st.bar}`}
                       style={{
@@ -561,14 +563,14 @@ export default function CoveragePage() {
 
                   <div className="mt-4 flex gap-2">
                     <button
-                      className="text-xs rounded-lg border border-neutral-700 px-3 py-2 text-neutral-200 hover:bg-neutral-800 transition-colors"
+                      className="text-xs rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                       type="button"
                     >
                       Learn more
                     </button>
                     <Link
                       href={item.actionHref}
-                      className="text-xs rounded-lg border border-emerald-800 bg-emerald-900/30 px-3 py-2 text-emerald-200 hover:bg-emerald-900/50 transition-colors"
+                      className="text-xs rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-2 text-emerald-700 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
                     >
                       {item.actionLabel}
                     </Link>
@@ -578,50 +580,50 @@ export default function CoveragePage() {
             })}
           </section>
 
-          <section className="mt-8 rounded-xl border border-neutral-800 bg-neutral-900 p-6">
-            <h2 className="text-lg text-white mb-4 font-medium">Recommended buildout path</h2>
+          <section className="mt-8 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6">
+            <h2 className="text-lg text-slate-900 dark:text-white mb-4 font-medium">Recommended buildout path</h2>
             <div className="grid md:grid-cols-3 gap-4">
               <Link
                 href="/dashboard/command-center"
-                className="rounded-xl border border-neutral-800 p-4 bg-neutral-950 hover:border-emerald-700 transition-colors"
+                className="rounded-xl border border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-950 hover:border-emerald-400 dark:hover:border-emerald-700 transition-colors"
               >
-                <Compass className="w-5 h-5 text-emerald-400 mb-2" />
-                <p className="text-white text-sm">Open command center</p>
-                <p className="text-xs text-neutral-400 mt-1">
+                <Compass className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mb-2" />
+                <p className="text-slate-900 dark:text-white text-sm">Open command center</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                   Get an execution summary and action-ready readiness recommendations.
                 </p>
               </Link>
               <Link
                 href="/connect"
-                className="rounded-xl border border-neutral-800 p-4 bg-neutral-950 hover:border-emerald-700 transition-colors"
+                className="rounded-xl border border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-950 hover:border-emerald-400 dark:hover:border-emerald-700 transition-colors"
               >
-                <Database className="w-5 h-5 text-emerald-400 mb-2" />
-                <p className="text-white text-sm">Add another connected bank</p>
-                <p className="text-xs text-neutral-400 mt-1">Expands transaction and category coverage.</p>
+                <Database className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mb-2" />
+                <p className="text-slate-900 dark:text-white text-sm">Add another connected bank</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Expands transaction and category coverage.</p>
               </Link>
               <Link
                 href="/dashboard/scenario-lab"
-                className="rounded-xl border border-neutral-800 p-4 bg-neutral-950 hover:border-emerald-700 transition-colors"
+                className="rounded-xl border border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-950 hover:border-emerald-400 dark:hover:border-emerald-700 transition-colors"
               >
-                <RefreshCw className="w-5 h-5 text-emerald-400 mb-2" />
-                <p className="text-white text-sm">Run scenario simulations</p>
-                <p className="text-xs text-neutral-400 mt-1">Stress-test runway and debt under future assumptions.</p>
+                <RefreshCw className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mb-2" />
+                <p className="text-slate-900 dark:text-white text-sm">Run scenario simulations</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Stress-test runway and debt under future assumptions.</p>
               </Link>
               <Link
                 href="/profile"
-                className="rounded-xl border border-neutral-800 p-4 bg-neutral-950 hover:border-emerald-700 transition-colors"
+                className="rounded-xl border border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-950 hover:border-emerald-400 dark:hover:border-emerald-700 transition-colors"
               >
-                <ShieldCheck className="w-5 h-5 text-emerald-400 mb-2" />
-                <p className="text-white text-sm">Complete profile fields</p>
-                <p className="text-xs text-neutral-400 mt-1">Increases advisor signal reliability.</p>
+                <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mb-2" />
+                <p className="text-slate-900 dark:text-white text-sm">Complete profile fields</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Increases advisor signal reliability.</p>
               </Link>
               <Link
                 href="/dashboard/decision-narrative"
-                className="rounded-xl border border-neutral-800 p-4 bg-neutral-950 hover:border-emerald-700 transition-colors"
+                className="rounded-xl border border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-950 hover:border-emerald-400 dark:hover:border-emerald-700 transition-colors"
               >
-                <RefreshCw className="w-5 h-5 text-emerald-400 mb-2" />
-                <p className="text-white text-sm">Review recent traces</p>
-                <p className="text-xs text-neutral-400 mt-1">Validate what your current recommendations are seeing.</p>
+                <RefreshCw className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mb-2" />
+                <p className="text-slate-900 dark:text-white text-sm">Review recent traces</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Validate what your current recommendations are seeing.</p>
               </Link>
             </div>
           </section>

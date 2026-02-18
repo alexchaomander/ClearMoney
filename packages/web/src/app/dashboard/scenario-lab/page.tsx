@@ -3,10 +3,16 @@
 import { motion } from "framer-motion";
 import { FlaskConical, ArrowLeft, Target, TrendingUp, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { RetirementMonteCarloChart } from "@/components/dashboard/RetirementMonteCarloChart";
 import { AssumptionControl } from "@/components/dashboard/AssumptionControl";
+
+const RetirementMonteCarloChart = dynamic(
+  () => import("@/components/dashboard/RetirementMonteCarloChart").then(m => m.RetirementMonteCarloChart),
+  { ssr: false, loading: () => <div className="h-72 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" /> }
+);
 import { ConsentGate } from "@/components/shared/ConsentGate";
+import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
 import { ScenarioLab } from "@/components/dashboard/ScenarioLab";
 import { usePortfolioSummary, useRunwayMetrics } from "@/lib/strata/hooks";
 
@@ -15,14 +21,14 @@ export default function ScenarioLabPage() {
   const { data: runwayMetrics } = useRunwayMetrics();
 
   // Fallbacks for demo
-  const baseMonthlyBurn = runwayMetrics?.personal.monthly_spend ?? 12000;
+  const baseMonthlyBurn = runwayMetrics?.personal.monthly_burn ?? 12000;
   const baseTotalLiquid = (portfolio?.total_cash_value ?? 0) + (portfolio?.total_investment_value ?? 0) || 150000;
-  const baseRevenue = runwayMetrics?.entity.monthly_revenue ?? 0;
+  const baseRevenue = 0;
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950">
       <div
-        className="fixed inset-0 opacity-30 pointer-events-none"
+        className="fixed inset-0 opacity-0 dark:opacity-30 pointer-events-none"
         style={{
           background:
             "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 60%)",
@@ -32,14 +38,8 @@ export default function ScenarioLabPage() {
       <DashboardHeader />
 
       <main className="relative z-10 max-w-5xl mx-auto px-6 lg:px-8 py-8">
+        <Breadcrumbs items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Scenario Lab" }]} />
         <div className="mb-8">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300 transition-colors mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
-          </Link>
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-2xl bg-emerald-900/30 text-emerald-400">
               <FlaskConical className="w-6 h-6" />

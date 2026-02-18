@@ -21,7 +21,12 @@ import { AccountsList } from "@/components/dashboard/AccountsList";
 import { AllocationChart } from "@/components/dashboard/AllocationChart";
 import { HoldingsTable } from "@/components/dashboard/HoldingsTable";
 import { ConcentrationAlert } from "@/components/dashboard/ConcentrationAlert";
-import { PortfolioHistoryChart } from "@/components/dashboard/PortfolioHistoryChart";
+import dynamic from "next/dynamic";
+
+const PortfolioHistoryChart = dynamic(
+  () => import("@/components/dashboard/PortfolioHistoryChart").then(m => m.PortfolioHistoryChart),
+  { ssr: false, loading: () => <div className="h-72 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" /> }
+);
 import { CashDebtSection } from "@/components/dashboard/CashDebtSection";
 import { AddAccountModal } from "@/components/dashboard/AddAccountModal";
 import { DecisionTracePanel } from "@/components/dashboard/DecisionTracePanel";
@@ -298,7 +303,7 @@ export default function DashboardPage() {
         <DataSourceStatusStrip items={sourceItems} usingDemoData={usingDemoData} />
         <AssumptionControl />
         {usingDemoData ? (
-          <p className="mb-4 text-xs text-amber-300 inline-flex items-center gap-2">
+          <p className="mb-4 text-xs text-amber-600 dark:text-amber-300 inline-flex items-center gap-2">
             <RefreshCw className="w-3 h-3" />
             Running synthetic preview data until live Strata connections are available.
           </p>
@@ -312,14 +317,14 @@ export default function DashboardPage() {
           className="flex items-center justify-between mb-8"
         >
           <div>
-            <h1 className="font-serif text-3xl text-white mb-1">
+            <h1 className="font-serif text-3xl text-slate-900 dark:text-white mb-1">
               Portfolio Dashboard
             </h1>
-            <p className="text-neutral-400">
+            <p className="text-slate-600 dark:text-slate-400">
               Your complete investment overview
             </p>
             {lastSyncedAt && (
-              <p className="text-xs text-neutral-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Last synced: {lastSyncedAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
               </p>
             )}
@@ -339,19 +344,19 @@ export default function DashboardPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2 w-52 rounded-xl bg-neutral-900 border border-neutral-800 shadow-xl overflow-hidden z-20"
+                  className="absolute right-0 mt-2 w-52 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden z-20"
                 >
                   <Link
                     href="/connect"
                     onClick={() => setShowAddDropdown(false)}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 transition-colors"
+                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     <Link2 className="w-4 h-4 text-emerald-400" />
                     Link Brokerage
                   </Link>
                   <button
                     onClick={() => { setShowAddDropdown(false); setShowAddModal(true); }}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 transition-colors"
+                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     <PenLine className="w-4 h-4 text-emerald-400" />
                     Add Manually
@@ -371,7 +376,7 @@ export default function DashboardPage() {
                 scopes={["portfolio:read", "accounts:read", "connections:read"]}
                 purpose="Load your accounts, balances, and holdings for the dashboard."
               >
-                <div className="text-sm text-neutral-400">
+                <div className="text-sm text-slate-600 dark:text-slate-400">
                   Authorize access to see your portfolio.
                 </div>
               </ConsentGate>
@@ -423,9 +428,9 @@ export default function DashboardPage() {
               onDeleteDebtAccount={(id) => debtMutations.remove.mutate(id)}
             />
 
-            <div className="p-6 rounded-xl bg-neutral-900 border border-neutral-800">
+            <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-serif text-xl text-neutral-100">
+                <h3 className="font-serif text-xl text-slate-800 dark:text-slate-100">
                   Linked Accounts
                 </h3>
                 <Link
@@ -454,9 +459,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
       <div
-        className="fixed inset-0 opacity-30 pointer-events-none"
+        className="fixed inset-0 opacity-0 dark:opacity-30 pointer-events-none"
         style={{
           background:
             "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 60%)",
@@ -490,11 +495,11 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-sm uppercase tracking-[0.25em] text-emerald-400">Intelligence Hub</p>
-                <h2 className="font-serif text-2xl text-white mt-2">
+                <h2 className="font-serif text-2xl text-slate-900 dark:text-white mt-2">
                   Founder-first execution layers built on your data surface
                 </h2>
               </div>
-              <div className="hidden sm:flex items-center gap-2 text-xs text-neutral-500">
+              <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">
                 <Sparkles className="w-4 h-4 text-emerald-400" />
                 Decision-ready context
               </div>
@@ -505,13 +510,13 @@ export default function DashboardPage() {
                 <Link
                   key={card.href}
                   href={card.href}
-                  className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 hover:border-emerald-700 transition-colors"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 hover:border-emerald-700 transition-colors"
                 >
-                  <div className="inline-flex rounded-lg border border-neutral-700 p-2 text-emerald-300">
+                  <div className="inline-flex rounded-lg border border-slate-300 dark:border-slate-700 p-2 text-emerald-300">
                     <card.icon className="w-4 h-4" />
                   </div>
-                  <h3 className="mt-3 text-sm text-white font-medium">{card.label}</h3>
-                  <p className="mt-2 text-xs text-neutral-400 leading-relaxed">{card.description}</p>
+                  <h3 className="mt-3 text-sm text-slate-900 dark:text-white font-medium">{card.label}</h3>
+                  <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{card.description}</p>
                 </Link>
               ))}
             </div>

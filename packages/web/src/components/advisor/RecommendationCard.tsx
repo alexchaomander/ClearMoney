@@ -45,10 +45,10 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
 
   return (
     <div
-      className={`rounded-xl border transition-all ${
+      className={`rounded-2xl border transition-all ${
         isExecuted
           ? "bg-emerald-900/10 border-emerald-800/40"
-          : "bg-neutral-900 border-neutral-800"
+          : "bg-slate-900 border-slate-800"
       }`}
     >
       <div className="p-4">
@@ -58,18 +58,18 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
           </div>
           <div className="flex-1">
             <div className="flex items-start justify-between">
-              <h3 className="text-sm font-medium text-neutral-100">
+              <h3 className="text-sm font-medium text-slate-100">
                 {recommendation.title}
               </h3>
               <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded border ${
                 isExecuted 
                   ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" 
-                  : "bg-neutral-800 text-neutral-500 border-neutral-700"
+                  : "bg-slate-800 text-slate-500 border-slate-700"
               }`}>
                 {isExecuted ? "Executed" : status}
               </span>
             </div>
-            <p className="text-xs text-neutral-400 mt-1">
+            <p className="text-xs text-slate-400 mt-1">
               {recommendation.summary}
             </p>
           </div>
@@ -78,7 +78,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
         <div className="mt-4 flex items-center justify-between gap-4">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+            className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
           >
             {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
             {isExpanded ? "Hide Details" : "Show Details"}
@@ -114,15 +114,15 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-t border-neutral-800/60"
+            className="overflow-hidden border-t border-slate-800/60"
           >
             <div className="p-4 space-y-4 text-xs">
               {details?.rationale && (
                 <div>
-                  <p className="text-neutral-500 uppercase tracking-widest text-[10px] mb-2 font-bold">Rationale</p>
+                  <p className="text-slate-500 uppercase tracking-widest text-[10px] mb-2 font-bold">Rationale</p>
                   <ul className="space-y-1.5">
                     {details.rationale.map((step: string, i: number) => (
-                      <li key={i} className="flex gap-2 text-neutral-300">
+                      <li key={i} className="flex gap-2 text-slate-300">
                         <span className="text-emerald-500 shrink-0">•</span>
                         {step}
                       </li>
@@ -135,9 +135,9 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
                 <div className="rounded-lg bg-white/5 border border-white/10 p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <Info className="w-3 h-3 text-sky-400" />
-                    <span className="font-medium text-neutral-200 uppercase tracking-wider text-[10px]">Action Payload</span>
+                    <span className="font-medium text-slate-200 uppercase tracking-wider text-[10px]">Action Payload</span>
                   </div>
-                  <pre className="bg-black/40 p-2 rounded text-[10px] text-neutral-400 overflow-x-auto">
+                  <pre className="bg-black/40 p-2 rounded text-[10px] text-slate-400 overflow-x-auto">
                     {JSON.stringify(action, null, 2)}
                   </pre>
                 </div>

@@ -1,794 +1,438 @@
-# Project Roadmap: The Anti-Points Guy
+# ClearMoney Roadmap
 
-## Vision Statement
-
-**Democratize financial literacy in the credit card and points space.**
-
-The points and miles industry has been captured by corporate interests. Sites like The Points Guy exist to serve credit card issuers, not consumers. They're paid to make cards look good, inflate point valuations, and bury the real math under 3,000 words of SEO filler.
-
-We're building something different: **a platform that serves people, not corporations.**
-
-We believe everyone deserves access to the same analytical tools and honest information that finance professionals use. No gatekeeping. No hidden agendas. No manipulation.
-
-**Our Promise:**
-- We will never recommend a card because it pays us well
-- We will always show our math so you can verify our claims
-- We will tell you when a card is bad, even if it's popular
-- We will respect your time and intelligence
-- We will remain independent from corporate influence
+*Last updated: February 2026*
 
 ---
 
-## Mission: Financial Literacy for Everyone
+## Vision
 
-### The Problem
+**Build the most transparent, actionable, and founder-aware financial operating system on the planet.**
 
-The average American makes credit card decisions based on:
-- Influencer recommendations (often paid)
-- Affiliate-driven "reviews" disguised as journalism
-- Word of mouth from friends who don't know the math
-- Marketing from the card issuers themselves
+ClearMoney is not another portfolio tracker. It is the institutional-grade financial intelligence layer that treats every number as auditable, every recommendation as traceable, and every action as executable -- with the user in full control.
 
-This information asymmetry costs regular people **thousands of dollars per year** in:
-- Annual fees for cards that don't fit their spending
-- Missed rewards from suboptimal card choices
-- Points devaluations they didn't see coming
-- Complexity designed to confuse, not inform
+We exist because the financial advisory industry has two failure modes:
+1. **Black-box AI advisors** (CFO Silvia, Wealthfront, Betterment) that give you answers without showing the math
+2. **Affiliate-driven content mills** (The Points Guy, NerdWallet, Bankrate) that optimize for ad revenue, not outcomes
 
-### Our Solution
-
-**Give people the tools to make their own informed decisions.**
-
-Not "trust us, this card is great." Instead: "Here's the math. Here are your numbers. Here's what makes sense for YOU."
-
-We don't want followers. We want people who understand their own finances.
+ClearMoney rejects both. We show our work, prove our independence, and move from "here's what you should do" to "here's the paperwork, ready to sign."
 
 ---
 
-## Why The Points Guy is the Problem
+## Competitive Positioning: ClearMoney vs. CFO Silvia
 
-### Who TPG Actually Serves
+CFO Silvia (Pompliano / ProCap Financial) is our closest competitor. They launched May 2025, hit 10,000+ users and $30B+ tracked assets, and are being acquired to become a publicly traded "agentic finance" company. They have distribution (Pompliano's audience), a free price point, and multi-channel access (chat, call, email).
 
-TPG was acquired by Red Ventures (now Bankrate) in 2012. Red Ventures is a **$4 billion marketing company** that makes money by driving credit card applications. TPG is not a media company—it's a lead generation machine disguised as journalism.
+**We win by being better where it matters most, not by copying what they do.**
 
-**Follow the money:**
-- TPG earns $200-$500+ per approved credit card application
-- Higher-fee cards typically pay higher commissions
-- TPG's "valuations" make expensive cards look better
-- Content is optimized for affiliate clicks, not reader value
+### Our Strategic Moats (Double Down)
 
-### TPG's Specific Failures
+| Moat | Why Silvia Can't Copy It Easily |
+|------|--------------------------------|
+| **Radical Transparency** | Their entire UX is a black-box chat. Retrofitting "show the math" traces into a conversational interface is an architecture rewrite. |
+| **Founder Operating Room** | They serve general consumers. Building founder-specific tooling (runway, commingling, tax shields, entity separation) requires deep domain expertise and different data models. |
+| **Action Execution (War Room)** | Silvia is read-only advisory. We draft ACATS paperwork, generate switch kits, and execute intents with biometric authorization. Going from "advice" to "execution" is a regulatory and engineering leap. |
+| **Trust Protocol** | Our affiliate payout transparency, independence audits, and methodology audit logs create verifiable trust. Silvia's free model raises unanswered questions about monetization. |
+| **Decision Traces** | Every ClearMoney recommendation writes a full logic tree (inputs, rules, assumptions, confidence). This is not a feature -- it's our data model. |
 
-| What They Do | Why It Hurts Consumers |
-|--------------|------------------------|
-| Inflate point valuations (2.0cpp for Chase UR) | Makes annual fees seem more justified than they are |
-| 3,000+ word articles for simple questions | Wastes your time; exists for SEO, not education |
-| "Best cards" lists dominated by affiliate cards | Excludes great cards that don't pay commissions |
-| Autoplay videos, pop-ups, ad clutter | Prioritizes ad revenue over user experience |
-| Hedge language ("it depends", "could be worth it") | Avoids taking stances that might reduce conversions |
-| Complex jargon without explanation | Gatekeeps knowledge to seem authoritative |
+### Where We Must Close the Gap
 
-### Our Counter-Position
-
-| TPG Approach | Our Approach |
-|--------------|--------------|
-| Serve the advertisers | **Serve the reader** |
-| Maximize affiliate revenue | **Maximize reader outcomes** |
-| Inflate valuations | **Use conservative, defensible math** |
-| Hide methodology | **Open-source our calculations** |
-| Content bloat | **Respect people's time** |
-| Avoid controversy | **Take clear, honest positions** |
+| Silvia Advantage | Our Response | Priority |
+|-----------------|-------------|----------|
+| **Phone/SMS/Email access** | Build multi-channel AI (SMS via Twilio, voice via Vapi/Bland, email ingestion) | P0 |
+| **Physical asset tracking** | Add real estate (Zillow API), vehicles (KBB/Edmunds), collectibles with depreciation/appreciation | P0 |
+| **Completely free** | Free core tier with premium for execution, advanced modeling, and founder tools | P1 |
+| **10,000+ users / $30B AUM** | Leverage founder niche, transparency story, and content engine for organic growth | P1 |
+| **Native mobile apps** | Progressive Web App first, then React Native apps | P2 |
+| **Push notifications / market alerts** | Real-time alert system via web push, SMS, and email | P1 |
+| **Tax return upload** | PDF/image ingestion with AI extraction for tax optimization | P1 |
+| **Web research in scenarios** | Agentic web search integrated into scenario analysis and advisor chat | P1 |
 
 ---
 
-## Brand Identity
+## Strategic Pillars
 
-### Name Candidates
-- **PointsLab** - Tools/calculators focus, scientific credibility
-- **CardMath** - Analytical, no-BS positioning, educational
-- **HonestPoints** - Trust-first, anti-corporate messaging
-- **Point Blank** - Direct, honest opinions, no hedging
-- **The Real Points Guy** - Cheeky, confrontational (legal risk?)
-- **Points for People** - Populist, accessibility-focused
+### Pillar 1: Radical Transparency (Existing Moat -- Deepen)
 
-### Brand Pillars
+Every number on ClearMoney is auditable. This is not a feature; it is the product.
 
-1. **Financial Empowerment** - We exist to help you make better decisions, not to make money off your confusion
-2. **Radical Transparency** - We show our math, disclose our revenue, and explain our methodology
-3. **Intellectual Honesty** - We take real stances and admit when we're wrong
-4. **Respect** - We don't waste your time with filler content or manipulative design
-5. **Independence** - We are not beholden to card issuers or affiliate networks
+- **Metric Traces**: Hover any number to see raw inputs, formula, confidence score, data freshness
+- **Decision Narratives**: Full logic trees for every AI recommendation
+- **Affiliate Payout Disclosure**: Show what we earn and prove our rankings are independent
+- **Methodology Audit Log**: Public changelog of every calculation change
+- **Independence Reports**: Quarterly proof that recommendations != highest payout
 
-### Brand Voice
+### Pillar 2: Multi-Surface Intelligence (Close the Gap)
 
-**We sound like:**
-- A smart friend who happens to know a lot about credit cards
-- Someone who respects your intelligence
-- A teacher who wants you to understand, not just follow advice
-- An advocate who's on your side against corporate complexity
+Meet users where they are, not just in a dashboard.
 
-**We don't sound like:**
-- A salesperson trying to close a deal
-- A corporate blog optimized for SEO
-- An elitist gatekeeping "insider knowledge"
-- A hedge-everything-to-avoid-liability lawyer
+- **SMS/Text**: "What's my net worth?" via text message
+- **Voice**: Call your ClearMoney advisor for complex questions
+- **Email**: Forward financial documents, ask questions, get analysis
+- **Web Dashboard**: Full institutional-grade experience
+- **Mobile (PWA -> Native)**: On-the-go access to alerts and key metrics
 
-**Example Voice:**
+### Pillar 3: Founder-First Financial OS (Niche Dominance)
 
-❌ TPG style: "The Chase Sapphire Reserve could potentially be a solid choice for some travelers who value premium benefits and don't mind paying a higher annual fee for the right card that fits their lifestyle needs."
+No competitor serves founders. This is our beachhead.
 
-✅ Our style: "The Chase Sapphire Reserve costs $550/year. If you don't spend at least $4,000 on travel and dining annually, it's not worth it. Here's the math."
+- **Entity Separation**: Personal vs. business accounts with commingling alerts
+- **Runway Intelligence**: Real-time burn rate, runway projections, fundraising triggers
+- **Tax Shield Monitoring**: Quarterly estimates, safe harbor checks, deduction tracking
+- **Subscription Audit**: SaaS spend analysis with ROI scoring
+- **Cap Table Awareness**: Equity comp (RSUs, options, SAFEs) integrated into net worth
 
-### Visual Identity
-- Minimal, tool-focused aesthetic (like Linear, Vercel, Stripe)
-- Dark mode default—modern, focused, easy on the eyes
-- Data visualization forward—charts and numbers, not stock photos
-- No images of:
-  - People holding credit cards on beaches
-  - "Luxury travel" lifestyle porn
-  - Generic diverse-hands-around-a-table corporate imagery
-- Typography that's readable, not flashy
-- Color palette that conveys trust and clarity, not excitement and urgency
+### Pillar 4: Action Execution (Our Biggest Moat)
 
----
+Silvia tells you what to do. We do it.
 
-## Phase 1: Foundation (Months 1-3)
+- **Action Intents**: Structured primitives for every financial maneuver
+- **Switch Kits**: Auto-generated ACATS/ACH transfer documents
+- **War Room**: Queue, review, authorize, and execute with biometric approval
+- **Ghost Navigation**: Step-by-step guides for legacy bank UIs
+- **Agent Execution**: Autonomous rebalancing within user-defined guardrails
 
-### 1.1 Platform Architecture
+### Pillar 5: Comprehensive Wealth Picture (Parity + Beyond)
 
-**Goal:** Transform from single app to multi-tool platform
+Track everything, not just financial accounts.
 
-```
-/                           → Landing page + tool directory
-/tools/bilt-calculator      → Current Bilt 2.0 calculator (migrated)
-/tools/[tool-slug]          → Future calculators
-/blog/[post-slug]           → Opinion content
-/valuations                 → Live points valuations dashboard
-/compare                    → Card comparison tool
-```
+- **Financial Accounts**: Brokerage, retirement, banking, crypto via Plaid + SnapTrade
+- **Real Estate**: Property values (Zillow), rental income, mortgage tracking, appreciation
+- **Vehicles**: KBB/Edmunds valuations with depreciation curves
+- **Alternative Assets**: Collectibles, art, jewelry, wine with manual + API valuations
+- **Equity Compensation**: RSU vesting schedules, option exercise modeling, AMT impact
+- **Debt Complete Picture**: Student loans, mortgages, auto loans, credit cards with payoff strategies
+- **Tax Documents**: Upload W-2s, 1099s, K-1s, tax returns for comprehensive tax planning
 
-**Tech Stack:**
-- **Framework:** Next.js 15 (App Router) - current preference per CLAUDE.md
-- **Styling:** Tailwind CSS + shadcn/ui components
-- **Database:** PostgreSQL (Supabase/Neon) for user data, valuations
-- **CMS:** MDX for blog content (version controlled, no CMS lock-in)
-- **Analytics:** Plausible (privacy-first)
-- **Deployment:** Vercel
+### Pillar 6: Content & Trust Engine (Distribution Moat)
 
-**Migration Tasks:**
-- [ ] Create new Next.js project with proper routing
-- [ ] Migrate Bilt calculator to `/tools/bilt-calculator`
-- [ ] Create shared component library (sliders, cards, charts)
-- [ ] Set up MDX blog infrastructure
-- [ ] Design and build landing page
-- [ ] Set up CI/CD pipeline
+Original from our Anti-Points-Guy DNA. Silvia has zero content strategy.
 
-**Personalization (Memory & Opt-In Data):**
-- [x] Expand financial memory schema (spending, debt, portfolio, equity compensation)
-- [x] Derive memory profiles from connected accounts
-- [x] Add opt-in “Load my data” banner across calculators with prefill mappings
-
-### 1.2 Core Tools to Build
-
-**Priority 1: Decision Calculators**
-| Tool | Description | Complexity |
-|------|-------------|------------|
-| Bilt 2.0 Calculator | Already built - migrate | Done |
-| Annual Fee Worth It? | Generic "is this AF card worth keeping" | Medium |
-| Chase Trifecta Calculator | Sapphire + Freedom combo optimizer | Medium |
-| Amex Gold vs Platinum | Common comparison, high search volume | Medium |
-| Points Transfer Calculator | "Should I transfer to X partner?" | High |
-
-**Priority 2: Reference Tools**
-| Tool | Description | Complexity |
-|------|-------------|------------|
-| Live Valuations Dashboard | Our cpp estimates with methodology | Medium |
-| Transfer Partner Matrix | Which points transfer where, at what ratio | Medium |
-| Welcome Bonus Tracker | Current offers across all major cards | High (data) |
-
-### 1.3 Content Strategy
-
-**Content Philosophy:**
-
-Our content exists to educate, not to sell. Every piece should leave the reader more capable of making their own decisions—not more dependent on us for answers.
-
-**Content Types:**
-
-1. **Financial Literacy Fundamentals**
-   - "How Credit Card Rewards Actually Work" (the economics)
-   - "Understanding Points Valuations (And Why They Vary)"
-   - "Annual Fees: When They Make Sense and When They Don't"
-
-2. **Tool Explainers**
-   - Walkthroughs of our calculators
-   - Explanation of the methodology behind each tool
-
-3. **Honest Opinions**
-   - Card reviews that take clear stances
-   - "This card is bad" pieces (things TPG won't publish)
-   - Industry criticism and consumer advocacy
-
-4. **News Analysis**
-   - Quick takes on program changes
-   - "What this devaluation means for you"
-   - Translation of corporate announcements into plain English
-
-**Tone Guidelines:**
-- Write like you're explaining to a smart friend
-- Take clear positions; avoid hedge language ("it depends")
-- Use numbers and calculations to support every opinion
-- Keep it concise—800-1,200 words max (respect their time)
-- No filler paragraphs for SEO (we'd rather rank lower than waste your time)
-- Admit uncertainty when it exists; don't pretend to know everything
-- Call out bad actors by name (issuers, other sites, policies)
-
-**Initial Content Calendar (15 posts):**
-
-*Manifesto & Foundation:*
-1. "Why We Built This: A Manifesto for Honest Points Advice"
-2. "How The Points Guy Makes Money (And Why It Matters)"
-3. "Our Points Valuation Methodology (Open Source)"
-
-*Financial Literacy:*
-4. "Credit Card Rewards 101: How the Economics Actually Work"
-5. "The Annual Fee Trap: Why Most Premium Cards Aren't Worth It"
-6. "Points vs Cash Back: The Math Most People Get Wrong"
-
-*Contrarian Takes:*
-7. "The Amex Platinum is a Bad Card for Most People"
-8. "Hotel Points Are Almost Always a Bad Deal—Here's Why"
-9. "Why the Chase Sapphire Reserve Isn't Worth $550 Anymore"
-
-*Practical Guides:*
-10. "The Only 3 Credit Cards Most People Need"
-11. "The Bilt 2.0 Decision Framework (With Calculator)"
-12. "How to Actually Redeem Airline Miles Without Getting Screwed"
-
-*Industry Criticism:*
-13. "The Problem with Credit Card 'Best Of' Lists"
-14. "Devaluation Watch: How Issuers Quietly Steal Your Points"
-15. "The Affiliate Industrial Complex: Who's Really Writing Your Card Reviews"
+- **Independent Research**: Unbiased analysis on credit cards, points, financial products
+- **Blog with Methodology**: Every opinion backed by open math
+- **Short-Form Education**: TikTok/Reels/YouTube Shorts for financial literacy
+- **Newsletter**: Weekly intelligence briefing
+- **Community**: Discord/forum for peer education and crowdsourced data
 
 ---
 
-## Phase 2: Growth Engine (Months 4-6)
+## Phased Roadmap
 
-### 2.1 SEO + Distribution
+### Phase 0: Current State (Completed)
 
-**SEO Strategy:**
-- Target tool-based queries: "bilt card calculator", "is chase sapphire worth it calculator"
-- Build topical authority around "credit card math"
-- Internal linking between tools and related content
-- Programmatic pages for card comparisons
+What we've already built:
 
-**Social Distribution:**
-- **Reddit:** Genuinely helpful comments on r/creditcards, r/churning, r/awardtravel
-- **Twitter/X:** Quick takes, tool announcements, hot takes on news
-- **YouTube (later):** Tool walkthroughs, opinion videos
-
-**Community Building:**
-- Respond to every Reddit mention
-- Create tool embeds that others can share
-- Build reputation as "the calculator people"
-
-### 2.2 Advanced Tools
-
-| Tool | Description | Value |
-|------|-------------|-------|
-| Card Recommendation Engine | "Based on your spend, here are your top 3 cards" | High |
-| Points Portfolio Tracker | Track all your points/miles in one place | Very High |
-| Redemption Finder | "I have 50k UR, show me best redemptions" | Very High |
-| Downgrade Path Planner | "I want to cancel X, what should I downgrade to?" | Medium |
-
-### 2.3 User Accounts (Optional)
-
-**Purpose:** Save calculations, track portfolio, personalized recommendations
-
-**Features:**
-- Save tool inputs for recalculation
-- Track points balances across programs
-- Get alerts when valuations change significantly
-- Personalized card recommendations based on history
-
-**Consideration:** Accounts add friction. May want to keep tools anonymous-first with optional account for power users.
+- [x] Unified dashboard with net worth, allocation, and holdings
+- [x] "Show the Math" decision traces on all metrics
+- [x] Founder Operating Room (runway, commingling, tax shields, subscription audit)
+- [x] AI Advisor with specialized financial skills (Claude-based)
+- [x] War Room with action intent lifecycle and switch kit generation
+- [x] Scenario Lab with Monte Carlo simulations
+- [x] Command Center with prioritized actions
+- [x] Decision Narrative with full audit trails
+- [x] Trust Hub with payout transparency and independence audits
+- [x] Vanish Mode, redacted sharing, ephemeral links
+- [x] Financial Memory Wizard (conversational onboarding)
+- [x] Plaid integration for account linking
+- [x] Light/dark mode with Strata design system
+- [x] Blog infrastructure with editorial content
 
 ---
 
-## Phase 3: Monetization (Months 6-9)
+### Phase 1: Competitive Parity + Multi-Channel (Months 1-3)
 
-### 3.0 Editorial Independence Manifesto
+**Goal: Close every gap Silvia has on us. Launch multi-channel access.**
 
-Before discussing revenue, we need to establish inviolable principles. This is our constitution—the rules that cannot be broken regardless of financial pressure.
+#### 1.1 Physical & Alternative Asset Tracking (P0)
 
-**The Independence Pledge:**
+| Task | Details |
+|------|---------|
+| Real estate integration | Zillow API for property valuations, manual entry for rental income, mortgage linking, appreciation tracking |
+| Vehicle tracking | KBB/Edmunds API for current values, depreciation curves, insurance and maintenance cost tracking |
+| Manual asset registry | Structured entry for jewelry, art, collectibles, wine, crypto hardware wallets with custom valuation methods |
+| Net worth recalculation | Include all asset classes in net worth, allocation charts, and trace calculations |
+
+#### 1.2 Multi-Channel AI Access (P0)
+
+| Channel | Implementation | Priority |
+|---------|---------------|----------|
+| SMS/Text | Twilio integration, natural language processing, balance/metric queries, alert responses | P0 |
+| Voice | Vapi or Bland.ai for inbound/outbound calls, complex financial conversations, hands-free access | P0 |
+| Email | Inbound email parsing (SendGrid/Postmark), forward documents for analysis, receive weekly digests | P1 |
+| Web Push | Browser push notifications for alerts, market events, action reminders | P0 |
+| Mobile PWA | Service worker, app manifest, offline-capable dashboard, installable on iOS/Android | P1 |
+
+#### 1.3 Proactive Alert System (P1)
+
+| Alert Type | Trigger |
+|------------|---------|
+| Market events | FOMC decisions, major index movements (>2%), sector-specific alerts |
+| Portfolio alerts | Concentration drift >5%, single position >20% of portfolio, cost basis opportunities |
+| Account alerts | Unusual transactions, large deposits/withdrawals, fee charges |
+| Tax alerts | Tax-loss harvesting opportunities, quarterly estimate due dates, wash sale warnings |
+| Founder alerts | Runway below 6 months, commingling detected, burn rate spike |
+
+#### 1.4 Tax Document Ingestion (P1)
+
+| Feature | Details |
+|---------|---------|
+| Upload tax returns | PDF/image upload with AI extraction (OCR + Claude) |
+| W-2/1099/K-1 parsing | Structured data extraction from tax documents |
+| Tax optimization report | AI analysis comparing current strategy to optimal, with specific dollar amounts |
+| YoY comparison | Track tax efficiency improvements across years |
+
+#### 1.5 Web Research in Advisor (P1)
+
+- Equip AI advisor with web search tool for real-time market data, news, and research
+- Integrate financial data APIs (Alpha Vantage, Polygon, FRED) for live pricing and economic data
+- Enable scenario analysis to pull real-world data (current rates, market conditions, inflation)
+
+**Phase 1 Success Metrics:**
+- All Silvia feature gaps closed
+- SMS/voice channel live with <2s response time
+- 5+ alternative asset types trackable
+- Tax return upload processing 95%+ of common forms
+
+---
+
+### Phase 2: Niche Dominance + Premium Value (Months 3-6)
+
+**Goal: Make ClearMoney indispensable for founders. Launch premium tier.**
+
+#### 2.1 Founder Operating Room v2
+
+| Feature | Details |
+|---------|---------|
+| Multi-entity support | Track multiple companies, SPVs, trusts with cross-entity reporting |
+| Cap table integration | Carta/Pulley integration or manual entry for equity, SAFEs, convertible notes |
+| Fundraising intelligence | Runway-to-raise triggers, dilution modeling, term sheet analysis |
+| Board-ready reports | One-click generation of financial snapshots for board meetings |
+| 409A integration | Track fair market value for stock option exercise decisions |
+| Compensation benchmarking | Compare founder salary/equity against market data |
+
+#### 2.2 Advanced Modeling Engine
+
+| Feature | Details |
+|---------|---------|
+| Multi-scenario comparison | Side-by-side comparison of 3+ scenarios with diff highlighting |
+| Stress testing | Model recession, market crash, job loss, medical emergency impacts |
+| Goal-based planning | Backwards planning from goals (buy house, retire, exit) with required actions |
+| Probabilistic forecasting | Confidence intervals on all projections, not just point estimates |
+| Custom assumption sets | Save and share assumption profiles (optimistic, base case, conservative) |
+
+#### 2.3 Premium Tier Launch
+
+| Free Tier | Premium ($29/mo) | Founder Pro ($79/mo) |
+|-----------|-----------------|---------------------|
+| Dashboard + net worth tracking | Everything in Free | Everything in Premium |
+| 3 connected accounts | Unlimited accounts | Multi-entity support |
+| Basic AI advisor (5 queries/day) | Unlimited AI advisor | Cap table + equity comp |
+| Show the Math traces | SMS/Voice/Email access | Board-ready reports |
+| Basic scenario analysis | Advanced modeling + stress tests | Fundraising intelligence |
+| Blog + educational content | Tax document ingestion | Dedicated founder advisor mode |
+| Manual asset tracking | Push alerts + market monitoring | Priority support |
+| | Action execution (War Room) | API access |
+| | Full Monte Carlo simulations | Custom integrations |
+
+#### 2.4 Integrations Expansion
+
+| Integration | Purpose |
+|-------------|---------|
+| Coinbase / Kraken / Phantom | Direct crypto wallet and exchange connections |
+| Carta / Pulley | Cap table and equity data |
+| Stripe / Mercury | Business revenue and banking for founders |
+| QuickBooks / Xero | Business accounting data |
+| Zillow / Redfin | Real estate valuations |
+| KBB / Edmunds | Vehicle valuations |
+
+**Phase 2 Success Metrics:**
+- 500+ founder users with Founder Pro subscriptions
+- Premium conversion rate >8% of free users
+- 3+ integrations live beyond Plaid
+- NPS >60 among founder users
+
+---
+
+### Phase 3: Action Layer + Trust Protocol (Months 6-12)
+
+**Goal: Execute financial actions, not just advise. Establish ClearMoney as a verifiable financial identity.**
+
+#### 3.1 Action Execution Engine v2
+
+| Feature | Details |
+|---------|---------|
+| One-click rollover | AI pre-fills ACATS transfer forms, e-signature integration (DocuSign/HelloSign) |
+| Automated rebalancing drafts | Agent proposes rebalancing trades based on target allocation + tax awareness |
+| Bill negotiation intents | Draft cancellation/negotiation scripts for subscriptions and services |
+| Guided execution | Step-by-step overlays for completing actions on legacy bank websites |
+| Action audit trail | Complete history of every action taken, with before/after snapshots |
+
+#### 3.2 Strata Verification Protocol (SVP)
+
+| Feature | Details |
+|---------|---------|
+| Proof of Funds | Cryptographically signed attestation of account balances without revealing exact amounts |
+| Income Stability Proof | Verifiable claim of income consistency for landlords, lenders |
+| Net Worth Attestation | Privacy-preserving proof for investment minimums, accredited investor status |
+| Public verification portal | `/verify` endpoint for third parties to validate ClearMoney-signed claims |
+| Privacy-preserving sharing | ZK-proof generation for financial claims |
+
+#### 3.3 Content & Distribution Engine
+
+| Initiative | Details |
+|------------|---------|
+| YouTube channel | Weekly 5-8 min videos: tool walkthroughs, market analysis, founder finance |
+| Short-form content | TikTok/Reels: "60-second math" series, myth busting, industry callouts |
+| Newsletter | Weekly intelligence briefing with 1 featured tool, 3 market takes, community highlights |
+| Podcast | "Show the Math" podcast: interviews with founders about their financial operating systems |
+| SEO content engine | Programmatic pages for card comparisons, investment product analysis |
+
+#### 3.4 Community Platform
+
+| Feature | Purpose |
+|---------|---------|
+| Discord server | Peer discussion, help, knowledge sharing |
+| Data point submissions | Crowdsource approval odds, redemption values, bonus data |
+| User reviews | Real experiences with financial products and strategies |
+| Independence watchdog | Community holds us accountable to our transparency pledge |
+| Open methodology | Community can suggest and vote on calculation improvements |
+
+**Phase 3 Success Metrics:**
+- First 100 financial actions executed through ClearMoney
+- SVP attestations used by 50+ users for real-world verification
+- 10,000+ newsletter subscribers
+- YouTube channel at 5,000+ subscribers
+- Community with 500+ active members
+
+---
+
+### Phase 4: The Agentic Ledger (Months 12-24)
+
+**Goal: Autonomous financial operations within user-defined guardrails. ClearMoney becomes the system of record.**
+
+#### 4.1 Smart Accounts
+
+| Feature | Details |
+|---------|---------|
+| Agent-managed accounts | Integration with Safe (Gnosis) for programmable smart accounts |
+| Programmable guardrails | User-defined rules: "Rebalance if drift >5%", "Max single trade $10k", "Never sell tax lots held <1yr" |
+| Multi-sig authorization | High-value actions require multiple approval factors |
+| Autonomous tax-loss harvesting | Agent continuously monitors and executes TLH within guardrails |
+| Auto-rebalancing | Drift-based rebalancing with tax-aware lot selection |
+
+#### 4.2 Agent Economy
+
+| Feature | Details |
+|---------|---------|
+| Skyfire integration | Agent-to-agent payments for specialized financial services |
+| L402 micropayments | Machine-to-machine payments for data and computation |
+| Agentic API | Third-party financial agents can interact with user's ClearMoney context (with consent) |
+| Agent marketplace | Specialized agents for tax, real estate, crypto, estate planning |
+
+#### 4.3 Native Ledger
+
+| Feature | Details |
+|---------|---------|
+| Internal double-entry ledger | Assets held directly within ClearMoney ecosystem |
+| Instant settlement | Bypass ACH/ACATS delays for internal transfers |
+| Context-native execution | Tax-loss harvesting, rebalancing, and transfers without leaving the platform |
+| Financial Portability Protocol (FPP) | JSON-LD schema for exporting your entire financial context to any platform |
+
+#### 4.4 Native Mobile Apps
+
+| Platform | Details |
+|----------|---------|
+| iOS (React Native) | Full dashboard, biometric auth, push notifications, Siri integration |
+| Android (React Native) | Full parity with iOS, widget support for net worth and alerts |
+| Apple Watch / Wear OS | Quick glance at net worth, runway, and critical alerts |
+
+**Phase 4 Success Metrics:**
+- 80% of routine rebalancing executed autonomously
+- Internal ledger processing $10M+ in managed assets
+- FPP protocol adopted by 3+ third-party platforms
+- Native apps with 4.5+ star ratings
+- 50,000+ total users
+
+---
+
+## Monetization Strategy
+
+### Revenue Model
+
+| Stream | Phase | Details |
+|--------|-------|---------|
+| **Premium subscriptions** | Phase 2+ | $29/mo individual, $79/mo founder |
+| **Ethical affiliate revenue** | Phase 1+ | Credit card and financial product recommendations with full payout disclosure |
+| **Action execution fees** | Phase 3+ | Small fee for executed financial actions (ACATS, rebalancing) |
+| **API access** | Phase 3+ | Third-party developers and agents consuming ClearMoney data |
+| **Enterprise / Family Office** | Phase 4+ | White-label or dedicated instances for wealth managers |
+
+### Independence Pledge
 
 ```
 WE WILL NEVER:
-1. Recommend a card because of its affiliate payout
-2. Inflate point valuations to make cards look better
-3. Suppress negative reviews of cards that pay us
-4. Accept editorial input from card issuers
-5. Hide affiliate relationships from readers
-6. Prioritize revenue over reader outcomes
+1. Recommend a product because of its affiliate payout
+2. Inflate valuations to make products look better
+3. Suppress negative reviews of products that pay us
+4. Accept editorial input from financial product issuers
+5. Hide affiliate relationships from users
+6. Prioritize revenue over user outcomes
 
 WE WILL ALWAYS:
-1. Show our math so readers can verify our claims
+1. Show our math so users can verify our claims
 2. Include non-affiliate options when they're better
-3. Publish negative reviews even if it costs us money
+3. Publish negative reviews even if it costs us revenue
 4. Disclose exactly how we make money
-5. Recommend AGAINST cards when appropriate
-6. Update content when we're proven wrong
+5. Recommend AGAINST products when appropriate
+6. Publish quarterly Independence Reports with full data
 ```
-
-**Accountability Mechanism:**
-- Publish an annual "Independence Report" showing:
-  - Our affiliate revenue by card
-  - Instances where we recommended against affiliate cards
-  - Reader feedback and corrections we've made
-  - Any pressure we've received from issuers
-
-### 3.1 Revenue Streams (Ethical Framework)
-
-**Tier 1: Affiliate Revenue (With Guardrails)**
-
-Yes, we'll use affiliate links. Here's how we'll do it ethically:
-
-| Guardrail | Implementation |
-|-----------|----------------|
-| Disclosure | Every page with affiliate links has clear, prominent disclosure |
-| Comparison | We show affiliate AND non-affiliate options side by side |
-| Math-first | Calculator recommendations are based on user inputs, not payouts |
-| Negative reviews | We publish "don't get this card" content for bad affiliate cards |
-| Payout transparency | We publish what we earn per card (radical transparency) |
-
-**What we won't do:**
-- "Best cards" lists ordered by payout
-- Suppress reviews of cards that don't pay us
-- Inflate valuations to justify high-fee affiliate cards
-- Dark patterns to drive clicks
-
-**Tier 2: Premium Tools (User-Aligned)**
-
-Premium features should provide genuine value, not gate essential information.
-
-| Free Forever | Premium ($8/mo) |
-|--------------|-----------------|
-| All calculators | Portfolio tracking across programs |
-| All blog content | Personalized alerts (devaluations, bonus offers) |
-| Methodology/math | Advanced redemption finder |
-| Basic valuations | Historical valuation data |
-| Card comparisons | API access |
-
-**Principle:** If someone needs information to avoid losing money, it's free. Premium is for power users who want convenience and depth.
-
-**Tier 3: Sponsorships (Selective)**
-
----
-
-## Strata Roadmap (Platform + ClearMoney)
-
-Inspired by Foundation Capital’s “Stratas” thesis: the durable asset is the decision trace. Our goal is to build the Strata Action Layer (SAL), moving from a "Read-Only" aggregator to an "Autonomous Execution" ledger.
-
-### Era 1: The Context Graph (0–6 months)
-*Goal: Build the foundation of radical transparency.*
-- **Platform:** Unified API abstraction for SnapTrade/Plaid. Token vault + consent ledger.
-- **ClearMoney:** Investment dashboard with "Show the Math" decision traces.
-- **Milestone:** Link brokerage → normalize holdings → show allocation → generate 3 recommendations with "why" trace.
-
-### Era 2: The Drafting Layer (6–12 months)
-*Goal: Remove cognitive friction and bridge legacy systems.*
-- **Action Intents:** Standard primitives for ACATS rollovers and ACH transfers.
-- **Switch Kits:** Automated PDF generation for rollovers and account migrations.
-- **Ghost Navigation:** Guided sidebar for execution on legacy bank UIs.
-- **Milestone:** First user rollover executed via AI-drafted paperwork.
-
-### Era 3: The Agentic Ledger (12–24 months)
-*Goal: Autonomous economic citizens and programmable money.*
-- **Smart Accounts:** Every user gets a Safe (Smart Account) managed by their agent.
-- **Agent Economy:** Integration with Skyfire/L402 for agent-to-agent transactions.
-- **Native Ledger:** Strata becomes the primary system of record for assets.
-- **Milestone:** 80% of routine rebalancing executed autonomously by the agent.
 
 ---
 
 ## Operating Principles
-...
 
-- **Execution path first**: To build Strata, we must be in the decision loop, not just reading data after the fact. citeturn0view0
-- **Decision traces are product**: Every recommendation writes a trace that captures inputs, policy, and rationale.
-- **Data minimization + consent**: Users see, control, and revoke every data scope.
+1. **Transparency is the product.** Every number is traceable. Every recommendation has a logic tree. If we can't show the math, we don't show the number.
 
-We will accept sponsorships under strict conditions:
-- No editorial control—sponsor cannot review or modify content
-- Clear "Sponsored" labeling, not hidden advertorials
-- We can (and will) criticize sponsor products in other content
-- No exclusivity agreements that limit our coverage
+2. **Execution path first.** To build the action layer, we must be in the decision loop. Read-only advisory is table stakes.
 
-**Sponsors we'll reject:**
-- Anyone requiring editorial approval
-- Companies with predatory practices
-- Payday lenders, high-interest cards targeting vulnerable populations
+3. **Founders are our beachhead.** The founder niche is underserved, high-value, and word-of-mouth driven. Win founders, then expand.
 
-### 3.2 Revenue Transparency Page
+4. **Meet users where they are.** Dashboard-only is a limitation. SMS, voice, email, and push are required channels.
 
-We'll publish a live page showing:
-- Monthly/quarterly affiliate revenue (aggregated)
-- Which cards generate the most revenue for us
-- Instances where our top recommendation ≠ highest-paying card
-- Sponsorship relationships and terms
+5. **Data minimization + consent.** Users see, control, and revoke every data scope. Privacy is a feature, not a checkbox.
 
-**Why:** If readers can see our incentives, they can judge our content accordingly. Hiding this information is what TPG does.
+6. **Decision traces are the data model.** Every recommendation writes a trace that captures inputs, policy, rationale, and confidence. This is our moat and our audit trail.
+
+7. **Earn trust through proof, not promises.** Independence reports, payout transparency, and open methodology. Trust is built with data, not marketing.
 
 ---
 
-## Phase 4: Media Expansion (Months 9-12)
+## Key Risks & Mitigations
 
-### 4.1 Video Content
-
-**YouTube Strategy:**
-- Tool walkthrough videos (screencast + voiceover)
-- "Card Review in 5 Minutes" series
-- News reaction videos
-- "I Applied for X Card—Here's What Happened"
-
-**Format:** Clean, fast-paced, no fluff. Aim for 5-8 minute videos.
-
-### 4.2 Short-Form Content
-
-**TikTok/Reels/Shorts Strategy:**
-
-Short-form is where we reach people who've never questioned their card choices. This is financial literacy outreach, not just marketing.
-
-**Content Pillars:**
-
-1. **"They Don't Want You to Know"** - Exposing industry practices
-   - "Why your 'travel rewards' card is actually terrible"
-   - "The real reason TPG recommends this card"
-   - "How credit card companies make money off confusion"
-
-2. **Quick Math** - Visual breakdowns
-   - "Is the Amex Platinum worth it? Let's do the math in 60 seconds"
-   - "Your points just got devalued. Here's what you lost."
-   - "Stop paying annual fees for cards you don't use"
-
-3. **Myth Busting** - Correcting common misconceptions
-   - "No, you don't need a 750 credit score for premium cards"
-   - "Closing a credit card won't destroy your credit"
-   - "Cash back usually beats points. Here's why."
-
-4. **Tool Demos** - Show the calculators in action
-   - "I built a calculator to figure out if Bilt 2.0 is worth it"
-   - "Plug in your numbers and I'll tell you your best card"
-
-5. **Industry Callouts** - Name names, create controversy
-   - "Why I don't trust The Points Guy"
-   - "This card is bad and everyone recommends it anyway"
-   - "The affiliate industrial complex, explained"
-
-**Tone:** Confident, slightly irreverent, never preachy. We're sharing knowledge, not lecturing.
-
-### 4.3 Newsletter
-
-**Weekly newsletter:**
-- 1 featured tool or update
-- 2-3 quick opinions on the week's news
-- Best community questions/discussions
-- No sponsorship in newsletter (trust-building)
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Silvia/ProCap acquires distribution dominance | High | Focus on founder niche where distribution is word-of-mouth; transparency story creates organic press |
+| Silvia copies our transparency features | Medium | Our traces are architectural (data model), not a UI layer. Retrofitting is hard. |
+| Regulatory risk on action execution | High | Partner with licensed broker-dealers; implement robust compliance framework |
+| User acquisition cost too high | Medium | Content engine + SEO + founder community creates organic growth |
+| Plaid/SnapTrade reliability | Medium | Multi-provider strategy; graceful degradation; manual entry fallback |
+| Free pricing pressure from Silvia | Medium | Premium value justifies cost; founders already pay for specialized tools |
 
 ---
 
-## Phase 5: Platform Effects & Movement Building (Year 2+)
+## 5-Year North Star
 
-### 5.1 Community: Building a Movement
+**By 2031, ClearMoney is the financial operating system that:**
 
-This isn't just a website—it's a movement for financial literacy and consumer advocacy in the rewards space.
+- Manages $100B+ in tracked assets across 100,000+ users
+- Executes 80%+ of routine financial operations autonomously
+- Is the standard for transparent, auditable financial AI
+- Has forced the industry to adopt "show the math" as a baseline expectation
+- Operates the Financial Portability Protocol used by 10+ platforms
+- Is the default financial OS for startup founders
+- Has saved users $100M+ through optimized decisions and avoided fees
 
-**Community Principles:**
-- **Peer education** - Users help each other, not just consume our content
-- **Crowdsourced knowledge** - Community data improves our tools
-- **Accountability** - Community holds us to our independence pledge
-- **Advocacy** - Collective voice against predatory practices
-
-**Community Features:**
-
-| Feature | Purpose |
-|---------|---------|
-| Discord/Forum | Peer discussion, help, and knowledge sharing |
-| Data point submissions | Crowdsource bonus approvals, redemption values |
-| User reviews | Real experiences with cards and redemptions |
-| Correction submissions | Community helps us fix errors |
-| Independence watchdog | Users call us out if we stray from principles |
-
-**Community-Sourced Content:**
-- "Best redemption" stories submitted by users
-- Data points on approval odds, credit limits
-- Transfer partner sweet spot discoveries
-- Devaluation alerts from the community
-
-### 5.2 Consumer Advocacy
-
-As we grow, we can use our platform for advocacy:
-
-- **Devaluation tracking** - Public pressure on issuers who devalue
-- **Fine print translation** - Explain what terms actually mean
-- **Regulatory awareness** - Educate on CFPB actions, consumer rights
-- **Industry reports** - Annual "State of Points" exposing trends
-
-**Long-term vision:** Become a trusted consumer advocate that issuers actually have to listen to.
-
-### 5.3 API/Embeds (Open Infrastructure)
-
-Make our tools available to everyone:
-
-- **Embed calculators** - Let personal finance sites embed our tools (with attribution)
-- **Open API** - Free tier for valuations, transfer partners
-- **Open source** - Consider open-sourcing calculator logic
-- **Partner integrations** - Mint, YNAB, other PFM tools
-
-**Philosophy:** The more people have access to good information, the better. We're not gatekeeping.
-
-### 5.4 Expansion Verticals
-
-Apply the same principles to adjacent spaces:
-
-| Vertical | Approach |
-|----------|----------|
-| **Bank bonuses** | Same calculator-first, math-driven approach |
-| **Brokerage bonuses** | Transfer bonus calculators |
-| **International markets** | UK, Canada, Australia points ecosystems |
-| **Credit building** | Financial literacy for credit newbies |
-| **Travel booking** | Eventually, honest travel deal curation |
-
-### 5.5 Long-Term Impact Goals
-
-**In 5 years, we want to have:**
-- Saved users millions in avoided annual fees and bad decisions
-- Forced TPG and competitors to be more transparent
-- Created a new standard for ethical affiliate content
-- Built the largest independent community of informed points users
-- Made "do the math" the default approach to card decisions
-
-**Success isn't:**
-- Maximizing our revenue
-- Getting the most traffic
-- Being acquired by Red Ventures
-
-**Success is:**
-- People making better financial decisions
-- Industry practices improving due to our pressure
-- Trust in financial content increasing
+**Success is not** maximizing our revenue. **Success is** people making measurably better financial decisions because every number they see is auditable, every recommendation is traceable, and every action is executable.
 
 ---
 
-## Technical Architecture
-
-### Shared Component Library
-
-```typescript
-// Reusable across all tools
-components/
-├── ui/
-│   ├── Slider.tsx           // Tap-to-edit slider (from Bilt app)
-│   ├── CardTile.tsx         // Result display card
-│   ├── ComparisonChart.tsx  // Bar/comparison charts
-│   ├── ValueBreakdown.tsx   // Line-item value breakdown
-│   ├── MethodologyModal.tsx // Explains calculations
-│   └── DisclaimerBanner.tsx // Affiliate/assumption disclaimers
-├── calculators/
-│   ├── useCalculation.ts    // Shared calculation hook pattern
-│   ├── ValuationContext.tsx // Global points valuations
-│   └── InputPresets.tsx     // Common spend profiles
-└── layout/
-    ├── ToolLayout.tsx       // Standard tool page wrapper
-    ├── BlogLayout.tsx       // Article page wrapper
-    └── Navigation.tsx       // Site-wide nav
-```
-
-### Data Architecture
-
-```typescript
-// Centralized valuations (database or config)
-interface PointsProgram {
-  id: string;
-  name: string;
-  baseValuation: number;      // Our conservative estimate
-  tpgValuation: number;       // For comparison
-  lastUpdated: Date;
-  methodology: string;        // Link to explanation
-  transferPartners: TransferPartner[];
-}
-
-interface CreditCard {
-  id: string;
-  issuer: string;
-  name: string;
-  annualFee: number;
-  welcomeBonus: WelcomeBonus;
-  earnRates: EarnRate[];
-  credits: Credit[];
-  affiliateUrl?: string;
-  affiliatePayout?: number;   // Transparency
-}
-
-interface Calculator {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  relatedCards: string[];
-  relatedContent: string[];
-}
-```
-
-### Content Architecture (MDX)
-
-```
-content/
-├── blog/
-│   ├── why-we-built-this.mdx
-│   ├── our-valuation-methodology.mdx
-│   └── ...
-├── tools/
-│   ├── bilt-calculator/
-│   │   ├── page.tsx          // Tool component
-│   │   └── explainer.mdx     // How to use guide
-│   └── ...
-└── data/
-    ├── cards.json            // Card database
-    ├── valuations.json       // Points valuations
-    └── transfers.json        // Transfer partners
-```
-
----
-
-## Success Metrics
-
-We measure success differently than a typical media company. Revenue matters, but impact matters more.
-
-### Phase 1 (Foundation)
-
-**Output Metrics:**
-- [ ] Platform live with 3+ tools
-- [ ] 15+ blog posts published
-- [ ] Launch manifesto and methodology documentation
-
-**Impact Metrics:**
-- [ ] 1,000 monthly tool users
-- [ ] Positive Reddit reception (not dismissed as "another affiliate site")
-- [ ] At least 1 piece of content that challenges conventional wisdom
-
-### Phase 2 (Growth)
-
-**Output Metrics:**
-- [ ] 7+ tools live
-- [ ] Top 10 Google ranking for 5+ tool queries
-- [ ] 1,000 Twitter/X followers
-- [ ] Active Reddit presence
-
-**Impact Metrics:**
-- [ ] 10,000 monthly users
-- [ ] User testimonials: "This changed how I think about cards"
-- [ ] Community members helping each other (not just consuming)
-- [ ] At least 1 "negative review" of a popular card that ranks well
-
-### Phase 3 (Monetization)
-
-**Output Metrics:**
-- [ ] Affiliate revenue established
-- [ ] Premium tier launched
-- [ ] Transparency page live (showing our revenue sources)
-
-**Impact Metrics:**
-- [ ] Break-even on hosting costs
-- [ ] Zero instances of recommending a card primarily for affiliate payout
-- [ ] Published at least 3 "don't get this card" pieces for affiliate cards
-- [ ] Independence Report published
-
-### Phase 4 (Media)
-
-**Output Metrics:**
-- [ ] YouTube channel with 1,000 subscribers
-- [ ] 10,000 newsletter subscribers
-- [ ] Short-form content generating traffic
-
-**Impact Metrics:**
-- [ ] Short-form content reaching people outside the "points enthusiast" bubble
-- [ ] Comments/feedback showing people learned something new
-- [ ] Industry figures (TPG, etc.) responding to our criticism
-
-### Year 2+
-
-**Output Metrics:**
-- [ ] 100,000 monthly users
-- [ ] Sustainable profitability
-- [ ] Community with active participation
-
-**Impact Metrics:**
-- [ ] Recognized as the "honest alternative" to TPG in community discussions
-- [ ] Evidence of users making better decisions (testimonials, surveys)
-- [ ] Other sites citing our methodology or adopting similar practices
-- [ ] Card issuers aware of our platform (invitations to events, press inquiries)
-
----
-
-## Immediate Next Steps
-
-### Launch Readiness Sprint (Current)
-1. [x] Finalize core product branding and public narrative
-2. [x] Build multi-tool Next.js platform and migrate flagship tools
-3. [x] Stand up FastAPI backend with accounts, transactions, banking, and advisor APIs
-4. [x] Ship methodology, transparency, payout disclosure, and corrections hub pages
-5. [ ] Connect transparency pages to live affiliate/recommendation data ingestion
-6. [ ] Finalize production auth + deployment mode (SSR app runtime vs static export mode)
-7. [ ] Complete production hardening checklist (CORS allowlist, secrets, monitoring, incident runbook)
-
-### Next 30 Days
-1. [ ] Public beta launch with waitlist and feedback loop
-2. [ ] Implement analytics + funnel instrumentation
-3. [ ] Publish 6 high-signal launch articles
-4. [ ] Complete CI release gates for web + API (lint/test/build)
-5. [ ] Launch social/community distribution cadence
-
-### Next Quarter
-1. [ ] Full public launch
-2. [ ] Grow to 10k monthly users and >30% returning usage
-3. [ ] Expand tools with top requested backlog items
-4. [ ] Publish quarterly independence and methodology update
-5. [ ] Introduce premium workflows once trust KPIs are met
-
----
-
-## Open Questions
-
-1. **Brand name decision** - Need to pick and validate domain availability
-2. **Solo vs team** - Can this scale with one person? When to bring on writers?
-3. **Affiliate timing** - Start with affiliates or build trust first?
-4. **User accounts** - Worth the complexity early on?
-5. **Video priority** - When does video content make sense to start?
-
----
-
-## Appendix: Tool Ideas Backlog
-
-### High Value
-- Credit card decision tree (guided questionnaire)
-- "Should I cancel this card?" calculator
-- Points vs cash back break-even calculator
-- Transfer partner sweet spot finder
-- Annual fee ROI tracker
-
-### Medium Value
-- Credit score impact estimator
-- Velocity limits tracker
-- Card application timeline planner
-- Referral bonus optimizer
-- Foreign transaction fee calculator
-
-### Fun/Viral Potential
-- "How much are your points worth?" total portfolio value
-- "Which card personality are you?" quiz
-- "Rate my wallet" - analyze someone's card setup
-- "Points leaderboard" - anonymous community comparison
-
----
-
-## The Bottom Line
-
-We're not building a business that happens to be ethical. We're building an ethical platform that happens to be a business.
-
-The credit card and points industry is worth billions, and almost all of that money flows from consumers to corporations. The "advice" ecosystem that's supposed to help consumers is captured by the same corporations it should be holding accountable.
-
-We believe there's room for something different. Something that:
-- Puts people first
-- Shows its work
-- Takes real stances
-- Builds trust through transparency
-- Empowers rather than exploits
-
-If we do this right, we won't just build a successful platform. We'll help shift an entire industry toward honesty and accountability.
-
-That's the mission. That's why we're doing this.
-
----
-
-*Last updated: February 2026*
+*This roadmap is a living document. Updated quarterly with progress and competitive intelligence.*
