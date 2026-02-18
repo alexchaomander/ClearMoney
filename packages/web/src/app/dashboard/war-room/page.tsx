@@ -28,6 +28,20 @@ import {
 } from "@/lib/strata/hooks";
 import { METRIC_METHODOLOGY } from "@/lib/strata/metrics-methodology";
 import { toast } from "@/components/shared/toast";
+import type { ActionIntentStatus } from "@clearmoney/strata-sdk";
+
+// Helper to map backend status to frontend display status
+function getStatusLabel(status: ActionIntentStatus): ActionStatus {
+  switch (status) {
+    case "draft": return "draft";
+    case "pending_approval": return "ready";
+    case "processing": return "executing";
+    case "executed": return "completed";
+    case "failed": return "failed";
+    case "cancelled": return "failed"; // map cancelled to failed visual state or add new state
+    default: return "draft";
+  }
+}
 
 export default function WarRoomPage() {
   const [filter, setFilter] = useState<ActionStatus | "all">("all");
@@ -47,14 +61,14 @@ export default function WarRoomPage() {
   const filteredIntents = useMemo(() => {
     if (!intents) return [];
     if (filter === "all") return intents;
-    return intents.filter(i => i.status === filter);
+    return intents.filter(i => getStatusLabel(i.status) === filter);
   }, [intents, filter]);
 
   const stats = useMemo(() => {
     if (!intents) return { pending: 0, completed: 0 };
     return {
-      pending: intents.filter(i => i.status === "draft" || i.status === "ready").length,
-      completed: intents.filter(i => i.status === "executed" || i.status === "completed").length
+      pending: intents.filter(i => getStatusLabel(i.status) === "draft" || getStatusLabel(i.status) === "ready").length,
+      completed: intents.filter(i => getStatusLabel(i.status) === "completed").length
     };
   }, [intents]);
 
@@ -166,11 +180,11 @@ export default function WarRoomPage() {
                 { id: "all" as const, label: "All Intents" },
                 { id: "ready" as ActionStatus, label: "Ready" },
                 { id: "draft" as ActionStatus, label: "Drafts" },
-                { id: "executed" as ActionStatus, label: "History" }
+                { id: "completed" as ActionStatus, label: "History" }
               ].map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => setFilter(t.id as any)}
+                  onClick={() => setFilter(t.id)}
                   className={cn(
                     "px-4 py-2 text-xs font-bold rounded-lg transition-all",
                     filter === t.id 
@@ -225,7 +239,7 @@ export default function WarRoomPage() {
                     id={intent.id}
                     title={intent.title}
                     description={intent.description || ""}
-                    status={intent.status as any}
+                    status={getStatusLabel(intent.status)}
                     type={intent.intent_type}
                     impact={Object.values(intent.impact_summary)[0]?.toString()}
                     onReview={() => handleReview(intent.decision_trace_id)}
