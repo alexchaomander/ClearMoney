@@ -117,24 +117,27 @@ function classifyExpense(tx: TxLike): "business" | "personal" | "unknown" {
 function riskTone(risk: RiskBand) {
   if (risk === "good") {
     return {
-      badge: "text-emerald-200 bg-emerald-900/30 border-emerald-700",
+      badge: "text-emerald-700 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700",
       bar: "bg-emerald-500",
-      text: "text-emerald-100",
+      text: "text-emerald-600 dark:text-emerald-400",
+      icon: "text-emerald-500",
       label: "Strong",
     };
   }
   if (risk === "watch") {
     return {
-      badge: "text-amber-200 bg-amber-900/30 border-amber-700",
+      badge: "text-amber-700 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700",
       bar: "bg-amber-500",
-      text: "text-amber-100",
+      text: "text-amber-600 dark:text-amber-400",
+      icon: "text-amber-500",
       label: "Watch",
     };
   }
   return {
-    badge: "text-rose-200 bg-rose-900/30 border-rose-700",
+    badge: "text-rose-700 dark:text-rose-200 bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-700",
     bar: "bg-rose-500",
-    text: "text-rose-100",
+    text: "text-rose-600 dark:text-rose-400",
+    icon: "text-rose-500",
     label: "Needs Action",
   };
 }
@@ -397,11 +400,7 @@ export default function FounderOperatingRoomPage() {
   ]);
 
   const usingDemoData = !portfolio || !allAccounts || !bankAccounts || !transactionPage || !memory || !spending;
-  const runwayTone = riskTone(derived.runwayBand);
-  const savingsTone = riskTone(derived.savingsBand);
-  const debtTone = riskTone(derived.debtBand);
-  const comminglingTone = riskTone(derived.comminglingBand);
-
+  
   const lastSyncedAt = useMemo(() => {
     if (!connections?.length) return null;
     const syncTimes = connections
@@ -463,11 +462,6 @@ export default function FounderOperatingRoomPage() {
     transactions,
   ]);
 
-  const runwayBar = toPercent(derived.runway / 12);
-  const savingsBar = toPercent(derived.savingsRate);
-  const debtBar = toPercent(1 - Math.min(0.9, derived.debtRatio));
-  const comminglingBar = toPercent(1 - derived.personalShare);
-
   const personalRunway = runwayMetrics?.personal.runway_months ?? derived.runway;
   const entityRunway = runwayMetrics?.entity.runway_months ?? 0;
 
@@ -509,6 +503,9 @@ export default function FounderOperatingRoomPage() {
     },
   ], [personalRunway, entityRunway, derived]);
 
+  const comminglingTone = riskTone(derived.comminglingBand);
+  const comminglingBar = toPercent(1 - derived.personalShare);
+
   async function handleRefresh() {
     if (!hasSyncConsent) {
       refetchPortfolio();
@@ -541,7 +538,7 @@ export default function FounderOperatingRoomPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950">
+      <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
         <DashboardHeader
           showRefresh={hasSyncConsent}
           isRefreshing={syncAllConnections.isPending}
@@ -557,7 +554,7 @@ export default function FounderOperatingRoomPage() {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-slate-950">
+      <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
         <DashboardHeader
           showRefresh={hasSyncConsent}
           isRefreshing={syncAllConnections.isPending}
@@ -576,9 +573,9 @@ export default function FounderOperatingRoomPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
       <div
-        className="fixed inset-0 opacity-30 pointer-events-none"
+        className="fixed inset-0 opacity-10 dark:opacity-30 pointer-events-none"
         style={{
           background:
             "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 60%)",
@@ -598,13 +595,13 @@ export default function FounderOperatingRoomPage() {
           transition={{ duration: 0.5 }}
           className="mb-6"
         >
-          <p className="text-sm uppercase tracking-[0.25em] text-emerald-400">Founder command center</p>
-          <h1 className="mt-2 font-serif text-3xl text-white">Founder Operating Room</h1>
-          <p className="mt-2 text-slate-400 max-w-3xl">
+          <p className="text-sm uppercase tracking-[0.25em] text-emerald-600 dark:text-emerald-400 font-bold">Founder command center</p>
+          <h1 className="mt-2 font-serif text-3xl text-slate-900 dark:text-white">Founder Operating Room</h1>
+          <p className="mt-2 text-slate-500 dark:text-slate-400 max-w-3xl">
             A founder-first cockpit for runway, burn, and financial discipline.
           </p>
           {usingDemoData ? (
-            <p className="mt-2 text-xs text-amber-300 inline-flex items-center gap-2">
+            <p className="mt-2 text-xs text-amber-600 dark:text-amber-300 inline-flex items-center gap-2 font-bold">
               <RefreshCw className="w-3 h-3" />
               Synthetic founder snapshot is active until live Strata data is connected.
             </p>
@@ -656,91 +653,91 @@ export default function FounderOperatingRoomPage() {
           </section>
 
           <section className="grid lg:grid-cols-3 gap-4 mb-6">
-            <article className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+            <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg text-white font-medium">Subscription audit</h2>
-                <div className="px-2 py-0.5 rounded bg-emerald-950/50 text-emerald-400 border border-emerald-800/40 text-[10px] font-bold">
+                <h2 className="text-lg text-slate-900 dark:text-white font-medium">Subscription audit</h2>
+                <div className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40 text-[10px] font-bold">
                   { subscriptionData?.subscription_count ?? 0 } ACTIVE
                 </div>
               </div>
-              <p className="mt-2 text-sm text-slate-400">
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 Monthly burn from recurring SaaS and services.
               </p>
-              <p className="mt-3 text-2xl text-white">
+              <p className="mt-3 text-2xl text-slate-900 dark:text-white font-display">
                 {formatCurrency(subscriptionData?.total_monthly_subscription_burn ?? 0)}/mo
               </p>
               <div className="mt-4 space-y-2 max-h-40 overflow-y-auto pr-2">
                 {(subscriptionData?.subscriptions ?? []).slice(0, 5).map((s: Subscription) => (
-                  <div key={s.merchant} className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
+                  <div key={s.merchant} className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-slate-200 truncate">{s.merchant}</p>
-                      <p className="text-[10px] text-slate-500 uppercase">{s.frequency}</p>
+                      <p className="text-xs font-medium text-slate-700 dark:text-neutral-200 truncate">{s.merchant}</p>
+                      <p className="text-[10px] text-slate-400 dark:text-neutral-500 uppercase">{s.frequency}</p>
                     </div>
-                    <span className="text-xs font-bold text-slate-300">
+                    <span className="text-xs font-bold text-slate-600 dark:text-neutral-300 font-mono">
                       {formatCurrency(s.amount)}
                     </span>
                   </div>
                 ))}
                 {(!subscriptionData || subscriptionData.subscriptions.length === 0) && (
-                  <p className="text-xs text-slate-600 italic">No recurring patterns detected.</p>
+                  <p className="text-xs text-slate-400 dark:text-neutral-600 italic">No recurring patterns detected.</p>
                 )}
               </div>
             </article>
 
-            <article className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+            <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg text-white font-medium">Tax shield posture</h2>
-                <Percent className="w-4 h-4 text-emerald-300" />
+                <h2 className="text-lg text-slate-900 dark:text-white font-medium">Tax shield posture</h2>
+                <Percent className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
               </div>
-              <p className="mt-2 text-sm text-slate-400">
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 Estimated quarterly tax liability based on YTD business income.
               </p>
-              <p className="mt-3 text-2xl text-white">
+              <p className="mt-3 text-2xl text-slate-900 dark:text-white font-display">
                 {formatCurrency(taxShield?.next_quarterly_payment as number ?? 0)}
               </p>
-              <div className="mt-4 space-y-2 text-sm text-slate-300">
+              <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-neutral-300">
                 <p>YTD Biz Income: {formatCurrency(taxShield?.ytd_business_income as number ?? 0)}</p>
                 <p>Combined Rate: {formatPercent(taxShield?.estimated_combined_tax_rate as number ?? 0.31, 1)}</p>
                 <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${
                   taxShield?.safe_harbor_met 
-                    ? "bg-emerald-900/20 text-emerald-400 border border-emerald-800/40" 
-                    : "bg-amber-900/20 text-amber-400 border border-amber-800/40"
+                    ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40" 
+                    : "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/40"
                 }`}>
                   {taxShield?.safe_harbor_met ? "Safe Harbor Met" : "Action Recommended"}
                 </div>
               </div>
             </article>
 
-            <article className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+            <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg text-white font-medium">Commingling signal</h2>
-                <ShieldAlert className={`w-4 h-4 ${comminglingTone.text}`} />
+                <h2 className="text-lg text-slate-900 dark:text-white font-medium">Commingling signal</h2>
+                <ShieldAlert className={`w-4 h-4 ${comminglingTone.icon}`} />
               </div>
-              <p className="mt-2 text-sm text-slate-400">
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 Personal spend share across observed transactions.
               </p>
-              <p className={`mt-3 text-2xl ${comminglingTone.text}`}>
+              <p className={`mt-3 text-2xl font-display ${comminglingTone.text}`}>
                 {vulnerabilityReport?.risk_score as number ?? toPercent(1 - derived.personalShare)}%
               </p>
-              <div className="mt-3 h-2 rounded-full bg-slate-800 overflow-hidden">
+              <div className="mt-3 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                 <div
                   className={`h-full ${comminglingTone.bar}`}
                   style={{ width: `${vulnerabilityReport?.risk_score as number ?? comminglingBar}%` }}
                 />
               </div>
-              <div className="mt-4 space-y-2 text-sm text-slate-300">
+              <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-neutral-300">
                 <p>Personal spend: {formatCurrency(vulnerabilityReport?.commingled_amount as number ?? derived.personalSpend)}</p>
                 <p>Total analyzed: {vulnerabilityReport?.total_analyzed as number ?? transactions.length} txns</p>
                 <p>Alerts: {vulnerabilityReport?.commingled_count as number ?? 0}</p>
               </div>
             </article>
 
-            <article className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+            <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg text-white font-medium">Account posture</h2>
-                <CircleDot className="w-4 h-4 text-emerald-300" />
+                <h2 className="text-lg text-slate-900 dark:text-white font-medium">Account posture</h2>
+                <CircleDot className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
               </div>
-              <div className="mt-4 space-y-2 text-sm text-slate-300">
+              <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-neutral-300">
                 <p>{derived.investmentAccounts} investment account(s)</p>
                 <p>{derived.cashAccounts} cash account(s)</p>
                 <p>{derived.debtAccounts} debt account(s)</p>
@@ -749,57 +746,57 @@ export default function FounderOperatingRoomPage() {
               </div>
             </article>
 
-            <article className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+            <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg text-white font-medium">Priority actions</h2>
-                <Wrench className="w-4 h-4 text-emerald-300" />
+                <h2 className="text-lg text-slate-900 dark:text-white font-medium">Priority actions</h2>
+                <Wrench className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
               </div>
               <div className="mt-4 space-y-3">
                 <Link
                   href="/dashboard/scenario-lab"
-                  className="rounded-lg border border-slate-700 p-3 block hover:bg-slate-800 transition-colors"
+                  className="rounded-lg border border-slate-100 dark:border-slate-700 p-3 block hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
                 >
-                  <p className="text-sm text-slate-100 flex items-center gap-2">
-                    <Target className="w-4 h-4 text-emerald-300" />Run 12-month scenarios
+                  <p className="text-sm text-slate-900 dark:text-neutral-100 flex items-center gap-2 font-bold">
+                    <Target className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />Run 12-month scenarios
                   </p>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">
                     Stress-test runway and debt strategy under upside and downside paths.
                   </p>
                 </Link>
 
                 <Link
                   href="/dashboard/progress"
-                  className="rounded-lg border border-slate-700 p-3 block hover:bg-slate-800 transition-colors"
+                  className="rounded-lg border border-slate-100 dark:border-slate-700 p-3 block hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
                 >
-                  <p className="text-sm text-slate-100 flex items-center gap-2">
-                    <CircleDollarSign className="w-4 h-4 text-emerald-300" />Track founder progress
+                  <p className="text-sm text-slate-900 dark:text-neutral-100 flex items-center gap-2 font-bold">
+                    <CircleDollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />Track founder progress
                   </p>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">
                     Watch trajectory with trend and milestone cards.
                   </p>
                 </Link>
 
                 <Link
                   href="/dashboard/coverage"
-                  className="rounded-lg border border-emerald-800 bg-emerald-900/15 p-3 block hover:bg-emerald-900/30 transition-colors"
+                  className="rounded-lg border border-emerald-100 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/15 p-3 block hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30 transition-colors shadow-sm"
                 >
-                  <p className="text-sm text-emerald-100 flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-emerald-200" />
+                  <p className="text-sm text-emerald-800 dark:text-emerald-100 flex items-center gap-2 font-bold">
+                    <AlertTriangle className="w-4 h-4 text-emerald-600 dark:text-emerald-200" />
                     Strengthen data quality
                   </p>
-                  <p className="text-xs text-emerald-100/70 mt-1">
+                  <p className="text-xs text-emerald-700/70 dark:text-emerald-100/70 mt-1">
                     Fill profile and account gaps to improve recommendation strength.
                   </p>
                 </Link>
                 <Link
                   href="/dashboard/command-center"
-                  className="rounded-lg border border-slate-700 p-3 block hover:bg-slate-800 transition-colors"
+                  className="rounded-lg border border-slate-100 dark:border-slate-700 p-3 block hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
                 >
-                  <p className="text-sm text-slate-100 flex items-center gap-2">
-                    <Compass className="w-4 h-4 text-emerald-300" />
+                  <p className="text-sm text-slate-900 dark:text-neutral-100 flex items-center gap-2 font-bold">
+                    <Compass className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
                     Return to command center
                   </p>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">
                     Consolidate operating posture and route the highest-priority execution action.
                   </p>
                 </Link>
@@ -807,31 +804,31 @@ export default function FounderOperatingRoomPage() {
             </article>
           </section>
 
-          <section className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+          <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-colors duration-500">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg text-white">Execution bridge</h2>
-                <p className="mt-1 text-sm text-slate-400">
+                <h2 className="text-lg text-slate-900 dark:text-white">Execution bridge</h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                   Connect this operating posture to concrete founder-level decisions.
                 </p>
               </div>
               <Link
                 href="/dashboard/decision-narrative"
-                className="inline-flex items-center gap-2 text-sm text-emerald-200 border border-emerald-900 bg-emerald-900/25 px-3 py-2 rounded-lg"
+                className="inline-flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/25 px-3 py-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all shadow-sm"
               >
                 Review decision rationale
                 <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-            <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950 p-4">
-              <p className="text-sm text-slate-400">
-                Current portfolio cash: <span className="text-white">{formatCurrency(derived.totalCash)}</span>
+            <div className="mt-4 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Current portfolio cash: <span className="text-slate-900 dark:text-white font-mono font-bold">{formatCurrency(derived.totalCash)}</span>
               </p>
-              <p className="text-sm text-slate-400 mt-2">
-                Current debt: <span className="text-white">{formatCurrency(derived.totalDebt)}</span>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                Current debt: <span className="text-slate-900 dark:text-white font-mono font-bold">{formatCurrency(derived.totalDebt)}</span>
               </p>
-              <p className="text-sm text-slate-400 mt-2">
-                Monthly income: <span className="text-white">{formatCurrency(derived.monthlyIncome)}</span>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                Monthly income: <span className="text-slate-900 dark:text-white font-mono font-bold">{formatCurrency(derived.monthlyIncome)}</span>
               </p>
             </div>
           </section>
