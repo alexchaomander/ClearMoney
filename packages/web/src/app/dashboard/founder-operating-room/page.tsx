@@ -21,6 +21,8 @@ import { ApiErrorState } from "@/components/shared/ApiErrorState";
 import { DashboardLoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { DataSourceStatusStrip, type DataSourceStatusItem } from "@/components/dashboard/DataSourceStatusStrip";
 import { MetricTrace } from "@/components/dashboard/MetricTrace";
+import { MetricCard } from "@/components/dashboard/MetricCard";
+import { MetricCardSkeleton } from "@/components/dashboard/MetricCardSkeleton";
 import {
   FALLBACK_BANK_ACCOUNTS,
   FALLBACK_BANK_TRANSACTIONS,
@@ -469,52 +471,43 @@ export default function FounderOperatingRoomPage() {
   const personalRunway = runwayMetrics?.personal.runway_months ?? derived.runway;
   const entityRunway = runwayMetrics?.entity.runway_months ?? 0;
 
-  const summaryCards = [
+  const metricConfigs = useMemo(() => [
     {
+      id: "personalRunway",
       label: "Personal Runway",
       value: formatMonthsAsYears(Math.max(0, Math.round(personalRunway))),
-      tone: riskTone(bandFromRatio(Math.min(1, personalRunway / 12), "higherIsBetter")),
-      bar: toPercent(personalRunway / 12),
-      detail:
-        personalRunway >= 12
-          ? "Over 1 year buffer"
-          : "Under 1 year runway; watch spend discipline",
+      subValue: personalRunway >= 12 ? "Over 1 year buffer" : "Under 1 year runway",
+      intent: derived.runwayBand === "good" ? "emerald" as const : derived.runwayBand === "watch" ? "amber" as const : "error" as const,
+      confidence: derived.confidence / 100,
+      metricId: "personalRunway",
     },
     {
+      id: "entityRunway",
       label: "Entity Runway",
       value: formatMonthsAsYears(Math.max(0, Math.round(entityRunway))),
-      tone: riskTone(bandFromRatio(Math.min(1, entityRunway / 12), "higherIsBetter")),
-      bar: toPercent(entityRunway / 12),
-      detail: entityRunway > 0 
-        ? (entityRunway >= 12 ? "Solid business runway" : "Monitor entity burn closely")
-        : "No business accounts connected",
+      subValue: entityRunway >= 12 ? "Solid business runway" : entityRunway > 0 ? "Monitor burn closely" : "No business accounts",
+      intent: entityRunway >= 12 ? "emerald" as const : entityRunway > 3 ? "amber" as const : "error" as const,
+      confidence: derived.confidence / 100,
     },
     {
-      label: "Burn surplus",
+      id: "savingsRate",
+      label: "Burn Surplus",
       value: formatPercent(derived.savingsRate, 1),
-      tone: savingsTone,
-      bar: savingsBar,
-      detail:
-        derived.savingsRate > 0.2 ? "Cash generation is healthy" : "Improve pricing or expense control",
+      subValue: derived.savingsRate > 0.2 ? "Healthy cash generation" : "Tight margins",
+      intent: derived.savingsBand === "good" ? "emerald" as const : derived.savingsBand === "watch" ? "amber" as const : "error" as const,
+      confidence: derived.confidence / 100,
+      metricId: "savingsRate",
     },
     {
-      label: "Debt load",
+      id: "debtLoad",
+      label: "Debt Load",
       value: formatPercent(derived.debtRatio, 1),
-      tone: debtTone,
-      bar: debtBar,
-      detail:
-        derived.debtRatio > 0.45
-          ? "Debt is materially impacting risk posture"
-          : "Debt remains controlled at current snapshot",
+      subValue: derived.debtRatio > 0.45 ? "High leverage" : "Controlled debt",
+      intent: derived.debtBand === "good" ? "emerald" as const : derived.debtBand === "watch" ? "amber" as const : "error" as const,
+      confidence: derived.confidence / 100,
+      metricId: "netWorth",
     },
-    {
-      label: "Execution confidence",
-      value: `${derived.confidence}%`,
-      tone: riskTone(derived.confidence >= 72 ? "good" : derived.confidence >= 48 ? "watch" : "critical"),
-      bar: Math.max(12, derived.confidence),
-      detail: "Signal reliability across accounts, memory, and transactions",
-    },
-  ];
+  ], [personalRunway, entityRunway, derived]);
 
   async function handleRefresh() {
     if (!hasSyncConsent) {
@@ -548,7 +541,7 @@ export default function FounderOperatingRoomPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-neutral-950">
+      <div className="min-h-screen bg-slate-950">
         <DashboardHeader
           showRefresh={hasSyncConsent}
           isRefreshing={syncAllConnections.isPending}
@@ -564,7 +557,7 @@ export default function FounderOperatingRoomPage() {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-neutral-950">
+      <div className="min-h-screen bg-slate-950">
         <DashboardHeader
           showRefresh={hasSyncConsent}
           isRefreshing={syncAllConnections.isPending}
@@ -583,7 +576,7 @@ export default function FounderOperatingRoomPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950">
+    <div className="min-h-screen bg-slate-950">
       <div
         className="fixed inset-0 opacity-30 pointer-events-none"
         style={{
@@ -607,7 +600,7 @@ export default function FounderOperatingRoomPage() {
         >
           <p className="text-sm uppercase tracking-[0.25em] text-emerald-400">Founder command center</p>
           <h1 className="mt-2 font-serif text-3xl text-white">Founder Operating Room</h1>
-          <p className="mt-2 text-neutral-400 max-w-3xl">
+          <p className="mt-2 text-slate-400 max-w-3xl">
             A founder-first cockpit for runway, burn, and financial discipline.
           </p>
           {usingDemoData ? (
@@ -631,35 +624,46 @@ export default function FounderOperatingRoomPage() {
           purpose="Analyze founder runway, operating discipline, and commingling risk with connected data"
         >
           <section className="grid lg:grid-cols-4 gap-4 mb-6">
-            {summaryCards.map((item) => (
-              <article
-                key={item.label}
-                className="rounded-xl border border-neutral-800 bg-neutral-900 p-5"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-neutral-400">{item.label}</p>
-                  {item.label === "Personal Runway" && <MetricTrace metricId="personalRunway" />}
-                  {item.label === "Burn surplus" && <MetricTrace metricId="savingsRate" />}
-                </div>
-                <p className="mt-2 text-2xl font-semibold text-white">{item.value}</p>
-                <p className={`mt-2 text-xs ${item.tone.text}`}>{item.tone.label}</p>
-                <div className="mt-3 h-2 rounded-full bg-neutral-800 overflow-hidden">
-                  <div className={`h-full ${item.tone.bar}`} style={{ width: `${item.bar}%` }} />
-                </div>
-                <p className="mt-3 text-xs text-neutral-500">{item.detail}</p>
-              </article>
-            ))}
+            {isLoading ? (
+              <>
+                <MetricCardSkeleton />
+                <MetricCardSkeleton />
+                <MetricCardSkeleton />
+                <MetricCardSkeleton />
+              </>
+            ) : (
+              <>
+                {metricConfigs.map((config) => (
+                  <MetricCard
+                    key={config.id}
+                    label={config.label}
+                    value={config.value}
+                    subValue={config.subValue}
+                    intent={config.intent}
+                    confidence={config.confidence}
+                    metricId={config.metricId}
+                  />
+                ))}
+                <MetricCard
+                  label="Execution Confidence"
+                  value={`${derived.confidence}%`}
+                  subValue="Signal reliability"
+                  intent={derived.confidence >= 72 ? "emerald" : derived.confidence >= 48 ? "amber" : "error"}
+                  confidence={1.0}
+                />
+              </>
+            )}
           </section>
 
           <section className="grid lg:grid-cols-3 gap-4 mb-6">
-            <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+            <article className="rounded-xl border border-slate-800 bg-slate-900 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg text-white font-medium">Subscription audit</h2>
                 <div className="px-2 py-0.5 rounded bg-emerald-950/50 text-emerald-400 border border-emerald-800/40 text-[10px] font-bold">
                   { subscriptionData?.subscription_count ?? 0 } ACTIVE
                 </div>
               </div>
-              <p className="mt-2 text-sm text-neutral-400">
+              <p className="mt-2 text-sm text-slate-400">
                 Monthly burn from recurring SaaS and services.
               </p>
               <p className="mt-3 text-2xl text-white">
@@ -667,34 +671,34 @@ export default function FounderOperatingRoomPage() {
               </p>
               <div className="mt-4 space-y-2 max-h-40 overflow-y-auto pr-2">
                 {(subscriptionData?.subscriptions ?? []).slice(0, 5).map((s: Subscription) => (
-                  <div key={s.merchant} className="flex items-center justify-between py-2 border-b border-neutral-800 last:border-0">
+                  <div key={s.merchant} className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-neutral-200 truncate">{s.merchant}</p>
-                      <p className="text-[10px] text-neutral-500 uppercase">{s.frequency}</p>
+                      <p className="text-xs font-medium text-slate-200 truncate">{s.merchant}</p>
+                      <p className="text-[10px] text-slate-500 uppercase">{s.frequency}</p>
                     </div>
-                    <span className="text-xs font-bold text-neutral-300">
+                    <span className="text-xs font-bold text-slate-300">
                       {formatCurrency(s.amount)}
                     </span>
                   </div>
                 ))}
                 {(!subscriptionData || subscriptionData.subscriptions.length === 0) && (
-                  <p className="text-xs text-neutral-600 italic">No recurring patterns detected.</p>
+                  <p className="text-xs text-slate-600 italic">No recurring patterns detected.</p>
                 )}
               </div>
             </article>
 
-            <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+            <article className="rounded-xl border border-slate-800 bg-slate-900 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg text-white font-medium">Tax shield posture</h2>
                 <Percent className="w-4 h-4 text-emerald-300" />
               </div>
-              <p className="mt-2 text-sm text-neutral-400">
+              <p className="mt-2 text-sm text-slate-400">
                 Estimated quarterly tax liability based on YTD business income.
               </p>
               <p className="mt-3 text-2xl text-white">
                 {formatCurrency(taxShield?.next_quarterly_payment as number ?? 0)}
               </p>
-              <div className="mt-4 space-y-2 text-sm text-neutral-300">
+              <div className="mt-4 space-y-2 text-sm text-slate-300">
                 <p>YTD Biz Income: {formatCurrency(taxShield?.ytd_business_income as number ?? 0)}</p>
                 <p>Combined Rate: {formatPercent(taxShield?.estimated_combined_tax_rate as number ?? 0.31, 1)}</p>
                 <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${
@@ -707,36 +711,36 @@ export default function FounderOperatingRoomPage() {
               </div>
             </article>
 
-            <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+            <article className="rounded-xl border border-slate-800 bg-slate-900 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg text-white font-medium">Commingling signal</h2>
                 <ShieldAlert className={`w-4 h-4 ${comminglingTone.text}`} />
               </div>
-              <p className="mt-2 text-sm text-neutral-400">
+              <p className="mt-2 text-sm text-slate-400">
                 Personal spend share across observed transactions.
               </p>
               <p className={`mt-3 text-2xl ${comminglingTone.text}`}>
                 {vulnerabilityReport?.risk_score as number ?? toPercent(1 - derived.personalShare)}%
               </p>
-              <div className="mt-3 h-2 rounded-full bg-neutral-800 overflow-hidden">
+              <div className="mt-3 h-2 rounded-full bg-slate-800 overflow-hidden">
                 <div
                   className={`h-full ${comminglingTone.bar}`}
                   style={{ width: `${vulnerabilityReport?.risk_score as number ?? comminglingBar}%` }}
                 />
               </div>
-              <div className="mt-4 space-y-2 text-sm text-neutral-300">
+              <div className="mt-4 space-y-2 text-sm text-slate-300">
                 <p>Personal spend: {formatCurrency(vulnerabilityReport?.commingled_amount as number ?? derived.personalSpend)}</p>
                 <p>Total analyzed: {vulnerabilityReport?.total_analyzed as number ?? transactions.length} txns</p>
                 <p>Alerts: {vulnerabilityReport?.commingled_count as number ?? 0}</p>
               </div>
             </article>
 
-            <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+            <article className="rounded-xl border border-slate-800 bg-slate-900 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg text-white font-medium">Account posture</h2>
                 <CircleDot className="w-4 h-4 text-emerald-300" />
               </div>
-              <div className="mt-4 space-y-2 text-sm text-neutral-300">
+              <div className="mt-4 space-y-2 text-sm text-slate-300">
                 <p>{derived.investmentAccounts} investment account(s)</p>
                 <p>{derived.cashAccounts} cash account(s)</p>
                 <p>{derived.debtAccounts} debt account(s)</p>
@@ -745,7 +749,7 @@ export default function FounderOperatingRoomPage() {
               </div>
             </article>
 
-            <article className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+            <article className="rounded-xl border border-slate-800 bg-slate-900 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg text-white font-medium">Priority actions</h2>
                 <Wrench className="w-4 h-4 text-emerald-300" />
@@ -753,24 +757,24 @@ export default function FounderOperatingRoomPage() {
               <div className="mt-4 space-y-3">
                 <Link
                   href="/dashboard/scenario-lab"
-                  className="rounded-lg border border-neutral-700 p-3 block hover:bg-neutral-800 transition-colors"
+                  className="rounded-lg border border-slate-700 p-3 block hover:bg-slate-800 transition-colors"
                 >
-                  <p className="text-sm text-neutral-100 flex items-center gap-2">
+                  <p className="text-sm text-slate-100 flex items-center gap-2">
                     <Target className="w-4 h-4 text-emerald-300" />Run 12-month scenarios
                   </p>
-                  <p className="text-xs text-neutral-400 mt-1">
+                  <p className="text-xs text-slate-400 mt-1">
                     Stress-test runway and debt strategy under upside and downside paths.
                   </p>
                 </Link>
 
                 <Link
                   href="/dashboard/progress"
-                  className="rounded-lg border border-neutral-700 p-3 block hover:bg-neutral-800 transition-colors"
+                  className="rounded-lg border border-slate-700 p-3 block hover:bg-slate-800 transition-colors"
                 >
-                  <p className="text-sm text-neutral-100 flex items-center gap-2">
+                  <p className="text-sm text-slate-100 flex items-center gap-2">
                     <CircleDollarSign className="w-4 h-4 text-emerald-300" />Track founder progress
                   </p>
-                  <p className="text-xs text-neutral-400 mt-1">
+                  <p className="text-xs text-slate-400 mt-1">
                     Watch trajectory with trend and milestone cards.
                   </p>
                 </Link>
@@ -789,13 +793,13 @@ export default function FounderOperatingRoomPage() {
                 </Link>
                 <Link
                   href="/dashboard/command-center"
-                  className="rounded-lg border border-neutral-700 p-3 block hover:bg-neutral-800 transition-colors"
+                  className="rounded-lg border border-slate-700 p-3 block hover:bg-slate-800 transition-colors"
                 >
-                  <p className="text-sm text-neutral-100 flex items-center gap-2">
+                  <p className="text-sm text-slate-100 flex items-center gap-2">
                     <Compass className="w-4 h-4 text-emerald-300" />
                     Return to command center
                   </p>
-                  <p className="text-xs text-neutral-400 mt-1">
+                  <p className="text-xs text-slate-400 mt-1">
                     Consolidate operating posture and route the highest-priority execution action.
                   </p>
                 </Link>
@@ -803,11 +807,11 @@ export default function FounderOperatingRoomPage() {
             </article>
           </section>
 
-          <section className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+          <section className="rounded-xl border border-slate-800 bg-slate-900 p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg text-white">Execution bridge</h2>
-                <p className="mt-1 text-sm text-neutral-400">
+                <p className="mt-1 text-sm text-slate-400">
                   Connect this operating posture to concrete founder-level decisions.
                 </p>
               </div>
@@ -819,14 +823,14 @@ export default function FounderOperatingRoomPage() {
                 <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-            <div className="mt-4 rounded-lg border border-neutral-800 bg-neutral-950 p-4">
-              <p className="text-sm text-neutral-400">
+            <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950 p-4">
+              <p className="text-sm text-slate-400">
                 Current portfolio cash: <span className="text-white">{formatCurrency(derived.totalCash)}</span>
               </p>
-              <p className="text-sm text-neutral-400 mt-2">
+              <p className="text-sm text-slate-400 mt-2">
                 Current debt: <span className="text-white">{formatCurrency(derived.totalDebt)}</span>
               </p>
-              <p className="text-sm text-neutral-400 mt-2">
+              <p className="text-sm text-slate-400 mt-2">
                 Monthly income: <span className="text-white">{formatCurrency(derived.monthlyIncome)}</span>
               </p>
             </div>
