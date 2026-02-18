@@ -20,45 +20,18 @@ ClearMoney rejects both.
 
 ## Brand Identity
 
-### Name
+> For the full brand guide -- including voice examples, visual identity, messaging framework, competitive positioning one-liners, and marketing channel strategy -- see [BRANDING.md](./BRANDING.md).
 
-**ClearMoney.** The name communicates exactly what we are: clarity applied to money. No cleverness required. No explanation needed.
+**Name:** ClearMoney -- clarity applied to money.
 
-### Brand Pillars
+**Tagline:** *See the math. Make the move.*
 
-1. **Radical Transparency** -- We show our math, disclose our revenue, and explain our methodology. Every number is auditable.
-2. **Financial Empowerment** -- We exist to help you make better decisions, not to create dependency on our advice.
-3. **Intellectual Honesty** -- We take real stances, admit uncertainty, and prove our independence with data.
-4. **Respect for Intelligence** -- We don't waste your time with filler, dark patterns, or marketing-speak.
-5. **Action Over Advice** -- We don't just tell you what to do. We prepare the paperwork and let you execute.
+**Pillars:** Radical Transparency | Financial Empowerment | Intellectual Honesty | Action Over Advice | Respect for Intelligence
 
-### Brand Voice
-
-**We sound like:** A sharp, technically competent friend who respects your intelligence and happens to know a lot about money. We explain complex things simply without being condescending.
-
-**We don't sound like:** A salesperson closing a deal. A corporate blog optimized for SEO. A hedge-everything-to-avoid-liability compliance department.
-
-**Example:**
-
-> Black-box advisor: *"Based on our proprietary analysis, we recommend adjusting your portfolio allocation."*
->
-> ClearMoney: *"Your tech stocks are 34% of your portfolio -- up from 25% target. Here's the drift, the tax impact of rebalancing, and a one-click trade to fix it. [Show the Math]"*
-
-### Visual Identity
-
-- **Design System:** Strata -- institutional authority meets modern clarity
-- **Typography:** Serif for editorial authority, monospace for financial data
-- **Color Semantics:** Emerald for growth, amber for warnings, red for critical
-- **Aesthetic:** Minimal, data-forward. Charts and numbers, not stock photos. Think Bloomberg terminal meets Linear.
-- **Modes:** Light and dark, with dark as the default for the dashboard
-
-### Target Audience
-
-**Primary:** Startup founders and technically sophisticated individuals who demand transparency and control over their financial lives.
-
-**Secondary:** High-net-worth individuals managing complex portfolios across multiple accounts and asset types.
-
-**Tertiary:** Financially literate consumers who are tired of black-box advice and affiliate-driven content.
+**Target Audience:**
+- **Primary:** Startup founders (seed to Series B) managing personal + company finances
+- **Secondary:** HNW individuals with $250k-$5M+ across multiple institutions
+- **Tertiary:** Informed consumers tired of affiliate-driven financial content
 
 ---
 
@@ -394,7 +367,7 @@ Scale the ClearMoney publication from blog-only to full multi-channel content op
 - 10,000+ newsletter subscribers
 - YouTube channel at 5,000+ subscribers
 - Community with 500+ active members
-- 3+ credit card review articles ranking page 1 for target keywords
+- 6+ SEO-optimized credit card articles published targeting specific long-tail keywords, with top-3 ranking for at least 2 long-tail terms
 
 ---
 

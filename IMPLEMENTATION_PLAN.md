@@ -105,7 +105,7 @@ class ManualAsset(BaseModel):
 | Service | Purpose | API | Priority |
 |---------|---------|-----|----------|
 | Zillow Bridge API | Property Zestimates | REST, requires partner access | P0 |
-| Redfin (fallback) | Property estimates | Scraping or data partner | P1 |
+| Redfin (fallback) | Property estimates | Official data partner or API (no scraping -- ToS and maintenance risk) | P1 |
 | KBB API | Vehicle valuations | REST | P0 |
 | Edmunds (fallback) | Vehicle valuations | REST | P1 |
 
@@ -194,6 +194,7 @@ app/api/channels/
 
 **Key decisions:**
 - User links phone number in Settings (verified via OTP)
+- **Authentication:** Phone number alone is not trusted for identity. Each SMS session requires an OTP challenge on first message (or within a session timeout). Sensitive actions (balances, transfers) require re-authentication. Caller ID is never trusted as sole auth factor.
 - SMS responses are concise (summary + "reply MORE for details")
 - Financial data in SMS is optionally redacted (user preference)
 
@@ -209,7 +210,7 @@ app/api/channels/
 
 **Key decisions:**
 - Inbound calls only initially (user calls ClearMoney number)
-- Voice PIN or caller ID verification for authentication
+- **Authentication:** Voice sessions require a user-configured secret PIN spoken at the start of the call. Caller ID is used as a secondary signal only, never as sole authentication. Sensitive actions (transfers, trades) always redirect to the dashboard for biometric confirmation.
 - Agent can quote metrics but cannot execute actions via voice
 
 #### 1.2.4 Email Channel (SendGrid)
@@ -300,11 +301,18 @@ Upload (PDF/image) → OCR/Extraction → Structured Data → Tax Analysis → R
 ```
 app/services/tax/
 ├── ingestion.py        # File upload handler + type detection
-├── extraction.py       # Claude Vision for document parsing
+├── extraction.py       # Document parsing (abstracted provider interface)
+├── providers/
+│   ├── base.py         # Abstract extraction provider interface
+│   ├── claude_vision.py  # Claude Vision implementation (primary)
+│   ├── textract.py     # Amazon Textract implementation (fallback)
+│   └── document_ai.py  # Google Document AI implementation (fallback)
 ├── schema.py           # Structured tax data models (W-2, 1099, K-1, 1040)
 ├── analysis.py         # Tax optimization analysis engine
 └── strategies.py       # Tax strategy library (Roth conversion, TLH, etc.)
 ```
+
+**Note:** The extraction service uses an abstraction layer (`BaseExtractionProvider`) so the underlying OCR/extraction engine can be swapped without code changes. This guards against pricing, availability, or performance changes in any single provider.
 
 #### 1.4.2 Supported Documents
 
@@ -487,37 +495,49 @@ class CrossEntityReport(BaseModel):
 
 #### 2.3.2 Feature Gating
 
-```typescript
-const TIER_FEATURES = {
-  free: {
-    maxAccounts: 3,
-    advisorQueriesPerDay: 5,
-    channels: ["web"],
-    scenarios: 1,
-    monteCarlo: false,
-    warRoom: false,
-    taxIngestion: false,
-  },
-  premium: {
-    maxAccounts: Infinity,
-    advisorQueriesPerDay: Infinity,
-    channels: ["web", "sms", "voice", "email"],
-    scenarios: Infinity,
-    monteCarlo: true,
-    warRoom: true,
-    taxIngestion: true,
-  },
-  founder_pro: {
-    // Everything in premium plus:
-    multiEntity: true,
-    capTable: true,
-    boardReports: true,
-    fundraisingIntel: true,
-    apiAccess: true,
-    prioritySupport: true,
-  },
-} as const;
+**All feature gating must be enforced on the backend.** The backend is the ultimate authority on whether a user can access a feature. The frontend only queries the backend to determine which UI elements to show -- it never makes access decisions itself.
+
+```python
+# Backend: app/middleware/feature_gate.py
+# All gating logic lives server-side. Frontend mirrors this for UI hints only.
+TIER_FEATURES = {
+    "free": {
+        "max_accounts": 3,
+        "advisor_queries_per_day": 5,
+        "channels": ["web"],
+        "scenarios": 1,
+        "monte_carlo": False,
+        "war_room": False,
+        "tax_ingestion": False,
+    },
+    "premium": {
+        "max_accounts": None,  # Unlimited
+        "advisor_queries_per_day": None,
+        "channels": ["web", "sms", "voice", "email"],
+        "scenarios": None,
+        "monte_carlo": True,
+        "war_room": True,
+        "tax_ingestion": True,
+    },
+    "founder_pro": {
+        # Everything in premium plus:
+        "multi_entity": True,
+        "cap_table": True,
+        "board_reports": True,
+        "fundraising_intel": True,
+        "api_access": True,
+        "priority_support": True,
+    },
+}
+
+async def require_feature(feature: str, user: User = Depends(get_current_user)):
+    """FastAPI dependency that blocks access if user's tier lacks the feature."""
+    tier = await get_user_tier(user.id)
+    if not has_feature(tier, feature):
+        raise HTTPException(403, f"Feature '{feature}' requires a higher tier")
 ```
+
+The frontend fetches the user's tier from `GET /api/v1/user/tier` and uses it for UI display only (e.g., showing upgrade prompts). It never trusts client-side tier checks for access control.
 
 **Acceptance Criteria:**
 - [ ] Stripe Billing integrated with 3 tiers
@@ -596,7 +616,7 @@ class Attestation(BaseModel):
         "accredited_investor",
     ]
     claim_data: dict        # Structured claim (e.g., {"threshold": 100000, "meets": True})
-    evidence_hash: str      # SHA-256 of underlying data (not the data itself)
+    evidence_hash: str      # HMAC-SHA256 of underlying data with per-user key (prevents rainbow table attacks)
     signature: str          # ClearMoney's cryptographic signature
     issued_at: datetime
     expires_at: datetime
@@ -798,7 +818,7 @@ PR → Lint (ruff + eslint) → Type Check (mypy + tsc) → Unit Tests → Build
 - [ ] Rate limiting on all public endpoints
 - [ ] JWT with short expiry + refresh token rotation
 - [ ] Secrets in environment variables (never in code)
-- [ ] Read-only access to linked accounts (never write credentials)
+- [ ] Enforce least privilege: read-only access by default, explicit user consent for write capabilities. Never store raw user credentials.
 - [ ] Encryption at rest for all financial data
 - [ ] Audit log for all data access and actions
 - [ ] Annual penetration testing
