@@ -11,15 +11,41 @@
   --color-brand-600: #0284c7;
   --color-brand-700: #0369a1;
 
-  /* Success/Positive */
-  --color-success-400: #4ade80;
-  --color-success-500: #22c55e;
-  --color-success-600: #16a34a;
+  /* Financial Emerald - Growth & Verified */
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+  --color-emerald-900: #064e3b;
+  --color-emerald-950: #022c22;
 
-  /* Warning */
-  --color-warning-400: #fbbf24;
-  --color-warning-500: #f59e0b;
-  --color-warning-600: #d97706;
+  /* Audit Amber - Warnings & Drift */
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-900: #78350f;
+  --color-amber-950: #451a03;
+
+  /* Sovereign Slate - UI Canvas */
+  --color-slate-800: #1e293b;
+  --color-slate-850: #162032; /* Custom deep slate */
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+
+  /* Trace Blue - Logic & Interactivity */
+  --color-trace-400: #60a5fa;
+  --color-trace-500: #3b82f6;
+  --color-trace-600: #2563eb;
+  --color-trace-900: #1e3a8a;
+
+  /* Success/Positive (Legacy mapping to Emerald) */
+  --color-success-400: var(--color-emerald-400);
+  --color-success-500: var(--color-emerald-500);
+  --color-success-600: var(--color-emerald-600);
+
+  /* Warning (Legacy mapping to Amber) */
+  --color-warning-400: var(--color-amber-400);
+  --color-warning-500: var(--color-amber-500);
+  --color-warning-600: var(--color-amber-600);
 
   /* Error/Negative */
   --color-error-400: #f87171;
