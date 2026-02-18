@@ -78,7 +78,7 @@ function PreferenceField({
 
   return (
     <div className="flex items-center justify-between py-2">
-      <span className="text-sm text-neutral-300">{label}</span>
+      <span className="text-sm text-slate-700 dark:text-slate-300">{label}</span>
       <div className="flex items-center gap-2">
         <input
           type="number"
@@ -89,9 +89,9 @@ function PreferenceField({
             setDirty(true);
           }}
           onBlur={handleBlur}
-          className="w-20 rounded-lg bg-neutral-800 border border-neutral-700 px-2 py-1 text-right text-sm text-neutral-100 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+          className="w-20 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-2 py-1 text-right text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
         />
-        {suffix && <span className="text-xs text-neutral-500 w-4">{suffix}</span>}
+        {suffix && <span className="text-xs text-slate-500 w-4">{suffix}</span>}
       </div>
     </div>
   );
@@ -127,12 +127,12 @@ function ActionPolicySettings() {
     });
   };
 
-  if (isLoading) return <div className="h-48 rounded-xl bg-neutral-800/50 animate-pulse" />;
+  if (isLoading) return <div className="h-48 rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse" />;
 
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <h3 className="text-sm font-medium text-neutral-200">Allowed Actions</h3>
+        <h3 className="text-sm font-medium text-slate-800 dark:text-slate-200">Allowed Actions</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
             { id: "savings_transfer", label: "Savings Transfers" },
@@ -146,7 +146,7 @@ function ActionPolicySettings() {
               className={`flex items-center justify-between p-3 rounded-xl border transition-all text-left ${
                 currentPolicy.allowed_actions.includes(action.id)
                   ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-300"
-                  : "bg-neutral-800/50 border-neutral-700 text-neutral-400 hover:border-neutral-600"
+                  : "bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
               }`}
             >
               <span className="text-xs font-medium">{action.label}</span>
@@ -157,28 +157,28 @@ function ActionPolicySettings() {
       </div>
 
       <div className="space-y-4 pt-2">
-        <h3 className="text-sm font-medium text-neutral-200">Guardrails</h3>
+        <h3 className="text-sm font-medium text-slate-800 dark:text-slate-200">Guardrails</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label className="text-sm text-neutral-300">Auto-confirmation Threshold</Label>
-              <p className="text-xs text-neutral-500">Require manual approval for actions above this amount.</p>
+              <Label className="text-sm text-slate-700 dark:text-slate-300">Auto-confirmation Threshold</Label>
+              <p className="text-xs text-slate-500">Require manual approval for actions above this amount.</p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-neutral-500">$</span>
+              <span className="text-xs text-slate-500">$</span>
               <input
                 type="number"
                 value={currentPolicy.max_amount ?? ""}
                 onChange={(e) => updatePolicy({ max_amount: e.target.value ? Number(e.target.value) : null })}
-                className="w-24 rounded-lg bg-neutral-800 border border-neutral-700 px-2 py-1 text-right text-sm text-neutral-100 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                className="w-24 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-2 py-1 text-right text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
               />
             </div>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label className="text-sm text-neutral-300">Require MFA</Label>
-              <p className="text-xs text-neutral-500">Biometric or secondary factor for all execution requests.</p>
+              <Label className="text-sm text-slate-700 dark:text-slate-300">Require MFA</Label>
+              <p className="text-xs text-slate-500">Biometric or secondary factor for all execution requests.</p>
             </div>
             <Switch
               checked={currentPolicy.require_mfa}
@@ -188,8 +188,8 @@ function ActionPolicySettings() {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label className="text-sm text-neutral-300">Manual Confirmation</Label>
-              <p className="text-xs text-neutral-500">Always ask for confirmation before any money movement.</p>
+              <Label className="text-sm text-slate-700 dark:text-slate-300">Manual Confirmation</Label>
+              <p className="text-xs text-slate-500">Always ask for confirmation before any money movement.</p>
             </div>
             <Switch
               checked={currentPolicy.require_confirmation}
@@ -244,11 +244,11 @@ export default function SettingsPage() {
     });
   };
 
-  const sectionClass = "p-6 rounded-xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800";
-  const rowClass = "flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800";
+  const sectionClass = "p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800";
+  const rowClass = "flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800";
 
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-neutral-950">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950">
       <div
         className="fixed inset-0 opacity-0 dark:opacity-30 pointer-events-none"
         style={{
@@ -265,8 +265,8 @@ export default function SettingsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="font-serif text-3xl text-white mb-1">Settings</h1>
-          <p className="text-neutral-400 mb-8">
+          <h1 className="font-serif text-3xl text-slate-900 dark:text-white mb-1">Settings</h1>
+          <p className="text-slate-500 dark:text-slate-400 mb-8">
             Manage your accounts, connections, and preferences
           </p>
         </motion.div>
@@ -285,7 +285,7 @@ export default function SettingsPage() {
           >
             <div className="flex items-center gap-2 mb-4">
               <Wifi className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-neutral-100">
+              <h2 className="font-serif text-xl text-slate-900 dark:text-white">
                 Connected Accounts
               </h2>
             </div>
@@ -293,21 +293,21 @@ export default function SettingsPage() {
             {connectionsLoading ? (
               <div className="space-y-2">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-14 rounded-xl bg-neutral-800/50 animate-pulse" />
+                  <div key={i} className="h-14 rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse" />
                 ))}
               </div>
             ) : connections && connections.length > 0 ? (
               <div className="space-y-2">
                 {connections.map((conn) => (
                   <div key={conn.id} className={rowClass}>
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-neutral-800 text-neutral-300 text-sm font-medium">
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium">
                       {getInitials(getInstitutionName(conn.institution_id, institutions))}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-neutral-100 truncate">
+                      <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
                         {getInstitutionName(conn.institution_id, institutions)}
                       </p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-xs text-slate-500">
                         Status: {conn.status} &middot; Provider: {conn.provider}
                       </p>
                     </div>
@@ -315,7 +315,7 @@ export default function SettingsPage() {
                       <button
                         onClick={() => syncConnection.mutate(conn.id)}
                         disabled={syncConnection.isPending}
-                        className="p-2 rounded-lg text-neutral-400 hover:text-emerald-400 hover:bg-emerald-400/10 transition-all"
+                        className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-400 hover:bg-emerald-400/10 transition-all"
                         title="Sync"
                         aria-label="Sync connection"
                       >
@@ -323,7 +323,7 @@ export default function SettingsPage() {
                       </button>
                       {pendingDeleteId === conn.id ? (
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-neutral-400">Delete?</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">Delete?</span>
                           <button
                             onClick={() => {
                               deleteConnection.mutate(conn.id);
@@ -335,7 +335,7 @@ export default function SettingsPage() {
                           </button>
                           <button
                             onClick={() => setPendingDeleteId(null)}
-                            className="text-xs font-medium px-2 py-0.5 rounded-md text-neutral-400 hover:bg-neutral-700 transition-all"
+                            className="text-xs font-medium px-2 py-0.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
                           >
                             Cancel
                           </button>
@@ -343,7 +343,7 @@ export default function SettingsPage() {
                       ) : (
                         <button
                           onClick={() => setPendingDeleteId(conn.id)}
-                          className="p-2 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                          className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all"
                           title="Disconnect"
                           aria-label="Disconnect account"
                         >
@@ -355,7 +355,7 @@ export default function SettingsPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-neutral-500">No connected accounts</p>
+              <p className="text-sm text-slate-500">No connected accounts</p>
             )}
           </motion.div>
 
@@ -368,7 +368,7 @@ export default function SettingsPage() {
           >
             <div className="flex items-center gap-2 mb-4">
               <Landmark className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-neutral-100">
+              <h2 className="font-serif text-xl text-slate-900 dark:text-white">
                 Manual Accounts
               </h2>
             </div>
@@ -376,7 +376,7 @@ export default function SettingsPage() {
             {accountsLoading ? (
               <div className="space-y-2">
                 {[1, 2].map((i) => (
-                  <div key={i} className="h-14 rounded-xl bg-neutral-800/50 animate-pulse" />
+                  <div key={i} className="h-14 rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse" />
                 ))}
               </div>
             ) : (
@@ -387,10 +387,10 @@ export default function SettingsPage() {
                       {getInitials(account.name)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-neutral-100 truncate">
+                      <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
                         {account.name}
                       </p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-xs text-slate-500">
                         Cash &middot; {formatTitleCase(account.account_type)}
                         {account.institution_name ? ` &middot; ${account.institution_name}` : ""}
                       </p>
@@ -401,14 +401,14 @@ export default function SettingsPage() {
                         className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
                           account.is_business
                             ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-400"
-                            : "bg-neutral-800 border-neutral-700 text-neutral-500 hover:text-neutral-400"
+                            : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-500 dark:hover:text-slate-400"
                         }`}
                       >
                         {account.is_business ? "Business" : "Personal"}
                       </button>
                       {pendingDeleteId === account.id ? (
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-neutral-400">Delete?</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">Delete?</span>
                           <button
                             onClick={() => {
                               cashMutations.remove.mutate(account.id);
@@ -420,7 +420,7 @@ export default function SettingsPage() {
                           </button>
                           <button
                             onClick={() => setPendingDeleteId(null)}
-                            className="text-xs font-medium px-2 py-0.5 rounded-md text-neutral-400 hover:bg-neutral-700 transition-all"
+                            className="text-xs font-medium px-2 py-0.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
                           >
                             Cancel
                           </button>
@@ -428,7 +428,7 @@ export default function SettingsPage() {
                       ) : (
                         <button
                           onClick={() => setPendingDeleteId(account.id)}
-                          className="p-2 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
+                          className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
                           title="Delete"
                           aria-label="Delete cash account"
                         >
@@ -445,10 +445,10 @@ export default function SettingsPage() {
                       <CreditCard className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-neutral-100 truncate">
+                      <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
                         {account.name}
                       </p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-xs text-slate-500">
                         Debt &middot; {formatTitleCase(account.debt_type)}
                         {account.institution_name ? ` &middot; ${account.institution_name}` : ""}
                       </p>
@@ -459,14 +459,14 @@ export default function SettingsPage() {
                         className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
                           account.is_business
                             ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-400"
-                            : "bg-neutral-800 border-neutral-700 text-neutral-500 hover:text-neutral-400"
+                            : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-500 dark:hover:text-slate-400"
                         }`}
                       >
                         {account.is_business ? "Business" : "Personal"}
                       </button>
                       {pendingDeleteId === account.id ? (
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-neutral-400">Delete?</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">Delete?</span>
                           <button
                             onClick={() => {
                               debtMutations.remove.mutate(account.id);
@@ -478,7 +478,7 @@ export default function SettingsPage() {
                           </button>
                           <button
                             onClick={() => setPendingDeleteId(null)}
-                            className="text-xs font-medium px-2 py-0.5 rounded-md text-neutral-400 hover:bg-neutral-700 transition-all"
+                            className="text-xs font-medium px-2 py-0.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
                           >
                             Cancel
                           </button>
@@ -486,7 +486,7 @@ export default function SettingsPage() {
                       ) : (
                         <button
                           onClick={() => setPendingDeleteId(account.id)}
-                          className="p-2 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
+                          className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
                           title="Delete"
                           aria-label="Delete debt account"
                         >
@@ -503,10 +503,10 @@ export default function SettingsPage() {
                       <TrendingUp className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-neutral-100 truncate">
+                      <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
                         {account.name}
                       </p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-xs text-slate-500">
                         Investment &middot; {formatTitleCase(account.account_type)}
                       </p>
                     </div>
@@ -516,14 +516,14 @@ export default function SettingsPage() {
                         className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
                           account.is_business
                             ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-400"
-                            : "bg-neutral-800 border-neutral-700 text-neutral-500 hover:text-neutral-400"
+                            : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-500 dark:hover:text-slate-400"
                         }`}
                       >
                         {account.is_business ? "Business" : "Personal"}
                       </button>
                       {pendingDeleteId === account.id ? (
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-neutral-400">Delete?</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">Delete?</span>
                           <button
                             onClick={() => {
                               investmentMutations.remove.mutate(account.id);
@@ -535,7 +535,7 @@ export default function SettingsPage() {
                           </button>
                           <button
                             onClick={() => setPendingDeleteId(null)}
-                            className="text-xs font-medium px-2 py-0.5 rounded-md text-neutral-400 hover:bg-neutral-700 transition-all"
+                            className="text-xs font-medium px-2 py-0.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
                           >
                             Cancel
                           </button>
@@ -543,7 +543,7 @@ export default function SettingsPage() {
                       ) : (
                         <button
                           onClick={() => setPendingDeleteId(account.id)}
-                          className="p-2 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
+                          className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -554,7 +554,7 @@ export default function SettingsPage() {
                 ))}
 
                 {(!allAccounts?.cash_accounts.length && !allAccounts?.debt_accounts.length && !allAccounts?.investment_accounts.filter(a => !a.connection_id).length) && (
-                  <p className="text-sm text-neutral-500">No manual accounts</p>
+                  <p className="text-sm text-slate-500">No manual accounts</p>
                 )}
               </div>
             )}
@@ -572,11 +572,11 @@ export default function SettingsPage() {
           >
             <div className="flex items-center gap-2 mb-4">
               <Shield className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-neutral-100">
+              <h2 className="font-serif text-xl text-slate-900 dark:text-white">
                 Action Policy & Guardrails
               </h2>
             </div>
-            <p className="text-sm text-neutral-400 mb-6">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
               Define the boundaries for the AI Advisor's execution capabilities.
             </p>
             <ActionPolicySettings />
@@ -591,11 +591,11 @@ export default function SettingsPage() {
           >
             <div className="flex items-center gap-2 mb-4">
               <Info className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-neutral-100">
+              <h2 className="font-serif text-xl text-slate-900 dark:text-white">
                 Data Access & Consent
               </h2>
             </div>
-            <p className="text-sm text-neutral-400 mb-4">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
               You control what data ClearMoney can use. Revoke access at any time.
             </p>
             <div className="space-y-3">
@@ -607,8 +607,8 @@ export default function SettingsPage() {
                 return (
                   <div key={scope} className={rowClass}>
                     <div className="flex-1">
-                      <p className="text-sm text-neutral-100">{scope.replace(/:/g, " ")}</p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-sm text-slate-900 dark:text-white">{scope.replace(/:/g, " ")}</p>
+                      <p className="text-xs text-slate-500">
                         {active ? "Active consent" : "Not granted"}
                       </p>
                     </div>
@@ -616,12 +616,12 @@ export default function SettingsPage() {
                       <button
                         onClick={() => revokeConsent.mutate(active.id)}
                         disabled={revokeConsent.isPending}
-                        className="text-xs rounded-full border border-neutral-700 px-3 py-1 text-neutral-300 hover:border-rose-400 hover:text-rose-300 transition"
+                        className="text-xs rounded-full border border-slate-300 dark:border-slate-700 px-3 py-1 text-slate-700 dark:text-slate-300 hover:border-rose-400 hover:text-rose-300 transition"
                       >
                         Revoke
                       </button>
                     ) : (
-                      <span className="text-xs text-neutral-500">—</span>
+                      <span className="text-xs text-slate-500">—</span>
                     )}
                   </div>
                 );
@@ -636,13 +636,13 @@ export default function SettingsPage() {
             transition={{ delay: 0.3 }}
             className={sectionClass}
           >
-            <h2 className="font-serif text-xl text-neutral-100 mb-4">
+            <h2 className="font-serif text-xl text-slate-900 dark:text-white mb-4">
               Financial Assumptions (Seven Pillars)
             </h2>
-            <p className="text-sm text-neutral-400 mb-4">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
               Customize the global constants used for projections and analysis.
             </p>
-            <div className="divide-y divide-neutral-800">
+            <div className="divide-y divide-slate-200 dark:divide-slate-800">
               <PreferenceField
                 label="Inflation Target"
                 prefKey="inflation_target"
@@ -695,24 +695,24 @@ export default function SettingsPage() {
             transition={{ delay: 0.35 }}
             className={sectionClass}
           >
-            <h2 className="font-serif text-xl text-neutral-100 mb-4">
+            <h2 className="font-serif text-xl text-slate-900 dark:text-white mb-4">
               Notifications
             </h2>
             <div className="space-y-3">
               <label className="flex items-center justify-between">
-                <span className="text-sm text-neutral-300">
+                <span className="text-sm text-slate-700 dark:text-slate-300">
                   Email notifications
                 </span>
-                <div className="w-10 h-6 rounded-full bg-neutral-700 relative cursor-not-allowed opacity-50">
-                  <div className="w-4 h-4 rounded-full bg-neutral-400 absolute top-1 left-1" />
+                <div className="w-10 h-6 rounded-full bg-slate-200 dark:bg-slate-700 relative cursor-not-allowed opacity-50">
+                  <div className="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-400 absolute top-1 left-1" />
                 </div>
               </label>
               <label className="flex items-center justify-between">
-                <span className="text-sm text-neutral-300">
+                <span className="text-sm text-slate-700 dark:text-slate-300">
                   Weekly portfolio summary
                 </span>
-                <div className="w-10 h-6 rounded-full bg-neutral-700 relative cursor-not-allowed opacity-50">
-                  <div className="w-4 h-4 rounded-full bg-neutral-400 absolute top-1 left-1" />
+                <div className="w-10 h-6 rounded-full bg-slate-200 dark:bg-slate-700 relative cursor-not-allowed opacity-50">
+                  <div className="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-400 absolute top-1 left-1" />
                 </div>
               </label>
             </div>
@@ -727,11 +727,11 @@ export default function SettingsPage() {
           >
             <div className="flex items-center gap-2 mb-3">
               <Info className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-neutral-100">About</h2>
+              <h2 className="font-serif text-xl text-slate-900 dark:text-white">About</h2>
             </div>
-            <div className="space-y-1 text-sm text-neutral-400">
+            <div className="space-y-1 text-sm text-slate-500 dark:text-slate-400">
               <p>
-                <span className="text-neutral-300 font-medium">ClearMoney</span>{" "}
+                <span className="text-slate-700 dark:text-slate-300 font-medium">ClearMoney</span>{" "}
                 — Portfolio Dashboard
               </p>
               <p>Version 0.1.0</p>

@@ -67,12 +67,12 @@ export function NotificationCenter() {
     <div className="relative" ref={containerRef}>
       <button
         onClick={toggleOpen}
-        className="relative p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5 transition-all"
+        className="relative p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-white hover:bg-white/5 transition-all"
         aria-label="Notifications"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 border-2 border-neutral-950" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 border-2 border-white dark:border-slate-950" />
         )}
       </button>
 
@@ -83,11 +83,11 @@ export function NotificationCenter() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-neutral-900 border border-neutral-800 shadow-2xl overflow-hidden z-50"
+            className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden z-50"
           >
-            <div className="flex items-center justify-between p-4 border-b border-neutral-800 bg-neutral-900/50">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
               <div className="flex items-center gap-2">
-                <h3 className="font-medium text-neutral-100">Notifications</h3>
+                <h3 className="font-medium text-slate-900 dark:text-white">Notifications</h3>
                 {unreadCount > 0 && (
                   <span className="px-1.5 py-0.5 rounded-full bg-emerald-900/30 text-emerald-400 text-[10px] font-bold">
                     {unreadCount} NEW
@@ -98,14 +98,14 @@ export function NotificationCenter() {
                 {unreadCount > 0 && (
                   <button
                     onClick={() => markAllRead.mutate()}
-                    className="text-[10px] uppercase tracking-widest text-neutral-500 hover:text-emerald-400 transition-colors"
+                    className="text-[10px] uppercase tracking-widest text-slate-500 hover:text-emerald-400 transition-colors"
                   >
                     Mark all read
                   </button>
                 )}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1 rounded-md text-neutral-500 hover:text-white transition-colors"
+                  className="p-1 rounded-md text-slate-500 hover:text-white transition-colors"
                   aria-label="Close notifications"
                 >
                   <X className="w-4 h-4" />
@@ -113,19 +113,19 @@ export function NotificationCenter() {
               </div>
             </div>
 
-            <div className="max-h-[400px] overflow-y-auto divide-y divide-neutral-800/50">
+            <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-200/50 dark:divide-slate-800/50">
               {isLoading ? (
                 <div className="p-8 text-center">
                   <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                  <p className="text-xs text-neutral-500">Checking for updates...</p>
+                  <p className="text-xs text-slate-500">Checking for updates...</p>
                 </div>
               ) : !notifications || notifications.length === 0 ? (
                 <div className="p-12 text-center">
-                  <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center mx-auto mb-4">
-                    <Bell className="w-6 h-6 text-neutral-600" />
+                  <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                    <Bell className="w-6 h-6 text-slate-400 dark:text-slate-600" />
                   </div>
-                  <p className="text-sm text-neutral-200">All clear</p>
-                  <p className="text-xs text-neutral-500 mt-1">No new alerts at this time.</p>
+                  <p className="text-sm text-slate-800 dark:text-slate-200">All clear</p>
+                  <p className="text-xs text-slate-500 mt-1">No new alerts at this time.</p>
                 </div>
               ) : (
                 notifications.map((n) => (
@@ -144,14 +144,14 @@ export function NotificationCenter() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <p className={`text-sm font-medium leading-tight ${n.is_read ? "text-neutral-300" : "text-neutral-100"}`}>
+                          <p className={`text-sm font-medium leading-tight ${n.is_read ? "text-slate-700 dark:text-slate-300" : "text-slate-900 dark:text-white"}`}>
                             {n.title}
                           </p>
-                          <span className="text-[10px] text-neutral-600 whitespace-nowrap pt-0.5">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-600 whitespace-nowrap pt-0.5">
                             {new Date(n.created_at).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-xs text-neutral-500 mt-1 leading-relaxed">
+                        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                           {n.message}
                         </p>
                         
@@ -172,7 +172,7 @@ export function NotificationCenter() {
                           {!n.is_read && (
                             <button
                               onClick={() => updateNotification.mutate({ id: n.id, data: { is_read: true } })}
-                              className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-neutral-300"
+                              className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                             >
                               Dismiss
                             </button>
@@ -185,11 +185,11 @@ export function NotificationCenter() {
               )}
             </div>
             
-            <div className="p-3 bg-neutral-900 border-t border-neutral-800 text-center">
+            <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-center">
               <Link
                 href="/settings"
                 onClick={() => setIsOpen(false)}
-                className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-neutral-300"
+                className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               >
                 Notification Settings
               </Link>

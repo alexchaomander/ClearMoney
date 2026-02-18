@@ -64,12 +64,12 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
               <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded border ${
                 isExecuted 
                   ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" 
-                  : "bg-slate-800 text-neutral-500 border-slate-700"
+                  : "bg-slate-800 text-slate-500 border-slate-700"
               }`}>
                 {isExecuted ? "Executed" : status}
               </span>
             </div>
-            <p className="text-xs text-neutral-400 mt-1">
+            <p className="text-xs text-slate-400 mt-1">
               {recommendation.summary}
             </p>
           </div>
@@ -78,7 +78,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
         <div className="mt-4 flex items-center justify-between gap-4">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+            className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
           >
             {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
             {isExpanded ? "Hide Details" : "Show Details"}
@@ -119,10 +119,10 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
             <div className="p-4 space-y-4 text-xs">
               {details?.rationale && (
                 <div>
-                  <p className="text-neutral-500 uppercase tracking-widest text-[10px] mb-2 font-bold">Rationale</p>
+                  <p className="text-slate-500 uppercase tracking-widest text-[10px] mb-2 font-bold">Rationale</p>
                   <ul className="space-y-1.5">
                     {details.rationale.map((step: string, i: number) => (
-                      <li key={i} className="flex gap-2 text-neutral-300">
+                      <li key={i} className="flex gap-2 text-slate-300">
                         <span className="text-emerald-500 shrink-0">•</span>
                         {step}
                       </li>
@@ -137,7 +137,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
                     <Info className="w-3 h-3 text-sky-400" />
                     <span className="font-medium text-slate-200 uppercase tracking-wider text-[10px]">Action Payload</span>
                   </div>
-                  <pre className="bg-black/40 p-2 rounded text-[10px] text-neutral-400 overflow-x-auto">
+                  <pre className="bg-black/40 p-2 rounded text-[10px] text-slate-400 overflow-x-auto">
                     {JSON.stringify(action, null, 2)}
                   </pre>
                 </div>
