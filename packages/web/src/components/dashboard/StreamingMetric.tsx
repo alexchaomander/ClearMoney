@@ -15,7 +15,7 @@ export function StreamingMetric({
   formatter = (v) => v.toLocaleString(),
   className,
 }: StreamingMetricProps) {
-  const [displayValue, setDisplayValue] = useState(0);
+  const [displayValue, setDisplayValue] = useState(value);
 
   useEffect(() => {
     const controls = animate(displayValue, value, {
@@ -23,7 +23,7 @@ export function StreamingMetric({
       onUpdate: (latest) => setDisplayValue(latest),
     });
     return () => controls.stop();
-  }, [value, displayValue]);
+  }, [value]);
 
   return (
     <span className={cn("font-mono tabular-nums", className)}>

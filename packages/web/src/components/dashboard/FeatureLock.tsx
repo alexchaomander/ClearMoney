@@ -51,8 +51,8 @@ export function FeatureLock({
             Data Pillars Required
           </p>
           <div className="flex flex-wrap justify-center gap-2">
-            {requiredData.map((data, i) => (
-              <span key={i} className="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-[10px] font-mono text-slate-300">
+            {requiredData.map((data) => (
+              <span key={data} className="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-[10px] font-mono text-slate-300">
                 {data}
               </span>
             ))}

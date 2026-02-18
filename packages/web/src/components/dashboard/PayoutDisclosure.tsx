@@ -70,8 +70,8 @@ export function PayoutDisclosure() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
-            {SAMPLE_PAYOUTS.map((item, i) => (
-              <tr key={i} className="group hover:bg-slate-800/20 transition-colors">
+            {SAMPLE_PAYOUTS.map((item) => (
+              <tr key={item.product} className="group hover:bg-slate-800/20 transition-colors">
                 <td className="px-6 py-4">
                   <div className="font-medium text-white">{item.product}</div>
                   <div className="text-xs text-slate-500">{item.category}</div>

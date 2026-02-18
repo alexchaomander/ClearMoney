@@ -54,8 +54,8 @@ export default function TransparencyPage() {
                     "We prioritize your financial health over affiliate revenue.",
                     "We use bank-grade encryption for all connections.",
                     "We open-source our core methodology."
-                  ].map((item, i) => (
-                    <li key={i} className="flex gap-3 text-sm text-slate-400">
+                  ].map((item) => (
+                    <li key={item} className="flex gap-3 text-sm text-slate-400">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
                       {item}
                     </li>

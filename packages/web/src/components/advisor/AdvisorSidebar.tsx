@@ -88,6 +88,7 @@ export function AdvisorSidebar() {
       const reader = stream.getReader();
       const decoder = new TextDecoder();
       let assistantContent = "";
+      let buffer = "";
       const toolCalls: { name: string; result: string }[] = [];
 
       setMessages((prev) => [...prev, { role: "assistant", content: "", toolCalls: [] }]);
@@ -96,9 +97,11 @@ export function AdvisorSidebar() {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const text = decoder.decode(value, { stream: true });
-        const lines = text.split("
-");
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        
+        // Keep the last partial line in the buffer
+        buffer = lines.pop() || "";
 
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
