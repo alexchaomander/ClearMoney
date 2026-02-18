@@ -132,9 +132,9 @@ export default function WarRoomPage() {
   }, [selectedTraceId, traces]);
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
       <div
-        className="fixed inset-0 opacity-30 pointer-events-none"
+        className="fixed inset-0 opacity-10 dark:opacity-30 pointer-events-none"
         style={{
           background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16, 185, 129, 0.1) 0%, transparent 60%)",
         }}
@@ -146,25 +146,25 @@ export default function WarRoomPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div>
-            <div className="flex items-center gap-2 text-emerald-400 mb-4">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-4">
               <ShieldAlert className="w-5 h-5" />
               <span className="text-[10px] font-bold uppercase tracking-widest font-mono">Action Approval Queue</span>
             </div>
-            <h1 className="font-display text-4xl text-white mb-2">The War Room</h1>
-            <p className="text-slate-400 max-w-xl">
+            <h1 className="font-display text-4xl text-slate-900 dark:text-white mb-2">The War Room</h1>
+            <p className="text-slate-500 dark:text-slate-400 max-w-xl">
               Authorize high-fidelity financial maneuvers drafted by your Advisor. 
               Review the logic, verify the math, and execute with one-touch security.
             </p>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="px-4 py-3 rounded-2xl bg-slate-900 border border-slate-800 text-center min-w-[120px]">
-              <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Pending</p>
-              <p className="text-xl font-mono font-bold text-amber-400">{stats.pending}</p>
+            <div className="px-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center min-w-[120px] shadow-sm">
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold mb-1">Pending</p>
+              <p className="text-xl font-mono font-bold text-amber-600 dark:text-amber-400">{stats.pending}</p>
             </div>
-            <div className="px-4 py-3 rounded-2xl bg-slate-900 border border-slate-800 text-center min-w-[120px]">
-              <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Executed</p>
-              <p className="text-xl font-mono font-bold text-emerald-400">{stats.completed}</p>
+            <div className="px-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center min-w-[120px] shadow-sm">
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold mb-1">Executed</p>
+              <p className="text-xl font-mono font-bold text-emerald-600 dark:text-emerald-400">{stats.completed}</p>
             </div>
           </div>
         </div>
@@ -175,7 +175,7 @@ export default function WarRoomPage() {
         >
           {/* Controls */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-            <div className="flex items-center gap-2 bg-slate-900/50 p-1 rounded-xl border border-slate-800">
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
               {[
                 { id: "all" as const, label: "All Intents" },
                 { id: "ready" as ActionStatus, label: "Ready" },
@@ -188,8 +188,8 @@ export default function WarRoomPage() {
                   className={cn(
                     "px-4 py-2 text-xs font-bold rounded-lg transition-all",
                     filter === t.id 
-                      ? "bg-slate-800 text-white shadow-sm" 
-                      : "text-slate-500 hover:text-slate-300"
+                      ? "bg-slate-900 dark:bg-slate-800 text-white shadow-sm" 
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-300"
                   )}
                 >
                   {t.label}
@@ -199,7 +199,7 @@ export default function WarRoomPage() {
 
             <button 
               onClick={() => refetch()}
-              className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-xs font-bold text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin")} />
               Refresh Queue
@@ -210,21 +210,21 @@ export default function WarRoomPage() {
           {isLoading ? (
             <div className="grid md:grid-cols-2 gap-6">
               {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-48 rounded-2xl bg-slate-900/50 border border-slate-800 animate-pulse" />
+                <div key={i} className="h-48 rounded-2xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 animate-pulse shadow-sm" />
               ))}
             </div>
           ) : filteredIntents.length === 0 ? (
-            <div className="py-24 text-center rounded-3xl border border-dashed border-slate-800 bg-slate-900/20">
-              <div className="w-16 h-16 rounded-full bg-slate-900 flex items-center justify-center mx-auto mb-4 text-slate-600">
+            <div className="py-24 text-center rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/20">
+              <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center mx-auto mb-4 text-slate-300 dark:text-slate-600">
                 <Search className="w-8 h-8" />
               </div>
-              <h3 className="text-white font-medium mb-1">No maneuvers found</h3>
+              <h3 className="text-slate-900 dark:text-white font-medium mb-1">No maneuvers found</h3>
               <p className="text-sm text-slate-500">
                 Your queue is empty. Ask the Advisor to help optimize your portfolio.
               </p>
               <Link 
                 href="/advisor"
-                className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
+                className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors"
               >
                 Go to Advisor
                 <ArrowLeft className="w-4 h-4 rotate-180" />
