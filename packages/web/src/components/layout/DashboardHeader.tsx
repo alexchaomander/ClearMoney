@@ -23,6 +23,7 @@ export function DashboardHeader({
   const navItems = [
     { label: "Tools", href: "/tools" },
     { label: "Dashboard", href: "/dashboard" },
+    { label: "War Room", href: "/dashboard/war-room" },
     { label: "Action Lab", href: "/dashboard/action-lab", isPreview: true },
     { label: "Connect", href: "/connect" },
     { label: "Advisor", href: "/advisor" },
@@ -46,12 +47,9 @@ export function DashboardHeader({
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               {navItems.map((item) => {
-                const isActive = pathname === item.href ||
-                  (item.href === "/dashboard" && pathname.startsWith("/dashboard") && !pathname.startsWith("/dashboard/action-lab")) ||
-                  (item.href === "/dashboard/action-lab" && pathname === "/dashboard/action-lab") ||
-                  (item.href === "/connect" && pathname.startsWith("/connect")) ||
-                  (item.href === "/settings" && pathname.startsWith("/settings")) ||
-                  (item.href === "/profile" && pathname.startsWith("/profile"));
+                const isActive = item.href === "/dashboard" 
+                  ? pathname === "/dashboard"
+                  : pathname.startsWith(item.href);
 
                 return (
                   <Link

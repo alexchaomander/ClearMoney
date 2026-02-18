@@ -28,6 +28,7 @@ interface ActionIntentCardProps {
   confidence?: number;
   onReview?: () => void;
   onExecute?: () => void;
+  onDownload?: () => void;
   className?: string;
 }
 
@@ -41,6 +42,7 @@ export function ActionIntentCard({
   confidence = 1.0,
   onReview,
   onExecute,
+  onDownload,
   className,
 }: ActionIntentCardProps) {
   const { density } = useDensity();
@@ -136,6 +138,17 @@ export function ActionIntentCard({
         </div>
 
         <div className="flex gap-2">
+          {onDownload && (status === "ready" || status === "executing" || status === "completed") && (
+            <button
+              onClick={onDownload}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-850 text-slate-300 text-xs font-bold hover:bg-slate-800 transition-colors border border-slate-700"
+              title={type.includes('transfer') ? "Download PDF Switch Kit" : "Download Action Manifest"}
+            >
+              <Info className="w-3.5 h-3.5" />
+              Switch Kit
+            </button>
+          )}
+
           {status === "ready" && (
             <button
               onClick={onReview}

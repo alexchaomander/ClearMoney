@@ -126,6 +126,23 @@ This document outlines the comprehensive plan to elevate the ClearMoney UI/UX to
 
 ---
 
+## 7. Action Execution Hub (The War Room)
+**Goal:** A centralized "Inbox" for authorizing financial maneuvers and generating switch kits.
+
+### 7.1 Queue Management
+- [x] **Page Implementation:** Create `/dashboard/war-room` to manage all pending intents.
+- [x] **Filter Logic:** Support filtering by "Ready," "Draft," and "Executed" history.
+
+### 7.2 Authorization Workflow
+- [x] **Logic Review:** Seamless integration with `TraceModal` to verify AI reasoning before execution.
+- [x] **Biometric Authorization:** High-fidelity `BiometricOverlay` for authorizing maneuvers.
+
+### 7.3 Switch Kit Integration
+- [x] **PDF Manifests:** Specialized PDF templates for ACATS and ACH transfers.
+- [x] **Download UX:** Direct "Switch Kit" download button from the Action Intent Card.
+
+---
+
 ## Execution Strategy
 
-1.  **Phase 1-6:** Completed.
+1.  **Phase 1-7:** Completed.
