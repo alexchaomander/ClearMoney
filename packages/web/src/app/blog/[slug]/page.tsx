@@ -44,8 +44,11 @@ export default async function BlogPostPage({ params }: PageProps) {
     notFound();
   }
 
-  const categoryId = post.tags[0]?.toLowerCase().replace(" ", "-");
-  const category = categories.find((c) => c.id === categoryId) || categories[0];
+  // Try matching each tag against known categories (tags may not be in category-id format)
+  const category = post.tags.reduce<(typeof categories)[number] | undefined>(
+    (found, tag) => found || categories.find((c) => c.id === tag.toLowerCase().replace(/\s+/g, "-")),
+    undefined,
+  ) || categories[0];
   const accentColor = category?.primaryColor || "#10b981";
   const categoryName = category?.name || post.tags[0] || "General";
 

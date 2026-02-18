@@ -117,24 +117,27 @@ function classifyExpense(tx: TxLike): "business" | "personal" | "unknown" {
 function riskTone(risk: RiskBand) {
   if (risk === "good") {
     return {
-      badge: "text-emerald-200 bg-emerald-900/30 border-emerald-700",
+      badge: "text-emerald-700 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700",
       bar: "bg-emerald-500",
-      text: "text-emerald-100",
+      text: "text-emerald-600 dark:text-emerald-400",
+      icon: "text-emerald-500",
       label: "Strong",
     };
   }
   if (risk === "watch") {
     return {
-      badge: "text-amber-200 bg-amber-900/30 border-amber-700",
+      badge: "text-amber-700 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700",
       bar: "bg-amber-500",
-      text: "text-amber-100",
+      text: "text-amber-600 dark:text-amber-400",
+      icon: "text-amber-500",
       label: "Watch",
     };
   }
   return {
-    badge: "text-rose-200 bg-rose-900/30 border-rose-700",
+    badge: "text-rose-700 dark:text-rose-200 bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-700",
     bar: "bg-rose-500",
-    text: "text-rose-100",
+    text: "text-rose-600 dark:text-rose-400",
+    icon: "text-rose-500",
     label: "Needs Action",
   };
 }
@@ -500,6 +503,7 @@ export default function FounderOperatingRoomPage() {
     },
   ], [personalRunway, entityRunway, derived]);
 
+  const comminglingTone = riskTone(derived.comminglingBand);
   const comminglingBar = toPercent(1 - derived.personalShare);
 
   async function handleRefresh() {
@@ -707,17 +711,17 @@ export default function FounderOperatingRoomPage() {
             <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg text-slate-900 dark:text-white font-medium">Commingling signal</h2>
-                <ShieldAlert className={`w-4 h-4 ${derived.comminglingBand === 'critical' ? 'text-rose-500' : 'text-emerald-500'}`} />
+                <ShieldAlert className={`w-4 h-4 ${comminglingTone.icon}`} />
               </div>
               <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 Personal spend share across observed transactions.
               </p>
-              <p className={`mt-3 text-2xl font-display ${derived.comminglingBand === 'critical' ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+              <p className={`mt-3 text-2xl font-display ${comminglingTone.text}`}>
                 {vulnerabilityReport?.risk_score as number ?? toPercent(1 - derived.personalShare)}%
               </p>
               <div className="mt-3 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                 <div
-                  className={`h-full ${derived.comminglingBand === 'critical' ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                  className={`h-full ${comminglingTone.bar}`}
                   style={{ width: `${vulnerabilityReport?.risk_score as number ?? comminglingBar}%` }}
                 />
               </div>
@@ -781,7 +785,7 @@ export default function FounderOperatingRoomPage() {
                     Strengthen data quality
                   </p>
                   <p className="text-xs text-emerald-700/70 dark:text-emerald-100/70 mt-1">
-                    Fill profile and account gabs to improve recommendation strength.
+                    Fill profile and account gaps to improve recommendation strength.
                   </p>
                 </Link>
                 <Link

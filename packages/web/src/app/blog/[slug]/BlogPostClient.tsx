@@ -15,6 +15,8 @@ import {
   BarChart3,
   Sparkles,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 import type { Post } from "@/lib/content/types";
 
@@ -158,20 +160,18 @@ export function BlogPostClient({ post, accentColor, categoryName }: BlogPostClie
                 prose-blockquote:border-l-4 prose-blockquote:border-emerald-500 prose-blockquote:bg-emerald-50/50 dark:prose-blockquote:bg-emerald-950/20 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-2xl
                 prose-a:text-emerald-600 dark:prose-a:text-emerald-400 prose-a:font-bold prose-a:no-underline hover:prose-a:underline
               ">
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: post.content
-                      .replace(/^# .+\n/, "")
-                      .replace(/\n## /g, '\n<h2 class="font-display tracking-tight text-slate-900 dark:text-white">')
-                      .replace(/\n### /g, '\n<h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-10 mb-4">')
-                      .replace(/\n\n/g, "</p><p>")
-                      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-                      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-                      .replace(/^- (.+)$/gm, "<li>$1</li>")
-                      .replace(/(<li>.*<\/li>\n?)+/g, '<ul class="list-disc pl-6 my-6 space-y-2">$&</ul>')
-                      .replace(/---/g, '<hr class="my-16 border-slate-200 dark:border-slate-800">')
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h1: () => null,
+                    h2: ({ children }) => <h2 className="font-display tracking-tight text-slate-900 dark:text-white">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-10 mb-4">{children}</h3>,
+                    ul: ({ children }) => <ul className="list-disc pl-6 my-6 space-y-2">{children}</ul>,
+                    hr: () => <hr className="my-16 border-slate-200 dark:border-slate-800" />,
                   }}
-                />
+                >
+                  {post.content}
+                </ReactMarkdown>
               </div>
 
               {/* Maneuver Bridge CTA */}

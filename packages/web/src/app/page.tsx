@@ -19,6 +19,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { VALUATIONS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 // --- Sub-components for Polish ---
@@ -45,13 +46,7 @@ function ProductWindow({ children, title }: { children: React.ReactNode, title: 
   );
 }
 
-const VALUATIONS = [
-  { program: "Chase UR", value: "2.05 cpp", delta: "+0.05" },
-  { program: "Amex MR", value: "1.80 cpp", delta: "-0.02" },
-  { program: "Bilt Rewards", value: "2.10 cpp", delta: "0.00" },
-  { program: "Capital One", value: "1.75 cpp", delta: "+0.01" },
-  { program: "Marriott", value: "0.80 cpp", delta: "-0.05" }
-];
+// VALUATIONS imported from @/lib/constants
 
 // --- Main Page ---
 
@@ -197,7 +192,7 @@ export default function LandingPage() {
                   <span className="text-emerald-600 dark:text-emerald-400 italic">Transparency.</span>
                 </h2>
                 <p className="text-xl text-slate-500 dark:text-slate-400 leading-relaxed mb-10">
-                  generic advice is for the average. You are not average. Every recommendation in ClearMoney is backed by a verifiable **Logic Trace**. 
+                  Generic advice is for the average. You are not average. Every recommendation in ClearMoney is backed by a verifiable <strong>Logic Trace</strong>.
                 </p>
                 
                 <div className="space-y-6">
@@ -408,7 +403,7 @@ export default function LandingPage() {
                   <span className="text-purple-600 dark:text-purple-400 italic">Future.</span>
                 </h2>
                 <p className="text-xl text-slate-500 dark:text-slate-400 leading-relaxed mb-10">
-                  Real wealth is about planning for the unknown. Use the **Scenario Lab** to stress-test your liquidity against market shocks, pivots, and hiring plans in real-time.
+                  Real wealth is about planning for the unknown. Use the <strong>Scenario Lab</strong> to stress-test your liquidity against market shocks, pivots, and hiring plans in real-time.
                 </p>
                 <Link href="/dashboard/scenario-lab" className="group text-slate-900 dark:text-white font-bold text-lg flex items-center gap-2 hover:gap-3 transition-all">
                   Try the Simulation
