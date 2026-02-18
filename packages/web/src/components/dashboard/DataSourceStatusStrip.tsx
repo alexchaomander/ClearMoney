@@ -285,11 +285,11 @@ function DataSourceStrip({ items, usingDemoData }: DataSourceStatusStripProps) {
       : "No critical data blocks; remaining items are mostly quality-upgrade opportunities.";
 
   return (
-    <section className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+    <section className="rounded-xl border border-slate-800 bg-slate-900 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center justify-between mb-1">
-            <p className="text-sm uppercase tracking-[0.16em] text-neutral-400">Data sources</p>
+            <p className="text-sm uppercase tracking-[0.16em] text-slate-400">Data sources</p>
             <Link 
               href="/data-health" 
               className="text-[10px] uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1.5"
@@ -298,11 +298,11 @@ function DataSourceStrip({ items, usingDemoData }: DataSourceStatusStripProps) {
               Full Health Report
             </Link>
           </div>
-          <p className="text-xs text-neutral-500 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             {connectedCount}/{items.length} live sources ({completionRate}% readiness)
           </p>
           <p className={`mt-2 text-xs ${readiness.text}`}>{blockLabel}</p>
-          <div className="mt-2 h-2 rounded-full bg-neutral-800 overflow-hidden max-w-sm">
+          <div className="mt-2 h-2 rounded-full bg-slate-800 overflow-hidden max-w-sm">
             <div className={`h-full ${readiness.bar}`} style={{ width: `${readinessScore}%` }} />
           </div>
           <span className={`inline-flex mt-2 items-center gap-2 rounded-full border px-3 py-1 text-[11px] ${readiness.badge}`}>
@@ -342,13 +342,13 @@ function DataSourceStrip({ items, usingDemoData }: DataSourceStatusStripProps) {
               : `${syncStyle.label}${lastSyncedText ? ` · ${lastSyncedText}` : ""}`;
 
           return (
-            <article key={item.id} className={`rounded-lg border ${styles.border} bg-neutral-950 p-3`}>
+            <article key={item.id} className={`rounded-lg border ${styles.border} bg-slate-950 p-3`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-2">
                   <Icon className={`w-4 h-4 mt-0.5 ${styles.dot}`} />
                   <div className="space-y-1">
                     <p className="text-sm text-white">{item.title}</p>
-                    <p className="text-xs text-neutral-400">{item.detail}</p>
+                    <p className="text-xs text-slate-400">{item.detail}</p>
                   </div>
                 </div>
                 <span
@@ -366,7 +366,7 @@ function DataSourceStrip({ items, usingDemoData }: DataSourceStatusStripProps) {
                 {item.href ? (
                   <Link
                     href={item.href}
-                    className="text-xs rounded-full border border-neutral-700 px-3 py-1 text-neutral-300 hover:border-neutral-500 hover:text-neutral-100 transition-colors"
+                    className="text-xs rounded-full border border-slate-700 px-3 py-1 text-slate-300 hover:border-slate-500 hover:text-slate-100 transition-colors"
                   >
                     {item.actionLabel ?? "Open"}
                   </Link>
@@ -378,14 +378,14 @@ function DataSourceStrip({ items, usingDemoData }: DataSourceStatusStripProps) {
       </div>
 
       {usingDemoData || unresolved.length > 0 ? (
-        <div className="mt-4 rounded-lg border border-neutral-800 bg-neutral-950 p-3">
+        <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950 p-3">
           <p className="text-sm text-white">Strata integration next actions</p>
           {usingDemoData ? (
-            <p className="text-xs text-neutral-400 mt-1">
+            <p className="text-xs text-slate-400 mt-1">
               Connect these live pillars to move from synthetic data to your real financial graph.
             </p>
           ) : (
-            <p className="text-xs text-neutral-400 mt-1">
+            <p className="text-xs text-slate-400 mt-1">
               Your data stream is partially active. Completing these data sources increases decision confidence.
             </p>
           )}
@@ -398,7 +398,7 @@ function DataSourceStrip({ items, usingDemoData }: DataSourceStatusStripProps) {
                   <Link
                     key={action.href}
                     href={action.href}
-                    className="inline-flex items-center gap-2 rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1 text-xs text-neutral-200 hover:border-emerald-500 transition-colors"
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-slate-200 hover:border-emerald-500 transition-colors"
                   >
                     <ActionIcon className="w-3 h-3" />
                     {action.actionLabel}
@@ -408,7 +408,7 @@ function DataSourceStrip({ items, usingDemoData }: DataSourceStatusStripProps) {
               })}
             </div>
           ) : (
-            <p className="mt-3 text-xs text-neutral-500">
+            <p className="mt-3 text-xs text-slate-500">
               No additional actions are exposed for this surface. Review source details above.
             </p>
           )}
@@ -434,14 +434,14 @@ export function DataSourceStatusStrip({
     const readiness = readinessStyles[readinessBand];
 
     return (
-      <section className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+      <section className="rounded-xl border border-slate-800 bg-slate-900 p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-sm uppercase tracking-[0.16em] text-neutral-400">Data sources</p>
-            <p className="text-xs text-neutral-500 mt-1">
+            <p className="text-sm uppercase tracking-[0.16em] text-slate-400">Data sources</p>
+            <p className="text-xs text-slate-500 mt-1">
               {connectedCount}/{items.length} sources currently live
             </p>
-            <div className="mt-2 h-2 rounded-full bg-neutral-800 overflow-hidden max-w-sm">
+            <div className="mt-2 h-2 rounded-full bg-slate-800 overflow-hidden max-w-sm">
               <div className={`h-full ${readiness.bar}`} style={{ width: `${readinessScore}%` }} />
             </div>
             <span className={`inline-flex mt-2 items-center gap-2 rounded-full border px-3 py-1 text-[11px] ${readiness.badge}`}>
@@ -455,7 +455,7 @@ export function DataSourceStatusStrip({
                 Synthetic mode
               </span>
             ) : (
-              <span className="text-xs rounded-full border border-neutral-700 px-2 py-1 text-neutral-300">
+              <span className="text-xs rounded-full border border-slate-700 px-2 py-1 text-slate-300">
                 {pending === 0 ? "Live mode" : `${completionRate}% ready`}
               </span>
             )}
@@ -474,13 +474,13 @@ export function DataSourceStatusStrip({
                 : `${syncStyle.label}${lastSyncedText ? ` · ${lastSyncedText}` : ""}`;
 
             return (
-              <article key={item.id} className={`rounded-lg border ${styles.border} bg-neutral-950 p-3`}>
+              <article key={item.id} className={`rounded-lg border ${styles.border} bg-slate-950 p-3`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-2">
                     <Icon className={`w-4 h-4 mt-0.5 ${styles.dot}`} />
                     <div className="space-y-1">
                       <p className="text-sm text-white">{item.title}</p>
-                      <p className="text-xs text-neutral-400">{item.detail}</p>
+                      <p className="text-xs text-slate-400">{item.detail}</p>
                     </div>
                   </div>
                   <span
@@ -498,7 +498,7 @@ export function DataSourceStatusStrip({
                   {item.href ? (
                     <Link
                       href={item.href}
-                      className="text-xs rounded-full border border-neutral-700 px-3 py-1 text-neutral-300 hover:border-neutral-500 hover:text-neutral-100 transition-colors"
+                      className="text-xs rounded-full border border-slate-700 px-3 py-1 text-slate-300 hover:border-slate-500 hover:text-slate-100 transition-colors"
                     >
                       {item.actionLabel ?? "Open"}
                     </Link>
