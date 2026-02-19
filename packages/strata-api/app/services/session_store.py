@@ -11,7 +11,10 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any
 
-import redis.asyncio as aioredis
+try:
+    import redis.asyncio as aioredis
+except ImportError:  # pragma: no cover
+    aioredis = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +66,8 @@ class RedisSessionStore(SessionStore):
     """Redis-backed store for production."""
 
     def __init__(self, redis_url: str) -> None:
+        if aioredis is None:
+            raise ImportError("redis package is required for RedisSessionStore: pip install redis[hiredis]")
         self._redis = aioredis.from_url(redis_url, decode_responses=True)
 
     async def set(self, key: str, value: dict[str, Any], ttl: int = DEFAULT_TTL_SECONDS) -> None:
