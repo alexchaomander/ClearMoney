@@ -6,7 +6,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.connections import _pending_link_sessions, get_provider
+from app.api.connections import get_provider
 from app.main import app
 from app.models import Connection, InvestmentAccountType, SecurityType, User
 from app.models.transaction import TransactionType
@@ -112,11 +112,9 @@ def override_provider() -> None:
     app.dependency_overrides.pop(get_provider, None)
 
 
-@pytest.fixture(autouse=True)
-def clear_pending_sessions() -> None:
-    _pending_link_sessions.clear()
-    yield
-    _pending_link_sessions.clear()
+def _get_session_store():
+    """Helper to access the test session store from app state."""
+    return app.state.session_store
 
 
 @pytest.mark.asyncio
@@ -141,11 +139,11 @@ async def test_connection_callback_success(
     session: AsyncSession,
 ) -> None:
     session_token = "session_token_123"
-    _pending_link_sessions[session_token] = {
+    store = _get_session_store()
+    await store.set(session_token, {
         "user_id": str(connection_user.id),
         "user_secret": "secret_123",
-        "created_at": datetime.now(timezone.utc),
-    }
+    })
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
@@ -190,11 +188,11 @@ async def test_connection_callback_session_user_mismatch(
     await session.refresh(other_user)
 
     session_token = "session_token_mismatch"
-    _pending_link_sessions[session_token] = {
+    store = _get_session_store()
+    await store.set(session_token, {
         "user_id": str(other_user.id),
         "user_secret": "secret_123",
-        "created_at": datetime.now(timezone.utc),
-    }
+    })
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
