@@ -72,3 +72,13 @@ def override_get_async_session() -> None:
             yield session
 
     app.dependency_overrides[get_async_session] = _override
+
+
+@pytest.fixture(autouse=True)
+def setup_session_store() -> None:
+    from app.services.session_store import InMemorySessionStore
+
+    store = InMemorySessionStore()
+    app.state.session_store = store
+    yield
+    app.state.session_store = InMemorySessionStore()
