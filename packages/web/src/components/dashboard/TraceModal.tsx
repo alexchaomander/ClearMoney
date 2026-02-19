@@ -174,7 +174,7 @@ export function TraceModal({ data, open, onOpenChange }: TraceModalProps) {
 
                   <div className="px-6 py-3 bg-slate-950 border-t border-slate-800 flex justify-between items-center">
                     <span className="text-[10px] text-slate-600 font-mono">
-                      TRACE_ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}
+                      TRACE_ID: {data.metricId.slice(0, 9).toUpperCase()}
                     </span>
                     <button className="text-[10px] text-emerald-500 hover:text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors">
                       View Independent Audit <ArrowRight className="w-3 h-3" />

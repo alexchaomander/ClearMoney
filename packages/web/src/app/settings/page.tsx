@@ -60,8 +60,8 @@ function PreferenceField({
 }: {
   label: string;
   prefKey: string;
-  preferences: Record<string, any>;
-  onSave: (val: any) => void;
+  preferences: Record<string, unknown>;
+  onSave: (val: number | null) => void;
   suffix?: string;
   step?: number;
 }) {
@@ -236,7 +236,7 @@ export default function SettingsPage() {
 
   const preferences = memory?.preferences || {};
 
-  const savePreference = (key: string, value: any) => {
+  const savePreference = (key: string, value: number | null) => {
     updateMemory.mutate({
       preferences: { ...preferences, [key]: value },
     }, {
@@ -577,7 +577,7 @@ export default function SettingsPage() {
               </h2>
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-              Define the boundaries for the AI Advisor's execution capabilities.
+              Define the boundaries for the AI Advisor&apos;s execution capabilities.
             </p>
             <ActionPolicySettings />
           </motion.div>

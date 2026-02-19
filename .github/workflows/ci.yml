@@ -39,3 +39,40 @@ jobs:
       - run: uv venv --python 3.12
       - run: uv pip install -e ".[dev]"
       - run: .venv/bin/python -m pytest tests -v
+
+  deploy-api:
+    needs: api
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+      - name: Deploy to Railway
+        run: railway up --service strata-api --detach
+        working-directory: packages/strata-api
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  deploy-web:
+    needs: web
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Required for Vercel CLI: https://vercel.com/docs/cli
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+      - name: Pull Vercel environment
+        run: vercel pull --yes --token="$VERCEL_TOKEN"
+        working-directory: packages/web
+      - name: Build with Vercel
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+        working-directory: packages/web
+      - name: Deploy to Vercel
+        run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+        working-directory: packages/web

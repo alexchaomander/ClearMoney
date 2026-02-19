@@ -18,6 +18,9 @@ dependencies = [
     "anthropic>=0.40.0",
     "fpdf2>=2.8.0",
     "numpy>=2.0.0",
+    "gunicorn>=22.0.0",
+    "redis[hiredis]>=5.0.0",
+    "sentry-sdk[fastapi]>=2.0.0",
 ]
 
 [project.optional-dependencies]

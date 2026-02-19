@@ -31,10 +31,25 @@ from app.api.transactions import router as transactions_router
 from app.core.config import settings
 from app.db.session import close_db
 from app.services.jobs.background import start_background_tasks
+from app.services.session_store import create_session_store
+
+# Initialise Sentry at module level so import-time and startup errors are
+# captured before the ASGI lifespan even begins.
+if settings.sentry_dsn:
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        traces_sample_rate=0.2,
+        environment="production" if not settings.debug else "development",
+    )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    # Session store (Redis or in-memory)
+    app.state.session_store = create_session_store(settings.redis_url)
+
     stop_event = None
     tasks = []
     if settings.enable_background_jobs:
@@ -48,6 +63,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await task
+    await app.state.session_store.close()
     await close_db()
 
 

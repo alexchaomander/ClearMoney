@@ -1,4 +1,5 @@
 from collections.abc import AsyncGenerator
+from typing import Any
 
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -8,10 +9,18 @@ from sqlalchemy.ext.asyncio import (
 
 from app.core.config import settings
 
-engine = create_async_engine(
-    settings.database_url,
-    echo=settings.database_echo,
-)
+_engine_kwargs: dict[str, Any] = {
+    "echo": settings.database_echo,
+}
+
+if not settings.database_url.startswith("sqlite"):
+    _engine_kwargs.update(
+        pool_size=5,
+        max_overflow=10,
+        pool_pre_ping=True,
+    )
+
+engine = create_async_engine(settings.database_url, **_engine_kwargs)
 
 async_session_factory = async_sessionmaker(
     engine,

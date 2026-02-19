@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createMDX from "@next/mdx";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const isStaticExport = process.env.STATIC_EXPORT === "true";
 
@@ -39,4 +40,7 @@ const withMDX = createMDX({
   },
 });
 
-export default withMDX(nextConfig);
+export default withSentryConfig(withMDX(nextConfig), {
+  silent: true,
+  disableLogger: true,
+});

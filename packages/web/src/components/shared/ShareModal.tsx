@@ -11,8 +11,8 @@ import { Label } from "@/components/ui/label";
 
 interface ShareModalProps {
   toolId: string;
-  payload: Record<string, any>;
-  onRedact?: (payload: Record<string, any>, settings: RedactionSettings) => Record<string, any>;
+  payload: Record<string, unknown>;
+  onRedact?: (payload: Record<string, unknown>, settings: RedactionSettings) => Record<string, unknown>;
   trigger?: React.ReactNode;
 }
 

@@ -3,7 +3,7 @@ import secrets
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,13 +21,10 @@ from app.schemas.connection import (
 )
 from app.services.connection_sync import sync_connection_accounts
 from app.services.providers.snaptrade import SnapTradeProvider
+from app.services.session_store import SessionStore
 from app.services.user_refresh import refresh_user_financials
 
 logger = logging.getLogger(__name__)
-
-# In-memory store for pending link sessions (use Redis in production)
-# Maps session_token -> {user_id, user_secret, created_at}
-_pending_link_sessions: dict[str, dict] = {}
 
 router = APIRouter(prefix="/connections", tags=["connections"])
 
@@ -35,6 +32,11 @@ router = APIRouter(prefix="/connections", tags=["connections"])
 def get_provider() -> SnapTradeProvider:
     """Get the SnapTrade provider instance."""
     return SnapTradeProvider()
+
+
+def get_session_store(request: Request) -> SessionStore:
+    """Retrieve the session store from app state."""
+    return request.app.state.session_store
 
 
 async def _get_user_connection(
@@ -62,6 +64,7 @@ async def create_link_session(
     request: LinkSessionRequest,
     user: User = Depends(require_scopes(["connections:write"])),
     provider: SnapTradeProvider = Depends(get_provider),
+    store: SessionStore = Depends(get_session_store),
 ) -> LinkSessionResponse:
     """Create a link session to connect a new investment account.
 
@@ -74,33 +77,16 @@ async def create_link_session(
         redirect_uri=request.redirect_uri,
     )
 
-    # Generate a secure session token and store the user_secret server-side
-    # In production, use Redis or database with TTL for this
     session_token = secrets.token_urlsafe(32)
-    _pending_link_sessions[session_token] = {
+    await store.set(session_token, {
         "user_id": str(user.id),
         "user_secret": link_session.user_secret,
-        "created_at": datetime.now(timezone.utc),
-    }
-
-    # Clean up old sessions (simple cleanup, use TTL in production)
-    _cleanup_old_sessions()
+    })
 
     return LinkSessionResponse(
         redirect_url=link_session.redirect_url,
-        session_id=session_token,  # Return the session token, not the user_secret
+        session_id=session_token,
     )
-
-
-def _cleanup_old_sessions() -> None:
-    """Remove sessions older than 15 minutes."""
-    cutoff = datetime.now(timezone.utc).timestamp() - 900  # 15 minutes
-    expired = [
-        token for token, data in _pending_link_sessions.items()
-        if data["created_at"].timestamp() < cutoff
-    ]
-    for token in expired:
-        del _pending_link_sessions[token]
 
 
 @router.post("/callback", response_model=ConnectionResponse)
@@ -109,6 +95,7 @@ async def handle_callback(
     user: User = Depends(require_scopes(["connections:write"])),
     session: AsyncSession = Depends(get_async_session),
     provider: SnapTradeProvider = Depends(get_provider),
+    store: SessionStore = Depends(get_session_store),
 ) -> ConnectionResponse:
     """Handle the OAuth callback from the brokerage.
 
@@ -122,22 +109,23 @@ async def handle_callback(
             detail=f"Connection failed: {request.error_description or request.error}",
         )
 
-    # Retrieve the user_secret from server-side storage using the session token
     session_token = request.state
-    if not session_token or session_token not in _pending_link_sessions:
+    pending_session = await store.get(session_token) if session_token else None
+    if not pending_session:
         raise HTTPException(
             status_code=400,
             detail="Invalid or expired session. Please restart the connection flow.",
         )
 
-    pending_session = _pending_link_sessions.pop(session_token)
-
-    # Verify the session belongs to this user
     if pending_session["user_id"] != str(user.id):
         raise HTTPException(
             status_code=403,
             detail="Session does not belong to this user.",
         )
+
+    # Delete only after ownership is verified so a wrong-user attempt
+    # doesn't destroy the legitimate user's session.
+    await store.delete(session_token)
 
     user_secret = pending_session["user_secret"]
 

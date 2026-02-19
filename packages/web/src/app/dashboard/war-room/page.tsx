@@ -96,7 +96,7 @@ export default function WarRoomPage() {
     try {
       await updateIntent.mutateAsync({
         id: executingIntentId,
-        data: { status: "executed" as any }
+        data: { status: "executed" as ActionIntentStatus }
       });
       pushToast({ title: "Maneuver authorized and processing.", variant: "success" });
       setIsBiometricOpen(false);
@@ -126,7 +126,7 @@ export default function WarRoomPage() {
         metricId: realTrace.id,
         label: realTrace.trace_type,
         description: realTrace.source,
-        formula: (realTrace.outputs as any)?.formula || "Custom AI Logic",
+        formula: String((realTrace.outputs as Record<string, unknown>)?.formula ?? "Custom AI Logic"),
         dataPoints: Object.entries(realTrace.input_data).map(([k, v]) => ({ label: k, value: String(v) })),
         confidenceScore: 0
       };
