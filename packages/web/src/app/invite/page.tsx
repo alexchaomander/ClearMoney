@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, ArrowRight } from "lucide-react";
 
+// Set NEXT_PUBLIC_BETA_CODES in your environment (comma-separated) for production.
+// Falls back to a dev-only default when the env var is not configured.
 const VALID_CODES = (process.env.NEXT_PUBLIC_BETA_CODES ?? "CLEARMONEY2026")
   .split(",")
   .map((c) => c.trim().toUpperCase());
@@ -16,7 +18,8 @@ export default function InvitePage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (VALID_CODES.includes(code.trim().toUpperCase())) {
-      document.cookie = "cm_beta_access=1; path=/; max-age=31536000; SameSite=Lax";
+      // 90-day expiry — aligned with expected beta program duration
+      document.cookie = "cm_beta_access=1; path=/; max-age=7776000; SameSite=Lax";
       router.push("/onboarding");
     } else {
       setError("Invalid invite code. Please check your email for the correct code.");

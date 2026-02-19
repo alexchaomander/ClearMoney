@@ -14,7 +14,8 @@ sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), ".."
 
 from app.db.base import Base  # noqa: E402
 
-# Import all models so their tables are registered on Base.metadata
+# Import all models so their tables are registered on Base.metadata.
+# F401: imports are used for side-effect (table registration), not referenced directly.
 from app.models import (  # noqa: E402, F401
     AgentSession,
     CashAccount,

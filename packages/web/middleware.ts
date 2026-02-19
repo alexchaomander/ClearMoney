@@ -11,23 +11,14 @@ const isProtectedRoute = createRouteMatcher([
   "/onboarding(.*)",
 ]);
 
-const isBetaGated = createRouteMatcher([
-  "/onboarding(.*)",
-  "/dashboard(.*)",
-  "/connect(.*)",
-  "/profile(.*)",
-  "/settings(.*)",
-  "/advisor(.*)",
-]);
-
 export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, req: NextRequest) => {
   if (isProtectedRoute(req)) {
     await auth.protect();
-  }
 
-  // Require beta invite code for gated routes
-  if (isBetaGated(req) && !req.cookies.get("cm_beta_access")) {
-    return NextResponse.redirect(new URL("/invite", req.url));
+    // Require beta invite code for all protected routes
+    if (!req.cookies.get("cm_beta_access")) {
+      return NextResponse.redirect(new URL("/invite", req.url));
+    }
   }
 });
 

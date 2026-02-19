@@ -195,7 +195,7 @@ export default function ActionLabPage() {
                         {intent.status}
                       </span>
                       <span className="text-[9px] text-slate-500 uppercase tracking-tighter font-mono">
-                        {intent.id.slice(0, 8)}
+                        {intent.id ? intent.id.slice(0, 8) : ""}
                       </span>
                     </div>
                   </div>

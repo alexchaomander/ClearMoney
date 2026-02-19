@@ -162,14 +162,18 @@ async def execute_recommendation(
 
         elif action_type == "rebalance_portfolio":
             brokerage_service = BrokerageExecutionService(session)
-            account_id = action_payload.get("account_id", "")
+            account_id = action_payload.get("account_id")
+            if not account_id:
+                raise HTTPException(status_code=400, detail="Missing account ID for portfolio rebalance")
             trades = await brokerage_service.rebalance_portfolio(user.id, account_id, {})
             execution_status = "accepted"
             execution_result["rebalance_trades"] = trades
 
         elif action_type == "open_account":
             deep_link_service = DeepLinkService()
-            provider_id = action_payload.get("provider_id", "")
+            provider_id = action_payload.get("provider_id")
+            if not provider_id:
+                raise HTTPException(status_code=400, detail="Missing provider ID for open account action")
             link = deep_link_service.generate_referral_link(provider_id, {"user_id": str(user.id)})
             execution_status = "completed"
             execution_result["referral_link"] = link
