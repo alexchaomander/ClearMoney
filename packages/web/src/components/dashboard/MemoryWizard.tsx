@@ -103,7 +103,7 @@ export function MemoryWizard({ isOpen, onClose }: MemoryWizardProps) {
     setCurrentStepIndex(prev => Math.max(0, prev - 1));
   };
 
-  const updateValue = (field: keyof FinancialMemory, val: any) => {
+  const updateValue = (field: keyof FinancialMemory, val: string | number | null) => {
     setValues(prev => ({ ...prev, [field]: val }));
   };
 

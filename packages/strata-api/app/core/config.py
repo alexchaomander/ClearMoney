@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     clerk_secret_key: str = ""
     clerk_pem_public_key: str = ""
 
+    # Redis (session persistence)
+    redis_url: str = ""
+
+    # Sentry (error tracking)
+    sentry_dsn: str = ""
+
     # Anthropic API (for Financial Advisor)
     anthropic_api_key: str = ""
     advisor_model: str = "claude-sonnet-4-20250514"

@@ -76,7 +76,7 @@ export function ShareSheetPreview({ data, className }: ShareSheetPreviewProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-200">Hide Institution Names</p>
-                <p className="text-xs text-slate-500">"Major US Bank" instead of "Chase".</p>
+                <p className="text-xs text-slate-500">&quot;Major US Bank&quot; instead of &quot;Chase&quot;.</p>
               </div>
               <Switch 
                 checked={settings.hideInstitutions}

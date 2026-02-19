@@ -55,7 +55,7 @@ export default function DataHealthPage() {
           <div className="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-8 text-center">
             <AlertTriangle className="h-12 w-12 text-rose-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">Error loading health data</h2>
-            <p className="text-white/60 mb-6">We couldn't reach the Strata health service. Please try again.</p>
+            <p className="text-white/60 mb-6">We couldn&apos;t reach the Strata health service. Please try again.</p>
             <button
               onClick={() => refetch()}
               className="px-6 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-sm font-medium"
