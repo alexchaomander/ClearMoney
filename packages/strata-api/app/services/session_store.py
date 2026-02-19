@@ -11,6 +11,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any
 
+import redis.asyncio as aioredis
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_TTL_SECONDS = 900  # 15 minutes
@@ -61,8 +63,6 @@ class RedisSessionStore(SessionStore):
     """Redis-backed store for production."""
 
     def __init__(self, redis_url: str) -> None:
-        import redis.asyncio as aioredis
-
         self._redis = aioredis.from_url(redis_url, decode_responses=True)
 
     async def set(self, key: str, value: dict[str, Any], ttl: int = DEFAULT_TTL_SECONDS) -> None:

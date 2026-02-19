@@ -21,7 +21,14 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
 
 WORKDIR /app
-COPY . .
+
+# Copy only the files needed at runtime — keeps the image small and avoids
+# leaking build-time artifacts (pyproject.toml, tests, etc.)
+COPY app ./app
+COPY alembic ./alembic
+COPY alembic.ini .
+COPY entrypoint.sh .
+COPY gunicorn.conf.py .
 
 RUN chown -R app:app /app
 USER app
