@@ -31,6 +31,7 @@ from app.models import (  # noqa: E402, F401
     User,
 )
 from app.models.connection import Connection as ConnectionModel  # noqa: E402, F401
+from app.models.notification import Notification  # noqa: E402, F401
 
 config = context.config
 

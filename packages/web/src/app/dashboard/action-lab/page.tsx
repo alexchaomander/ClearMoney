@@ -32,7 +32,7 @@ import {
 import { useActionExecution } from "@/lib/strata/action-execution-context";
 import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
 
-interface MockIntent {
+interface ActionIntent {
   id: string;
   title: string;
   description: string;
@@ -40,7 +40,6 @@ interface MockIntent {
   status: string;
   icon: LucideIcon;
   type: string;
-  isReal?: boolean;
   logic: {
     rule: string;
     reasoning: string;
@@ -49,83 +48,8 @@ interface MockIntent {
   };
 }
 
-const MOCK_INTENTS: MockIntent[] = [
-  {
-    id: "intent_yield_001",
-    title: "Optimize Cash Yield",
-    description: "Move $12,450 from Bank of America Checking (0.01%) to Strata-Native HYSA (4.50%).",
-    impact: "+$560.25/year",
-    status: "DRAFT",
-    icon: Zap,
-    type: "CASH_OPTIMIZATION",
-    logic: {
-      rule: "Yield Threshold > 3.0%",
-      reasoning: "Current liquidity in low-yield checking exceeds 3-month burn buffer by $12,450. Relocating to a High-Yield Savings Account (HYSA) provides risk-free arbitrage.",
-      dataPoints: {
-        "Source Rate": "0.01% APY",
-        "Target Rate": "4.50% APY",
-        "Excess Liquidity": "$12,450",
-        "Burn Buffer": "$24,000 (3 mo)"
-      },
-      steps: [
-        "Initiate ACH Pull from BoA Checking ending in *4592",
-        "Establish internal ledger entry for User Cash Vault",
-        "Generate daily interest accrual event"
-      ]
-    }
-  },
-  {
-    id: "intent_tax_002",
-    title: "Commingling Reconciliation",
-    description: "Reconcile $4,210 in 'Personal Spend on Business Credit' to preserve the corporate veil.",
-    impact: "Legal Compliance",
-    status: "DRAFT",
-    icon: ShieldCheck,
-    type: "COMPLIANCE",
-    logic: {
-      rule: "Corporate Veil Integrity Check",
-      reasoning: "Detected 12 transactions on Mercury Visa (Business) categorized as 'Personal/Home'. To maintain limited liability, these must be treated as a shareholder distribution or reimbursed.",
-      dataPoints: {
-        "Affected Entity": "ClearMoney Inc.",
-        "Total Breach": "$4,210.50",
-        "Audit Risk": "High",
-        "Recommended Action": "Shareholder Reimbursement"
-      },
-      steps: [
-        "Flag 12 transactions as 'Reimbursed'",
-        "Generate Corporate Resolution PDF",
-        "Initiate $4,210.50 transfer from Personal to Business"
-      ]
-    }
-  },
-  {
-    id: "intent_rebalance_003",
-    title: "Portfolio Rebalance",
-    description: "Your equity exposure is at 82%. Rebalance to your 75% target by shifting to Bond ETFs.",
-    impact: "Risk Reduction",
-    status: "DRAFT",
-    icon: Rocket,
-    type: "REBALANCE",
-    logic: {
-      rule: "Drift Tolerance > 5%",
-      reasoning: "Market appreciation in NVDA and AAPL has caused equity drift beyond the 75% target. Harvesting gains now locks in returns and returns the risk profile to 'Moderate'.",
-      dataPoints: {
-        "Target Allocation": "75% Equity",
-        "Current Allocation": "82.4% Equity",
-        "Drift Delta": "+7.4%",
-        "Estimated Tax Impact": "$420.00"
-      },
-      steps: [
-        "Sell $8,200 of VTI (Vanguard Total Stock)",
-        "Buy $8,200 of BND (Vanguard Total Bond)",
-        "Update Portfolio Context Graph"
-      ]
-    }
-  }
-];
-
 export default function ActionLabPage() {
-  const [activeIntent, setActiveIntent] = useState<MockIntent | null>(null);
+  const [activeIntent, setActiveIntent] = useState<ActionIntent | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [email, setEmail] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -138,8 +62,8 @@ export default function ActionLabPage() {
   const [proofThreshold, setProofThreshold] = useState("50000");
   const { startExecution } = useActionExecution();
 
-  const allIntents = useMemo(() => {
-    const formattedReal: MockIntent[] = (realIntents || []).map(ri => ({
+  const allIntents = useMemo((): ActionIntent[] => {
+    return (realIntents || []).map(ri => ({
       id: ri.id,
       title: ri.title,
       description: ri.description || "",
@@ -147,7 +71,6 @@ export default function ActionLabPage() {
       status: ri.status.toUpperCase(),
       icon: ri.intent_type === 'ach_transfer' ? Zap : ri.intent_type === 'rebalance' ? Rocket : Bot,
       type: ri.intent_type,
-      isReal: true,
       logic: {
         rule: "Strata Intent v1",
         reasoning: ri.description || "Autonomous recommendation based on current data surface.",
@@ -155,34 +78,18 @@ export default function ActionLabPage() {
         steps: ["Draft Manifest", "Review Details", "Biometric Confirmation"]
       }
     }));
-
-    return [...formattedReal, ...MOCK_INTENTS];
   }, [realIntents]);
 
   const handleExecute = async () => {
     if (!activeIntent) return;
-    
-    setIsExecuting(true);
-    
-    try {
-      if (activeIntent.isReal) {
-        // Launch Ghost Navigation Copilot
-        startExecution(activeIntent.id);
-        setActiveIntent(null);
-        setIsExecuting(false);
-        return;
-      }
 
-      // Simulate ledger processing time for mock intents
-      await new Promise(resolve => setTimeout(resolve, 2500));
-      
+    setIsExecuting(true);
+
+    try {
+      startExecution(activeIntent.id);
       setActiveIntent(null);
-      // Trigger waitlist focus
-      const el = document.getElementById("waitlist-section");
-      el?.scrollIntoView({ behavior: "smooth" });
     } catch (err) {
       console.error("Failed to execute intent:", err);
-      // In a production app, we would show a toast error here
     } finally {
       setIsExecuting(false);
     }
@@ -248,7 +155,7 @@ export default function ActionLabPage() {
             <div className="w-px h-8 bg-slate-200 dark:bg-slate-800" />
             <div className="text-right">
               <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Drafted Intents</p>
-              <p className="text-sm font-medium text-slate-900 dark:text-white">3 Pending</p>
+              <p className="text-sm font-medium text-slate-900 dark:text-white">{allIntents.length} Pending</p>
             </div>
           </div>
         </div>
@@ -259,6 +166,14 @@ export default function ActionLabPage() {
             <div className="col-span-3 py-20 text-center text-slate-500">
               <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
               Loading your data surface...
+            </div>
+          ) : allIntents.length === 0 ? (
+            <div className="col-span-3 py-20 text-center">
+              <Bot className="w-12 h-12 mx-auto mb-4 text-slate-300 dark:text-slate-700" />
+              <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">No action intents yet</h3>
+              <p className="text-sm text-slate-500 max-w-md mx-auto">
+                Connect your financial accounts and let the agent analyze your data surface. Action intents will appear here when opportunities are identified.
+              </p>
             </div>
           ) : (
             allIntents.map((intent, i) => (
@@ -279,8 +194,8 @@ export default function ActionLabPage() {
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                         {intent.status}
                       </span>
-                      <span className="text-[9px] text-slate-500 uppercase tracking-tighter">
-                        {intent.isReal ? "REAL INTENT" : `MOCK ID: ${intent.id}`}
+                      <span className="text-[9px] text-slate-500 uppercase tracking-tighter font-mono">
+                        {intent.id.slice(0, 8)}
                       </span>
                     </div>
                   </div>
