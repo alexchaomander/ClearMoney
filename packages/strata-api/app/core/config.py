@@ -72,5 +72,21 @@ class Settings(BaseSettings):
             )
         return self
 
+    @model_validator(mode="after")
+    def _validate_production_auth(self) -> "Settings":
+        import logging
+        import warnings
+
+        if not self.debug and not self.clerk_pem_public_key:
+            msg = (
+                "STRATA_CLERK_PEM_PUBLIC_KEY is not set. "
+                "The API is running with the X-Clerk-User-Id header bypass active. "
+                "Set STRATA_CLERK_PEM_PUBLIC_KEY to enable JWT validation, "
+                "or set STRATA_DEBUG=true to suppress this warning."
+            )
+            logging.getLogger("app.core.config").warning(msg)
+            warnings.warn(msg, stacklevel=2)
+        return self
+
 
 settings = Settings()

@@ -4,15 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
+import { MemoryWizard } from "@/components/dashboard/MemoryWizard";
 
 const ONBOARDING_KEY = "clearmoney_onboarding_complete";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [isCompleting, setIsCompleting] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
 
-  const handleComplete = () => {
-    setIsCompleting(true);
+  const handleWizardClose = () => {
+    setShowWizard(false);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(ONBOARDING_KEY, "true");
     }
@@ -40,24 +41,24 @@ export default function OnboardingPage() {
             Let&apos;s build your financial command center
           </h1>
           <p className="mt-4 text-lg text-neutral-300 max-w-2xl mx-auto">
-            We&apos;ll guide you through connecting accounts, tracking performance, and
-            monitoring net worth over time. It only takes a few minutes.
+            We&apos;ll guide you through setting up your financial profile and connecting
+            your accounts. It only takes a few minutes.
           </p>
         </div>
 
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {[
             {
+              title: "Set your financial profile",
+              description: "Tell us about your goals, income, and risk tolerance so we can personalize your experience.",
+            },
+            {
               title: "Connect accounts securely",
               description: "Link your brokerage accounts to pull holdings and transactions.",
             },
             {
-              title: "See daily portfolio history",
-              description: "We capture daily snapshots to chart your net worth over time.",
-            },
-            {
-              title: "Track performance",
-              description: "Understand contributions, gains, and cost basis at a glance.",
+              title: "Get personalized insights",
+              description: "Your agent analyzes your data surface to identify opportunities.",
             },
           ].map((item) => (
             <div
@@ -73,18 +74,19 @@ export default function OnboardingPage() {
         <div className="mt-12 flex flex-col items-center gap-4">
           <button
             type="button"
-            onClick={handleComplete}
-            disabled={isCompleting}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-emerald-500 text-emerald-950 hover:bg-emerald-400 disabled:opacity-60"
+            onClick={() => setShowWizard(true)}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
           >
-            Continue to connect
+            Get Started
             <ArrowRight className="w-4 h-4" />
           </button>
           <p className="text-xs text-neutral-500">
-            You can revisit onboarding any time from the navigation.
+            You can update your financial profile any time from Settings.
           </p>
         </div>
       </main>
+
+      <MemoryWizard isOpen={showWizard} onClose={handleWizardClose} />
     </div>
   );
 }
