@@ -1,31 +1,25 @@
 # Strata API
 
-FastAPI-based backend for the Strata financial data platform. Provides investment account connectivity via SnapTrade, portfolio management, and data aggregation.
-
-## Features
-
-- **Investment Account Connectivity**: Connect brokerage accounts via SnapTrade
-- **Banking Connectivity**: Connect bank accounts via Plaid for transaction data and spending analysis
-- **Portfolio Management**: Track holdings, balances, and allocations across accounts
-- **Transaction History**: Investment and bank transaction tracking with pagination and filtering
-- **Spending Analysis**: Automatic spending categorization and monthly breakdowns from linked bank data
-- **Portfolio Snapshots**: Daily net worth snapshots for historical tracking
-- **Financial Advisor**: AI-powered financial advice with memory and personalized context
-- **Background Jobs**: Automatic connection syncing and snapshot creation
-- **Multi-Provider Architecture**: Extensible provider system for investments (SnapTrade) and banking (Plaid)
-- **Async PostgreSQL**: High-performance async database operations with SQLAlchemy 2.0
+FastAPI-based backend for the ClearMoney financial platform. Provides investment account connectivity via SnapTrade, banking via Plaid, AI-powered financial advice, action intent lifecycle, and portfolio management.
 
 ## Quick Start
 
-### Prerequisites
+### Option A: Docker (Recommended)
 
-- Python 3.11+
-- PostgreSQL (or SQLite for development)
-- [uv](https://github.com/astral-sh/uv) for dependency management
-
-### Setup
+From the **monorepo root**:
 
 ```bash
+cp packages/strata-api/.env.example packages/strata-api/.env
+docker compose up -d
+```
+
+This starts PostgreSQL, Redis, and the API. The API runs at `http://localhost:8000` with auto-reload. Migrations run automatically on startup.
+
+### Option B: Manual Setup
+
+```bash
+cd packages/strata-api
+
 # Create virtual environment
 uv venv --python 3.11
 source .venv/bin/activate
@@ -44,259 +38,208 @@ alembic upgrade head
 uvicorn app.main:app --reload --port 8000
 ```
 
-### Environment Variables
+For production, the Dockerfile uses gunicorn with uvicorn workers:
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `STRATA_DATABASE_URL` | PostgreSQL connection string | Yes |
-| `STRATA_CREDENTIALS_ENCRYPTION_KEY` | Fernet key for encrypting credentials | Yes |
-| `STRATA_SNAPTRADE_CLIENT_ID` | SnapTrade API client ID | For SnapTrade |
-| `STRATA_SNAPTRADE_CONSUMER_KEY` | SnapTrade API consumer key | For SnapTrade |
-| `STRATA_PLAID_CLIENT_ID` | Plaid API client ID | For Plaid |
-| `STRATA_PLAID_SECRET` | Plaid API secret | For Plaid |
-| `STRATA_PLAID_ENVIRONMENT` | Plaid environment: `sandbox`, `development`, or `production` (default: `sandbox`) | No |
-| `STRATA_ENABLE_BACKGROUND_JOBS` | Enable background sync/snapshot jobs (default: `true`) | No |
-| `STRATA_SYNC_INTERVAL_SECONDS` | Seconds between connection sync runs (default: `3600`) | No |
-| `STRATA_SYNC_STALE_MINUTES` | Minutes before a connection is considered stale (default: `60`) | No |
-| `STRATA_SNAPSHOT_INTERVAL_SECONDS` | Seconds between snapshot runs (default: `86400`) | No |
-| `STRATA_BANKING_HISTORY_DAYS` | Days of transaction history to fetch on initial bank sync (default: `730`) | No |
-| `STRATA_CORS_ALLOW_ORIGINS` | Comma-separated list of allowed CORS origins (default: `http://localhost:3000,http://127.0.0.1:3000`) | No |
-| `STRATA_CORS_ALLOW_METHODS` | Comma-separated allowed CORS methods (default: `GET,POST,PUT,PATCH,DELETE,OPTIONS`) | No |
-| `STRATA_CORS_ALLOW_HEADERS` | Comma-separated allowed CORS headers | No |
-| `STRATA_CORS_ALLOW_CREDENTIALS` | Enable credentials in CORS responses (default: `true`) | No |
-
-> Note: when `STRATA_CORS_ALLOW_CREDENTIALS=true`, `STRATA_CORS_ALLOW_ORIGINS` must not contain `*`.
-
-Generate an encryption key:
 ```bash
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+docker build -t strata-api .
+docker run -p 8000:8000 --env-file .env strata-api
 ```
+
+## Environment Variables
+
+### Required
+
+| Variable | Description |
+|----------|-------------|
+| `STRATA_DATABASE_URL` | Database connection string (`postgresql+asyncpg://...` for production, `sqlite+aiosqlite:///strata.db` for dev) |
+| `STRATA_CREDENTIALS_ENCRYPTION_KEY` | Fernet key for encrypting provider credentials. Generate with: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` |
+
+### Authentication (Clerk)
+
+| Variable | Description |
+|----------|-------------|
+| `STRATA_CLERK_SECRET_KEY` | Clerk secret key for server-side API calls |
+| `STRATA_CLERK_PEM_PUBLIC_KEY` | Clerk PEM public key for JWT validation. **When unset, the API falls back to trusting the `X-Clerk-User-Id` header** (dev/testing only). A startup warning is logged in non-debug mode. |
+
+### Data Providers
+
+| Variable | Description |
+|----------|-------------|
+| `STRATA_SNAPTRADE_CLIENT_ID` | SnapTrade API client ID (brokerage connections) |
+| `STRATA_SNAPTRADE_CONSUMER_KEY` | SnapTrade API consumer key |
+| `STRATA_PLAID_CLIENT_ID` | Plaid API client ID (banking connections) |
+| `STRATA_PLAID_SECRET` | Plaid API secret |
+| `STRATA_PLAID_ENVIRONMENT` | `sandbox`, `development`, or `production` (default: `sandbox`) |
+| `STRATA_ANTHROPIC_API_KEY` | Anthropic API key for the AI advisor |
+
+### Infrastructure (Optional)
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `STRATA_REDIS_URL` | Redis URL for SnapTrade session persistence. Falls back to in-memory store when unset. | _(empty)_ |
+| `STRATA_SENTRY_DSN` | Sentry DSN for error tracking. Disabled when unset. | _(empty)_ |
+| `STRATA_DEBUG` | Enable debug mode (suppresses PEM key warning, enables verbose logging) | `false` |
+| `STRATA_DATABASE_ECHO` | Echo SQL queries to stdout | `false` |
+
+### CORS
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `STRATA_CORS_ALLOW_ORIGINS` | Comma-separated allowed origins | `http://localhost:3000,http://127.0.0.1:3000` |
+| `STRATA_CORS_ALLOW_METHODS` | Comma-separated allowed methods | `GET,POST,PUT,PATCH,DELETE,OPTIONS` |
+| `STRATA_CORS_ALLOW_CREDENTIALS` | Enable credentials in CORS responses | `true` |
+
+> When `STRATA_CORS_ALLOW_CREDENTIALS=true`, `STRATA_CORS_ALLOW_ORIGINS` must not contain `*`.
+
+### Background Jobs
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `STRATA_ENABLE_BACKGROUND_JOBS` | Enable periodic sync and snapshot jobs | `true` |
+| `STRATA_SYNC_INTERVAL_SECONDS` | Seconds between connection sync runs | `3600` |
+| `STRATA_SYNC_STALE_MINUTES` | Minutes before a connection is considered stale | `60` |
+| `STRATA_SNAPSHOT_INTERVAL_SECONDS` | Seconds between portfolio snapshot runs | `86400` |
 
 ## API Endpoints
 
-### Health
-- `GET /api/v1/health` - Health check
+All endpoints are prefixed with `/api/v1`. Full OpenAPI docs are available at `/docs` when running.
 
-### Institutions
-- `GET /api/v1/institutions` - Search supported financial institutions
-- `GET /api/v1/institutions/popular` - Get popular institutions
+### Core
 
-### Connections
-- `POST /api/v1/connections/link` - Create SnapTrade link session
-- `POST /api/v1/connections/callback` - Handle OAuth callback
-- `GET /api/v1/connections` - List user's connections
-- `DELETE /api/v1/connections/{id}` - Delete a connection
-- `POST /api/v1/connections/{id}/sync` - Trigger manual sync
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Health check |
+
+### Connections & Institutions
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/institutions` | Search supported financial institutions |
+| `GET` | `/institutions/popular` | Get popular institutions |
+| `POST` | `/connections/link` | Create SnapTrade link session |
+| `POST` | `/connections/callback` | Handle OAuth callback |
+| `GET` | `/connections` | List user's connections |
+| `DELETE` | `/connections/{id}` | Delete a connection |
+| `POST` | `/connections/{id}/sync` | Trigger manual sync |
 
 ### Accounts
-- `GET /api/v1/accounts` - List all accounts (cash, debt, investment)
-- `GET /api/v1/accounts/investment` - List investment accounts
-- `GET /api/v1/accounts/investment/{id}` - Get account with holdings
 
-### Transactions
-- `GET /api/v1/transactions` - List investment transactions (paginated)
-  - Query params: `account_id`, `start_date`, `end_date`, `limit` (1-500, default 100), `offset` (default 0)
-
-### Financial Memory
-- `GET /api/v1/memory` - Get user's financial profile
-- `PATCH /api/v1/memory` - Update financial profile
-- `GET /api/v1/memory/events` - Get change history
-- `POST /api/v1/memory/derive` - Auto-populate from accounts
-
-### Portfolio
-- `GET /api/v1/portfolio/summary` - Portfolio summary with allocations
-- `GET /api/v1/portfolio/holdings` - All holdings across accounts
-- `GET /api/v1/portfolio/history` - Historical net worth from snapshots
-  - Query params: `range` (`1M`, `3M`, `6M`, `1Y`, `ALL`; default `3M`)
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/accounts` | List all accounts (cash, debt, investment) |
+| `GET` | `/accounts/investment` | List investment accounts |
+| `GET` | `/accounts/investment/{id}` | Get account with holdings |
+| `POST` | `/accounts/cash` | Create manual cash account |
+| `POST` | `/accounts/debt` | Create manual debt account |
 
 ### Banking (Plaid)
-- `POST /api/v1/banking/link` - Create Plaid Link token for initializing Plaid Link
-- `POST /api/v1/banking/callback` - Handle Plaid Link completion (exchange public_token)
-- `GET /api/v1/banking/accounts` - List bank accounts (linked and manual)
-  - Query params: `include_manual` (default `true`)
-- `GET /api/v1/banking/transactions` - List bank transactions with filtering
-  - Query params: `account_id`, `start_date`, `end_date`, `category`, `page` (default 1), `page_size` (1-500, default 50)
-- `GET /api/v1/banking/spending-summary` - Get spending breakdown by category
-  - Query params: `months` (1-24, default 3)
-- `POST /api/v1/banking/{connection_id}/sync` - Trigger manual sync for a banking connection
-- `DELETE /api/v1/banking/{connection_id}` - Delete a banking connection and all associated data
 
-## Data Models
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/banking/link` | Create Plaid Link token |
+| `POST` | `/banking/callback` | Handle Plaid Link completion |
+| `GET` | `/banking/accounts` | List bank accounts |
+| `GET` | `/banking/transactions` | List bank transactions (paginated, filterable) |
+| `GET` | `/banking/spending-summary` | Spending breakdown by category |
 
-### Core Models
+### Portfolio
 
-| Model | Description |
-|-------|-------------|
-| `User` | User identity (linked to Clerk) |
-| `Connection` | Provider connection with encrypted credentials |
-| `Institution` | Financial institution (brokerage, bank) |
-| `InvestmentAccount` | Investment account (401k, IRA, brokerage, etc.) |
-| `Security` | Security/asset (stock, ETF, bond, crypto) |
-| `Holding` | Position in a security within an account |
-| `Transaction` | Investment transaction (buy, sell, dividend, etc.) |
-| `PortfolioSnapshot` | Daily point-in-time net worth snapshot |
-| `FinancialMemory` | User financial profile and goals (long-term memory) |
-| `MemoryEvent` | Audit log of changes to financial memory |
-| `CashAccount` | Cash/checking/savings account (manual or linked via Plaid) |
-| `DebtAccount` | Manual debt account (credit card, loan) |
-| `BankTransaction` | Bank transaction from linked Plaid accounts |
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/portfolio/summary` | Portfolio summary with allocations |
+| `GET` | `/portfolio/holdings` | All holdings across accounts |
+| `GET` | `/portfolio/history` | Historical net worth from snapshots |
 
-### Account Types
+### Financial Memory
 
-- `brokerage` - Taxable brokerage account
-- `ira` - Traditional IRA
-- `roth_ira` - Roth IRA
-- `401k` - 401(k) retirement account
-- `403b` - 403(b) retirement account
-- `hsa` - Health Savings Account
-- `sep_ira` - SEP IRA
-- `simple_ira` - SIMPLE IRA
-- `pension` - Pension account
-- `trust` - Trust account
-- `other` - Other account type
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/memory` | Get user's financial profile |
+| `PATCH` | `/memory` | Update financial profile |
+| `GET` | `/memory/events` | Get change history |
+| `POST` | `/memory/derive` | Auto-populate from accounts |
 
-### Security Types
+### AI Advisor
 
-- `stock` - Individual stock
-- `etf` - Exchange-traded fund
-- `mutual_fund` - Mutual fund
-- `bond` - Bond
-- `crypto` - Cryptocurrency
-- `cash` - Cash or money market
-- `option` - Options contract
-- `other` - Other security type
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/advisor/chat` | Send message to AI advisor |
+| `GET` | `/advisor/sessions` | List chat sessions |
+| `GET` | `/advisor/sessions/{id}` | Get session with messages |
 
-### Transaction Types
+### Agent & Action Intents
 
-- `buy` - Purchase of a security
-- `sell` - Sale of a security
-- `dividend` - Dividend payment
-- `interest` - Interest payment
-- `fee` - Fee charge
-- `transfer` - Transfer between accounts
-- `other` - Other transaction type
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/agent/context` | Get financial context for agent |
+| `GET` | `/agent/decision-traces` | List decision traces |
+| `GET` | `/agent/audit-summary` | Audit summary (trace stats) |
+| `POST` | `/agent/recommendations/{id}/execute` | Execute a recommendation |
+| `GET` | `/agent/action-policy` | Get user's action policies |
+| `POST` | `/action-intents` | Create action intent |
+| `GET` | `/action-intents` | List action intents |
 
-## Background Jobs
+### Notifications
 
-The API runs periodic background jobs when `STRATA_ENABLE_BACKGROUND_JOBS` is `true` (the default). Jobs are managed via the FastAPI lifespan and use `asyncio` tasks.
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/notifications` | List notifications |
+| `PATCH` | `/notifications/{id}/read` | Mark notification as read |
 
-| Job | Default Interval | Description |
-|-----|-----------------|-------------|
-| `connection_sync` | Every 60 minutes | Syncs account data for connections that haven't been updated within `STRATA_SYNC_STALE_MINUTES` |
-| `portfolio_snapshots` | Every 24 hours | Creates one `PortfolioSnapshot` per user per day recording net worth, investment, cash, and debt totals |
+### Data Portability & Sharing
 
-Each connection is synced in an isolated database session so that a failure for one connection does not affect others. Errors are recorded on the connection (`error_code`, `error_message`) and the connection status is set to `error`.
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/portability/export` | Export financial passport (FPP) |
+| `POST` | `/portability/proof-of-funds` | Generate proof of funds attestation |
+| `POST` | `/share-reports` | Create shareable report |
+| `GET` | `/share-reports/{id}` | Get shared report (public) |
 
-Set `STRATA_ENABLE_BACKGROUND_JOBS=false` to disable all background jobs (useful for testing or when running multiple instances).
+### Consent Management
 
-## Provider Integration
-
-The API uses an extensible provider system. Currently supported:
-
-### SnapTrade
-
-SnapTrade provides connectivity to 100+ brokerages including:
-- Fidelity
-- Charles Schwab
-- Vanguard
-- TD Ameritrade
-- E*TRADE
-- Robinhood
-- Interactive Brokers
-
-To add SnapTrade support, set `STRATA_SNAPTRADE_CLIENT_ID` and `STRATA_SNAPTRADE_CONSUMER_KEY` in your environment. The provider automatically handles:
-- OAuth link session creation and callback
-- Account discovery and sync
-- Holdings and transaction retrieval
-- Credential management (encrypted at rest)
-- Transaction normalization (SnapTrade types mapped to standard `TransactionType` enum)
-
-### Plaid (Banking)
-
-Plaid provides connectivity to 12,000+ financial institutions for banking data including:
-- Checking and savings accounts
-- Transaction history with automatic categorization
-- Real-time balance information
-
-To add Plaid support, set `STRATA_PLAID_CLIENT_ID` and `STRATA_PLAID_SECRET` in your environment. The provider automatically handles:
-- Plaid Link token creation for secure client-side authentication
-- Public token exchange after user authorization
-- Account discovery and balance sync
-- Transaction sync with Plaid's automatic categorization
-- Spending derivation to populate `FinancialMemory.spending_categories_monthly`
-- Credential management (encrypted at rest)
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/consents` | List user's data consents |
+| `POST` | `/consents` | Grant a consent scope |
+| `DELETE` | `/consents/{id}` | Revoke a consent scope |
 
 ## Testing
 
 ```bash
-# Run all tests
-python -m pytest tests/ -v
+source .venv/bin/activate
 
-# Run specific test file
-python -m pytest tests/test_investment_models.py -v
+# Run all tests (155 tests)
+python -m pytest tests/ -v
 
 # Run with coverage
 python -m pytest tests/ --cov=app --cov-report=html
 ```
 
-## Project Structure
+## Deployment
 
+### Railway
+
+The repo includes `railway.toml` with a healthcheck configured at `/api/v1/health`. Required GitHub secrets: `RAILWAY_TOKEN`.
+
+### Docker
+
+```bash
+docker build -t strata-api .
+docker run -p 8000:8000 --env-file .env.production strata-api
 ```
-app/
-├── api/                 # API route handlers
-│   ├── accounts.py      # Account endpoints
-│   ├── banking.py       # Banking/Plaid endpoints
-│   ├── connections.py   # Connection management
-│   ├── deps.py          # Dependency injection
-│   ├── health.py        # Health check
-│   ├── institutions.py  # Institution search
-│   ├── portfolio.py     # Portfolio aggregation & history
-│   └── transactions.py  # Transaction listing with pagination
-├── core/
-│   └── config.py        # Settings management
-├── db/
-│   ├── base.py          # SQLAlchemy base
-│   ├── session.py       # Database session
-│   └── types.py         # Custom column types
-├── models/              # SQLAlchemy models
-│   ├── bank_transaction.py
-│   ├── cash_account.py
-│   ├── connection.py
-│   ├── holding.py
-│   ├── institution.py
-│   ├── investment_account.py
-│   ├── portfolio_snapshot.py
-│   ├── security.py
-│   ├── transaction.py
-│   └── user.py
-├── schemas/             # Pydantic schemas
-│   ├── connection.py
-│   ├── holding.py
-│   ├── institution.py
-│   ├── investment_account.py
-│   ├── portfolio.py
-│   ├── security.py
-│   └── transaction.py
-├── services/
-│   ├── banking_sync.py         # Bank account/transaction sync
-│   ├── connection_sync.py      # Investment account/holdings/transaction sync
-│   ├── portfolio_metrics.py    # Shared portfolio calculation helpers
-│   ├── portfolio_snapshots.py  # Daily snapshot creation
-│   ├── spending_derivation.py  # Derive spending categories from transactions
-│   ├── jobs/
-│   │   └── background.py       # Periodic background job runner
-│   └── providers/              # Data provider adapters
-│       ├── base.py             # Abstract base provider (investments)
-│       ├── base_banking.py     # Abstract base provider (banking)
-│       ├── plaid.py            # Plaid implementation (banking)
-│       └── snaptrade.py        # SnapTrade implementation (investments)
-└── main.py              # FastAPI application
-```
+
+The entrypoint runs `alembic upgrade head` before starting gunicorn.
 
 ## Authentication
 
-The API expects a `x-clerk-user-id` header for authenticated endpoints. This should be set by your authentication middleware after validating the Clerk session.
+**Production:** The API validates Clerk JWTs using `STRATA_CLERK_PEM_PUBLIC_KEY`. Tokens are passed as `Authorization: Bearer <token>`.
+
+**Development:** When the PEM key is not set, the API falls back to trusting the `X-Clerk-User-Id` header directly. This is for local development only.
 
 ```bash
+# Development
 curl -H "x-clerk-user-id: user_abc123" http://localhost:8000/api/v1/accounts
+
+# Production (with JWT)
+curl -H "Authorization: Bearer eyJ..." http://localhost:8000/api/v1/accounts
 ```
