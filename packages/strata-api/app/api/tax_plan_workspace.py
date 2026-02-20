@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
+from typing import NamedTuple
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, or_, select, update
@@ -18,6 +19,7 @@ from app.models.tax_plan_workspace import (
 )
 from app.models.user import User
 from app.schemas.tax_plan_workspace import (
+    CollaboratorRole,
     TaxPlanCollaboratorCreateRequest,
     TaxPlanCollaboratorResponse,
     TaxPlanCommentCreateRequest,
@@ -32,6 +34,11 @@ from app.schemas.tax_plan_workspace import (
 )
 
 router = APIRouter(prefix="/tax-plan-workspace", tags=["tax-plan-workspace"])
+
+
+class PlanAccess(NamedTuple):
+    plan: TaxPlan
+    role: CollaboratorRole
 
 
 def _normalize_email(email: str | None) -> str:
@@ -62,14 +69,14 @@ async def _get_plan_accessible(
     *,
     require_write: bool = False,
     require_owner: bool = False,
-) -> TaxPlan:
+) -> PlanAccess:
     result = await session.execute(select(TaxPlan).where(TaxPlan.id == plan_id))
     plan = result.scalar_one_or_none()
     if not plan:
         raise HTTPException(status_code=404, detail="Tax plan not found")
 
     if plan.user_id == user.id:
-        return plan
+        return PlanAccess(plan=plan, role="owner")
 
     collaborator = await _get_active_collaborator(
         session,
@@ -91,7 +98,7 @@ async def _get_plan_accessible(
             detail="Viewer collaborators do not have write access",
         )
 
-    return plan
+    return PlanAccess(plan=plan, role=collaborator.role)
 
 
 @router.post("/plans", response_model=TaxPlanResponse)
@@ -145,8 +152,8 @@ async def get_tax_plan(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> TaxPlanResponse:
-    plan = await _get_plan_accessible(session, user, plan_id)
-    return TaxPlanResponse.model_validate(plan)
+    access = await _get_plan_accessible(session, user, plan_id)
+    return TaxPlanResponse.model_validate(access.plan)
 
 
 @router.patch("/plans/{plan_id}", response_model=TaxPlanResponse)
@@ -156,14 +163,16 @@ async def update_tax_plan(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> TaxPlanResponse:
-    plan = await _get_plan_accessible(session, user, plan_id, require_owner=True)
+    access = await _get_plan_accessible(session, user, plan_id, require_owner=True)
+    plan = access.plan
 
-    if data.name is not None:
-        plan.name = data.name
-    if data.household_name is not None:
+    provided = data.model_fields_set
+    if "name" in provided:
+        plan.name = data.name  # type: ignore[assignment]
+    if "household_name" in provided:
         plan.household_name = data.household_name
-    if data.status is not None:
-        plan.status = data.status
+    if "status" in provided:
+        plan.status = data.status  # type: ignore[assignment]
 
     await session.commit()
     await session.refresh(plan)
@@ -177,10 +186,10 @@ async def create_tax_plan_version(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> TaxPlanVersionResponse:
-    plan = await _get_plan_accessible(session, user, plan_id, require_write=True)
+    access = await _get_plan_accessible(session, user, plan_id, require_write=True)
 
     version = TaxPlanVersion(
-        plan_id=plan.id,
+        plan_id=access.plan.id,
         created_by_user_id=user.id,
         label=data.label,
         inputs=data.inputs,
@@ -192,7 +201,7 @@ async def create_tax_plan_version(
 
     session.add(
         TaxPlanEvent(
-            plan_id=plan.id,
+            plan_id=access.plan.id,
             version_id=version.id,
             actor_user_id=user.id,
             event_type="version_created",
@@ -212,11 +221,11 @@ async def list_tax_plan_versions(
     session: AsyncSession = Depends(get_async_session),
     limit: int = Query(100, ge=1, le=500),
 ) -> list[TaxPlanVersionResponse]:
-    plan = await _get_plan_accessible(session, user, plan_id)
+    access = await _get_plan_accessible(session, user, plan_id)
 
     result = await session.execute(
         select(TaxPlanVersion)
-        .where(TaxPlanVersion.plan_id == plan.id)
+        .where(TaxPlanVersion.plan_id == access.plan.id)
         .order_by(TaxPlanVersion.created_at.desc())
         .limit(limit)
     )
@@ -234,7 +243,14 @@ async def approve_tax_plan_version(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> TaxPlanVersionResponse:
-    plan = await _get_plan_accessible(session, user, plan_id, require_owner=True)
+    access = await _get_plan_accessible(session, user, plan_id, require_owner=True)
+    plan = access.plan
+
+    if plan.status == "archived":
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot approve versions on an archived plan",
+        )
 
     result = await session.execute(
         select(TaxPlanVersion).where(
@@ -287,34 +303,37 @@ async def create_tax_plan_comment(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> TaxPlanCommentResponse:
-    plan = await _get_plan_accessible(session, user, plan_id, require_write=True)
+    access = await _get_plan_accessible(session, user, plan_id, require_write=True)
 
     if data.version_id is not None:
         result = await session.execute(
             select(TaxPlanVersion).where(
                 TaxPlanVersion.id == data.version_id,
-                TaxPlanVersion.plan_id == plan.id,
+                TaxPlanVersion.plan_id == access.plan.id,
             )
         )
         if result.scalar_one_or_none() is None:
             raise HTTPException(status_code=404, detail="Tax plan version not found")
 
+    # Derive author_role from actual access level rather than trusting client
+    author_role = access.role
+
     comment = TaxPlanComment(
-        plan_id=plan.id,
+        plan_id=access.plan.id,
         version_id=data.version_id,
         author_user_id=user.id,
-        author_role=data.author_role,
+        author_role=author_role,
         body=data.body,
     )
     session.add(comment)
 
     session.add(
         TaxPlanEvent(
-            plan_id=plan.id,
+            plan_id=access.plan.id,
             version_id=data.version_id,
             actor_user_id=user.id,
             event_type="comment_created",
-            event_metadata={"author_role": data.author_role},
+            event_metadata={"author_role": author_role},
         )
     )
 
@@ -330,11 +349,11 @@ async def list_tax_plan_comments(
     session: AsyncSession = Depends(get_async_session),
     limit: int = Query(200, ge=1, le=1000),
 ) -> list[TaxPlanCommentResponse]:
-    plan = await _get_plan_accessible(session, user, plan_id)
+    access = await _get_plan_accessible(session, user, plan_id)
 
     result = await session.execute(
         select(TaxPlanComment)
-        .where(TaxPlanComment.plan_id == plan.id)
+        .where(TaxPlanComment.plan_id == access.plan.id)
         .order_by(TaxPlanComment.created_at.desc())
         .limit(limit)
     )
@@ -352,7 +371,7 @@ async def add_tax_plan_collaborator(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> TaxPlanCollaboratorResponse:
-    plan = await _get_plan_accessible(session, user, plan_id, require_owner=True)
+    access = await _get_plan_accessible(session, user, plan_id, require_owner=True)
 
     normalized_email = _normalize_email(data.email)
     if not normalized_email:
@@ -361,12 +380,12 @@ async def add_tax_plan_collaborator(
     if normalized_email == _normalize_email(user.email):
         raise HTTPException(status_code=409, detail="Owner already has plan access")
 
-    existing = await _get_active_collaborator(session, plan.id, normalized_email)
+    existing = await _get_active_collaborator(session, access.plan.id, normalized_email)
     if existing is not None:
         raise HTTPException(status_code=409, detail="Collaborator already exists")
 
     collaborator = TaxPlanCollaborator(
-        plan_id=plan.id,
+        plan_id=access.plan.id,
         email=normalized_email,
         role=data.role,
         invited_by_user_id=user.id,
@@ -377,7 +396,7 @@ async def add_tax_plan_collaborator(
 
     session.add(
         TaxPlanEvent(
-            plan_id=plan.id,
+            plan_id=access.plan.id,
             actor_user_id=user.id,
             event_type="collaborator_added",
             event_metadata={"email": normalized_email, "role": data.role},
@@ -397,14 +416,19 @@ async def list_tax_plan_collaborators(
     plan_id: uuid.UUID,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
+    active_only: bool = Query(True),
 ) -> list[TaxPlanCollaboratorResponse]:
-    plan = await _get_plan_accessible(session, user, plan_id)
+    access = await _get_plan_accessible(session, user, plan_id)
 
-    result = await session.execute(
+    stmt = (
         select(TaxPlanCollaborator)
-        .where(TaxPlanCollaborator.plan_id == plan.id)
+        .where(TaxPlanCollaborator.plan_id == access.plan.id)
         .order_by(TaxPlanCollaborator.created_at.desc())
     )
+    if active_only:
+        stmt = stmt.where(TaxPlanCollaborator.revoked_at.is_(None))
+
+    result = await session.execute(stmt)
     rows = result.scalars().all()
     return [TaxPlanCollaboratorResponse.model_validate(row) for row in rows]
 
@@ -416,12 +440,12 @@ async def revoke_tax_plan_collaborator(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> dict[str, str]:
-    plan = await _get_plan_accessible(session, user, plan_id, require_owner=True)
+    access = await _get_plan_accessible(session, user, plan_id, require_owner=True)
 
     result = await session.execute(
         select(TaxPlanCollaborator).where(
             TaxPlanCollaborator.id == collaborator_id,
-            TaxPlanCollaborator.plan_id == plan.id,
+            TaxPlanCollaborator.plan_id == access.plan.id,
         )
     )
     collaborator = result.scalar_one_or_none()
@@ -432,7 +456,7 @@ async def revoke_tax_plan_collaborator(
 
     session.add(
         TaxPlanEvent(
-            plan_id=plan.id,
+            plan_id=access.plan.id,
             actor_user_id=user.id,
             event_type="collaborator_revoked",
             event_metadata={"email": collaborator.email},
@@ -450,20 +474,20 @@ async def create_tax_plan_event(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> TaxPlanEventResponse:
-    plan = await _get_plan_accessible(session, user, plan_id, require_write=True)
+    access = await _get_plan_accessible(session, user, plan_id, require_write=True)
 
     if data.version_id is not None:
         result = await session.execute(
             select(TaxPlanVersion).where(
                 TaxPlanVersion.id == data.version_id,
-                TaxPlanVersion.plan_id == plan.id,
+                TaxPlanVersion.plan_id == access.plan.id,
             )
         )
         if result.scalar_one_or_none() is None:
             raise HTTPException(status_code=404, detail="Tax plan version not found")
 
     event = TaxPlanEvent(
-        plan_id=plan.id,
+        plan_id=access.plan.id,
         version_id=data.version_id,
         actor_user_id=user.id,
         event_type=data.event_type,
@@ -482,11 +506,11 @@ async def list_tax_plan_events(
     session: AsyncSession = Depends(get_async_session),
     limit: int = Query(200, ge=1, le=2000),
 ) -> list[TaxPlanEventResponse]:
-    plan = await _get_plan_accessible(session, user, plan_id)
+    access = await _get_plan_accessible(session, user, plan_id)
 
     result = await session.execute(
         select(TaxPlanEvent)
-        .where(TaxPlanEvent.plan_id == plan.id)
+        .where(TaxPlanEvent.plan_id == access.plan.id)
         .order_by(TaxPlanEvent.created_at.desc())
         .limit(limit)
     )

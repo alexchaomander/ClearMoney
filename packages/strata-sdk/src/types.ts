@@ -1226,7 +1226,6 @@ export interface TaxPlanComment {
 
 export interface TaxPlanCommentCreateRequest {
   version_id?: string | null;
-  author_role?: TaxPlanCollaboratorRole;
   body: string;
 }
 

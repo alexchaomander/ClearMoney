@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Index, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -24,11 +24,16 @@ class TaxPlan(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     household_name: Mapped[str | None] = mapped_column(String(160), nullable=True)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="draft")
-    approved_version_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
+    approved_version_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("tax_plan_versions.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+    )
 
     user: Mapped["User"] = relationship(back_populates="tax_plans")
     versions: Mapped[list["TaxPlanVersion"]] = relationship(
-        back_populates="plan", cascade="all, delete-orphan"
+        back_populates="plan",
+        cascade="all, delete-orphan",
+        foreign_keys="[TaxPlanVersion.plan_id]",
     )
     comments: Mapped[list["TaxPlanComment"]] = relationship(
         back_populates="plan", cascade="all, delete-orphan"
@@ -68,7 +73,9 @@ class TaxPlanVersion(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         nullable=True,
     )
 
-    plan: Mapped["TaxPlan"] = relationship(back_populates="versions")
+    plan: Mapped["TaxPlan"] = relationship(
+        back_populates="versions", foreign_keys="[TaxPlanVersion.plan_id]"
+    )
 
 
 class TaxPlanComment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -101,6 +108,15 @@ class TaxPlanComment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
 class TaxPlanCollaborator(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "tax_plan_collaborators"
+    __table_args__ = (
+        Index(
+            "ix_active_collaborator_plan_email",
+            "plan_id",
+            "email",
+            unique=True,
+            postgresql_where="revoked_at IS NULL",
+        ),
+    )
 
     plan_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("tax_plans.id", ondelete="CASCADE"),

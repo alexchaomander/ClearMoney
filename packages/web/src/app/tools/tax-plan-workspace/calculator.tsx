@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import {
   Check,
@@ -29,6 +29,7 @@ import { buildTaxPlanPacket } from "@/lib/calculators/tax-plan-workspace/packet"
 import {
   createSnapshot,
   deleteSnapshot,
+  isObject,
   loadSnapshots,
   persistSnapshots,
   upsertSnapshot,
@@ -108,18 +109,12 @@ const MODE_OPTIONS: Array<{ value: WorkspaceMode; label: string; detail: string 
 ];
 
 const STATE_OPTIONS = [
-  "CA",
-  "NY",
-  "TX",
-  "FL",
-  "WA",
-  "IL",
-  "NJ",
-  "MA",
-  "CO",
-  "AZ",
-  "GA",
-  "NC",
+  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL",
+  "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME",
+  "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH",
+  "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI",
+  "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI",
+  "WY",
 ];
 
 const STRATEGY_LABELS: Array<{
@@ -173,13 +168,15 @@ function parsePayload(payload: unknown): ServerSnapshotPayload | null {
   if (row.version !== 1) return null;
   if (typeof row.savedAt !== "string") return null;
   if (typeof row.label !== "string") return null;
-  if (!row.inputs || typeof row.inputs !== "object") return null;
+
+  const inputs = hydrateWorkspaceInputs(row.inputs);
+  if (!inputs) return null;
 
   return {
     version: 1,
     savedAt: row.savedAt,
     label: row.label,
-    inputs: row.inputs as WorkspaceInputs,
+    inputs,
   };
 }
 
@@ -190,10 +187,6 @@ function createServerPayload(label: string, inputs: WorkspaceInputs): ServerSnap
     label,
     inputs: JSON.parse(JSON.stringify(inputs)) as WorkspaceInputs,
   };
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }
 
 function parseNumber(value: unknown, fallback: number): number {
@@ -230,8 +223,9 @@ function hydrateWorkspaceInputs(raw: unknown): WorkspaceInputs | null {
         ? raw.filingStatus
         : "single",
     stateCode:
-      typeof raw.stateCode === "string" && raw.stateCode.trim()
-        ? raw.stateCode.toUpperCase().slice(0, 2)
+      typeof raw.stateCode === "string" &&
+      STATE_OPTIONS.includes(raw.stateCode.toUpperCase().trim().slice(0, 2))
+        ? raw.stateCode.toUpperCase().trim().slice(0, 2)
         : DEFAULT_INPUTS.stateCode,
     wagesIncome: parseNumber(raw.wagesIncome, DEFAULT_INPUTS.wagesIncome),
     otherOrdinaryIncome: parseNumber(
@@ -362,10 +356,22 @@ export function Calculator() {
   const comparedPairRef = useRef<string>("");
 
   const [inputs, setInputs] = useState<WorkspaceInputs>(DEFAULT_INPUTS);
-  const [localSnapshots, setLocalSnapshots] = useState<SavedTaxPlanSnapshot[]>(() => loadSnapshots());
+  const initialSnapshotsRef = useRef<SavedTaxPlanSnapshot[] | null>(null);
+  if (initialSnapshotsRef.current === null) {
+    initialSnapshotsRef.current = loadSnapshots();
+  }
+  const [localSnapshots, setLocalSnapshots] = useState<SavedTaxPlanSnapshot[]>(
+    () => initialSnapshotsRef.current!
+  );
   const [snapshotLabel, setSnapshotLabel] = useState("Q1 Draft Plan");
-  const [compareA, setCompareA] = useState(() => (loadSnapshots()[0] ? `local:${loadSnapshots()[0]?.id}` : ""));
-  const [compareB, setCompareB] = useState(() => (loadSnapshots()[1] ? `local:${loadSnapshots()[1]?.id}` : ""));
+  const [compareA, setCompareA] = useState(() => {
+    const first = initialSnapshotsRef.current![0];
+    return first ? `local:${first.id}` : "";
+  });
+  const [compareB, setCompareB] = useState(() => {
+    const second = initialSnapshotsRef.current![1];
+    return second ? `local:${second.id}` : "";
+  });
   const [briefCopied, setBriefCopied] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
@@ -489,7 +495,6 @@ export function Calculator() {
       client.createTaxPlanComment(payload.planId, {
         version_id: payload.versionId ?? null,
         body: payload.body,
-        author_role: "owner",
       }),
     onSuccess: (_comment, payload) => {
       queryClient.invalidateQueries({
@@ -649,25 +654,28 @@ export function Calculator() {
     if (!activePlan) return;
     setPlanName(activePlan.name);
     setHouseholdName(activePlan.household_name ?? "");
-  }, [activePlan?.id]);
+  }, [activePlan]);
 
-  function queuePlanEvent(
-    planId: string,
-    eventType: string,
-    eventMetadata: Record<string, unknown> = {},
-    versionId?: string
-  ) {
-    void client
-      .createTaxPlanEvent(planId, {
-        version_id: versionId ?? null,
-        event_type: eventType,
-        event_metadata: eventMetadata,
-      })
-      .then(() => {
-        queryClient.invalidateQueries({ queryKey: ["tax-plan-workspace", "events", planId] });
-      })
-      .catch(() => undefined);
-  }
+  const queuePlanEvent = useCallback(
+    (
+      planId: string,
+      eventType: string,
+      eventMetadata: Record<string, unknown> = {},
+      versionId?: string
+    ) => {
+      void client
+        .createTaxPlanEvent(planId, {
+          version_id: versionId ?? null,
+          event_type: eventType,
+          event_metadata: eventMetadata,
+        })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ["tax-plan-workspace", "events", planId] });
+        })
+        .catch(() => undefined);
+    },
+    [client, queryClient]
+  );
 
   useEffect(() => {
     if (!activePlanId || !compareA || !compareB) return;
@@ -678,7 +686,7 @@ export function Calculator() {
       compare_a: compareA,
       compare_b: compareB,
     });
-  }, [activePlanId, compareA, compareB]);
+  }, [activePlanId, compareA, compareB, queuePlanEvent]);
 
   const estimatedRate =
     inputs.wagesIncome + inputs.otherOrdinaryIncome + inputs.shortTermGains > 0
@@ -706,11 +714,22 @@ export function Calculator() {
     }));
   }
 
+  const briefTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const shareLinkTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(briefTimerRef.current);
+      clearTimeout(shareLinkTimerRef.current);
+    };
+  }, []);
+
   async function copyBrief() {
     try {
       await navigator.clipboard.writeText(results.advisorBrief);
       setBriefCopied(true);
-      setTimeout(() => setBriefCopied(false), 1500);
+      clearTimeout(briefTimerRef.current);
+      briefTimerRef.current = setTimeout(() => setBriefCopied(false), 1500);
     } catch {
       setBriefCopied(false);
     }
@@ -721,7 +740,8 @@ export function Calculator() {
     try {
       await navigator.clipboard.writeText(shareLink);
       setShareLinkCopied(true);
-      setTimeout(() => setShareLinkCopied(false), 1500);
+      clearTimeout(shareLinkTimerRef.current);
+      shareLinkTimerRef.current = setTimeout(() => setShareLinkCopied(false), 1500);
     } catch {
       setShareLinkCopied(false);
     }
@@ -912,6 +932,11 @@ export function Calculator() {
   async function handleCsvFileSelected(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (file.size > 1_000_000) {
+      setCsvImportStatus("File too large. CSV must be under 1 MB.");
+      event.target.value = "";
+      return;
+    }
     try {
       const text = await file.text();
       const mapped = mapCsvToInputs(text);

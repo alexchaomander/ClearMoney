@@ -1,8 +1,8 @@
 """add_tax_plan_workspace
 
-Revision ID: d96511898d7c
+Revision ID: ea2ad1b76fce
 Revises: 89647041d785
-Create Date: 2026-02-19 16:35:28.637134
+Create Date: 2026-02-19 17:04:46.867013
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'd96511898d7c'
+revision: str = 'ea2ad1b76fce'
 down_revision: Union[str, Sequence[str], None] = '89647041d785'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -30,6 +30,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.ForeignKeyConstraint(['approved_version_id'], ['tax_plan_versions.id'], ondelete='SET NULL', use_alter=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -48,6 +49,7 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['plan_id'], ['tax_plans.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index('ix_active_collaborator_plan_email', 'tax_plan_collaborators', ['plan_id', 'email'], unique=True, postgresql_where='revoked_at IS NULL')
     op.create_index(op.f('ix_tax_plan_collaborators_email'), 'tax_plan_collaborators', ['email'], unique=False)
     op.create_index(op.f('ix_tax_plan_collaborators_invited_by_user_id'), 'tax_plan_collaborators', ['invited_by_user_id'], unique=False)
     op.create_index(op.f('ix_tax_plan_collaborators_plan_id'), 'tax_plan_collaborators', ['plan_id'], unique=False)
@@ -125,6 +127,7 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_tax_plan_collaborators_plan_id'), table_name='tax_plan_collaborators')
     op.drop_index(op.f('ix_tax_plan_collaborators_invited_by_user_id'), table_name='tax_plan_collaborators')
     op.drop_index(op.f('ix_tax_plan_collaborators_email'), table_name='tax_plan_collaborators')
+    op.drop_index('ix_active_collaborator_plan_email', table_name='tax_plan_collaborators', postgresql_where='revoked_at IS NULL')
     op.drop_table('tax_plan_collaborators')
     op.drop_index(op.f('ix_tax_plans_user_id'), table_name='tax_plans')
     op.drop_table('tax_plans')

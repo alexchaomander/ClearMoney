@@ -2,7 +2,7 @@ import type { SavedTaxPlanSnapshot, WorkspaceInputs } from "./types";
 
 export const TAX_PLAN_WORKSPACE_STORAGE_KEY = "taxPlanWorkspace.snapshots.v1";
 
-function isObject(value: unknown): value is Record<string, unknown> {
+export function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 

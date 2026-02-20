@@ -98,7 +98,6 @@ async def test_tax_plan_workspace_lifecycle() -> None:
             json={
                 "version_id": version_2["id"],
                 "body": "Looks ready for Q2",
-                "author_role": "owner",
             },
         )
         assert create_comment.status_code == 200
@@ -196,7 +195,7 @@ async def test_tax_plan_workspace_is_user_scoped() -> None:
         event_other = await client.post(
             f"/api/v1/tax-plan-workspace/plans/{plan_id}/events",
             headers=other_headers,
-            json={"event_type": "should_fail", "event_metadata": {}},
+            json={"event_type": "viewed", "event_metadata": {}},
         )
         assert event_other.status_code == 404
 

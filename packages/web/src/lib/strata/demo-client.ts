@@ -1529,7 +1529,7 @@ export class DemoStrataClient implements StrataClientInterface {
     const store = this.loadTaxPlansStore();
     const plan: TaxPlan = {
       id: crypto.randomUUID(),
-      user_id: "demo-user",
+      user_id: "demo-user-001",
       name: data.name,
       household_name: data.household_name ?? null,
       status: "draft",
@@ -1647,7 +1647,7 @@ export class DemoStrataClient implements StrataClientInterface {
       plan_id: planId,
       version_id: data.version_id ?? null,
       author_user_id: "demo-user",
-      author_role: data.author_role ?? "owner",
+      author_role: "owner",
       body: data.body,
       created_at: now,
       updated_at: now,
