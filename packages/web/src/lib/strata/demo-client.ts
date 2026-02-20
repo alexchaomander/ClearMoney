@@ -44,6 +44,17 @@ import type {
   ShareReportCreateResponse,
   ShareReportListItem,
   ShareReportPublicResponse,
+  TaxPlan,
+  TaxPlanCollaborator,
+  TaxPlanCollaboratorCreateRequest,
+  TaxPlanComment,
+  TaxPlanCommentCreateRequest,
+  TaxPlanCreateRequest,
+  TaxPlanEvent,
+  TaxPlanEventCreateRequest,
+  TaxPlanUpdateRequest,
+  TaxPlanVersion,
+  TaxPlanVersionCreateRequest,
   SkillDetail,
   SkillSummary,
   SpendingSummary,
@@ -1319,6 +1330,7 @@ export class DemoStrataClient implements StrataClientInterface {
   // === Share Reports ===
 
   private static readonly SHARE_REPORTS_STORAGE_KEY = "clearmoney-demo-share-reports.v1";
+  private static readonly TAX_PLANS_STORAGE_KEY = "clearmoney-demo-tax-plans.v1";
 
   private loadShareReports(): Record<
     string,
@@ -1398,7 +1410,7 @@ export class DemoStrataClient implements StrataClientInterface {
     return report;
   }
 
-  async listShareReports(params?: { toolId?: string; limit?: number }): Promise<ShareReportListItem[]> {
+  async listShareReports(params?: { toolId?: string; limit?: number; includePayload?: boolean }): Promise<ShareReportListItem[]> {
     await delay(150);
     const limit = params?.limit ?? 50;
     const toolId = params?.toolId ?? null;
@@ -1417,6 +1429,7 @@ export class DemoStrataClient implements StrataClientInterface {
         max_views: row.report.max_views ?? null,
         view_count: row.report.view_count ?? 0,
         last_viewed_at: row.report.last_viewed_at ?? null,
+        payload: params?.includePayload ? row.report.payload : null,
       });
     }
 
@@ -1461,6 +1474,280 @@ export class DemoStrataClient implements StrataClientInterface {
       expires_at: row.report.expires_at,
       max_views: row.report.max_views ?? null,
     };
+  }
+
+  // === Tax Plan Workspace ===
+
+  private loadTaxPlansStore(): {
+    plans: TaxPlan[];
+    versions: TaxPlanVersion[];
+    comments: TaxPlanComment[];
+    collaborators: TaxPlanCollaborator[];
+    events: TaxPlanEvent[];
+  } {
+    if (typeof window === "undefined") {
+      return { plans: [], versions: [], comments: [], collaborators: [], events: [] };
+    }
+    try {
+      const raw = window.localStorage.getItem(DemoStrataClient.TAX_PLANS_STORAGE_KEY);
+      if (!raw) return { plans: [], versions: [], comments: [], collaborators: [], events: [] };
+      const parsed = JSON.parse(raw) as unknown;
+      if (!parsed || typeof parsed !== "object") {
+        return { plans: [], versions: [], comments: [], collaborators: [], events: [] };
+      }
+      const obj = parsed as Record<string, unknown>;
+      return {
+        plans: Array.isArray(obj.plans) ? (obj.plans as TaxPlan[]) : [],
+        versions: Array.isArray(obj.versions) ? (obj.versions as TaxPlanVersion[]) : [],
+        comments: Array.isArray(obj.comments) ? (obj.comments as TaxPlanComment[]) : [],
+        collaborators: Array.isArray(obj.collaborators) ? (obj.collaborators as TaxPlanCollaborator[]) : [],
+        events: Array.isArray(obj.events) ? (obj.events as TaxPlanEvent[]) : [],
+      };
+    } catch {
+      return { plans: [], versions: [], comments: [], collaborators: [], events: [] };
+    }
+  }
+
+  private persistTaxPlansStore(store: {
+    plans: TaxPlan[];
+    versions: TaxPlanVersion[];
+    comments: TaxPlanComment[];
+    collaborators: TaxPlanCollaborator[];
+    events: TaxPlanEvent[];
+  }): void {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(DemoStrataClient.TAX_PLANS_STORAGE_KEY, JSON.stringify(store));
+    } catch {
+      // ignore
+    }
+  }
+
+  async createTaxPlan(data: TaxPlanCreateRequest): Promise<TaxPlan> {
+    await delay(120);
+    const now = new Date().toISOString();
+    const store = this.loadTaxPlansStore();
+    const plan: TaxPlan = {
+      id: crypto.randomUUID(),
+      user_id: "demo-user-001",
+      name: data.name,
+      household_name: data.household_name ?? null,
+      status: "draft",
+      approved_version_id: null,
+      created_at: now,
+      updated_at: now,
+    };
+    store.plans.push(plan);
+    this.persistTaxPlansStore(store);
+    return plan;
+  }
+
+  async listTaxPlans(params?: { limit?: number }): Promise<TaxPlan[]> {
+    await delay(120);
+    const limit = params?.limit ?? 50;
+    const store = this.loadTaxPlansStore();
+    return [...store.plans]
+      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
+      .slice(0, limit);
+  }
+
+  async getTaxPlan(planId: string): Promise<TaxPlan> {
+    await delay(120);
+    const store = this.loadTaxPlansStore();
+    const plan = store.plans.find((p) => p.id === planId);
+    if (!plan) throw new Error("Tax plan not found");
+    return plan;
+  }
+
+  async updateTaxPlan(planId: string, data: TaxPlanUpdateRequest): Promise<TaxPlan> {
+    await delay(120);
+    const store = this.loadTaxPlansStore();
+    const plan = store.plans.find((p) => p.id === planId);
+    if (!plan) throw new Error("Tax plan not found");
+    if (data.name !== undefined) plan.name = data.name;
+    if (data.household_name !== undefined) plan.household_name = data.household_name ?? null;
+    if (data.status !== undefined) plan.status = data.status;
+    plan.updated_at = new Date().toISOString();
+    this.persistTaxPlansStore(store);
+    return plan;
+  }
+
+  async createTaxPlanVersion(planId: string, data: TaxPlanVersionCreateRequest): Promise<TaxPlanVersion> {
+    await delay(120);
+    const now = new Date().toISOString();
+    const store = this.loadTaxPlansStore();
+    const plan = store.plans.find((p) => p.id === planId);
+    if (!plan) throw new Error("Tax plan not found");
+    const version: TaxPlanVersion = {
+      id: crypto.randomUUID(),
+      plan_id: planId,
+      created_by_user_id: "demo-user",
+      label: data.label,
+      inputs: data.inputs,
+      results: data.results ?? null,
+      source: data.source ?? "manual",
+      is_approved: false,
+      approved_at: null,
+      approved_by_user_id: null,
+      created_at: now,
+      updated_at: now,
+    };
+    store.versions.push(version);
+    plan.updated_at = now;
+    this.persistTaxPlansStore(store);
+    return version;
+  }
+
+  async listTaxPlanVersions(planId: string, params?: { limit?: number }): Promise<TaxPlanVersion[]> {
+    await delay(120);
+    const limit = params?.limit ?? 100;
+    const store = this.loadTaxPlansStore();
+    return store.versions
+      .filter((v) => v.plan_id === planId)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .slice(0, limit);
+  }
+
+  async approveTaxPlanVersion(planId: string, versionId: string): Promise<TaxPlanVersion> {
+    await delay(120);
+    const now = new Date().toISOString();
+    const store = this.loadTaxPlansStore();
+    const plan = store.plans.find((p) => p.id === planId);
+    if (!plan) throw new Error("Tax plan not found");
+    let approved: TaxPlanVersion | null = null;
+    for (const version of store.versions.filter((v) => v.plan_id === planId)) {
+      if (version.id === versionId) {
+        version.is_approved = true;
+        version.approved_at = now;
+        version.approved_by_user_id = "demo-user";
+        version.updated_at = now;
+        approved = version;
+      } else {
+        version.is_approved = false;
+        version.approved_at = null;
+        version.approved_by_user_id = null;
+      }
+    }
+    if (!approved) throw new Error("Tax plan version not found");
+    plan.approved_version_id = versionId;
+    plan.status = "active";
+    plan.updated_at = now;
+    this.persistTaxPlansStore(store);
+    return approved;
+  }
+
+  async createTaxPlanComment(planId: string, data: TaxPlanCommentCreateRequest): Promise<TaxPlanComment> {
+    await delay(120);
+    const now = new Date().toISOString();
+    const store = this.loadTaxPlansStore();
+    const plan = store.plans.find((p) => p.id === planId);
+    if (!plan) throw new Error("Tax plan not found");
+    const comment: TaxPlanComment = {
+      id: crypto.randomUUID(),
+      plan_id: planId,
+      version_id: data.version_id ?? null,
+      author_user_id: "demo-user",
+      author_role: "owner",
+      body: data.body,
+      created_at: now,
+      updated_at: now,
+    };
+    store.comments.push(comment);
+    plan.updated_at = now;
+    this.persistTaxPlansStore(store);
+    return comment;
+  }
+
+  async listTaxPlanComments(planId: string, params?: { limit?: number }): Promise<TaxPlanComment[]> {
+    await delay(120);
+    const limit = params?.limit ?? 200;
+    const store = this.loadTaxPlansStore();
+    return store.comments
+      .filter((c) => c.plan_id === planId)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .slice(0, limit);
+  }
+
+  async addTaxPlanCollaborator(
+    planId: string,
+    data: TaxPlanCollaboratorCreateRequest
+  ): Promise<TaxPlanCollaborator> {
+    await delay(120);
+    const now = new Date().toISOString();
+    const store = this.loadTaxPlansStore();
+    const plan = store.plans.find((p) => p.id === planId);
+    if (!plan) throw new Error("Tax plan not found");
+    const existing = store.collaborators.find(
+      (c) => c.plan_id === planId && c.email.toLowerCase() === data.email.toLowerCase() && !c.revoked_at
+    );
+    if (existing) throw new Error("Collaborator already exists");
+    const collaborator: TaxPlanCollaborator = {
+      id: crypto.randomUUID(),
+      plan_id: planId,
+      email: data.email,
+      role: data.role,
+      invited_by_user_id: "demo-user",
+      accepted_at: null,
+      revoked_at: null,
+      created_at: now,
+      updated_at: now,
+    };
+    store.collaborators.push(collaborator);
+    this.persistTaxPlansStore(store);
+    return collaborator;
+  }
+
+  async listTaxPlanCollaborators(planId: string): Promise<TaxPlanCollaborator[]> {
+    await delay(120);
+    const store = this.loadTaxPlansStore();
+    return store.collaborators
+      .filter((c) => c.plan_id === planId)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  }
+
+  async revokeTaxPlanCollaborator(planId: string, collaboratorId: string): Promise<{ status: string }> {
+    await delay(120);
+    const now = new Date().toISOString();
+    const store = this.loadTaxPlansStore();
+    const collaborator = store.collaborators.find(
+      (c) => c.plan_id === planId && c.id === collaboratorId
+    );
+    if (!collaborator) throw new Error("Collaborator not found");
+    collaborator.revoked_at = now;
+    collaborator.updated_at = now;
+    this.persistTaxPlansStore(store);
+    return { status: "revoked" };
+  }
+
+  async createTaxPlanEvent(planId: string, data: TaxPlanEventCreateRequest): Promise<TaxPlanEvent> {
+    await delay(80);
+    const now = new Date().toISOString();
+    const store = this.loadTaxPlansStore();
+    const plan = store.plans.find((p) => p.id === planId);
+    if (!plan) throw new Error("Tax plan not found");
+    const event: TaxPlanEvent = {
+      id: crypto.randomUUID(),
+      plan_id: planId,
+      version_id: data.version_id ?? null,
+      actor_user_id: "demo-user",
+      event_type: data.event_type,
+      event_metadata: data.event_metadata ?? {},
+      created_at: now,
+      updated_at: now,
+    };
+    store.events.push(event);
+    this.persistTaxPlansStore(store);
+    return event;
+  }
+
+  async listTaxPlanEvents(planId: string, params?: { limit?: number }): Promise<TaxPlanEvent[]> {
+    await delay(120);
+    const limit = params?.limit ?? 200;
+    const store = this.loadTaxPlansStore();
+    return store.events
+      .filter((e) => e.plan_id === planId)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .slice(0, limit);
   }
 
   async getActionIntents(_status?: ActionIntentStatus): Promise<ActionIntent[]> {

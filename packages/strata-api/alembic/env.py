@@ -29,6 +29,11 @@ from app.models import (  # noqa: E402, F401
     Recommendation,
     Security,
     ShareReport,
+    TaxPlan,
+    TaxPlanCollaborator,
+    TaxPlanComment,
+    TaxPlanEvent,
+    TaxPlanVersion,
     User,
 )
 from app.models.connection import Connection as ConnectionModel  # noqa: E402, F401
