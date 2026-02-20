@@ -277,21 +277,26 @@ export class StrataClient implements StrataClientInterface {
     this.authToken = token;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-
+  private authHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {};
     if (this.clerkUserId) {
       headers['X-Clerk-User-Id'] = this.clerkUserId;
     }
     if (this.authToken) {
       headers.Authorization = `Bearer ${this.authToken}`;
     }
+    return headers;
+  }
+
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...this.authHeaders(),
+      ...(options.headers as Record<string, string>),
+    };
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
@@ -1034,13 +1039,7 @@ export class StrataClient implements StrataClientInterface {
     filename: string,
     documentTypeHint?: string
   ): Promise<TaxDocumentResponse> {
-    const headers: Record<string, string> = {};
-    if (this.clerkUserId) {
-      headers['X-Clerk-User-Id'] = this.clerkUserId;
-    }
-    if (this.authToken) {
-      headers.Authorization = `Bearer ${this.authToken}`;
-    }
+    const headers = this.authHeaders();
 
     const formData = new FormData();
     formData.append('file', file, filename);

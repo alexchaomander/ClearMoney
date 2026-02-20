@@ -80,7 +80,8 @@ class DocumentExtractionService:
         schema_cls = FIELD_SCHEMAS.get(doc_type)
         if schema_cls:
             try:
-                schema_cls.model_validate(result.fields)
+                validated = schema_cls.model_validate(result.fields)
+                result.fields = validated.model_dump()
             except ValidationError as e:
                 for error in e.errors():
                     issues.append(

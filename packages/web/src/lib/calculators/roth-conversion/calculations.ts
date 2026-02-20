@@ -65,8 +65,11 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
   const currentRate = currentTaxRate / 100;
   const retirementRate = retirementTaxRate / 100;
 
+  // Clamp conversion to available balance
+  const actualConversion = Math.min(conversionAmount, traditionalIraBalance);
+
   // Tax cost of converting now
-  const conversionTaxCost = conversionAmount * currentRate;
+  const conversionTaxCost = actualConversion * currentRate;
 
   // Scenario A: No conversion — entire balance grows, taxed at retirement rate
   // Scenario B: Convert — pay tax now, remaining grows tax-free in Roth
@@ -81,8 +84,8 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
   // No-convert: full traditional balance grows, withdrawals taxed at retirement rate
   // Convert: traditional balance minus conversion grows (taxed at retirement),
   //          conversion minus tax grows tax-free in Roth
-  const traditionalAfterConversion = traditionalIraBalance - conversionAmount;
-  const rothAfterConversion = conversionAmount - conversionTaxCost;
+  const traditionalAfterConversion = traditionalIraBalance - actualConversion;
+  const rothAfterConversion = actualConversion - conversionTaxCost;
 
   let traditionalBal = traditionalIraBalance; // no-convert scenario
   let traditionalRemaining = traditionalAfterConversion; // convert scenario: traditional portion
@@ -99,7 +102,7 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
     const advantage = convertAfterTax - noConvertAfterTax;
 
     const isBreakEven =
-      breakEvenAge === null && i > 0 && advantage >= 0 && conversionAmount > 0;
+      breakEvenAge === null && i > 0 && advantage >= 0 && actualConversion > 0;
 
     if (isBreakEven) {
       breakEvenAge = age;
@@ -148,23 +151,23 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
 
   if (breakEvenAge !== null) {
     factors.push(`Break-even age is ${breakEvenAge}, meaning the Roth conversion pays off if you live past this age.`);
-  } else if (conversionAmount > 0) {
+  } else if (actualConversion > 0) {
     factors.push("No break-even point found within the projection period — the conversion may not be beneficial under these assumptions.");
   }
 
-  if (conversionAmount === 0) {
+  if (actualConversion === 0) {
     factors.push("No conversion amount entered. Adjust the conversion amount to see the analysis.");
   }
 
   let recommendation: string;
-  if (conversionAmount === 0) {
+  if (actualConversion === 0) {
     recommendation = "Enter a conversion amount to see the Roth conversion analysis.";
   } else if (lifetimeSavings > 0 && breakEvenAge !== null) {
-    recommendation = `Converting $${conversionAmount.toLocaleString()} could save you $${Math.round(lifetimeSavings).toLocaleString()} in after-tax wealth by age 90. The conversion breaks even at age ${breakEvenAge}.`;
+    recommendation = `Converting $${actualConversion.toLocaleString()} could save you $${Math.round(lifetimeSavings).toLocaleString()} in after-tax wealth by age 90. The conversion breaks even at age ${breakEvenAge}.`;
   } else if (lifetimeSavings > 0) {
-    recommendation = `Converting $${conversionAmount.toLocaleString()} shows a net positive outcome by age 90, saving $${Math.round(lifetimeSavings).toLocaleString()} in after-tax wealth.`;
+    recommendation = `Converting $${actualConversion.toLocaleString()} shows a net positive outcome by age 90, saving $${Math.round(lifetimeSavings).toLocaleString()} in after-tax wealth.`;
   } else {
-    recommendation = `Under these assumptions, converting $${conversionAmount.toLocaleString()} would reduce your after-tax wealth by $${Math.round(Math.abs(lifetimeSavings)).toLocaleString()} by age 90. Consider a smaller conversion or revisit your tax rate assumptions.`;
+    recommendation = `Under these assumptions, converting $${actualConversion.toLocaleString()} would reduce your after-tax wealth by $${Math.round(Math.abs(lifetimeSavings)).toLocaleString()} by age 90. Consider a smaller conversion or revisit your tax rate assumptions.`;
   }
 
   return {

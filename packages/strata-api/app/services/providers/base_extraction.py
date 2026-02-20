@@ -8,6 +8,16 @@ from app.schemas.tax_document import ExtractionResult
 
 logger = logging.getLogger(__name__)
 
+
+def _safe_float(value: object, default: float) -> float:
+    """Safely cast a value to float, returning default on failure."""
+    if value is None:
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
 EXTRACTION_SYSTEM_PROMPT = """You are a tax document extraction assistant. Given an image or PDF of a tax document, extract all relevant fields into structured JSON.
 
 Return a JSON object with exactly these top-level keys:
@@ -54,12 +64,28 @@ class ExtractionProvider(ABC):
 
     # --- Shared helpers for LLM-based providers ---
 
+    _KNOWN_DOC_TYPES = {"w2", "1099-int", "1099-div", "1099-b", "k-1", "1040"}
+
     @staticmethod
-    def build_user_prompt(filename: str, document_type_hint: str | None = None) -> str:
-        """Build the user-facing prompt text."""
-        text = f"Extract all fields from this tax document: {filename}"
-        if document_type_hint:
-            text += f" (expected type: {document_type_hint})"
+    def _sanitize_filename(filename: str) -> str:
+        """Extract only the basename and strip to alphanumeric, dots, hyphens, underscores."""
+        import os
+        import re
+        base = os.path.basename(filename)
+        # Keep only safe characters for a filename
+        return re.sub(r"[^\w.\-]", "_", base)[:100]
+
+    @classmethod
+    def build_user_prompt(cls, filename: str, document_type_hint: str | None = None) -> str:
+        """Build the user-facing prompt text.
+
+        Inputs are sanitized to mitigate prompt injection since filename
+        and hint originate from untrusted user input.
+        """
+        safe_filename = cls._sanitize_filename(filename)
+        text = f"Extract all fields from this tax document: {safe_filename}"
+        if document_type_hint and document_type_hint.lower() in cls._KNOWN_DOC_TYPES:
+            text += f" (expected type: {document_type_hint.lower()})"
         return text
 
     def parse_llm_response(self, raw_text: str) -> ExtractionResult:
@@ -71,9 +97,17 @@ class ExtractionProvider(ABC):
         try:
             cleaned = raw_text.strip()
             if cleaned.startswith("```"):
-                cleaned = cleaned.split("\n", 1)[1]
-                if cleaned.endswith("```"):
-                    cleaned = cleaned[:-3]
+                # Handle both multi-line (```json\n...\n```) and single-line (```{...}```)
+                if "\n" in cleaned:
+                    cleaned = cleaned.split("\n", 1)[1]
+                    if cleaned.endswith("```"):
+                        cleaned = cleaned[:-3]
+                else:
+                    # Single-line: strip opening/closing fences
+                    cleaned = cleaned.lstrip("`").rstrip("`")
+                    # Remove optional language tag (e.g. "json ")
+                    if cleaned.startswith(("json ", "JSON ")):
+                        cleaned = cleaned[5:]
                 cleaned = cleaned.strip()
 
             parsed = json.loads(cleaned)
@@ -98,7 +132,7 @@ class ExtractionProvider(ABC):
             document_type=parsed.get("document_type", "unknown"),
             tax_year=parsed.get("tax_year"),
             fields=parsed.get("fields", {}),
-            confidence=min(1.0, max(0.0, float(parsed.get("confidence", 0.5)))),
+            confidence=min(1.0, max(0.0, _safe_float(parsed.get("confidence"), 0.5))),
             provider_name=self.provider_name,
             raw_provider_response=parsed,
             warnings=parsed.get("warnings", []),
