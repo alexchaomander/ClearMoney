@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from app.models.income_source import IncomeSource
     from app.models.investment_account import InvestmentAccount
     from app.models.portfolio_snapshot import PortfolioSnapshot
+    from app.models.tax_document import TaxDocument
     from app.models.tax_plan_workspace import TaxPlan
 
 
@@ -46,5 +47,8 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     tax_plans: Mapped[list["TaxPlan"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    tax_documents: Mapped[list["TaxDocument"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
