@@ -45,6 +45,8 @@ import {
   formatPercent,
   formatWithSign,
 } from "@/lib/shared/formatters";
+import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
+import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_INPUTS: WorkspaceInputs = {
@@ -384,6 +386,22 @@ export function Calculator() {
   const [collaboratorRole, setCollaboratorRole] =
     useState<TaxPlanCollaboratorRole>("viewer");
   const [csvImportStatus, setCsvImportStatus] = useState<string | null>(null);
+
+  const {
+    preFilledFields,
+    isLoaded: memoryLoaded,
+    hasDefaults: memoryHasDefaults,
+    applyTo: applyMemoryDefaults,
+  } = useMemoryPreFill<WorkspaceInputs>({
+    wagesIncome: "annual_income",
+    filingStatus: "filing_status",
+    stateCode: "state",
+  });
+
+  const handleLoadData = useCallback(
+    () => applyMemoryDefaults(setInputs),
+    [applyMemoryDefaults]
+  );
 
   const sharedReportId = searchParams.get("reportId");
   const sharedToken = searchParams.get("token");
@@ -991,6 +1009,13 @@ export function Calculator() {
                 Build one clear tax plan with transparent math, scenario-based savings,
                 and advisor-ready packets you can save, compare, and share.
               </p>
+
+              <LoadMyDataBanner
+                isLoaded={memoryLoaded}
+                hasData={memoryHasDefaults}
+                isApplied={preFilledFields.size > 0}
+                onApply={handleLoadData}
+              />
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 {MODE_OPTIONS.map((option) => {
