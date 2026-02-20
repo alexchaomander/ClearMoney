@@ -26,6 +26,7 @@ from app.api.notifications import router as notifications_router
 from app.api.portability import router as portability_router
 from app.api.portfolio import router as portfolio_router
 from app.api.share_reports import router as share_reports_router
+from app.api.tax_documents import router as tax_documents_router
 from app.api.tax_plan_workspace import router as tax_plan_workspace_router
 from app.api.skills import router as skills_router
 from app.api.transactions import router as transactions_router
@@ -106,5 +107,6 @@ app.include_router(action_policy_router, prefix="/api/v1")
 app.include_router(action_approval_router, prefix="/api/v1")
 app.include_router(banking_router, prefix="/api/v1")
 app.include_router(calculators_router, prefix="/api/v1")
+app.include_router(tax_documents_router, prefix="/api/v1")
 app.include_router(tax_plan_workspace_router, prefix="/api/v1")
 app.include_router(data_router, prefix="/api/v1")

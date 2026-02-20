@@ -55,9 +55,13 @@ import type {
   TaxPlanUpdateRequest,
   TaxPlanVersion,
   TaxPlanVersionCreateRequest,
+  PrefillTaxPlanRequest,
+  PrefillTaxPlanResponse,
   SkillDetail,
   SkillSummary,
   SpendingSummary,
+  TaxDocumentListResponse,
+  TaxDocumentResponse,
   FinancialMemoryUpdate,
   DataHealthResponse,
   TransparencyPayload,
@@ -1748,6 +1752,133 @@ export class DemoStrataClient implements StrataClientInterface {
       .filter((e) => e.plan_id === planId)
       .sort((a, b) => b.created_at.localeCompare(a.created_at))
       .slice(0, limit);
+  }
+
+  // === Tax Documents ===
+
+  private static readonly TAX_DOCS_STORAGE_KEY = "clearmoney-demo-tax-docs.v1";
+
+  private loadTaxDocs(): TaxDocumentResponse[] {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = window.localStorage.getItem(DemoStrataClient.TAX_DOCS_STORAGE_KEY);
+      if (!raw) return [];
+      return JSON.parse(raw) as TaxDocumentResponse[];
+    } catch {
+      return [];
+    }
+  }
+
+  private persistTaxDocs(docs: TaxDocumentResponse[]): void {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(DemoStrataClient.TAX_DOCS_STORAGE_KEY, JSON.stringify(docs));
+    } catch {
+      // ignore
+    }
+  }
+
+  async uploadTaxDocument(
+    file: File | Blob,
+    filename: string,
+    documentTypeHint?: string
+  ): Promise<TaxDocumentResponse> {
+    await delay(1500);
+    const now = new Date().toISOString();
+    const docType = documentTypeHint ?? "w2";
+    const doc: TaxDocumentResponse = {
+      id: crypto.randomUUID(),
+      user_id: "demo-user-001",
+      original_filename: filename,
+      mime_type: file.type || "application/pdf",
+      file_size_bytes: file.size,
+      document_type: docType,
+      tax_year: 2025,
+      status: "completed",
+      provider_used: "demo",
+      extracted_data: docType === "w2"
+        ? {
+            employer_name: "Acme Corp",
+            wages_tips_compensation: 125000,
+            federal_income_tax_withheld: 22000,
+            social_security_wages: 125000,
+            social_security_tax_withheld: 7750,
+            medicare_wages: 125000,
+            medicare_tax_withheld: 1812.5,
+          }
+        : { description: "Demo extracted data" },
+      confidence_score: 0.92,
+      validation_errors: null,
+      error_message: null,
+      created_at: now,
+      updated_at: now,
+    };
+    const docs = this.loadTaxDocs();
+    docs.unshift(doc);
+    this.persistTaxDocs(docs);
+    return doc;
+  }
+
+  async listTaxDocuments(_limit?: number): Promise<TaxDocumentListResponse[]> {
+    await delay(150);
+    const limit = _limit ?? 50;
+    return this.loadTaxDocs()
+      .slice(0, limit)
+      .map((d) => ({
+        id: d.id,
+        original_filename: d.original_filename,
+        document_type: d.document_type,
+        tax_year: d.tax_year,
+        status: d.status,
+        confidence_score: d.confidence_score,
+        created_at: d.created_at,
+        updated_at: d.updated_at,
+      }));
+  }
+
+  async getTaxDocument(documentId: string): Promise<TaxDocumentResponse> {
+    await delay(150);
+    const doc = this.loadTaxDocs().find((d) => d.id === documentId);
+    if (!doc) throw new Error("Tax document not found");
+    return doc;
+  }
+
+  async prefillTaxPlan(data: PrefillTaxPlanRequest): Promise<PrefillTaxPlanResponse> {
+    await delay(500);
+    const docs = this.loadTaxDocs().filter((d) => data.document_ids.includes(d.id));
+    const fields: string[] = [];
+    for (const doc of docs) {
+      if (doc.document_type === "w2" && doc.extracted_data) {
+        if ("wages_tips_compensation" in doc.extracted_data) fields.push("wagesIncome");
+        if ("federal_income_tax_withheld" in doc.extracted_data) fields.push("currentWithholding");
+      }
+    }
+    // Also create the version in the tax plans store
+    const store = this.loadTaxPlansStore();
+    const now = new Date().toISOString();
+    const version: TaxPlanVersion = {
+      id: crypto.randomUUID(),
+      plan_id: data.plan_id,
+      created_by_user_id: "demo-user",
+      label: data.label,
+      inputs: { wagesIncome: 125000, currentWithholding: 22000 },
+      results: null,
+      source: "import",
+      is_approved: false,
+      approved_at: null,
+      approved_by_user_id: null,
+      created_at: now,
+      updated_at: now,
+    };
+    store.versions.push(version);
+    this.persistTaxPlansStore(store);
+
+    return {
+      version_id: version.id,
+      plan_id: data.plan_id,
+      fields_populated: [...new Set(fields)],
+      warnings: [],
+    };
   }
 
   async getActionIntents(_status?: ActionIntentStatus): Promise<ActionIntent[]> {
