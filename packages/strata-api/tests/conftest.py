@@ -38,6 +38,11 @@ from app.models import (  # noqa: F401
     Recommendation,
     Security,
     ShareReport,
+    TaxPlan,
+    TaxPlanCollaborator,
+    TaxPlanComment,
+    TaxPlanEvent,
+    TaxPlanVersion,
     Transaction,
     User,
 )

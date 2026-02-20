@@ -1161,6 +1161,106 @@ export interface ShareReportListItem {
   max_views: number | null;
   view_count: number;
   last_viewed_at: string | null;
+  payload?: Record<string, unknown> | null;
+}
+
+// === Tax Plan Workspace ===
+
+export type TaxPlanStatus = "draft" | "active" | "archived";
+export type TaxPlanCollaboratorRole = "owner" | "editor" | "viewer";
+
+export interface TaxPlan {
+  id: string;
+  user_id: string;
+  name: string;
+  household_name: string | null;
+  status: TaxPlanStatus;
+  approved_version_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaxPlanCreateRequest {
+  name: string;
+  household_name?: string | null;
+}
+
+export interface TaxPlanUpdateRequest {
+  name?: string;
+  household_name?: string | null;
+  status?: TaxPlanStatus;
+}
+
+export interface TaxPlanVersion {
+  id: string;
+  plan_id: string;
+  created_by_user_id: string;
+  label: string;
+  inputs: Record<string, unknown>;
+  results: Record<string, unknown> | null;
+  source: string;
+  is_approved: boolean;
+  approved_at: string | null;
+  approved_by_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaxPlanVersionCreateRequest {
+  label: string;
+  inputs: Record<string, unknown>;
+  results?: Record<string, unknown> | null;
+  source?: string;
+}
+
+export interface TaxPlanComment {
+  id: string;
+  plan_id: string;
+  version_id: string | null;
+  author_user_id: string;
+  author_role: TaxPlanCollaboratorRole;
+  body: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaxPlanCommentCreateRequest {
+  version_id?: string | null;
+  body: string;
+}
+
+export interface TaxPlanCollaborator {
+  id: string;
+  plan_id: string;
+  email: string;
+  role: TaxPlanCollaboratorRole;
+  invited_by_user_id: string;
+  accepted_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaxPlanCollaboratorCreateRequest {
+  email: string;
+  role: TaxPlanCollaboratorRole;
+}
+
+export interface TaxPlanEvent {
+  id: string;
+  plan_id: string;
+  version_id: string | null;
+  actor_user_id: string | null;
+  event_type: string;
+  event_metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaxPlanEventCreateRequest {
+  version_id?: string | null;
+  event_type: string;
+  event_metadata?: Record<string, unknown>;
 }
 
 // === Action Intents ===
