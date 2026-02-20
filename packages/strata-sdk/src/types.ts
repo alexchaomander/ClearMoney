@@ -1263,6 +1263,52 @@ export interface TaxPlanEventCreateRequest {
   event_metadata?: Record<string, unknown>;
 }
 
+// === Tax Documents ===
+
+export type TaxDocumentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'needs_review';
+
+export interface TaxDocumentResponse {
+  id: string;
+  user_id: string;
+  original_filename: string;
+  mime_type: string;
+  file_size_bytes: number;
+  document_type: string | null;
+  tax_year: number | null;
+  status: TaxDocumentStatus;
+  provider_used: string | null;
+  extracted_data: Record<string, unknown> | null;
+  confidence_score: number | null;
+  validation_errors: { field: string; message: string; severity: string }[] | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaxDocumentListResponse {
+  id: string;
+  original_filename: string;
+  document_type: string | null;
+  tax_year: number | null;
+  status: TaxDocumentStatus;
+  confidence_score: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PrefillTaxPlanRequest {
+  document_ids: string[];
+  plan_id: string;
+  label: string;
+}
+
+export interface PrefillTaxPlanResponse {
+  version_id: string;
+  plan_id: string;
+  fields_populated: string[];
+  warnings: string[];
+}
+
 // === Action Intents ===
 
 export type ActionIntentStatus = 'draft' | 'pending_approval' | 'processing' | 'executed' | 'failed' | 'cancelled';

@@ -85,6 +85,10 @@ import type {
   ActionIntentUpdate,
   FinancialPassport,
   SVPAttestation,
+  TaxDocumentResponse,
+  TaxDocumentListResponse,
+  PrefillTaxPlanRequest,
+  PrefillTaxPlanResponse,
 } from './types';
 
 export interface StrataClientInterface {
@@ -211,6 +215,11 @@ export interface StrataClientInterface {
   revokeTaxPlanCollaborator(planId: string, collaboratorId: string): Promise<{ status: string }>;
   createTaxPlanEvent(planId: string, data: TaxPlanEventCreateRequest): Promise<TaxPlanEvent>;
   listTaxPlanEvents(planId: string, params?: { limit?: number }): Promise<TaxPlanEvent[]>;
+  // Tax Documents
+  uploadTaxDocument(file: File | Blob, filename: string, documentTypeHint?: string): Promise<TaxDocumentResponse>;
+  listTaxDocuments(limit?: number): Promise<TaxDocumentListResponse[]>;
+  getTaxDocument(documentId: string): Promise<TaxDocumentResponse>;
+  prefillTaxPlan(data: PrefillTaxPlanRequest): Promise<PrefillTaxPlanResponse>;
   // Action Intents
   getActionIntents(status?: ActionIntentStatus): Promise<ActionIntent[]>;
   getActionIntent(intentId: string): Promise<ActionIntent>;
@@ -268,21 +277,26 @@ export class StrataClient implements StrataClientInterface {
     this.authToken = token;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-
+  private authHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {};
     if (this.clerkUserId) {
       headers['X-Clerk-User-Id'] = this.clerkUserId;
     }
     if (this.authToken) {
       headers.Authorization = `Bearer ${this.authToken}`;
     }
+    return headers;
+  }
+
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...this.authHeaders(),
+      ...(options.headers as Record<string, string>),
+    };
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
@@ -1016,6 +1030,53 @@ export class StrataClient implements StrataClientInterface {
     return this.request<TaxPlanEvent[]>(
       this.buildUrl(`/api/v1/tax-plan-workspace/plans/${planId}/events`, { limit: params?.limit })
     );
+  }
+
+  // === Tax Documents ===
+
+  async uploadTaxDocument(
+    file: File | Blob,
+    filename: string,
+    documentTypeHint?: string
+  ): Promise<TaxDocumentResponse> {
+    const headers = this.authHeaders();
+
+    const formData = new FormData();
+    formData.append('file', file, filename);
+    if (documentTypeHint) {
+      formData.append('document_type_hint', documentTypeHint);
+    }
+
+    const response = await fetch(`${this.baseUrl}/api/v1/tax-documents/upload`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      const detail = typeof errorBody?.detail === 'string' ? errorBody.detail : undefined;
+      throw new StrataApiError(response.status, detail || `Upload failed: ${response.status}`, detail);
+    }
+
+    return response.json();
+  }
+
+  async listTaxDocuments(limit?: number): Promise<TaxDocumentListResponse[]> {
+    return this.request<TaxDocumentListResponse[]>(
+      this.buildUrl('/api/v1/tax-documents/', { limit })
+    );
+  }
+
+  async getTaxDocument(documentId: string): Promise<TaxDocumentResponse> {
+    return this.request<TaxDocumentResponse>(`/api/v1/tax-documents/${documentId}`);
+  }
+
+  async prefillTaxPlan(data: PrefillTaxPlanRequest): Promise<PrefillTaxPlanResponse> {
+    return this.request<PrefillTaxPlanResponse>('/api/v1/tax-documents/prefill-tax-plan', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   }
 
   // === Action Intents ===

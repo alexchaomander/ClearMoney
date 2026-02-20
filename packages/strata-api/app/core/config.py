@@ -45,6 +45,16 @@ class Settings(BaseSettings):
     # Anthropic API (for Financial Advisor)
     anthropic_api_key: str = ""
     advisor_model: str = "claude-sonnet-4-20250514"
+
+    # Document Extraction
+    extraction_provider: str = "claude"
+    extraction_model: str = "claude-sonnet-4-20250514"
+    google_api_key: str = ""
+    openai_api_key: str = ""
+    openai_base_url: str = ""  # Custom OpenAI-compatible endpoint (e.g. vLLM)
+    deepseek_base_url: str = ""  # vLLM endpoint serving DeepSeek-OCR2
+    deepseek_api_key: str = ""  # API key for DeepSeek endpoint (or vLLM)
+    deepseek_model: str = "deepseek-ai/DeepSeek-OCR-2"
     advisor_max_tokens: int = 4096
     agent_freshness_max_hours: int = 24
     agent_runtime_mode: str = "in_process"
