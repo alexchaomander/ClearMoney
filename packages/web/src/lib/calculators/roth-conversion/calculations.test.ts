@@ -92,4 +92,16 @@ describe("roth-conversion.calculate", () => {
     expect(singleResults.irmaaImpact.annualSurchargeBefore).toBeGreaterThan(0);
     expect(marriedResults.irmaaImpact.annualSurchargeBefore).toBe(0);
   });
+
+  test("conversion clamped to available balance", () => {
+    const results = calculate({
+      ...BASE_INPUTS,
+      traditionalIraBalance: 30000,
+      conversionAmount: 50000, // exceeds balance
+    });
+    // Should clamp to 30000 * 0.24 = 7200
+    expect(results.conversionTaxCost).toBe(30000 * 0.24);
+    // Traditional after conversion should be 0, not negative
+    expect(results.yearByYear[0].traditionalBalance).toBeGreaterThanOrEqual(0);
+  });
 });
