@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import {
   ArrowRight,
@@ -8,8 +8,11 @@ import {
   ChevronDown,
   ChevronRight,
   FileSearch,
+  FileX2,
   Loader2,
-  Sparkles,
+  RefreshCw,
+  SortAsc,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
@@ -44,6 +47,16 @@ const STATUS_STYLES: Record<TaxDocumentStatus, { bg: string; text: string; label
   pending: { bg: "bg-yellow-500/20", text: "text-yellow-200", label: "Pending" },
 };
 
+const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "completed", label: "Completed" },
+  { value: "needs_review", label: "Needs Review" },
+  { value: "failed", label: "Failed" },
+  { value: "processing", label: "Processing" },
+];
+
+type SortKey = "date" | "type" | "status";
+
 function StatusBadge({ status }: { status: TaxDocumentStatus }) {
   const style = STATUS_STYLES[status] ?? STATUS_STYLES.pending;
   return (
@@ -53,11 +66,18 @@ function StatusBadge({ status }: { status: TaxDocumentStatus }) {
   );
 }
 
-function DocumentRow({ doc }: { doc: TaxDocumentListResponse }) {
+function DocumentRow({
+  doc,
+  onScrollToUpload,
+}: {
+  doc: TaxDocumentListResponse;
+  onScrollToUpload: () => void;
+}) {
   const client = useStrataClient();
   const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState(false);
   const [showPrefillModal, setShowPrefillModal] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState("");
   const [prefillLabel, setPrefillLabel] = useState("Imported from document");
 
@@ -85,11 +105,18 @@ function DocumentRow({ doc }: { doc: TaxDocumentListResponse }) {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: () => client.deleteTaxDocument(doc.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tax-documents"] });
+    },
+  });
+
   const detail = detailQuery.data;
   const canPrefill = doc.status === "completed" || doc.status === "needs_review";
 
   return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-950">
+    <div data-testid="document-row" className="rounded-2xl border border-neutral-800 bg-neutral-950">
       <button
         type="button"
         onClick={() => setExpanded((prev) => !prev)}
@@ -173,19 +200,63 @@ function DocumentRow({ doc }: { doc: TaxDocumentListResponse }) {
             </p>
           )}
 
-          {canPrefill && !showPrefillModal && (
-            <button
-              type="button"
-              onClick={() => setShowPrefillModal(true)}
-              className="inline-flex items-center gap-2 rounded-xl border border-sky-400/40 bg-sky-500/15 px-4 py-2 text-sm text-sky-100 hover:bg-sky-500/20"
-            >
-              <ArrowRight className="h-4 w-4" />
-              Send to Tax Plan
-            </button>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {doc.status === "failed" && (
+              <button
+                type="button"
+                onClick={onScrollToUpload}
+                className="inline-flex items-center gap-2 rounded-xl border border-amber-400/40 bg-amber-500/15 px-4 py-2 text-sm text-amber-100 hover:bg-amber-500/20"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Retry upload
+              </button>
+            )}
+
+            {canPrefill && !showPrefillModal && (
+              <button
+                type="button"
+                onClick={() => setShowPrefillModal(true)}
+                className="inline-flex items-center gap-2 rounded-xl border border-sky-400/40 bg-sky-500/15 px-4 py-2 text-sm text-sky-100 hover:bg-sky-500/20"
+              >
+                <ArrowRight className="h-4 w-4" />
+                Send to Tax Plan
+              </button>
+            )}
+
+            {!confirmingDelete ? (
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(true)}
+                className="inline-flex items-center gap-2 rounded-xl border border-rose-400/40 bg-rose-500/15 px-4 py-2 text-sm text-rose-100 hover:bg-rose-500/20"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </button>
+            ) : (
+              <span className="inline-flex items-center gap-2">
+                <span className="text-xs text-rose-200">Delete this document?</span>
+                <button
+                  type="button"
+                  onClick={() => deleteMutation.mutate()}
+                  disabled={deleteMutation.isPending}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-rose-500/30 px-3 py-1.5 text-xs font-medium text-rose-100 hover:bg-rose-500/40 disabled:opacity-60"
+                >
+                  {deleteMutation.isPending && <Loader2 className="h-3 w-3 animate-spin" />}
+                  Confirm
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingDelete(false)}
+                  className="rounded-lg px-3 py-1.5 text-xs text-neutral-400 hover:text-white"
+                >
+                  Cancel
+                </button>
+              </span>
+            )}
+          </div>
 
           {showPrefillModal && (
-            <div className="rounded-xl border border-sky-400/30 bg-sky-500/10 p-4">
+            <div className="mt-3 rounded-xl border border-sky-400/30 bg-sky-500/10 p-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-sky-100">Send to Tax Plan Workspace</p>
                 <button
@@ -265,9 +336,12 @@ export function DocumentManager() {
   const client = useStrataClient();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const uploadZoneRef = useRef<HTMLDivElement | null>(null);
   const [docTypeHint, setDocTypeHint] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploads, setUploads] = useState<UploadEntry[]>([]);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortKey, setSortKey] = useState<SortKey>("date");
 
   const documentsQuery = useQuery({
     queryKey: ["tax-documents"],
@@ -328,7 +402,43 @@ export function DocumentManager() {
     [handleFiles]
   );
 
+  const scrollToUpload = useCallback(() => {
+    uploadZoneRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
+
   const documents = documentsQuery.data ?? [];
+
+  // Batch upload summary
+  const { uploadingCount, doneCount, totalUploads } = useMemo(() => ({
+    uploadingCount: uploads.filter((e) => e.status === "uploading").length,
+    doneCount: uploads.filter((e) => e.status === "done").length,
+    totalUploads: uploads.length,
+  }), [uploads]);
+
+  // Filter and sort
+  const filteredAndSorted = useMemo(() => {
+    let filtered = documents;
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((d) => d.status === statusFilter);
+    }
+
+    const sorted = [...filtered];
+    switch (sortKey) {
+      case "type":
+        sorted.sort((a, b) => (a.document_type ?? "").localeCompare(b.document_type ?? ""));
+        break;
+      case "status":
+        sorted.sort((a, b) => a.status.localeCompare(b.status));
+        break;
+      case "date":
+      default:
+        sorted.sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        break;
+    }
+    return sorted;
+  }, [documents, statusFilter, sortKey]);
 
   return (
     <AppShell>
@@ -359,9 +469,10 @@ export function DocumentManager() {
               </p>
 
               {/* Upload zone */}
-              <div className="mt-6">
+              <div className="mt-6" ref={uploadZoneRef} data-testid="upload-zone">
                 <div className="mb-3 flex items-center gap-3">
                   <select
+                    data-testid="doc-type-select"
                     value={docTypeHint}
                     onChange={(e) => setDocTypeHint(e.target.value)}
                     className="rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-sky-300/60 focus:outline-none"
@@ -407,30 +518,38 @@ export function DocumentManager() {
                   </p>
                 </div>
 
-                {uploads.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {uploads.map((entry) => (
-                      <div key={entry.id} className="flex items-center gap-2 text-sm">
-                        {entry.status === "uploading" && (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin text-sky-300" />
-                            <span className="text-sky-300">Uploading {entry.filename}...</span>
-                          </>
-                        )}
-                        {entry.status === "done" && (
-                          <>
-                            <Check className="h-4 w-4 text-emerald-300" />
-                            <span className="text-emerald-300">{entry.filename} processed.</span>
-                          </>
-                        )}
-                        {entry.status === "error" && (
-                          <>
-                            <X className="h-4 w-4 text-rose-300" />
-                            <span className="text-rose-300">{entry.filename} failed.</span>
-                          </>
-                        )}
-                      </div>
-                    ))}
+                {totalUploads > 0 && (
+                  <div className="mt-3">
+                    {totalUploads > 1 && (
+                      <p className="mb-2 text-xs font-medium text-neutral-300">
+                        {doneCount}/{totalUploads} complete
+                        {uploadingCount > 0 && ` · ${uploadingCount} uploading`}
+                      </p>
+                    )}
+                    <div className="space-y-2">
+                      {uploads.map((entry) => (
+                        <div key={entry.id} className="flex items-center gap-2 text-sm">
+                          {entry.status === "uploading" && (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin text-sky-300" />
+                              <span className="text-sky-300">Uploading {entry.filename}...</span>
+                            </>
+                          )}
+                          {entry.status === "done" && (
+                            <>
+                              <Check className="h-4 w-4 text-emerald-300" />
+                              <span className="text-emerald-300">{entry.filename} processed.</span>
+                            </>
+                          )}
+                          {entry.status === "error" && (
+                            <>
+                              <X className="h-4 w-4 text-rose-300" />
+                              <span className="text-rose-300">{entry.filename} failed.</span>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -449,15 +568,72 @@ export function DocumentManager() {
                 )}
               </div>
 
-              {documents.length === 0 && !documentsQuery.isLoading && (
-                <p className="mt-4 text-sm text-neutral-500">
-                  No documents yet. Upload a tax document above to get started.
-                </p>
+              {/* Filter & sort controls */}
+              {documents.length > 0 && (
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:border-sky-300/60 focus:outline-none"
+                  >
+                    {STATUS_FILTER_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="flex items-center gap-1.5 text-xs text-neutral-400">
+                    <SortAsc className="h-3.5 w-3.5" />
+                    <span>Sort:</span>
+                    {(["date", "type", "status"] as SortKey[]).map((key) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setSortKey(key)}
+                        className={cn(
+                          "rounded-lg px-2 py-0.5 capitalize transition",
+                          sortKey === key
+                            ? "bg-neutral-700 text-white"
+                            : "hover:bg-neutral-800 hover:text-neutral-200"
+                        )}
+                      >
+                        {key}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
 
-              <div className="mt-4 space-y-3">
-                {documents.map((doc) => (
-                  <DocumentRow key={doc.id} doc={doc} />
+              {/* Empty state */}
+              {documents.length === 0 && !documentsQuery.isLoading && (
+                <div className="mt-8 flex flex-col items-center py-12 text-center">
+                  <div className="rounded-full bg-neutral-800 p-4">
+                    <FileX2 className="h-8 w-8 text-neutral-500" />
+                  </div>
+                  <p className="mt-4 text-sm font-medium text-neutral-300">
+                    No documents yet
+                  </p>
+                  <p className="mt-1 max-w-xs text-xs text-neutral-500">
+                    Upload a W-2, 1099, or K-1 above and AI will extract every field automatically.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={scrollToUpload}
+                    className="mt-4 inline-flex items-center gap-2 rounded-xl border border-sky-400/40 bg-sky-500/15 px-4 py-2 text-sm text-sky-100 hover:bg-sky-500/20"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Upload your first document
+                  </button>
+                </div>
+              )}
+
+              <div data-testid="document-list" className="mt-4 space-y-3">
+                {filteredAndSorted.map((doc) => (
+                  <DocumentRow
+                    key={doc.id}
+                    doc={doc}
+                    onScrollToUpload={scrollToUpload}
+                  />
                 ))}
               </div>
             </div>

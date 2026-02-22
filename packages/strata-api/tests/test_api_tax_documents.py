@@ -215,11 +215,10 @@ async def test_openai_extract_with_mock() -> None:
 
     provider = OpenAIExtractionProvider()
 
-    with patch.object(provider, "_get_client") as mock_client_factory:
-        mock_client = AsyncMock()
-        mock_client.chat.completions.create.return_value = mock_response
-        mock_client_factory.return_value = mock_client
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create.return_value = mock_response
 
+    with patch.object(type(provider), "_client", new_callable=lambda: property(lambda self: mock_client)):
         result = await provider.extract(
             b"fake image",
             "image/jpeg",
@@ -467,3 +466,130 @@ def test_validate_extraction_coerces_field_types() -> None:
     # After validation, string should be coerced to float
     assert isinstance(result.fields["wages_tips_compensation"], float)
     assert result.fields["wages_tips_compensation"] == 85000.0
+
+
+@pytest.mark.asyncio
+async def test_claude_extract_with_mock() -> None:
+    """Claude provider should parse a well-formed response via cached_property client."""
+    from app.services.providers.claude_extraction import ClaudeExtractionProvider
+
+    mock_response = MagicMock()
+    mock_block = MagicMock()
+    mock_block.type = "text"
+    mock_block.text = '{"document_type": "w2", "tax_year": 2025, "fields": {"wages_tips_compensation": 100000, "employer_name": "Test LLC"}, "confidence": 0.93, "warnings": []}'
+    mock_response.content = [mock_block]
+
+    provider = ClaudeExtractionProvider()
+
+    mock_client = AsyncMock()
+    mock_client.messages.create = AsyncMock(return_value=mock_response)
+
+    with patch.object(type(provider), "_client", new_callable=lambda: property(lambda self: mock_client)):
+        result = await provider.extract(
+            b"fake image",
+            "image/png",
+            "w2_claude.png",
+            document_type_hint="w2",
+        )
+
+    assert result.document_type == "w2"
+    assert result.tax_year == 2025
+    assert result.fields["wages_tips_compensation"] == 100000
+    assert result.confidence == 0.93
+    assert result.provider_name == "claude"
+
+
+def test_claude_resolve_model_falls_back_for_non_claude() -> None:
+    """Claude provider should fall back to default when model is not Claude."""
+    from app.services.providers.claude_extraction import (
+        CLAUDE_DEFAULT_MODEL,
+        ClaudeExtractionProvider,
+    )
+
+    with patch("app.services.providers.claude_extraction.settings") as mock_settings:
+        mock_settings.extraction_model = "gpt-4o"
+        assert ClaudeExtractionProvider._resolve_model() == CLAUDE_DEFAULT_MODEL
+
+        mock_settings.extraction_model = "gemini-2.0-flash"
+        assert ClaudeExtractionProvider._resolve_model() == CLAUDE_DEFAULT_MODEL
+
+        mock_settings.extraction_model = "claude-sonnet-4-20250514"
+        assert ClaudeExtractionProvider._resolve_model() == "claude-sonnet-4-20250514"
+
+        mock_settings.extraction_model = "claude-3-opus-20240229"
+        assert ClaudeExtractionProvider._resolve_model() == "claude-3-opus-20240229"
+
+
+def test_openai_resolve_model_falls_back_for_non_openai() -> None:
+    """OpenAI provider should fall back to default when model is not OpenAI."""
+    from app.services.providers.openai_extraction import (
+        OPENAI_DEFAULT_MODEL,
+        OpenAIExtractionProvider,
+    )
+
+    with patch("app.services.providers.openai_extraction.settings") as mock_settings:
+        mock_settings.extraction_model = "claude-sonnet-4-20250514"
+        assert OpenAIExtractionProvider._resolve_model() == OPENAI_DEFAULT_MODEL
+
+        mock_settings.extraction_model = "gemini-2.0-flash"
+        assert OpenAIExtractionProvider._resolve_model() == OPENAI_DEFAULT_MODEL
+
+        mock_settings.extraction_model = "gpt-4o"
+        assert OpenAIExtractionProvider._resolve_model() == "gpt-4o"
+
+        mock_settings.extraction_model = "o1-preview"
+        assert OpenAIExtractionProvider._resolve_model() == "o1-preview"
+
+        mock_settings.extraction_model = "o3-mini"
+        assert OpenAIExtractionProvider._resolve_model() == "o3-mini"
+
+
+@pytest.mark.asyncio
+async def test_delete_tax_document() -> None:
+    """Deleting an existing tax document should return 204."""
+    headers = {"x-clerk-user-id": "tax_doc_user_del"}
+
+    with patch(
+        "app.services.providers.claude_extraction.ClaudeExtractionProvider.extract",
+        new=_make_mock_extract(),
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            # Upload first
+            upload_resp = await client.post(
+                "/api/v1/tax-documents/upload",
+                headers=headers,
+                files={"file": ("w2_del.png", io.BytesIO(b"fake image"), "image/png")},
+            )
+            assert upload_resp.status_code == 200
+            doc_id = upload_resp.json()["id"]
+
+            # Delete it
+            del_resp = await client.delete(
+                f"/api/v1/tax-documents/{doc_id}",
+                headers=headers,
+            )
+            assert del_resp.status_code == 204
+
+            # Confirm it's gone
+            get_resp = await client.get(
+                f"/api/v1/tax-documents/{doc_id}",
+                headers=headers,
+            )
+            assert get_resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_delete_nonexistent_returns_404() -> None:
+    """Deleting a non-existent document should return 404."""
+    headers = {"x-clerk-user-id": "tax_doc_user_del_404"}
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        resp = await client.delete(
+            "/api/v1/tax-documents/00000000-0000-0000-0000-000000000000",
+            headers=headers,
+        )
+        assert resp.status_code == 404

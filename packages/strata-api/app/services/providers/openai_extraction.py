@@ -7,6 +7,9 @@ Set STRATA_OPENAI_BASE_URL to override the default OpenAI endpoint.
 """
 
 import base64
+import logging
+import re
+from functools import cached_property
 
 from app.core.config import settings
 from app.schemas.tax_document import ExtractionResult
@@ -14,6 +17,10 @@ from app.services.providers.base_extraction import (
     EXTRACTION_SYSTEM_PROMPT,
     ExtractionProvider,
 )
+
+logger = logging.getLogger(__name__)
+
+OPENAI_DEFAULT_MODEL = "gpt-4o"
 
 
 class OpenAIExtractionProvider(ExtractionProvider):
@@ -25,27 +32,42 @@ class OpenAIExtractionProvider(ExtractionProvider):
 
     provider_name = "openai"
 
-    def __init__(self) -> None:
-        self._client = None
+    @cached_property
+    def _client(self):
+        """Lazily initialize and cache the OpenAI client."""
+        api_key = settings.openai_api_key
+        if not api_key:
+            raise RuntimeError("STRATA_OPENAI_API_KEY not configured")
+        try:
+            from openai import AsyncOpenAI
+        except ImportError:
+            raise RuntimeError(
+                "openai package not installed. Run: uv pip install openai"
+            ) from None
 
-    def _get_client(self):
-        if self._client is None:
-            api_key = settings.openai_api_key
-            if not api_key:
-                raise RuntimeError("STRATA_OPENAI_API_KEY not configured")
-            try:
-                from openai import AsyncOpenAI
-            except ImportError:
-                raise RuntimeError(
-                    "openai package not installed. Run: uv pip install openai"
-                )
+        kwargs: dict = {"api_key": api_key}
+        if settings.openai_base_url:
+            kwargs["base_url"] = settings.openai_base_url
 
-            kwargs: dict = {"api_key": api_key}
-            if settings.openai_base_url:
-                kwargs["base_url"] = settings.openai_base_url
+        return AsyncOpenAI(**kwargs)
 
-            self._client = AsyncOpenAI(**kwargs)
-        return self._client
+    @staticmethod
+    def _resolve_model() -> str:
+        """Return an OpenAI-compatible model name.
+
+        Falls back to ``OPENAI_DEFAULT_MODEL`` when the global
+        ``extraction_model`` setting points at a non-OpenAI model.
+        """
+        model = settings.extraction_model
+        if re.match(r"^(gpt|o\d)", model):
+            return model
+        logger.warning(
+            "extraction_model '%s' is not an OpenAI model; "
+            "falling back to '%s'",
+            model,
+            OPENAI_DEFAULT_MODEL,
+        )
+        return OPENAI_DEFAULT_MODEL
 
     def supported_mime_types(self) -> list[str]:
         return [
@@ -64,13 +86,13 @@ class OpenAIExtractionProvider(ExtractionProvider):
         *,
         document_type_hint: str | None = None,
     ) -> ExtractionResult:
-        client = self._get_client()
+        client = self._client
 
         b64_data = base64.standard_b64encode(file_bytes).decode("utf-8")
         data_url = f"data:{mime_type};base64,{b64_data}"
 
         response = await client.chat.completions.create(
-            model=settings.extraction_model,
+            model=self._resolve_model(),
             max_tokens=4096,
             messages=[
                 {"role": "system", "content": EXTRACTION_SYSTEM_PROMPT},
