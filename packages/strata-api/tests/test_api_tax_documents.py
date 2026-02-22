@@ -545,6 +545,51 @@ def test_openai_resolve_model_falls_back_for_non_openai() -> None:
 
 
 @pytest.mark.asyncio
+async def test_openai_extract_uses_o_series_params() -> None:
+    """o-series models should use developer role and max_completion_tokens."""
+    from app.services.providers.openai_extraction import OpenAIExtractionProvider
+
+    mock_response = MagicMock()
+    mock_choice = MagicMock()
+    mock_choice.message.content = '{"document_type": "w2", "tax_year": 2025, "fields": {"wages_tips_compensation": 80000}, "confidence": 0.9, "warnings": []}'
+    mock_response.choices = [mock_choice]
+
+    provider = OpenAIExtractionProvider()
+
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+
+    with (
+        patch.object(type(provider), "_client", new_callable=lambda: property(lambda self: mock_client)),
+        patch("app.services.providers.openai_extraction.settings") as mock_settings,
+    ):
+        mock_settings.extraction_model = "o3-mini"
+        mock_settings.openai_api_key = "fake"
+        mock_settings.openai_base_url = None
+
+        result = await provider.extract(
+            b"fake image",
+            "image/png",
+            "w2_o3.png",
+        )
+
+    assert result.document_type == "w2"
+    # Verify o-series API contract was used
+    call_kwargs = mock_client.chat.completions.create.call_args[1]
+    assert call_kwargs["max_completion_tokens"] == 4096
+    assert "max_tokens" not in call_kwargs
+    assert call_kwargs["messages"][0]["role"] == "developer"
+
+
+def test_openai_supported_mime_types_excludes_pdf() -> None:
+    """OpenAI provider should not list PDF as a supported MIME type."""
+    from app.services.providers.openai_extraction import OpenAIExtractionProvider
+
+    provider = OpenAIExtractionProvider()
+    assert "application/pdf" not in provider.supported_mime_types()
+
+
+@pytest.mark.asyncio
 async def test_delete_tax_document() -> None:
     """Deleting an existing tax document should return 204."""
     headers = {"x-clerk-user-id": "tax_doc_user_del"}

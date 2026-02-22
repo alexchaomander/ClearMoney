@@ -22,6 +22,11 @@ logger = logging.getLogger(__name__)
 
 OPENAI_DEFAULT_MODEL = "gpt-4o"
 
+# o-series models (o1, o3, ...) use a different API contract:
+# - "developer" role instead of "system"
+# - "max_completion_tokens" instead of "max_tokens"
+_O_SERIES_RE = re.compile(r"^o\d")
+
 
 class OpenAIExtractionProvider(ExtractionProvider):
     """Extraction provider using OpenAI-compatible chat completions API.
@@ -70,12 +75,12 @@ class OpenAIExtractionProvider(ExtractionProvider):
         return OPENAI_DEFAULT_MODEL
 
     def supported_mime_types(self) -> list[str]:
+        # OpenAI Chat Completions vision supports images only — not PDF.
         return [
             "image/png",
             "image/jpeg",
             "image/webp",
             "image/gif",
-            "application/pdf",
         ]
 
     async def extract(
@@ -87,27 +92,42 @@ class OpenAIExtractionProvider(ExtractionProvider):
         document_type_hint: str | None = None,
     ) -> ExtractionResult:
         client = self._client
+        model = self._resolve_model()
+        is_o_series = bool(_O_SERIES_RE.match(model))
 
         b64_data = base64.standard_b64encode(file_bytes).decode("utf-8")
         data_url = f"data:{mime_type};base64,{b64_data}"
 
-        response = await client.chat.completions.create(
-            model=self._resolve_model(),
-            max_tokens=4096,
-            messages=[
+        user_content: list[dict] = [
+            {"type": "image_url", "image_url": {"url": data_url}},
+            {
+                "type": "text",
+                "text": self.build_user_prompt(filename, document_type_hint),
+            },
+        ]
+
+        if is_o_series:
+            # o-series models use "developer" instead of "system" and
+            # "max_completion_tokens" instead of "max_tokens".
+            messages: list[dict] = [
+                {"role": "developer", "content": EXTRACTION_SYSTEM_PROMPT},
+                {"role": "user", "content": user_content},
+            ]
+            response = await client.chat.completions.create(
+                model=model,
+                max_completion_tokens=4096,
+                messages=messages,
+            )
+        else:
+            messages = [
                 {"role": "system", "content": EXTRACTION_SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "image_url", "image_url": {"url": data_url}},
-                        {
-                            "type": "text",
-                            "text": self.build_user_prompt(filename, document_type_hint),
-                        },
-                    ],
-                },
-            ],
-        )
+                {"role": "user", "content": user_content},
+            ]
+            response = await client.chat.completions.create(
+                model=model,
+                max_tokens=4096,
+                messages=messages,
+            )
 
         raw_text = response.choices[0].message.content or ""
         return self.parse_llm_response(raw_text)
