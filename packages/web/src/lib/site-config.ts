@@ -686,6 +686,18 @@ featured: true,
     featured: true,
   },
   {
+    id: "tax-documents",
+    name: "Tax Document Extractor",
+    description:
+      "Upload W-2s, 1099s, and K-1s — extract fields with AI and send data to your Tax Plan Workspace",
+    href: "/tools/tax-documents",
+    categoryId: "taxes",
+    status: "live",
+    primaryColor: "#0ea5e9",
+    designStyle: "analytical",
+    featured: true,
+  },
+  {
     id: "roth-conversion",
     name: "Roth Conversion Analyzer",
     description:
