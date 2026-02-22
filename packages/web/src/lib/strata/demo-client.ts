@@ -1843,6 +1843,15 @@ export class DemoStrataClient implements StrataClientInterface {
     return doc;
   }
 
+  async deleteTaxDocument(documentId: string): Promise<void> {
+    await delay(200);
+    const docs = this.loadTaxDocs();
+    const idx = docs.findIndex((d) => d.id === documentId);
+    if (idx === -1) throw new Error("Tax document not found");
+    docs.splice(idx, 1);
+    this.persistTaxDocs(docs);
+  }
+
   async prefillTaxPlan(data: PrefillTaxPlanRequest): Promise<PrefillTaxPlanResponse> {
     await delay(500);
     const docs = this.loadTaxDocs().filter((d) => data.document_ids.includes(d.id));
