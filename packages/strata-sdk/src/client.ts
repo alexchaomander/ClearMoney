@@ -219,6 +219,7 @@ export interface StrataClientInterface {
   uploadTaxDocument(file: File | Blob, filename: string, documentTypeHint?: string): Promise<TaxDocumentResponse>;
   listTaxDocuments(limit?: number): Promise<TaxDocumentListResponse[]>;
   getTaxDocument(documentId: string): Promise<TaxDocumentResponse>;
+  deleteTaxDocument(documentId: string): Promise<void>;
   prefillTaxPlan(data: PrefillTaxPlanRequest): Promise<PrefillTaxPlanResponse>;
   // Action Intents
   getActionIntents(status?: ActionIntentStatus): Promise<ActionIntent[]>;
@@ -308,6 +309,10 @@ export class StrataClient implements StrataClientInterface {
       const detail = typeof errorBody?.detail === "string" ? errorBody.detail : undefined;
       const message = detail || `Request failed: ${response.status} ${response.statusText}`;
       throw new StrataApiError(response.status, message, detail);
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
     }
 
     return response.json();
@@ -728,11 +733,12 @@ export class StrataClient implements StrataClientInterface {
     sessionId?: string;
     recommendationId?: string;
   }): Promise<DecisionTrace[]> {
-    const query = new URLSearchParams();
-    if (params?.sessionId) query.set('session_id', params.sessionId);
-    if (params?.recommendationId) query.set('recommendation_id', params.recommendationId);
-    const suffix = query.toString() ? `?${query.toString()}` : '';
-    return this.request<DecisionTrace[]>(`/api/v1/agent/decision-traces${suffix}`);
+    return this.request<DecisionTrace[]>(
+      this.buildUrl('/api/v1/agent/decision-traces', {
+        session_id: params?.sessionId,
+        recommendation_id: params?.recommendationId,
+      })
+    );
   }
 
   // === Consent ===
@@ -1072,6 +1078,12 @@ export class StrataClient implements StrataClientInterface {
     return this.request<TaxDocumentResponse>(`/api/v1/tax-documents/${documentId}`);
   }
 
+  async deleteTaxDocument(documentId: string): Promise<void> {
+    await this.request<void>(`/api/v1/tax-documents/${documentId}`, {
+      method: 'DELETE',
+    });
+  }
+
   async prefillTaxPlan(data: PrefillTaxPlanRequest): Promise<PrefillTaxPlanResponse> {
     return this.request<PrefillTaxPlanResponse>('/api/v1/tax-documents/prefill-tax-plan', {
       method: 'POST',
@@ -1102,16 +1114,8 @@ export class StrataClient implements StrataClientInterface {
   }
 
   async getIntentManifest(intentId: string): Promise<Blob> {
-    const headers: Record<string, string> = {};
-    if (this.clerkUserId) {
-      headers['X-Clerk-User-Id'] = this.clerkUserId;
-    }
-    if (this.authToken) {
-      headers.Authorization = `Bearer ${this.authToken}`;
-    }
-
     const response = await fetch(`${this.baseUrl}/api/v1/action-intents/${intentId}/manifest`, {
-      headers,
+      headers: this.authHeaders(),
     });
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);
     return response.blob();

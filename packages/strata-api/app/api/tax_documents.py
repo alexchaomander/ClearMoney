@@ -98,6 +98,26 @@ async def get_tax_document(
     return TaxDocumentResponse.model_validate(doc)
 
 
+@router.delete("/{document_id}", status_code=204)
+async def delete_tax_document(
+    document_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> None:
+    """Delete a specific tax document."""
+    result = await session.execute(
+        select(TaxDocument).where(
+            TaxDocument.id == document_id,
+            TaxDocument.user_id == user.id,
+        )
+    )
+    doc = result.scalar_one_or_none()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Tax document not found")
+    await session.delete(doc)
+    await session.commit()
+
+
 @router.post("/prefill-tax-plan", response_model=PrefillTaxPlanResponse)
 async def prefill_tax_plan(
     data: PrefillTaxPlanRequest,

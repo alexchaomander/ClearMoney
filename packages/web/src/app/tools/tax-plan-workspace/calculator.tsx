@@ -1454,6 +1454,7 @@ export function Calculator() {
                   )}
                   <button
                     type="button"
+                    data-testid="import-from-docs-btn"
                     onClick={() => setShowDocImport((prev) => !prev)}
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-700 bg-white/5 px-4 py-2 text-sm text-white hover:bg-white/10"
                   >
@@ -1463,7 +1464,7 @@ export function Calculator() {
                 </div>
 
                 {showDocImport && (
-                  <div className="mt-3 rounded-2xl border border-sky-400/30 bg-sky-500/10 p-4">
+                  <div data-testid="doc-import-panel" className="mt-3 rounded-2xl border border-sky-400/30 bg-sky-500/10 p-4">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-sky-100">Import from Tax Documents</p>
                       <button

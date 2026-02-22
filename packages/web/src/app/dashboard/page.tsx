@@ -28,6 +28,7 @@ const PortfolioHistoryChart = dynamic(
   { ssr: false, loading: () => <div className="h-72 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" /> }
 );
 import { CashDebtSection } from "@/components/dashboard/CashDebtSection";
+import { TaxDocumentsCard } from "@/components/dashboard/TaxDocumentsCard";
 import { AddAccountModal } from "@/components/dashboard/AddAccountModal";
 import { DecisionTracePanel } from "@/components/dashboard/DecisionTracePanel";
 import { ConsentGate } from "@/components/shared/ConsentGate";
@@ -284,20 +285,6 @@ export default function DashboardPage() {
   ]);
 
   function renderContent() {
-    if (isLoading) {
-      return <DashboardLoadingSkeleton />;
-    }
-
-    if (isError) {
-      return (
-        <ApiErrorState
-          message="We couldn't load your dashboard. Please check that the API is running and try again."
-          error={errorDetails}
-          onRetry={handleRefresh}
-        />
-      );
-    }
-
     return (
       <>
         <DataSourceStatusStrip items={sourceItems} usingDemoData={usingDemoData} />
@@ -427,6 +414,8 @@ export default function DashboardPage() {
               onDeleteCashAccount={(id) => cashMutations.remove.mutate(id)}
               onDeleteDebtAccount={(id) => debtMutations.remove.mutate(id)}
             />
+
+            <TaxDocumentsCard />
 
             <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
               <div className="flex items-center justify-between mb-4">
