@@ -1,6 +1,7 @@
 """Gemini extraction provider using the google-genai SDK."""
 
 import logging
+from functools import cached_property
 
 from app.core.config import settings
 from app.schemas.tax_document import ExtractionResult
@@ -19,21 +20,19 @@ class GeminiExtractionProvider(ExtractionProvider):
 
     provider_name = "gemini"
 
-    def __init__(self) -> None:
-        self._client = None
-
-    def _get_client(self):
-        if self._client is None:
-            if not settings.google_api_key:
-                raise RuntimeError("STRATA_GOOGLE_API_KEY not configured")
-            try:
-                from google import genai
-            except ImportError:
-                raise RuntimeError(
-                    "google-genai package not installed. Run: uv pip install google-genai"
-                )
-            self._client = genai.Client(api_key=settings.google_api_key)
-        return self._client
+    @cached_property
+    def _client(self):
+        """Lazily initialize and cache the Gemini client."""
+        if not settings.google_api_key:
+            raise RuntimeError("STRATA_GOOGLE_API_KEY not configured")
+        try:
+            from google import genai
+        except ImportError:
+            raise RuntimeError(
+                "google-genai package not installed. "
+                "Run: uv pip install 'strata-api[providers]'"
+            ) from None
+        return genai.Client(api_key=settings.google_api_key)
 
     def supported_mime_types(self) -> list[str]:
         return ["image/png", "image/jpeg", "image/webp", "application/pdf"]
@@ -65,7 +64,7 @@ class GeminiExtractionProvider(ExtractionProvider):
         *,
         document_type_hint: str | None = None,
     ) -> ExtractionResult:
-        client = self._get_client()
+        client = self._client
 
         from google.genai import types
 

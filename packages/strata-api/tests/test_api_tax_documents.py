@@ -304,15 +304,10 @@ async def test_gemini_extract_with_mock() -> None:
 
     provider = GeminiExtractionProvider()
 
-    with patch.object(provider, "_get_client") as mock_client_factory:
-        mock_client = MagicMock()
-        mock_aio = MagicMock()
-        mock_models = AsyncMock()
-        mock_models.generate_content.return_value = mock_response
-        mock_aio.models = mock_models
-        mock_client.aio = mock_aio
-        mock_client_factory.return_value = mock_client
+    mock_client = MagicMock()
+    mock_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
 
+    with patch.object(type(provider), "_client", new_callable=lambda: property(lambda self: mock_client)):
         result = await provider.extract(
             b"fake image",
             "image/png",

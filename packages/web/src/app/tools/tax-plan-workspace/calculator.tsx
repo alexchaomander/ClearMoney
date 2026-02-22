@@ -710,10 +710,7 @@ export function Calculator() {
         label: payload.label,
       }),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["tax-plan-workspace", "versions", activePlanId],
-      });
-      queryClient.invalidateQueries({ queryKey: ["tax-plan-workspace", "plans"] });
+      queryClient.invalidateQueries({ queryKey: ["tax-plan-workspace"] });
       setDocImportStatus(
         `Imported ${data.fields_populated.length} field(s). New version available in history.`
       );
