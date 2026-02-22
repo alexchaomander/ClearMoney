@@ -3,11 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import {
+  ArrowRight,
   Check,
   Copy,
   Download,
+  FileSearch,
   FolderOpen,
   Link,
+  Loader2,
   MessageSquare,
   Save,
   Server,
@@ -16,9 +19,11 @@ import {
   Upload,
   UserRound,
   UsersRound,
+  X,
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
+import NextLink from "next/link";
 import { AppShell, MethodologySection } from "@/components/shared/AppShell";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { SliderInput } from "@/components/shared/SliderInput";
@@ -350,6 +355,120 @@ function mapCsvToInputs(csvText: string): WorkspaceInputs | null {
   return next;
 }
 
+import type { TaxDocumentListResponse } from "@clearmoney/strata-sdk";
+
+function DocImportList({
+  documents,
+  isSuccess,
+  selectedDocIds,
+  setSelectedDocIds,
+  activePlanId,
+  isPending,
+  onImport,
+}: {
+  documents: TaxDocumentListResponse[];
+  isSuccess: boolean;
+  selectedDocIds: Set<string>;
+  setSelectedDocIds: React.Dispatch<React.SetStateAction<Set<string>>>;
+  activePlanId: string;
+  isPending: boolean;
+  onImport: () => void;
+}) {
+  const importableDocs = documents.filter(
+    (d) => d.status === "completed" || d.status === "needs_review"
+  );
+
+  if (isSuccess && importableDocs.length === 0) {
+    return (
+      <div className="mt-3 text-xs text-neutral-400">
+        No completed documents found.{" "}
+        <NextLink
+          href="/tools/tax-documents"
+          className="text-sky-300 underline hover:text-sky-200"
+        >
+          Upload documents
+        </NextLink>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="mt-3 max-h-48 space-y-2 overflow-y-auto pr-1">
+        {importableDocs.map((doc) => (
+          <label
+            key={doc.id}
+            className={cn(
+              "flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition",
+              selectedDocIds.has(doc.id)
+                ? "border-sky-400/40 bg-sky-500/15"
+                : "border-neutral-800 bg-neutral-950"
+            )}
+          >
+            <input
+              type="checkbox"
+              checked={selectedDocIds.has(doc.id)}
+              onChange={(e) => {
+                setSelectedDocIds((prev) => {
+                  const next = new Set(prev);
+                  if (e.target.checked) {
+                    next.add(doc.id);
+                  } else {
+                    next.delete(doc.id);
+                  }
+                  return next;
+                });
+              }}
+              className="h-4 w-4 rounded border-neutral-700 bg-neutral-800"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium text-white">
+                {doc.original_filename}
+              </p>
+              <p className="text-[11px] text-neutral-400">
+                {doc.document_type?.toUpperCase() ?? "Unknown"} · {doc.tax_year ?? "—"}
+                {doc.confidence_score != null &&
+                  ` · ${Math.round(doc.confidence_score * 100)}%`}
+              </p>
+            </div>
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[10px] font-medium",
+                doc.status === "completed"
+                  ? "bg-emerald-500/20 text-emerald-200"
+                  : "bg-amber-500/20 text-amber-200"
+              )}
+            >
+              {doc.status === "completed" ? "Completed" : "Needs Review"}
+            </span>
+          </label>
+        ))}
+      </div>
+
+      <div className="mt-3 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onImport}
+          disabled={!activePlanId || selectedDocIds.size === 0 || isPending}
+          className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-500/15 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-60"
+        >
+          {isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ArrowRight className="h-4 w-4" />
+          )}
+          Import {selectedDocIds.size || ""} document{selectedDocIds.size !== 1 ? "s" : ""}
+        </button>
+        {!activePlanId && (
+          <span className="text-xs text-amber-300">
+            Create or select a plan first
+          </span>
+        )}
+      </div>
+    </>
+  );
+}
+
 export function Calculator() {
   const client = useStrataClient();
   const queryClient = useQueryClient();
@@ -386,6 +505,9 @@ export function Calculator() {
   const [collaboratorRole, setCollaboratorRole] =
     useState<TaxPlanCollaboratorRole>("viewer");
   const [csvImportStatus, setCsvImportStatus] = useState<string | null>(null);
+  const [showDocImport, setShowDocImport] = useState(false);
+  const [docImportStatus, setDocImportStatus] = useState<string | null>(null);
+  const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
 
   const {
     preFilledFields,
@@ -571,6 +693,40 @@ export function Calculator() {
     mutationFn: (reportId: string) => client.revokeShareReport(reportId),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["tax-plan-workspace", "server-history"] });
+    },
+  });
+
+  const taxDocumentsQuery = useQuery({
+    queryKey: ["tax-documents"],
+    queryFn: () => client.listTaxDocuments(100),
+    enabled: showDocImport,
+  });
+
+  const prefillFromDocsMutation = useMutation({
+    mutationFn: (payload: { planId: string; docIds: string[]; label: string }) =>
+      client.prefillTaxPlan({
+        document_ids: payload.docIds,
+        plan_id: payload.planId,
+        label: payload.label,
+      }),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["tax-plan-workspace", "versions", activePlanId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["tax-plan-workspace", "plans"] });
+      setDocImportStatus(
+        `Imported ${data.fields_populated.length} field(s). New version available in history.`
+      );
+      setSelectedDocIds(new Set());
+      if (activePlanId) {
+        queuePlanEvent(activePlanId, "doc_import", {
+          document_count: variables.docIds.length,
+          fields_populated: data.fields_populated,
+        });
+      }
+    },
+    onError: () => {
+      setDocImportStatus("Import failed. Please try again.");
     },
   });
 
@@ -1299,7 +1455,63 @@ export function Calculator() {
                       {csvImportStatus}
                     </p>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => setShowDocImport((prev) => !prev)}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-700 bg-white/5 px-4 py-2 text-sm text-white hover:bg-white/10"
+                  >
+                    <FileSearch className="h-4 w-4" />
+                    Import from Documents
+                  </button>
                 </div>
+
+                {showDocImport && (
+                  <div className="mt-3 rounded-2xl border border-sky-400/30 bg-sky-500/10 p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-sky-100">Import from Tax Documents</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowDocImport(false);
+                          setDocImportStatus(null);
+                        }}
+                        className="text-neutral-400 hover:text-white"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {taxDocumentsQuery.isLoading && (
+                      <div className="mt-3 flex items-center gap-2 text-neutral-400">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-xs">Loading documents...</span>
+                      </div>
+                    )}
+
+                    <DocImportList
+                      documents={taxDocumentsQuery.data ?? []}
+                      isSuccess={taxDocumentsQuery.isSuccess}
+                      selectedDocIds={selectedDocIds}
+                      setSelectedDocIds={setSelectedDocIds}
+                      activePlanId={activePlanId}
+                      isPending={prefillFromDocsMutation.isPending}
+                      onImport={() => {
+                        if (!activePlanId || selectedDocIds.size === 0) return;
+                        prefillFromDocsMutation.mutate({
+                          planId: activePlanId,
+                          docIds: Array.from(selectedDocIds),
+                          label: `Imported from ${selectedDocIds.size} document(s)`,
+                        });
+                      }}
+                    />
+
+                    {docImportStatus && (
+                      <p className="mt-3 rounded-lg bg-neutral-900 px-3 py-2 text-xs text-neutral-200">
+                        {docImportStatus}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
                   <input

@@ -295,13 +295,57 @@ async def test_extraction_error_message_is_sanitized() -> None:
 
 
 @pytest.mark.asyncio
-async def test_gemini_stub_raises_not_implemented() -> None:
-    """Gemini stub provider should raise NotImplementedError."""
+async def test_gemini_extract_with_mock() -> None:
+    """Gemini provider should parse a well-formed response via google-genai."""
     from app.services.providers.gemini_extraction import GeminiExtractionProvider
 
+    mock_response = MagicMock()
+    mock_response.text = '{"document_type": "w2", "tax_year": 2025, "fields": {"wages_tips_compensation": 95000, "employer_name": "Test Inc"}, "confidence": 0.91, "warnings": []}'
+
     provider = GeminiExtractionProvider()
-    with pytest.raises(NotImplementedError, match="not yet implemented"):
-        await provider.extract(b"data", "image/png", "test.png")
+
+    with patch.object(provider, "_get_client") as mock_client_factory:
+        mock_client = MagicMock()
+        mock_aio = MagicMock()
+        mock_models = AsyncMock()
+        mock_models.generate_content.return_value = mock_response
+        mock_aio.models = mock_models
+        mock_client.aio = mock_aio
+        mock_client_factory.return_value = mock_client
+
+        result = await provider.extract(
+            b"fake image",
+            "image/png",
+            "w2_gemini.png",
+            document_type_hint="w2",
+        )
+
+    assert result.document_type == "w2"
+    assert result.tax_year == 2025
+    assert result.fields["wages_tips_compensation"] == 95000
+    assert result.confidence == 0.91
+    assert result.provider_name == "gemini"
+
+
+def test_gemini_resolve_model_falls_back_for_non_gemini() -> None:
+    """Gemini provider should fall back to default when model is not Gemini."""
+    from app.services.providers.gemini_extraction import (
+        GEMINI_DEFAULT_MODEL,
+        GeminiExtractionProvider,
+    )
+
+    with patch("app.services.providers.gemini_extraction.settings") as mock_settings:
+        mock_settings.extraction_model = "claude-sonnet-4-20250514"
+        assert GeminiExtractionProvider._resolve_model() == GEMINI_DEFAULT_MODEL
+
+        mock_settings.extraction_model = "gpt-4o"
+        assert GeminiExtractionProvider._resolve_model() == GEMINI_DEFAULT_MODEL
+
+        mock_settings.extraction_model = "gemini-2.0-flash"
+        assert GeminiExtractionProvider._resolve_model() == "gemini-2.0-flash"
+
+        mock_settings.extraction_model = "gemini-1.5-pro"
+        assert GeminiExtractionProvider._resolve_model() == "gemini-1.5-pro"
 
 
 @pytest.mark.asyncio
