@@ -14,501 +14,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <style>
-    :root {
-      --emerald-400: #34d399;
-      --emerald-500: #10b981;
-      --emerald-600: #059669;
-      --amber-400: #fbbf24;
-      --amber-500: #f59e0b;
-      --red-400: #f87171;
-      --red-500: #ef4444;
-      --blue-400: #60a5fa;
-      --blue-500: #3b82f6;
-      --sky-500: #0ea5e9;
-      --slate-700: #334155;
-      --slate-800: #1e293b;
-      --slate-900: #0f172a;
-      --slate-950: #020617;
-      --font-display: 'Instrument Serif', Georgia, serif;
-      --font-sans: 'DM Sans', system-ui, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
-    }
-
-    .reveal-viewport { background: var(--slate-950); }
-
-    .reveal {
-      font-family: var(--font-sans);
-      font-size: 42px;
-      color: #e2e8f0;
-    }
-
-    .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
-      font-family: var(--font-display);
-      font-weight: 400;
-      color: #f8fafc;
-      text-transform: none;
-      letter-spacing: -0.025em;
-      line-height: 1.1;
-    }
-
-    .reveal h1 { font-size: 2.8em; }
-    .reveal h2 { font-size: 2.1em; margin-bottom: 0.5em; }
-    .reveal h3 { font-size: 1.4em; }
-
-    .reveal p, .reveal li {
-      font-weight: 400;
-      line-height: 1.6;
-      color: #cbd5e1;
-    }
-
-    .reveal strong { color: #f8fafc; font-weight: 600; }
-
-    .reveal .slides section { padding: 50px 100px; }
-
-    /* ── Accents ── */
-    .em { color: var(--emerald-400); }
-    .em-bold { color: var(--emerald-400); font-weight: 600; }
-    .amber { color: var(--amber-400); }
-    .red { color: var(--red-400); }
-    .blue { color: var(--blue-400); }
-    .sky { color: var(--sky-500); }
-    .muted { color: #64748b; }
-    .mono { font-family: var(--font-mono); font-size: 0.85em; }
-    .white { color: #f8fafc; }
-
-    /* ── Layout ── */
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; text-align: left; }
-    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; text-align: left; }
-    .four-col { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 30px; text-align: left; }
-
-    /* ── Cards ── */
-    .card {
-      background: rgba(30, 41, 59, 0.5);
-      border: 1px solid rgba(51, 65, 85, 0.45);
-      border-radius: 16px;
-      padding: 32px;
-      backdrop-filter: blur(12px);
-      transition: border-color 0.3s ease;
-    }
-    .card:hover { border-color: rgba(51, 65, 85, 0.7); }
-    .card-sm {
-      background: rgba(30, 41, 59, 0.4);
-      border: 1px solid rgba(51, 65, 85, 0.35);
-      border-radius: 12px;
-      padding: 24px;
-      backdrop-filter: blur(8px);
-      transition: border-color 0.3s ease;
-    }
-    .card-sm:hover { border-color: rgba(51, 65, 85, 0.6); }
-    .card-emerald {
-      background: rgba(16, 185, 129, 0.05);
-      border: 1px solid rgba(16, 185, 129, 0.18);
-      border-radius: 16px;
-      padding: 32px;
-    }
-    .card h3, .card-sm h3 {
-      font-family: var(--font-sans) !important;
-      font-size: 0.7em;
-      font-weight: 600;
-      margin-bottom: 12px;
-      color: #f8fafc;
-    }
-    .card p, .card-sm p { font-size: 0.6em; margin: 0; color: #94a3b8; }
-
-    /* ── Metrics ── */
-    .metric { text-align: center; }
-    .metric .number {
-      font-family: var(--font-mono);
-      font-size: 2.4em;
-      font-weight: 600;
-      color: var(--emerald-400);
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-    .metric .label {
-      font-size: 0.55em;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-weight: 500;
-    }
-
-    /* ── Logo ── */
-    .logo-mark {
-      display: inline-flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .logo-icon {
-      width: 56px; height: 56px;
-      background: linear-gradient(135deg, var(--emerald-600), var(--emerald-500));
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
-    }
-    .logo-icon svg { width: 32px; height: 32px; color: white; }
-    .logo-text {
-      font-family: var(--font-display);
-      font-size: 1.6em;
-      color: #f8fafc;
-      letter-spacing: -0.02em;
-    }
-    .logo-text span { color: var(--emerald-400); }
-
-    /* ── Misc ── */
-    .tagline {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-size: 1.1em;
-      color: #94a3b8;
-      margin-top: 16px;
-    }
-    .screenshot {
-      border-radius: 16px;
-      border: 1px solid rgba(51, 65, 85, 0.5);
-      box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6), 0 0 100px rgba(16, 185, 129, 0.06);
-      max-width: 100%;
-      height: auto;
-    }
-    .screenshot-sm {
-      border-radius: 12px;
-      border: 1px solid rgba(51, 65, 85, 0.5);
-      box-shadow: 0 15px 40px -8px rgba(0, 0, 0, 0.5);
-      max-width: 100%;
-      height: auto;
-    }
-    .reveal ul { list-style: none; padding: 0; margin: 0; }
-    .reveal ul li {
-      padding-left: 24px;
-      position: relative;
-      margin-bottom: 12px;
-      font-size: 0.75em;
-    }
-    .reveal ul li::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 10px;
-      width: 8px; height: 8px;
-      background: var(--emerald-500);
-      border-radius: 50%;
-    }
-    .reveal ul.no-bullets li::before { display: none; }
-    .reveal ul.no-bullets li { padding-left: 0; }
-
-    .divider {
-      width: 80px; height: 3px;
-      background: linear-gradient(90deg, var(--emerald-600), var(--emerald-400));
-      border-radius: 2px;
-      margin: 20px auto;
-    }
-    .big-quote {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-size: 1.5em;
-      color: #f8fafc;
-      line-height: 1.3;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    .comparison-table { width: 100%; border-collapse: collapse; font-size: 0.6em; }
-    .comparison-table th {
-      font-family: var(--font-sans);
-      font-weight: 600;
-      text-align: left;
-      padding: 16px 20px;
-      border-bottom: 2px solid var(--emerald-600);
-      color: #f8fafc;
-      font-size: 0.95em;
-    }
-    .comparison-table td {
-      padding: 14px 20px;
-      border-bottom: 1px solid rgba(51, 65, 85, 0.3);
-      color: #cbd5e1;
-    }
-    .comparison-table tr:last-child td { border-bottom: none; }
-    .comparison-table .check { color: var(--emerald-400); font-weight: 600; }
-    .comparison-table .x { color: #ef4444; opacity: 0.7; }
-    .comparison-table .warn { color: var(--amber-400); }
-    .comparison-table tbody tr { transition: background 0.2s ease; }
-    .comparison-table tbody tr:hover { background: rgba(30, 41, 59, 0.3); }
-
-    .phase-badge {
-      display: inline-block;
-      padding: 5px 16px;
-      border-radius: 20px;
-      font-size: 0.5em;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      font-family: var(--font-sans);
-    }
-    .phase-done { background: rgba(16,185,129,0.12); color: var(--emerald-400); border: 1px solid rgba(16,185,129,0.25); }
-    .phase-next { background: rgba(59,130,246,0.1); color: var(--blue-400); border: 1px solid rgba(59,130,246,0.25); }
-    .phase-future { background: rgba(148,163,184,0.08); color: #94a3b8; border: 1px solid rgba(148,163,184,0.18); }
-
-    .pricing-card {
-      background: rgba(30, 41, 59, 0.4);
-      border: 1px solid rgba(51, 65, 85, 0.35);
-      border-radius: 16px;
-      padding: 36px 28px;
-      text-align: center;
-      transition: transform 0.3s ease, border-color 0.3s ease;
-    }
-    .pricing-card:hover { transform: translateY(-4px); border-color: rgba(51, 65, 85, 0.6); }
-    .pricing-card.featured {
-      background: rgba(16, 185, 129, 0.05);
-      border: 1px solid rgba(16, 185, 129, 0.22);
-      box-shadow: 0 8px 32px rgba(16, 185, 129, 0.06);
-    }
-    .pricing-card.featured:hover { border-color: rgba(16, 185, 129, 0.4); }
-    .pricing-card .price {
-      font-family: var(--font-mono);
-      font-size: 1.8em;
-      font-weight: 600;
-      color: #f8fafc;
-      margin: 12px 0 8px;
-    }
-    .pricing-card .price .per { font-size: 0.4em; color: #64748b; font-weight: 400; }
-    .pricing-card .tier-name {
-      font-weight: 600;
-      font-size: 0.7em;
-      color: var(--emerald-400);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .footnote { font-size: 0.45em; color: #475569; margin-top: 32px; }
-    .subtitle {
-      font-family: var(--font-sans);
-      font-size: 0.6em;
-      color: #94a3b8;
-      font-weight: 400;
-      letter-spacing: 0.03em;
-    }
-    .icon-circle {
-      width: 48px; height: 48px;
-      border-radius: 12px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      margin-bottom: 12px;
-    }
-    .icon-emerald { background: rgba(16,185,129,0.1); }
-    .icon-blue { background: rgba(59,130,246,0.1); }
-    .icon-amber { background: rgba(245,158,11,0.1); }
-    .icon-red { background: rgba(239,68,68,0.1); }
-
-    .reveal .slide-number {
-      font-family: var(--font-mono);
-      font-size: 16px;
-      color: #334155;
-      background: transparent;
-      right: 24px;
-      bottom: 24px;
-    }
-    .reveal .progress span { background: linear-gradient(90deg, var(--emerald-600), var(--emerald-400)); }
-    .reveal .controls .navigate-left, .reveal .controls .navigate-right,
-    .reveal .controls .navigate-up, .reveal .controls .navigate-down {
-      color: rgba(52, 211, 153, 0.4);
-    }
-    .reveal .controls .navigate-left:hover, .reveal .controls .navigate-right:hover { color: var(--emerald-400); }
-    .reveal section img { border: none; box-shadow: none; background: transparent; }
-
-    /* ── Fix slide ghosting ── */
-    .reveal .slides section {
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeLegibility;
-      overflow: hidden;
-    }
-    .reveal .slides section:not(.present) {
-      opacity: 0 !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
-    }
-    .reveal .slides section.present {
-      opacity: 1 !important;
-      visibility: visible !important;
-    }
-
-    /* ── Animations ── */
-    @keyframes shimmer {
-      0% { background-position: -200% center; }
-      100% { background-position: 200% center; }
-    }
-    @keyframes subtleFloat {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-4px); }
-    }
-    @keyframes gradientShift {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 1; }
-    }
-    .shimmer-text {
-      background: linear-gradient(90deg, var(--emerald-400) 0%, #6ee7b7 20%, #a7f3d0 40%, #6ee7b7 60%, var(--emerald-400) 80%, #6ee7b7 100%);
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: shimmer 4s ease-in-out infinite;
-    }
-    .glow-emerald {
-      text-shadow: 0 0 60px rgba(16, 185, 129, 0.2), 0 0 120px rgba(16, 185, 129, 0.06);
-    }
-
-    /* ── Before/After ── */
-    .before-after {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      gap: 28px;
-      align-items: start;
-    }
-    .before-after .arrow {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.6em;
-      color: var(--emerald-400);
-      padding-top: 40px;
-      animation: subtleFloat 3s ease-in-out infinite;
-    }
-
-    /* ── Founder card ── */
-    .founder-grid {
-      display: grid;
-      grid-template-columns: 1fr 1.4fr;
-      gap: 48px;
-      align-items: start;
-      text-align: left;
-    }
-    .credential-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(30, 41, 59, 0.5);
-      border: 1px solid rgba(51, 65, 85, 0.35);
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 0.5em;
-      color: #cbd5e1;
-      margin: 4px;
-      transition: border-color 0.2s ease;
-    }
-    .credential-badge:hover { border-color: rgba(16, 185, 129, 0.3); }
-    .credential-badge .badge-num {
-      font-family: var(--font-mono);
-      font-weight: 600;
-      color: var(--emerald-400);
-    }
-
-    /* ── Stat row ── */
-    .stat-row {
-      display: flex;
-      align-items: baseline;
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-    .stat-row .stat-num {
-      font-family: var(--font-mono);
-      font-size: 1.6em;
-      font-weight: 600;
-      color: var(--emerald-400);
-      min-width: 140px;
-      text-align: right;
-    }
-    .stat-row .stat-desc {
-      font-size: 0.7em;
-      color: #cbd5e1;
-    }
-
-    /* ── Flywheel ── */
-    .flywheel-step {
-      text-align: center;
-      padding: 20px;
-    }
-    .flywheel-arrow {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--emerald-400);
-      font-size: 1.4em;
-    }
-
-    /* ── TAM circles ── */
-    .tam-stack {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 80px;
-    }
-    .tam-circle {
-      text-align: center;
-    }
-    .tam-circle .ring {
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 16px;
-      transition: transform 0.3s ease;
-    }
-    .tam-circle:hover .ring { transform: scale(1.05); }
-    .tam-circle .ring .tam-num {
-      font-family: var(--font-mono);
-      font-size: 1.7em;
-      font-weight: 600;
-      line-height: 1;
-    }
-    .tam-circle .ring .tam-label-inner {
-      font-size: 0.45em;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-top: 6px;
-      font-weight: 500;
-    }
-
-    /* ── Milestone timeline ── */
-    .milestone-row {
-      display: grid;
-      grid-template-columns: 120px 1fr;
-      gap: 20px;
-      align-items: start;
-      margin-bottom: 20px;
-    }
-    .milestone-time {
-      font-family: var(--font-mono);
-      font-size: 0.55em;
-      font-weight: 600;
-      text-align: right;
-      padding-top: 2px;
-    }
-    .milestone-content {
-      font-size: 0.55em;
-      color: #cbd5e1;
-      border-left: 2px solid rgba(51,65,85,0.5);
-      padding-left: 20px;
-    }
-
-    /* ── Noise texture overlay ── */
-    .reveal-viewport::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.015'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 1000;
-      opacity: 0.4;
-    }
-  </style>
+  <!-- ClearMoney Strata Design System -->
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
@@ -587,53 +94,53 @@
     <p class="subtitle" style="margin-bottom: 36px;">Five forces converging to create a once-in-a-decade window</p>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 1100px; margin: 0 auto;">
-      <div class="card-sm fragment fade-up" style="display: flex; gap: 16px; align-items: start;">
-        <div style="font-size: 1.3em; min-width: 36px; text-align: center; color: var(--emerald-400);">
+      <div class="card-sm force-card fragment fade-up">
+        <div class="force-card__icon" style="color: var(--emerald-400);">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         </div>
         <div>
-          <p style="font-size: 0.58em; color: #f8fafc; font-weight: 600; margin-bottom: 4px;">AI cost dropped 100x in 24 months</p>
-          <p style="font-size: 0.48em; color: #94a3b8;">Personalized financial reasoning at scale is now economically viable. "Show the math" traces cost pennies per query.</p>
+          <p class="force-card__title">AI cost dropped 100x in 24 months</p>
+          <p class="force-card__desc">Personalized financial reasoning at scale is now economically viable. "Show the math" traces cost pennies per query.</p>
         </div>
       </div>
 
-      <div class="card-sm fragment fade-up" style="display: flex; gap: 16px; align-items: start;">
-        <div style="font-size: 1.3em; min-width: 36px; text-align: center; color: var(--blue-400);">
+      <div class="card-sm force-card fragment fade-up">
+        <div class="force-card__icon" style="color: var(--blue-400);">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
         <div>
-          <p style="font-size: 0.58em; color: #f8fafc; font-weight: 600; margin-bottom: 4px;">Mint shut down &mdash; 15M users displaced</p>
-          <p style="font-size: 0.48em; color: #94a3b8;">Credit Karma absorbed accounts but dropped budgeting. No one is building the replacement these users deserve.</p>
+          <p class="force-card__title">Mint shut down &mdash; 15M users displaced</p>
+          <p class="force-card__desc">Credit Karma absorbed accounts but dropped budgeting. No one is building the replacement these users deserve.</p>
         </div>
       </div>
 
-      <div class="card-sm fragment fade-up" style="display: flex; gap: 16px; align-items: start;">
-        <div style="font-size: 1.3em; min-width: 36px; text-align: center; color: var(--amber-400);">
+      <div class="card-sm force-card fragment fade-up">
+        <div class="force-card__icon" style="color: var(--amber-400);">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
         <div>
-          <p style="font-size: 0.58em; color: #f8fafc; font-weight: 600; margin-bottom: 4px;">CFO Silvia validates category demand</p>
-          <p style="font-size: 0.48em; color: #94a3b8;">10K users, $30B tracked, going public via SPAC. Proves AI financial advisor demand &mdash; but still a black box.</p>
+          <p class="force-card__title">CFO Silvia validates category demand</p>
+          <p class="force-card__desc">10K users, $30B tracked, going public via SPAC. Proves AI financial advisor demand &mdash; but still a black box.</p>
         </div>
       </div>
 
-      <div class="card-sm fragment fade-up" style="display: flex; gap: 16px; align-items: start;">
-        <div style="font-size: 1.3em; min-width: 36px; text-align: center; color: #c084fc;">
+      <div class="card-sm force-card fragment fade-up">
+        <div class="force-card__icon" style="color: #c084fc;">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         </div>
         <div>
-          <p style="font-size: 0.58em; color: #f8fafc; font-weight: 600; margin-bottom: 4px;">Plaid + SnapTrade commoditized aggregation</p>
-          <p style="font-size: 0.48em; color: #94a3b8;">Account linking is now reliable, affordable, and covers 12K+ institutions. The data layer is solved.</p>
+          <p class="force-card__title">Plaid + SnapTrade commoditized aggregation</p>
+          <p class="force-card__desc">Account linking is now reliable, affordable, and covers 12K+ institutions. The data layer is solved.</p>
         </div>
       </div>
 
-      <div class="card-sm fragment fade-up" style="display: flex; gap: 16px; align-items: start; grid-column: 1 / -1; max-width: 540px; margin: 0 auto;">
-        <div style="font-size: 1.3em; min-width: 36px; text-align: center; color: var(--emerald-400);">
+      <div class="card-sm force-card fragment fade-up" style="grid-column: 1 / -1; max-width: 540px; margin: 0 auto;">
+        <div class="force-card__icon" style="color: var(--emerald-400);">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         </div>
         <div>
-          <p style="font-size: 0.58em; color: #f8fafc; font-weight: 600; margin-bottom: 4px;">Open banking regulation accelerating globally</p>
-          <p style="font-size: 0.48em; color: #94a3b8;">CFPB Section 1033 mandates data portability. Banks must share. The advantage shifts to platforms that use data best.</p>
+          <p class="force-card__title">Open banking regulation accelerating globally</p>
+          <p class="force-card__desc">CFPB Section 1033 mandates data portability. Banks must share. The advantage shifts to platforms that use data best.</p>
         </div>
       </div>
     </div>
@@ -716,29 +223,29 @@
 
     <!-- Seven Pillars -->
     <div style="display: flex; justify-content: center; gap: 8px; margin-top: 20px; flex-wrap: wrap;">
-      <span style="display: inline-block; padding: 4px 12px; border-radius: 16px; font-size: 0.42em; font-weight: 500; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: var(--emerald-400);">Liquid Assets</span>
-      <span style="display: inline-block; padding: 4px 12px; border-radius: 16px; font-size: 0.42em; font-weight: 500; background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); color: var(--blue-400);">Investments</span>
-      <span style="display: inline-block; padding: 4px 12px; border-radius: 16px; font-size: 0.42em; font-weight: 500; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); color: var(--amber-400);">Real Assets</span>
-      <span style="display: inline-block; padding: 4px 12px; border-radius: 16px; font-size: 0.42em; font-weight: 500; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: var(--red-400);">Liabilities</span>
-      <span style="display: inline-block; padding: 4px 12px; border-radius: 16px; font-size: 0.42em; font-weight: 500; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: var(--emerald-400);">Income</span>
-      <span style="display: inline-block; padding: 4px 12px; border-radius: 16px; font-size: 0.42em; font-weight: 500; background: rgba(14,165,233,0.08); border: 1px solid rgba(14,165,233,0.2); color: var(--sky-500);">Credit</span>
-      <span style="display: inline-block; padding: 4px 12px; border-radius: 16px; font-size: 0.42em; font-weight: 500; background: rgba(148,163,184,0.08); border: 1px solid rgba(148,163,184,0.2); color: #94a3b8;">Protection</span>
+      <span class="pillar-badge pillar-badge--emerald">Liquid Assets</span>
+      <span class="pillar-badge pillar-badge--blue">Investments</span>
+      <span class="pillar-badge pillar-badge--amber">Real Assets</span>
+      <span class="pillar-badge pillar-badge--red">Liabilities</span>
+      <span class="pillar-badge pillar-badge--emerald">Income</span>
+      <span class="pillar-badge pillar-badge--sky">Credit</span>
+      <span class="pillar-badge pillar-badge--muted">Protection</span>
     </div>
     <p style="font-size: 0.38em; color: #475569; text-align: center; margin-top: 6px;">The Seven Pillars of "The Strata" &mdash; no competitor covers all seven.</p>
 
     <!-- Three-step pipeline -->
     <div style="display: flex; justify-content: center; gap: 48px; margin-top: 14px;">
-      <div style="text-align: center;">
-        <p style="font-size: 0.52em; color: var(--emerald-400); font-weight: 600;">Aggregate</p>
-        <p style="font-size: 0.4em; color: #64748b;">Every account, asset, liability</p>
+      <div class="pipeline-step">
+        <p class="pipeline-step__label" style="color: var(--emerald-400);">Aggregate</p>
+        <p class="pipeline-step__desc">Every account, asset, liability</p>
       </div>
-      <div style="text-align: center;">
-        <p style="font-size: 0.52em; color: var(--blue-400); font-weight: 600;">Understand</p>
-        <p style="font-size: 0.4em; color: #64748b;">Decision traces on every number</p>
+      <div class="pipeline-step">
+        <p class="pipeline-step__label" style="color: var(--blue-400);">Understand</p>
+        <p class="pipeline-step__desc">Decision traces on every number</p>
       </div>
-      <div style="text-align: center;">
-        <p style="font-size: 0.52em; color: var(--amber-400); font-weight: 600;">Act</p>
-        <p style="font-size: 0.4em; color: #64748b;">Draft paperwork, execute transfers</p>
+      <div class="pipeline-step">
+        <p class="pipeline-step__label" style="color: var(--amber-400);">Act</p>
+        <p class="pipeline-step__desc">Draft paperwork, execute transfers</p>
       </div>
     </div>
   </section>
@@ -795,63 +302,63 @@
 
     <div class="two-col" style="gap: 40px; align-items: start;">
       <div>
-        <div class="card-sm fragment fade-up" style="margin-bottom: 12px; display: flex; gap: 14px; align-items: start;">
-          <div class="icon-circle icon-emerald" style="flex-shrink: 0; width: 40px; height: 40px;">
+        <div class="card-sm feature-card fragment fade-up">
+          <div class="icon-circle icon-emerald feature-card__icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           </div>
           <div>
-            <p style="font-size: 0.58em; color: #f8fafc; font-weight: 600; margin-bottom: 2px;">Portfolio Dashboard</p>
-            <p style="font-size: 0.45em;">Unified net worth. Live Plaid + SnapTrade data. Every metric traceable.</p>
+            <p class="feature-card__title">Portfolio Dashboard</p>
+            <p class="feature-card__desc">Unified net worth. Live Plaid + SnapTrade data. Every metric traceable.</p>
           </div>
         </div>
 
-        <div class="card-sm fragment fade-up" style="margin-bottom: 12px; display: flex; gap: 14px; align-items: start;">
-          <div class="icon-circle icon-blue" style="flex-shrink: 0; width: 40px; height: 40px;">
+        <div class="card-sm feature-card fragment fade-up">
+          <div class="icon-circle icon-blue feature-card__icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           </div>
           <div>
-            <p style="font-size: 0.58em; color: #f8fafc; font-weight: 600; margin-bottom: 2px;">AI Financial Advisor</p>
-            <p style="font-size: 0.45em;">Claude-powered. Tax, debt, equity comp specialists. Vanish mode.</p>
+            <p class="feature-card__title">AI Financial Advisor</p>
+            <p class="feature-card__desc">Claude-powered. Tax, debt, equity comp specialists. Vanish mode.</p>
           </div>
         </div>
 
-        <div class="card-sm fragment fade-up" style="margin-bottom: 12px; display: flex; gap: 14px; align-items: start;">
-          <div class="icon-circle icon-amber" style="flex-shrink: 0; width: 40px; height: 40px;">
+        <div class="card-sm feature-card fragment fade-up">
+          <div class="icon-circle icon-amber feature-card__icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           </div>
           <div>
-            <p style="font-size: 0.58em; color: #f8fafc; font-weight: 600; margin-bottom: 2px;">Founder Operating Room</p>
-            <p style="font-size: 0.45em;">Runway, commingling detection, tax shields, subscription audit.</p>
+            <p class="feature-card__title">Founder Operating Room</p>
+            <p class="feature-card__desc">Runway, commingling detection, tax shields, subscription audit.</p>
           </div>
         </div>
 
-        <div class="card-sm fragment fade-up" style="margin-bottom: 12px; display: flex; gap: 14px; align-items: start;">
-          <div class="icon-circle icon-red" style="flex-shrink: 0; width: 40px; height: 40px;">
+        <div class="card-sm feature-card fragment fade-up">
+          <div class="icon-circle icon-red feature-card__icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           </div>
           <div>
-            <p style="font-size: 0.58em; color: #f8fafc; font-weight: 600; margin-bottom: 2px;">War Room + Scenario Lab</p>
-            <p style="font-size: 0.45em;">ACATS transfers, switch kits, Monte Carlo sims, what-if modeling.</p>
+            <p class="feature-card__title">War Room + Scenario Lab</p>
+            <p class="feature-card__desc">ACATS transfers, switch kits, Monte Carlo sims, what-if modeling.</p>
           </div>
         </div>
 
-        <div class="card-sm fragment fade-up" style="margin-bottom: 12px; display: flex; gap: 14px; align-items: start;">
-          <div class="icon-circle icon-amber" style="flex-shrink: 0; width: 40px; height: 40px;">
+        <div class="card-sm feature-card fragment fade-up">
+          <div class="icon-circle icon-amber feature-card__icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           </div>
           <div>
-            <p style="font-size: 0.58em; color: #f8fafc; font-weight: 600; margin-bottom: 2px;">Tax Intelligence</p>
-            <p style="font-size: 0.45em;">Multi-provider document extraction (W-2, 1099s), tax plan workspace, bracket optimization.</p>
+            <p class="feature-card__title">Tax Intelligence</p>
+            <p class="feature-card__desc">Multi-provider document extraction (W-2, 1099s), tax plan workspace, bracket optimization.</p>
           </div>
         </div>
 
-        <div class="card-sm fragment fade-up" style="margin-bottom: 12px; display: flex; gap: 14px; align-items: start;">
-          <div class="icon-circle" style="flex-shrink: 0; width: 40px; height: 40px; background: rgba(14,165,233,0.1);">
+        <div class="card-sm feature-card fragment fade-up">
+          <div class="icon-circle icon-sky feature-card__icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <div>
-            <p style="font-size: 0.58em; color: #f8fafc; font-weight: 600; margin-bottom: 2px;">Trust &amp; Verification</p>
-            <p style="font-size: 0.45em;">SVP attestations, Financial Passport export, consent-gated data, decision narrative audit trail.</p>
+            <p class="feature-card__title">Trust &amp; Verification</p>
+            <p class="feature-card__desc">SVP attestations, Financial Passport export, consent-gated data, decision narrative audit trail.</p>
           </div>
         </div>
 
@@ -1231,7 +738,7 @@
 
     <div class="founder-grid" style="margin-top: 24px;">
       <div>
-        <h3 style="font-family: var(--font-sans) !important; font-size: 1.1em; font-weight: 600; margin-bottom: 4px;">Alex Chao</h3>
+        <h3 style="font-size: 1.1em; font-weight: 600; margin-bottom: 4px;">Alex Chao</h3>
         <p style="font-size: 0.6em; color: var(--emerald-400); font-weight: 500; margin-bottom: 16px;">Founder &amp; CEO</p>
 
         <p style="font-size: 0.48em; color: #94a3b8; margin-bottom: 8px; font-weight: 500;">EDUCATION</p>
