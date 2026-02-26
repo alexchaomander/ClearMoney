@@ -14,6 +14,10 @@ This document is the engineering execution plan for the [ROADMAP.md](./ROADMAP.m
 - Unified dashboard (net worth, allocation, holdings, portfolio history)
 - Founder Operating Room (runway, commingling, tax shields, subscription audit)
 - Founder Runway & Burn Tester (JIT tool)
+- Mega Backdoor Roth Simulator (JIT tool)
+- Conflict of Interest Audit (JIT tool)
+- 83(b) Election Perfect-Generator (JIT tool)
+- Editorial "Audit" Series (TPG, Backdoor, 83b audits)
 - AI Advisor with specialized financial skills (Claude-based)
 - War Room with action intent lifecycle and switch kit PDF generation
 - Scenario Lab with Monte Carlo simulations
