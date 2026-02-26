@@ -20,3 +20,4 @@ export { FeaturedTools, FeaturedToolsCompact } from "./FeaturedTools";
 export { MethodologyDetails, MethodologyInline } from "./MethodologySection";
 export { ShareResults, useSharedParams } from "./ShareResults";
 export { CategoryPage } from "./CategoryPage";
+export { UnifiedIntakeForm } from "./UnifiedIntakeForm";
