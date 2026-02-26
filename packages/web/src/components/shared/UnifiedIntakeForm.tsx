@@ -78,21 +78,24 @@ export function UnifiedIntakeForm({
         })
       });
 
-      if (!response.ok) throw new Error("Failed to join waitlist");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to join waitlist");
+      }
 
       const data = await response.json();
       setFormData({ ...formData, referralCode: data.referral_code });
       setStep("success");
       if (onSuccess) onSuccess(data.referral_code);
-    } catch (err) {
-      setError("Something went wrong. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const copyReferral = () => {
-    const url = `${window.location.origin}?ref=${formData.referralCode}`;
+    const url = `${window.location.origin}/?ref=${formData.referralCode}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -117,7 +120,7 @@ export function UnifiedIntakeForm({
           </p>
           <div className="flex gap-2">
             <div className="flex-1 bg-neutral-900 px-4 py-2 rounded-lg border border-neutral-800 text-sm text-neutral-300 font-mono overflow-hidden text-ellipsis whitespace-nowrap">
-              clearmoney.com/?ref={formData.referralCode}
+              {`${typeof window !== 'undefined' ? window.location.host : 'clearmoney.com'}/?ref=${formData.referralCode}`}
             </div>
             <Button size="icon" variant="outline" onClick={copyReferral}>
               {copied ? <Check className="w-4 h-4 text-brand-400" /> : <Copy className="w-4 h-4" />}
