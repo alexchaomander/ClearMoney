@@ -2071,12 +2071,15 @@ components:
         role:
           type: string
           nullable: true
+          enum: ["Founder", "Professional", "HNW Individual", "Other"]
         net_worth_bracket:
           type: string
           nullable: true
+          enum: ["<250k", "250k-1M", "1M-5M", "5M+"]
         interested_tier:
           type: string
           nullable: true
+          enum: ["Free", "Individual", "Founder Pro"]
         source_tool:
           type: string
           nullable: true
