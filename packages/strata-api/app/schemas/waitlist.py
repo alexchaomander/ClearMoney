@@ -14,7 +14,6 @@ class WaitlistCreate(BaseModel):
 
 class WaitlistResponse(BaseModel):
     id: UUID
-    email: str
     referral_code: str
     created_at: datetime
 

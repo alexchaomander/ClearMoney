@@ -21,6 +21,10 @@ import { Button } from "@/components/ui/button";
  * Targets founders with the universal anxiety: "How long until I go to zero?"
  */
 export function RunwayCalculator() {
+  const FUNDRAISING_RUNWAY_THRESHOLD_MONTHS = 9;
+  const AVERAGE_SERIES_A_TIMELINE_MONTHS = 6.4;
+  const CRITICAL_RUNWAY_THRESHOLD_MONTHS = 6;
+
   // Business Inputs
   const [bizCash, setBizCash] = useState(500000);
   const [bizBurn, setBizBurn] = useState(40000);
@@ -33,14 +37,24 @@ export function RunwayCalculator() {
   const [unlocked, setUnlocked] = useState(false);
 
   // Calculations
-  const bizRunway = useMemo(() => Math.floor(bizCash / bizBurn), [bizCash, bizBurn]);
+  const bizRunway = useMemo(() => {
+    if (bizBurn <= 0) return Infinity;
+    return Math.floor(bizCash / bizBurn);
+  }, [bizCash, bizBurn]);
+
   const combinedRunway = useMemo(() => {
     const totalCash = bizCash + personalCash;
     const totalBurn = bizBurn + personalBurn;
+    if (totalBurn <= 0) return Infinity;
     return Math.floor(totalCash / totalBurn);
   }, [bizCash, personalCash, bizBurn, personalBurn]);
 
-  const criticalWarning = bizRunway < 6;
+  const formatRunway = (months: number) => {
+    if (months === Infinity) return "Infinite";
+    return `${months} months`;
+  };
+
+  const criticalWarning = bizRunway < CRITICAL_RUNWAY_THRESHOLD_MONTHS;
 
   return (
     <AppShell
@@ -74,7 +88,7 @@ export function RunwayCalculator() {
                 label="Monthly Business Burn"
                 value={bizBurn}
                 onChange={setBizBurn}
-                min={1000}
+                min={0}
                 max={150000}
                 step={1000}
                 format="currency"
@@ -105,7 +119,7 @@ export function RunwayCalculator() {
                 label="Monthly Personal Burn"
                 value={personalBurn}
                 onChange={setPersonalBurn}
-                min={1000}
+                min={0}
                 max={30000}
                 step={500}
                 format="currency"
@@ -128,7 +142,7 @@ export function RunwayCalculator() {
         <div className="lg:col-span-5 space-y-6">
           <ResultCard
             title="Startup Runway"
-            value={`${bizRunway} months`}
+            value={formatRunway(bizRunway)}
             description="Until the company bank account hits $0."
             trend={criticalWarning ? "down" : "up"}
             icon={<Calendar className="w-5 h-5" />}
@@ -141,7 +155,7 @@ export function RunwayCalculator() {
               <div className="blur-sm pointer-events-none opacity-50 grayscale transition-all">
                 <ResultCard
                   title="True Survival Runway"
-                  value={`${combinedRunway} months`}
+                  value={formatRunway(combinedRunway)}
                   description="Combined personal + company assets."
                   icon={<ShieldAlert className="w-5 h-5" />}
                   color="#60a5fa"
@@ -165,7 +179,7 @@ export function RunwayCalculator() {
             <div className="animate-fade-up">
               <ResultCard
                 title="True Survival Runway"
-                value={`${combinedRunway} months`}
+                value={formatRunway(combinedRunway)}
                 description="Combined personal + company assets."
                 icon={<ShieldAlert className="w-5 h-5" />}
                 color="#60a5fa"
@@ -177,10 +191,10 @@ export function RunwayCalculator() {
                 </h4>
                 <p className="text-xs text-neutral-400 leading-relaxed">
                   Based on your burn of <strong>${(bizBurn + personalBurn).toLocaleString()}</strong>, you are currently 
-                  {combinedRunway < 9 ? " below the safe fundraising threshold." : " in a healthy position."}
+                  {combinedRunway < FUNDRAISING_RUNWAY_THRESHOLD_MONTHS ? " below the safe fundraising threshold." : " in a healthy position."}
                   <br /><br />
-                  <span className="text-white">Recommendation:</span> {combinedRunway < 9 
-                    ? "Start your fundraise process now. Average Series A time-to-close is 6.4 months." 
+                  <span className="text-white">Recommendation:</span> {combinedRunway < FUNDRAISING_RUNWAY_THRESHOLD_MONTHS 
+                    ? `Start your fundraise process now. Average Series A time-to-close is ${AVERAGE_SERIES_A_TIMELINE_MONTHS} months.` 
                     : "Focus on growth. You have enough buffer to hit your next milestone."}
                 </p>
                 
