@@ -151,37 +151,38 @@
   <!-- ════════════════════════════════════════════ -->
   <section data-background-gradient="radial-gradient(ellipse at 50% 50%, rgba(16,185,129,0.05) 0%, transparent 50%), linear-gradient(135deg, #020617 0%, #0f172a 100%)">
     <h2>The <span class="em">Market</span></h2>
-    <p class="subtitle" style="margin-bottom: 40px;">We start narrow and expand. Founders are the beachhead, not the ceiling.</p>
+    <p class="subtitle" style="margin-bottom: 20px;">Founders are the beachhead, not the ceiling. We start narrow and expand.</p>
 
-    <div class="tam-stack" style="margin-bottom: 40px;">
-      <div class="tam-circle fragment fade-up">
-        <div class="ring" style="background: rgba(16,185,129,0.06); border: 2px solid rgba(16,185,129,0.2);">
-          <div class="tam-num" style="color: var(--emerald-400);">$125B</div>
-          <div class="tam-label-inner" style="color: var(--emerald-400);">TAM</div>
+    <div class="market-expansion">
+      <!-- TAM Ring -->
+      <div class="expansion-ring ring-tam fragment fade-in">
+        <div class="ring-label tam-label">
+          <div style="font-size: 1.8em; margin-bottom: 4px;">$125B TAM</div>
+          <div style="font-size: 0.6em; line-height: 1.4; color: #64748b;">Wealth Mgmt + Fintech Tools + Media</div>
         </div>
-        <p style="font-size: 0.5em; color: #94a3b8; margin-top: 8px; max-width: 200px;">US wealth management<br>+ fintech tools<br>+ financial media</p>
-      </div>
-
-      <div class="tam-circle fragment fade-up">
-        <div class="ring" style="background: rgba(59,130,246,0.06); border: 2px solid rgba(59,130,246,0.2); width: 140px; height: 140px;">
-          <div class="tam-num" style="color: var(--blue-400);">$12B</div>
-          <div class="tam-label-inner" style="color: var(--blue-400);">SAM</div>
+        
+        <!-- SAM Ring -->
+        <div class="expansion-ring ring-sam fragment fade-in">
+          <div class="ring-label sam-label">
+            <div style="font-size: 1.5em; margin-bottom: 4px;">$12B SAM</div>
+            <div style="font-size: 0.6em; line-height: 1.4; color: #64748b;">22M HNW Households</div>
+          </div>
+          
+          <!-- Beachhead Ring -->
+          <div class="expansion-ring ring-beachhead fragment fade-in">
+            <div class="ring-label beachhead-label">
+              <div style="font-size: 1.4em; margin-bottom: 4px;">$710M</div>
+              <div style="font-size: 0.6em; font-weight: 500;">Beachhead</div>
+              <div style="font-size: 0.5em; color: #94a3b8; margin-top: 4px;">750K US Founders</div>
+            </div>
+          </div>
         </div>
-        <p style="font-size: 0.5em; color: #94a3b8; margin-top: 8px; max-width: 200px;">22M digitally-native<br>HNW households<br>+ 750K founders</p>
-      </div>
-
-      <div class="tam-circle fragment fade-up">
-        <div class="ring" style="background: rgba(245,158,11,0.06); border: 2px solid rgba(245,158,11,0.2); width: 120px; height: 120px;">
-          <div class="tam-num" style="color: var(--amber-400);">$710M</div>
-          <div class="tam-label-inner" style="color: var(--amber-400);">Beachhead</div>
-        </div>
-        <p style="font-size: 0.5em; color: #94a3b8; margin-top: 8px; max-width: 200px;">750K US founders<br>&times; $79/mo<br>= near-term wedge</p>
       </div>
     </div>
 
-    <div class="card-sm fragment fade-up" style="max-width: 800px; margin: 0 auto; text-align: center;">
+    <div class="card-sm fragment fade-up" style="max-width: 800px; margin: 30px auto 0; text-align: center;">
       <p style="font-size: 0.55em; color: #94a3b8; line-height: 1.7;">
-        <strong style="color: #f8fafc;">The expansion playbook:</strong> Win founders (underserved, high-LTV, word-of-mouth) &rarr; Expand to HNW professionals ($29/mo) &rarr; Free tools + publication capture broad consumer top-of-funnel.
+        <strong style="color: #f8fafc;">The expansion playbook:</strong> Win founders (underserved, high-LTV, word-of-mouth) &rarr; Expand to HNW professionals &rarr; Free tools capture broad consumer top-of-funnel.
         <br><span style="color: var(--emerald-400); font-weight: 600;">Same playbook as Stripe (developers &rarr; enterprise) and Figma (designers &rarr; everyone).</span>
       </p>
     </div>
@@ -216,13 +217,14 @@
     <h2>Introducing <span class="em">ClearMoney</span></h2>
     <p class="subtitle">GPS + Traffic + Directions &rarr; Accounts + AI + Execution. One platform.</p>
 
-    <div style="margin-top: 24px; position: relative;">
-      <div style="position: absolute; inset: -20px; background: radial-gradient(ellipse at center, rgba(16,185,129,0.08) 0%, transparent 70%); border-radius: 32px; pointer-events: none;"></div>
-      <img src="assets/dashboard.png" class="screenshot" style="max-height: 520px; width: auto; display: block; margin: 0 auto; filter: brightness(1.1) contrast(1.05);" alt="ClearMoney Dashboard">
+    <div style="margin-top: 24px;">
+      <div class="browser-frame" style="max-width: 1000px;">
+        <img src="assets/dashboard.png" class="screenshot" style="filter: brightness(1.1) contrast(1.05);" alt="ClearMoney Dashboard">
+      </div>
     </div>
 
     <!-- Seven Pillars -->
-    <div style="display: flex; justify-content: center; gap: 8px; margin-top: 20px; flex-wrap: wrap;">
+    <div style="display: flex; justify-content: center; gap: 8px; margin-top: 30px; flex-wrap: wrap;">
       <span class="pillar-badge pillar-badge--emerald">Liquid Assets</span>
       <span class="pillar-badge pillar-badge--blue">Investments</span>
       <span class="pillar-badge pillar-badge--amber">Real Assets</span>
@@ -342,34 +344,18 @@
           </div>
         </div>
 
-        <div class="card-sm feature-card fragment fade-up">
-          <div class="icon-circle icon-amber feature-card__icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          </div>
-          <div>
-            <p class="feature-card__title">Tax Intelligence</p>
-            <p class="feature-card__desc">Multi-provider document extraction (W-2, 1099s), tax plan workspace, bracket optimization.</p>
-          </div>
-        </div>
-
-        <div class="card-sm feature-card fragment fade-up">
-          <div class="icon-circle icon-sky feature-card__icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <div>
-            <p class="feature-card__title">Trust &amp; Verification</p>
-            <p class="feature-card__desc">SVP attestations, Financial Passport export, consent-gated data, decision narrative audit trail.</p>
-          </div>
-        </div>
-
         <p style="font-size: 0.45em; color: #475569; margin-top: 8px;">
           + 44 interactive calculators &middot; Plaid + SnapTrade + multi-provider fallback architecture
         </p>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 16px;">
-        <img src="assets/connect.png" class="screenshot-sm fragment fade-up" alt="Connect Accounts" style="max-height: 340px; width: 100%; object-fit: contain; filter: brightness(1.08) contrast(1.03);">
-        <img src="assets/account-detail.png" class="screenshot-sm fragment fade-up" alt="Account Detail" style="max-height: 340px; width: 100%; object-fit: contain; filter: brightness(1.08) contrast(1.03);">
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="browser-frame fragment fade-up" style="max-height: 280px;">
+          <img src="assets/connect.png" class="screenshot" alt="Connect Accounts" style="filter: brightness(1.08) contrast(1.03);">
+        </div>
+        <div class="browser-frame fragment fade-up" style="max-height: 280px;">
+          <img src="assets/account-detail.png" class="screenshot" alt="Account Detail" style="filter: brightness(1.08) contrast(1.03);">
+        </div>
       </div>
     </div>
   </section>
@@ -451,7 +437,7 @@
         <p style="font-size: 0.42em; color: #94a3b8;">Free tier captures<br>tool users into platform</p>
       </div>
       <div style="color: var(--emerald-400); font-size: 1.2em;">&rarr;</div>
-      <div class="card-sm fragment fade-up" style="text-align: center; padding: 20px 24px; min-width: 180px;">
+      <div class="card-sm flywheel-goal fragment fade-up" style="text-align: center; padding: 20px 24px; min-width: 180px;">
         <p style="font-size: 0.6em; color: #f8fafc; font-weight: 600; margin-bottom: 6px;">Premium Conversion</p>
         <p style="font-size: 0.42em; color: #94a3b8;">Power users upgrade<br>for full platform access</p>
       </div>
@@ -522,13 +508,6 @@
           <td class="x">"Free" (how?)</td>
           <td class="x">Hidden commissions</td>
           <td class="check">Fee-based</td>
-        </tr>
-        <tr class="fragment fade-up">
-          <td><strong>Financial Portability</strong></td>
-          <td class="check">Signed Financial Passport (FPP)</td>
-          <td class="x">Locked in</td>
-          <td class="x">N/A</td>
-          <td class="x">Locked in</td>
         </tr>
       </tbody>
     </table>
@@ -608,13 +587,6 @@
         + ethical affiliate revenue (disclosed) &middot; action execution fees (Phase 2) &middot; API access (Phase 3) &middot; enterprise/family office (Phase 4)
       </p>
     </div>
-
-    <div class="card-sm fragment fade-up" style="max-width: 900px; margin: 16px auto 0; border-left: 3px solid var(--emerald-400);">
-      <p style="font-size: 0.5em; color: var(--emerald-400); font-weight: 600; margin-bottom: 4px;">Independence Pledge</p>
-      <p style="font-size: 0.42em; color: #94a3b8; line-height: 1.7;">
-        Never rank by affiliate payout. Publish quarterly Independence Reports. Recommend against products when appropriate. Revenue transparency is the product, not a compromise.
-      </p>
-    </div>
   </section>
 
   <!-- ════════════════════════════════════════════ -->
@@ -629,11 +601,11 @@
 
         <div style="display: flex; gap: 40px; margin-bottom: 20px;">
           <div class="metric fragment fade-up">
-            <div class="number" style="font-size: 2em;">10+</div>
+            <div class="number" style="font-size: 2em;">7</div>
             <div class="label">Core Modules</div>
           </div>
           <div class="metric fragment fade-up">
-            <div class="number" style="font-size: 2em;">44</div>
+            <div class="number" style="font-size: 2em;">40+</div>
             <div class="label">Financial Tools</div>
           </div>
         </div>
@@ -684,7 +656,9 @@
     <h2>The Long Game: <span class="em">Three Eras</span></h2>
     <p class="subtitle" style="margin-bottom: 32px;">From read-only intelligence to autonomous financial agency</p>
 
-    <div class="three-col" style="gap: 28px;">
+    <div class="roadmap-container">
+      <div class="roadmap-line"></div>
+      
       <div class="card fragment fade-up" style="border-top: 3px solid var(--emerald-500);">
         <div style="margin-bottom: 12px;">
           <span class="phase-badge phase-done">Now &rarr; 12 mo</span>
@@ -692,9 +666,6 @@
         <h3 style="color: var(--emerald-400); font-size: 0.72em; margin-bottom: 10px;">Era 1: The Context Graph</h3>
         <p style="font-size: 0.5em; color: #cbd5e1; line-height: 1.7;">
           Build the most comprehensive picture of a user's financial life. Read-only aggregation. Show the math on everything. Earn trust.
-        </p>
-        <p style="font-size: 0.42em; color: #475569; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(51,65,85,0.4);">
-          Multi-channel AI &middot; Premium launch &middot; Publication &middot; Integrations
         </p>
       </div>
 
@@ -706,9 +677,6 @@
         <p style="font-size: 0.5em; color: #cbd5e1; line-height: 1.7;">
           AI prepares the action. Automates paperwork. Ghost navigation for legacy banks. Turn financial data into financial action.
         </p>
-        <p style="font-size: 0.42em; color: #475569; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(51,65,85,0.4);">
-          One-click rollovers &middot; Automated rebalancing &middot; Ghost Navigation (side-by-side guides for legacy banks) &middot; Trust Protocol (SVP) &mdash; privacy-preserving attestations
-        </p>
       </div>
 
       <div class="card fragment fade-up" style="border-top: 3px solid #94a3b8;">
@@ -718,9 +686,6 @@
         <h3 style="color: #94a3b8; font-size: 0.72em; margin-bottom: 10px;">Era 3: The Agentic Ledger</h3>
         <p style="font-size: 0.5em; color: #cbd5e1; line-height: 1.7;">
           Autonomous agents manage routine operations. Programmable guardrails. ClearMoney becomes the system of record.
-        </p>
-        <p style="font-size: 0.42em; color: #475569; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(51,65,85,0.4);">
-          Smart accounts &middot; Agent economy &middot; Financial Portability Protocol (FPP) &mdash; portable financial identity &middot; Enterprise
         </p>
       </div>
     </div>
@@ -759,28 +724,48 @@
       <div>
         <p style="font-size: 0.48em; color: #94a3b8; margin-bottom: 12px; font-weight: 500;">WHY ME FOR THIS</p>
 
-        <div class="card-sm" style="margin-bottom: 10px; padding: 14px 18px; border-left: 3px solid var(--emerald-400);">
-          <p style="font-size: 0.52em; color: #f8fafc; font-weight: 600; margin-bottom: 4px;">I am the target user</p>
-          <p style="font-size: 0.42em; color: #94a3b8;">Founder managing personal + company finances. I built ClearMoney because nothing else existed for people like me.</p>
+        <div class="card-sm founder-role-card fragment fade-left" style="border-left: 3px solid var(--emerald-400);">
+          <div class="founder-role-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>
+          </div>
+          <div>
+            <p style="font-size: 0.52em; color: #f8fafc; font-weight: 700; margin-bottom: 4px;">I am the target user</p>
+            <p style="font-size: 0.42em; color: #94a3b8;">Founder managing personal + company finances. Built ClearMoney because <strong style="color: #cbd5e1;">nothing else existed</strong> for people like me.</p>
+          </div>
         </div>
 
-        <div class="card-sm" style="margin-bottom: 10px; padding: 14px 18px;">
-          <p style="font-size: 0.52em; color: #f8fafc; font-weight: 600; margin-bottom: 4px;">ByteDance &mdash; MD, US Research</p>
-          <p style="font-size: 0.42em; color: #94a3b8;">Led frontier AI from gen 1.6 to Seed 2.0. LLM benchmarks, search agents, math reasoning.</p>
+        <div class="card-sm founder-role-card fragment fade-left">
+          <div class="founder-role-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div>
+            <p style="font-size: 0.52em; color: #f8fafc; font-weight: 700; margin-bottom: 4px;">ByteDance &mdash; MD, US Research</p>
+            <p style="font-size: 0.42em; color: #94a3b8;"><strong style="color: #cbd5e1;">Led frontier AI</strong> from gen 1.6 to Seed 2.0. LLM benchmarks, search agents, math reasoning.</p>
+          </div>
         </div>
 
-        <div class="card-sm" style="margin-bottom: 10px; padding: 14px 18px;">
-          <p style="font-size: 0.52em; color: #f8fafc; font-weight: 600; margin-bottom: 4px;">Microsoft &mdash; Strategic AI Advisor to the CTO</p>
-          <p style="font-size: 0.42em; color: #94a3b8;">Incubated AutoGen, GraphRAG, Semantic Kernel. Built 1,500-person AI community.</p>
+        <div class="card-sm founder-role-card fragment fade-left">
+          <div class="founder-role-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div>
+            <p style="font-size: 0.52em; color: #f8fafc; font-weight: 700; margin-bottom: 4px;">Microsoft &mdash; Strategic AI Advisor to the CTO</p>
+            <p style="font-size: 0.42em; color: #94a3b8;">Incubated AutoGen, GraphRAG. Built <strong style="color: #cbd5e1;">1,500-person AI community</strong>.</p>
+          </div>
         </div>
 
-        <div class="card-sm" style="margin-bottom: 10px; padding: 14px 18px;">
-          <p style="font-size: 0.52em; color: #f8fafc; font-weight: 600; margin-bottom: 4px;">Uber ATG &mdash; First Data Science Hire</p>
-          <p style="font-size: 0.42em; color: #94a3b8;">Self-driving cars. 2 patents. Safety-critical AI at scale.</p>
+        <div class="card-sm founder-role-card fragment fade-left">
+          <div class="founder-role-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div>
+            <p style="font-size: 0.52em; color: #f8fafc; font-weight: 700; margin-bottom: 4px;">Uber ATG &mdash; First Data Science Hire</p>
+            <p style="font-size: 0.42em; color: #94a3b8;"><strong style="color: #cbd5e1;">Safety-critical AI at scale</strong>. 2 patents. Self-driving cars.</p>
+          </div>
         </div>
 
         <p style="font-size: 0.45em; color: #475569; margin-top: 8px;">
-          Shipped full production platform solo in 4 months. I build fast.
+          Shipped full production platform solo in 4 months. <strong style="color: #64748b;">I build fast.</strong>
         </p>
       </div>
     </div>
