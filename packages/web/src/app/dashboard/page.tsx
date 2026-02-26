@@ -32,7 +32,7 @@ import { TaxDocumentsCard } from "@/components/dashboard/TaxDocumentsCard";
 import { AddAccountModal } from "@/components/dashboard/AddAccountModal";
 import { DecisionTracePanel } from "@/components/dashboard/DecisionTracePanel";
 import { ConsentGate } from "@/components/shared/ConsentGate";
-import { DashboardLoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { DashboardLoadingSkeleton, ProductTour } from "@/components/shared";
 import { ApiErrorState } from "@/components/shared/ApiErrorState";
 import { DataSourceStatusStrip, type DataSourceStatusItem } from "@/components/dashboard/DataSourceStatusStrip";
 import { AssumptionControl } from "@/components/dashboard/AssumptionControl";
@@ -369,13 +369,15 @@ export default function DashboardPage() {
               </ConsentGate>
             )}
 
-            <NetWorthCard
-              totalAssets={effectivePortfolio.total_investment_value + effectivePortfolio.total_cash_value}
-              totalLiabilities={effectivePortfolio.total_debt_value}
-              netWorth={effectivePortfolio.net_worth}
-              taxAdvantagedValue={effectivePortfolio.tax_advantaged_value}
-              taxableValue={effectivePortfolio.taxable_value}
-            />
+            <div id="net-worth-card">
+              <NetWorthCard
+                totalAssets={effectivePortfolio.total_investment_value + effectivePortfolio.total_cash_value}
+                totalLiabilities={effectivePortfolio.total_debt_value}
+                netWorth={effectivePortfolio.net_worth}
+                taxAdvantagedValue={effectivePortfolio.tax_advantaged_value}
+                taxableValue={effectivePortfolio.taxable_value}
+              />
+            </div>
 
             <PortfolioHistoryChart
               previewHistory={usingDemoData ? previewHistory : undefined}
@@ -480,7 +482,7 @@ export default function DashboardPage() {
         )}
 
         {!isLoading && !isError && hasAccounts && (
-          <section className="mt-8">
+          <section className="mt-8" id="command-center-trigger">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-sm uppercase tracking-[0.25em] text-emerald-400">Intelligence Hub</p>
@@ -522,6 +524,7 @@ export default function DashboardPage() {
       </main>
 
       <AddAccountModal open={showAddModal} onOpenChange={setShowAddModal} />
+      <ProductTour />
     </div>
   );
 }

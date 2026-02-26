@@ -78,13 +78,21 @@ const STEPS: Step[] = [
 interface MemoryWizardProps {
   isOpen: boolean;
   onClose: () => void;
+  initialValues?: Partial<FinancialMemory>;
 }
 
-export function MemoryWizard({ isOpen, onClose }: MemoryWizardProps) {
+export function MemoryWizard({ isOpen, onClose, initialValues }: MemoryWizardProps) {
   const { data: memory } = useFinancialMemory();
   const updateMemory = useUpdateMemory();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [values, setValues] = useState<Partial<FinancialMemory>>({});
+  const [values, setValues] = useState<Partial<FinancialMemory>>(initialValues || {});
+
+  // Update values if initialValues change
+  React.useEffect(() => {
+    if (initialValues) {
+      setValues(prev => ({ ...prev, ...initialValues }));
+    }
+  }, [initialValues]);
 
   const currentStep = STEPS[currentStepIndex];
   const isLastStep = currentStepIndex === STEPS.length - 1;
