@@ -1252,7 +1252,7 @@ paths:
           description: Subscription deleted
         '404':
           $ref: '#/components/responses/ErrorResponse'
-  /v1/waitlist:
+  /api/v1/waitlist:
     post:
       summary: Join the waitlist
       description: |
@@ -1286,7 +1286,7 @@ paths:
                 created_at: '2024-01-01T12:00:00Z'
         '400':
           $ref: '#/components/responses/ErrorResponse'
-  /v1/waitlist/{referral_code}:
+  /api/v1/waitlist/{referral_code}:
     get:
       summary: Get waitlist status
       description: |

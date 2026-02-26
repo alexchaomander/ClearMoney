@@ -479,7 +479,7 @@ featured: true,
     description:
       "Calculate your true survival runway by combining personal and startup assets. See your fundraising triggers.",
     href: "/tools/founder-runway",
-    categoryId: "budgeting",
+    categoryId: "equity-compensation",
     status: "live",
     primaryColor: "#f43f5e",
     designStyle: "analytical",
