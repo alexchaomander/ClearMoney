@@ -30,6 +30,7 @@ from app.api.tax_documents import router as tax_documents_router
 from app.api.tax_plan_workspace import router as tax_plan_workspace_router
 from app.api.skills import router as skills_router
 from app.api.transactions import router as transactions_router
+from app.api.waitlist import router as waitlist_router
 from app.core.config import settings
 from app.db.session import close_db
 from app.services.jobs.background import start_background_tasks
@@ -110,3 +111,4 @@ app.include_router(calculators_router, prefix="/api/v1")
 app.include_router(tax_documents_router, prefix="/api/v1")
 app.include_router(tax_plan_workspace_router, prefix="/api/v1")
 app.include_router(data_router, prefix="/api/v1")
+app.include_router(waitlist_router, prefix="/api/v1/waitlist", tags=["Waitlist"])
