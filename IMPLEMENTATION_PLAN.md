@@ -26,6 +26,7 @@ This document is the engineering execution plan for the [ROADMAP.md](./ROADMAP.m
 - Trust Hub (payout transparency, independence audits)
 - Vanish Mode, redacted sharing, ephemeral links
 - Financial Memory Wizard
+- Personalized Onboarding & Product Tour
 - Newsletter & Waitlist (Capture Engine)
 - Blog infrastructure
 - Light/dark mode (Strata design system)

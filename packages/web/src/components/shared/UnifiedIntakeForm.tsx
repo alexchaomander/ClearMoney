@@ -131,13 +131,30 @@ export function UnifiedIntakeForm({
           </p>
         </div>
 
-        <Button 
-          variant="link" 
-          className="text-brand-400"
-          onClick={() => window.location.href = "/"}
-        >
-          Explore more tools
-        </Button>
+        <div className="flex flex-col gap-3">
+          <Button 
+            className="w-full bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold py-6"
+            onClick={() => {
+              const params = new URLSearchParams({
+                role: formData.role,
+                nw: formData.netWorthBracket,
+                source: sourceTool
+              });
+              window.location.href = `/onboarding?${params.toString()}`;
+            }}
+          >
+            Launch My Command Center
+            <Zap className="ml-2 w-4 h-4 fill-current" />
+          </Button>
+          
+          <Button 
+            variant="link" 
+            className="text-neutral-500 text-xs"
+            onClick={() => window.location.href = "/"}
+          >
+            Explore more tools
+          </Button>
+        </div>
       </Card>
     );
   }

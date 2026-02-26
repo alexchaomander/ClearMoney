@@ -58,6 +58,7 @@ export function DashboardHeader({
                   <Link
                     key={item.label}
                     href={item.href}
+                    id={item.label === "War Room" ? "war-room-nav" : undefined}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 ${
                       isActive
                         ? "text-emerald-700 dark:text-emerald-100 bg-emerald-50 dark:bg-emerald-900/60"
