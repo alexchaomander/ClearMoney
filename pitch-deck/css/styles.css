@@ -13,6 +13,9 @@
   --blue-400: #60a5fa;
   --blue-500: #3b82f6;
   --sky-500: #0ea5e9;
+  --slate-400: #94a3b8; /* Brighter for legibility */
+  --slate-500: #64748b;
+  --slate-600: #475569;
   --slate-700: #334155;
   --slate-800: #1e293b;
   --slate-900: #0f172a;
@@ -27,7 +30,7 @@
 .reveal {
   font-family: var(--font-sans);
   font-size: 42px;
-  color: #e2e8f0;
+  color: #f1f5f9; /* Slightly brighter than e2e8f0 */
 }
 
 .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
@@ -49,6 +52,10 @@
   color: #cbd5e1;
 }
 
+/* Enhanced contrast for secondary text */
+.reveal .muted, .reveal p.muted { color: #94a3b8; }
+.reveal .footnote { color: #64748b; }
+
 .reveal strong { color: #f8fafc; font-weight: 600; }
 
 .reveal .slides section { padding: 50px 100px; }
@@ -60,7 +67,7 @@
 .red { color: var(--red-400); }
 .blue { color: var(--blue-400); }
 .sky { color: var(--sky-500); }
-.muted { color: #64748b; }
+.muted { color: #94a3b8; }
 .mono { font-family: var(--font-mono); font-size: 0.85em; }
 .white { color: #f8fafc; }
 
@@ -71,40 +78,149 @@
 
 /* ── Cards ── */
 .card {
-  background: rgba(30, 41, 59, 0.5);
-  border: 1px solid rgba(51, 65, 85, 0.45);
-  border-radius: 16px;
+  background: rgba(30, 41, 59, 0.6); /* Slightly more opaque */
+  border: 1px solid rgba(148, 163, 184, 0.2); /* Brighter border */
+  border-radius: 20px;
   padding: 32px;
-  backdrop-filter: blur(12px);
-  transition: border-color 0.3s ease;
+  backdrop-filter: blur(16px);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 }
-.card:hover { border-color: rgba(51, 65, 85, 0.7); }
+.card:hover { border-color: rgba(16, 185, 129, 0.3); transform: translateY(-4px); }
+
 .card-sm {
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid rgba(51, 65, 85, 0.35);
-  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 14px;
   padding: 24px;
-  backdrop-filter: blur(8px);
-  transition: border-color 0.3s ease;
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
 }
-.card-sm:hover { border-color: rgba(51, 65, 85, 0.6); }
+.card-sm:hover { border-color: rgba(16, 185, 129, 0.3); transform: translateY(-2px); }
+
 .card-emerald {
   background: rgba(16, 185, 129, 0.05);
-  border: 1px solid rgba(16, 185, 129, 0.18);
-  border-radius: 16px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 20px;
   padding: 32px;
+  box-shadow: 0 10px 40px -10px rgba(16, 185, 129, 0.1);
 }
 
-/* Use higher specificity instead of !important */
-.reveal .card h3,
-.reveal .card-sm h3 {
-  font-family: var(--font-sans);
-  font-size: 0.7em;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: #f8fafc;
+/* ── Browser Frame for Screenshots ── */
+.browser-frame {
+  position: relative;
+  border-radius: 12px;
+  background: #1e293b;
+  padding-top: 32px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 0 120px rgba(16, 185, 129, 0.08);
+  overflow: hidden;
+  margin: 0 auto;
 }
-.card p, .card-sm p { font-size: 0.6em; margin: 0; color: #94a3b8; }
+.browser-frame::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f87171;
+  box-shadow: 16px 0 0 #fbbf24, 32px 0 0 #34d399;
+  z-index: 10;
+}
+.screenshot {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.screenshot-sm {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.5);
+}
+
+/* ── TAM Expansion Playbook (Concentric) ── */
+.market-expansion {
+  position: relative;
+  width: 100%;
+  height: 450px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 40px;
+}
+.expansion-ring {
+  position: absolute;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.ring-tam { width: 450px; height: 450px; border: 1px solid rgba(16, 185, 129, 0.15); background: rgba(16, 185, 129, 0.03); }
+.ring-sam { width: 320px; height: 320px; border: 1px solid rgba(59, 130, 246, 0.2); background: rgba(59, 130, 246, 0.04); }
+.ring-beachhead { 
+  width: 180px; height: 180px; 
+  border: 2px solid var(--amber-400); 
+  background: rgba(245, 158, 11, 0.06);
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.1);
+}
+.ring-label {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-align: center;
+}
+.tam-label { top: 30px; color: rgba(16, 185, 129, 0.5); font-size: 0.8em; }
+.sam-label { top: 25px; color: rgba(59, 130, 246, 0.7); font-size: 0.7em; }
+.beachhead-label { color: var(--amber-400); font-size: 0.8em; }
+
+/* ── Roadmap Connection ── */
+.roadmap-container {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 28px;
+}
+.roadmap-line {
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--emerald-500) 0%, var(--blue-500) 50%, #94a3b8 100%);
+  z-index: 0;
+  opacity: 0.3;
+}
+.roadmap-container .card { z-index: 1; }
+
+/* ── Flywheel Premium Polish ── */
+.flywheel-goal {
+  border: 2px solid transparent;
+  background: linear-gradient(var(--slate-800), var(--slate-800)) padding-box,
+              linear-gradient(135deg, var(--emerald-400), var(--blue-500), var(--amber-400)) border-box !important;
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.15);
+}
+
+/* ── Founder Icons ── */
+.founder-role-card {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 16px 20px !important;
+}
+.founder-role-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--emerald-400);
+}
+
+/* Rest of the styles... */
 
 /* ── Metrics ── */
 .metric { text-align: center; }
@@ -156,20 +272,6 @@
   font-size: 1.1em;
   color: #94a3b8;
   margin-top: 16px;
-}
-.screenshot {
-  border-radius: 16px;
-  border: 1px solid rgba(51, 65, 85, 0.5);
-  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6), 0 0 100px rgba(16, 185, 129, 0.06);
-  max-width: 100%;
-  height: auto;
-}
-.screenshot-sm {
-  border-radius: 12px;
-  border: 1px solid rgba(51, 65, 85, 0.5);
-  box-shadow: 0 15px 40px -8px rgba(0, 0, 0, 0.5);
-  max-width: 100%;
-  height: auto;
 }
 .reveal ul { list-style: none; padding: 0; margin: 0; }
 .reveal ul li {
@@ -272,14 +374,6 @@
   letter-spacing: 0.08em;
 }
 
-.footnote { font-size: 0.45em; color: #475569; margin-top: 32px; }
-.subtitle {
-  font-family: var(--font-sans);
-  font-size: 0.6em;
-  color: #94a3b8;
-  font-weight: 400;
-  letter-spacing: 0.03em;
-}
 .icon-circle {
   width: 48px; height: 48px;
   border-radius: 12px;
@@ -431,42 +525,6 @@
   font-size: 1.4em;
 }
 
-/* ── TAM circles ── */
-.tam-stack {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 80px;
-}
-.tam-circle {
-  text-align: center;
-}
-.tam-circle .ring {
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 16px;
-  transition: transform 0.3s ease;
-}
-.tam-circle:hover .ring { transform: scale(1.05); }
-.tam-circle .ring .tam-num {
-  font-family: var(--font-mono);
-  font-size: 1.7em;
-  font-weight: 600;
-  line-height: 1;
-}
-.tam-circle .ring .tam-label-inner {
-  font-size: 0.45em;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-top: 6px;
-  font-weight: 500;
-}
-
 /* ── Milestone timeline ── */
 .milestone-row {
   display: grid;
@@ -500,12 +558,8 @@
   opacity: 0.4;
 }
 
-/* ══════════════════════════════════════════
-   Reusable utility classes — extracted from
-   repeated inline styles
-   ══════════════════════════════════════════ */
+/* ── Reusable utility classes ── */
 
-/* Feature card rows (Slide 8 platform cards) */
 .feature-card {
   margin-bottom: 12px;
   display: flex;
@@ -527,7 +581,6 @@
   font-size: 0.45em;
 }
 
-/* Seven Pillars badge chips (Slide 6) */
 .pillar-badge {
   display: inline-block;
   padding: 4px 12px;
@@ -542,14 +595,12 @@
 .pillar-badge--sky { background: rgba(14,165,233,0.08); border: 1px solid rgba(14,165,233,0.2); color: var(--sky-500); }
 .pillar-badge--muted { background: rgba(148,163,184,0.08); border: 1px solid rgba(148,163,184,0.2); color: #94a3b8; }
 
-/* Flywheel step cards (Slide 10) */
 .flywheel-card {
   text-align: center;
   padding: 20px 24px;
   min-width: 180px;
 }
 
-/* Why Now force cards (Slide 3) */
 .force-card {
   display: flex;
   gap: 16px;
@@ -571,7 +622,6 @@
   color: #94a3b8;
 }
 
-/* Pipeline step labels (Slide 6) */
 .pipeline-step {
   text-align: center;
 }
@@ -584,7 +634,6 @@
   color: #64748b;
 }
 
-/* Founder name — override reveal h3 without !important */
 .reveal .founder-grid h3 {
   font-family: var(--font-sans);
 }
