@@ -1252,6 +1252,68 @@ paths:
           description: Subscription deleted
         '404':
           $ref: '#/components/responses/ErrorResponse'
+  /v1/waitlist:
+    post:
+      summary: Join the waitlist
+      description: |
+        Join the ClearMoney waitlist and collect profile data for hard signals.
+        This endpoint is public and does not require an API key.
+      security: []
+      tags:
+        - Waitlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaitlistCreateRequest'
+            example:
+              email: founder@startup.com
+              role: Founder
+              net_worth_bracket: 1M-5M
+              interested_tier: Founder Pro
+              source_tool: Runway Tester
+      responses:
+        '200':
+          description: Waitlist joined successfully (or existing record returned)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaitlistResponse'
+              example:
+                id: 550e8400-e29b-41d4-a716-446655440000
+                referral_code: a1b2c3d4
+                created_at: '2024-01-01T12:00:00Z'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/waitlist/{referral_code}:
+    get:
+      summary: Get waitlist status
+      description: |
+        Get waitlist status by referral code. This endpoint is public.
+      security: []
+      tags:
+        - Waitlist
+      parameters:
+        - name: referral_code
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique referral code of the user
+      responses:
+        '200':
+          description: Waitlist status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaitlistResponse'
+              example:
+                id: 550e8400-e29b-41d4-a716-446655440000
+                referral_code: a1b2c3d4
+                created_at: '2024-01-01T12:00:00Z'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
 components:
   securitySchemes:
     AdminApiKeyAuth:
@@ -1999,6 +2061,43 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/WebhookSubscription'
+    WaitlistCreateRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          nullable: true
+        net_worth_bracket:
+          type: string
+          nullable: true
+        interested_tier:
+          type: string
+          nullable: true
+        source_tool:
+          type: string
+          nullable: true
+        referred_by:
+          type: string
+          nullable: true
+        metadata_json:
+          type: object
+          nullable: true
+    WaitlistResponse:
+      type: object
+      required: [id, referral_code, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        referral_code:
+          type: string
+        created_at:
+          type: string
+          format: date-time
     Pagination:
       type: object
       required: [data, next_cursor, has_more]
