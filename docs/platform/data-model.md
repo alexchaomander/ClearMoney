@@ -65,6 +65,20 @@ erDiagram
     users ||--o{ portfolio_snapshots : "tracked for"
     users ||--o{ decision_traces : "generates"
 
+    waitlist_users {
+        uuid id PK
+        text email
+        text role
+        text net_worth_bracket
+        text interested_tier
+        text source_tool
+        text referral_code
+        text referred_by
+        jsonb metadata_json
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
     institutions ||--o{ connections : "linked via"
 
     connections ||--o{ accounts : "contains"
@@ -391,6 +405,23 @@ Platform users belonging to apps. The combination of `(app_id, external_user_id)
 | `created_at` | TIMESTAMPTZ | Creation timestamp |
 | `updated_at` | TIMESTAMPTZ | Last update timestamp |
 | `deleted_at` | TIMESTAMPTZ | Soft delete timestamp |
+
+#### `waitlist_users`
+Users who have joined the waitlist via mini-tools. Used for lead generation and hard signal collection.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `email` | TEXT | User email |
+| `role` | TEXT | User role (e.g., "Founder") |
+| `net_worth_bracket` | TEXT | Estimated net worth |
+| `interested_tier` | TEXT | Preferred subscription tier |
+| `source_tool` | TEXT | Tool used for signup |
+| `referral_code` | TEXT | Unique code for referrals |
+| `referred_by` | TEXT | Referrer's code |
+| `metadata_json` | JSONB | Tool-specific calculation data |
+| `created_at` | TIMESTAMPTZ | Creation timestamp |
+| `updated_at` | TIMESTAMPTZ | Last update timestamp |
 
 #### `institutions`
 Financial institutions master list. **Shared across all apps.**
