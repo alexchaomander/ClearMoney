@@ -6,6 +6,7 @@ export interface PostMeta {
   author: string;
   tags: string[];
   readingTime?: string;
+  tool?: string; // e.g., "RunwayCalculator", "CardOptimizer"
 }
 
 export interface Post extends PostMeta {

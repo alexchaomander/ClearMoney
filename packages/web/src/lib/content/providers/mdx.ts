@@ -25,6 +25,7 @@ function loadPostMeta(fileName: string): PostMeta {
     author: data.author || "ClearMoney Team",
     tags: data.tags || [],
     readingTime: data.readingTime,
+    tool: data.tool,
   };
 }
 
@@ -55,6 +56,7 @@ export function getMdxProvider(): ContentProvider {
           author: data.author || "ClearMoney Team",
           tags: data.tags || [],
           readingTime: data.readingTime,
+          tool: data.tool,
           content,
         };
       } catch {
