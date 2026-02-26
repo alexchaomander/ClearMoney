@@ -32,11 +32,11 @@ export function EightyThreeBGenerator() {
   const [formData, setFormData] = useState({
     name: "",
     address: "",
-    ssn: "XXX-XX-XXXX",
+    ssn: "",
     company: "",
     shares: "1,000,000",
     purchasePrice: "$0.0001",
-    grantDate: new Date().toLocaleDateString()
+    grantDate: new Date().toISOString().split("T")[0]
   });
 
   const handleNext = () => {
@@ -85,6 +85,15 @@ export function EightyThreeBGenerator() {
                   className="bg-neutral-950 border-neutral-800"
                 />
               </div>
+              <div className="space-y-2">
+                <Label className="text-neutral-400">Social Security Number (SSN)</Label>
+                <Input 
+                  value={formData.ssn} 
+                  onChange={(e) => setFormData({...formData, ssn: e.target.value})}
+                  placeholder="000-00-0000"
+                  className="bg-neutral-950 border-neutral-800"
+                />
+              </div>
               <div className="space-y-2 md:col-span-2">
                 <Label className="text-neutral-400">Home Address</Label>
                 <Input 
@@ -108,6 +117,15 @@ export function EightyThreeBGenerator() {
                   value={formData.purchasePrice} 
                   onChange={(e) => setFormData({...formData, purchasePrice: e.target.value})}
                   className="bg-neutral-950 border-neutral-800"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-neutral-400">Actual Grant Date</Label>
+                <Input 
+                  type="date"
+                  value={formData.grantDate} 
+                  onChange={(e) => setFormData({...formData, grantDate: e.target.value})}
+                  className="bg-neutral-950 border-neutral-800 text-white"
                 />
               </div>
             </div>
