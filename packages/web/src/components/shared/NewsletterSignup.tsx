@@ -13,40 +13,58 @@ interface NewsletterSignupProps {
   description?: string;
   /** Additional className */
   className?: string;
+  /** Source for waitlist tracking */
+  source?: string;
 }
 
 /**
  * NewsletterSignup - Trust-focused email signup component
- *
- * Variants:
- * - inline: Horizontal layout for sidebars
- * - card: Full card with more details (homepage)
- * - minimal: Just the input for footers
+ * Now integrated with the waitlist API for "Hard Signal" collection.
  */
 export function NewsletterSignup({
   variant = "card",
   title = "Financial clarity, delivered",
   description = "Weekly insights on making smarter money decisions. No affiliate pitches. No sponsored content. Just math.",
   className,
+  source = "Newsletter"
 }: NewsletterSignupProps) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
 
     setStatus("loading");
+    setErrorMsg(null);
 
-    // Placeholder - simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_STRATA_API_URL || "http://localhost:8000"}/api/v1/waitlist/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          source_tool: source
+        })
+      });
 
-    // For now, always show success (placeholder)
-    setStatus("success");
-    setEmail("");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to join waitlist");
+      }
 
-    // Reset after 3 seconds
-    setTimeout(() => setStatus("idle"), 3000);
+      setStatus("success");
+      setEmail("");
+      
+      // Reset after 5 seconds
+      setTimeout(() => setStatus("idle"), 5000);
+    } catch (err: any) {
+      console.error("Newsletter signup error:", err);
+      setStatus("error");
+      setErrorMsg(err.message || "Something went wrong.");
+      setTimeout(() => setStatus("idle"), 3000);
+    }
   };
 
   const trustSignals = [
@@ -76,6 +94,8 @@ export function NewsletterSignup({
             "px-4 py-2 rounded-lg text-sm font-medium transition-all",
             status === "success"
               ? "bg-success-500 text-white"
+              : status === "error"
+              ? "bg-red-500 text-white"
               : "bg-brand-500 hover:bg-brand-400 text-white disabled:opacity-50 disabled:cursor-not-allowed"
           )}
         >
@@ -126,6 +146,8 @@ export function NewsletterSignup({
               "w-full py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2",
               status === "success"
                 ? "bg-success-500 text-white"
+                : status === "error"
+                ? "bg-red-500 text-white"
                 : "bg-brand-500 hover:bg-brand-400 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           >
@@ -136,6 +158,8 @@ export function NewsletterSignup({
                 <Check className="w-4 h-4" />
                 Subscribed!
               </>
+            ) : status === "error" ? (
+              "Error"
             ) : (
               <>
                 Subscribe
@@ -143,6 +167,7 @@ export function NewsletterSignup({
               </>
             )}
           </button>
+          {errorMsg && <p className="text-[10px] text-red-400 text-center">{errorMsg}</p>}
         </form>
       </div>
     );
@@ -195,6 +220,8 @@ export function NewsletterSignup({
                 "px-6 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 min-w-[140px]",
                 status === "success"
                   ? "bg-success-500 text-white"
+                  : status === "error"
+                  ? "bg-red-500 text-white"
                   : "bg-brand-500 hover:bg-brand-400 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               )}
             >
@@ -213,6 +240,7 @@ export function NewsletterSignup({
               )}
             </button>
           </div>
+          {errorMsg && <p className="text-xs text-red-400 mt-2">{errorMsg}</p>}
         </form>
 
         {/* Trust signals */}
