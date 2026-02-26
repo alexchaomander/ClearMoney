@@ -21,11 +21,15 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
+interface MegaBackdoorSimulatorProps {
+  showShell?: boolean;
+}
+
 /**
  * MegaBackdoorSimulator - "Shot #2" for the Viral Launch.
  * Targets high-income tech workers (HENRYs) with the FOMO of missing a massive tax loophole.
  */
-export function MegaBackdoorSimulator() {
+export function MegaBackdoorSimulator({ showShell = true }: MegaBackdoorSimulatorProps) {
   const IRS_2026_TOTAL_LIMIT = 70000; // Placeholder for 2026, usually rises
   const IRS_2026_EMPLOYEE_LIMIT = 23500;
   
@@ -62,13 +66,7 @@ export function MegaBackdoorSimulator() {
 
   const isEligible = hasAfterTax && hasInPlanConversion;
 
-  return (
-    <AppShell
-      title="Mega Backdoor Roth Simulator"
-      description="Are you leaving $40,000+ in tax-free space on the table? Calculate your 2026 opportunity cost."
-      category="Tax Optimization"
-      icon={<Zap className="w-6 h-6 text-brand-400" />}
-    >
+  const content = (
       <div className="grid gap-8 lg:grid-cols-12">
         {/* Left Col: Inputs */}
         <div className="lg:col-span-7 space-y-8">
@@ -239,6 +237,18 @@ export function MegaBackdoorSimulator() {
           )}
         </div>
       </div>
+  );
+
+  if (!showShell) return content;
+
+  return (
+    <AppShell
+      title="Mega Backdoor Roth Simulator"
+      description="Are you leaving $40,000+ in tax-free space on the table? Calculate your 2026 opportunity cost."
+      category="Tax Optimization"
+      icon={<Zap className="w-6 h-6 text-brand-400" />}
+    >
+      {content}
     </AppShell>
   );
 }

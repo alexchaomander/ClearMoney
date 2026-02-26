@@ -21,22 +21,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
+interface EightyThreeBGeneratorProps {
+  showShell?: boolean;
+}
+
 /**
  * EightyThreeBGenerator - "Shot #4" for the Viral Launch.
  * High-utility wedge for founders. Solves a terrifying tax problem in 30 seconds.
  */
-export function EightyThreeBGenerator() {
+export function EightyThreeBGenerator({ showShell = true }: EightyThreeBGeneratorProps) {
   const [step, setStep] = useState<"inputs" | "capture" | "document">("inputs");
   const [copied, setCopied] = useState(false);
   
   const [formData, setFormData] = useState({
     name: "",
     address: "",
-    ssn: "XXX-XX-XXXX",
+    ssn: "",
     company: "",
     shares: "1,000,000",
     purchasePrice: "$0.0001",
-    grantDate: new Date().toLocaleDateString()
+    grantDate: new Date().toISOString().split("T")[0]
   });
 
   const handleNext = () => {
@@ -56,13 +60,7 @@ export function EightyThreeBGenerator() {
     }
   };
 
-  return (
-    <AppShell
-      title="The 83(b) Perfect-Generator"
-      description="Messing up this form can cost you $1M+ in taxes. Generate a legally perfect 83(b) election in 30 seconds."
-      category="Founder High-Stakes"
-      icon={<FileText className="w-6 h-6 text-brand-400" />}
-    >
+  const content = (
       <div className="max-w-4xl mx-auto">
         {step === "inputs" && (
           <section className="p-8 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-8 animate-fade-in">
@@ -82,6 +80,16 @@ export function EightyThreeBGenerator() {
                   value={formData.company} 
                   onChange={(e) => setFormData({...formData, company: e.target.value})}
                   placeholder="ClearMoney Inc."
+                  className="bg-neutral-950 border-neutral-800"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-neutral-400">Social Security Number (SSN)</Label>
+                <Input
+                  type="password"
+                  value={formData.ssn}
+                  onChange={(e) => setFormData({...formData, ssn: e.target.value})}
+                  placeholder="000-00-0000"
                   className="bg-neutral-950 border-neutral-800"
                 />
               </div>
@@ -110,6 +118,15 @@ export function EightyThreeBGenerator() {
                   className="bg-neutral-950 border-neutral-800"
                 />
               </div>
+              <div className="space-y-2">
+                <Label className="text-neutral-400">Actual Grant Date</Label>
+                <Input 
+                  type="date"
+                  value={formData.grantDate} 
+                  onChange={(e) => setFormData({...formData, grantDate: e.target.value})}
+                  className="bg-neutral-950 border-neutral-800 text-white"
+                />
+              </div>
             </div>
 
             <Button 
@@ -124,7 +141,7 @@ export function EightyThreeBGenerator() {
             <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex gap-3">
               <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
               <p className="text-xs text-neutral-400 leading-relaxed">
-                <span className="text-amber-500 font-bold uppercase">Reminder:</span> You must mail this to the IRS within **30 days** of your stock grant. There are no exceptions.
+                <span className="text-amber-500 font-bold uppercase">Reminder:</span> You must mail this to the IRS within <strong>30 days</strong> of your stock grant. There are no exceptions.
               </p>
             </div>
           </section>
@@ -193,7 +210,7 @@ export function EightyThreeBGenerator() {
                 <p className="pl-8">{formData.grantDate}</p>
 
                 <p><strong>4. Taxable Year:</strong></p>
-                <p className="pl-8">The taxable year for which this election is made is the calendar year {new Date().getFullYear()}.</p>
+                <p className="pl-8">The taxable year for which this election is made is the calendar year {new Date(formData.grantDate).getFullYear()}.</p>
 
                 <p><strong>5. Nature of Restrictions:</strong></p>
                 <p className="pl-8">
@@ -263,6 +280,18 @@ export function EightyThreeBGenerator() {
           />
         </div>
       </div>
+  );
+
+  if (!showShell) return content;
+
+  return (
+    <AppShell
+      title="The 83(b) Perfect-Generator"
+      description="Messing up this form can cost you $1M+ in taxes. Generate a legally perfect 83(b) election in 30 seconds."
+      category="Founder High-Stakes"
+      icon={<FileText className="w-6 h-6 text-brand-400" />}
+    >
+      {content}
     </AppShell>
   );
 }

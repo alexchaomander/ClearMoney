@@ -53,6 +53,13 @@ const TOUR_STEPS: TourStep[] = [
 export function ProductTour() {
   const [active, setActive] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)"
+  });
+
+  const step = TOUR_STEPS[currentStepIndex];
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -64,6 +71,59 @@ export function ProductTour() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!active) return;
+
+    const updatePosition = () => {
+      const target = document.getElementById(step.targetId);
+      if (!target) {
+        // Fallback to center if target not found
+        setPopoverStyle({
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)"
+        });
+        return;
+      }
+
+      const rect = target.getBoundingClientRect();
+      const padding = 20;
+      
+      let top = rect.bottom + padding;
+      let left = rect.left + (rect.width / 2);
+      let transform = "translateX(-50%)";
+
+      if (step.position === "right") {
+        top = rect.top + (rect.height / 2);
+        left = rect.right + padding;
+        transform = "translateY(-50%)";
+      } else if (step.position === "top") {
+        top = rect.top - padding - 300; // Rough estimate of popover height
+        left = rect.left + (rect.width / 2);
+        transform = "translateX(-50%)";
+      } else if (step.position === "left") {
+        top = rect.top + (rect.height / 2);
+        left = rect.left - padding - 320; // Rough estimate of popover width
+        transform = "translateY(-50%)";
+      }
+
+      // Constrain to viewport
+      top = Math.max(20, Math.min(top, window.innerHeight - 350));
+      left = Math.max(20, Math.min(left, window.innerWidth - 350));
+
+      setPopoverStyle({
+        top: `${top}px`,
+        left: `${left}px`,
+        transform,
+        transition: "all 0.3s ease-out"
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    return () => window.removeEventListener("resize", updatePosition);
+  }, [active, step]);
+
   const handleNext = () => {
     if (currentStepIndex === TOUR_STEPS.length - 1) {
       setActive(false);
@@ -73,8 +133,6 @@ export function ProductTour() {
   };
 
   if (!active) return null;
-
-  const step = TOUR_STEPS[currentStepIndex];
 
   return (
     <AnimatePresence>
@@ -90,12 +148,12 @@ export function ProductTour() {
 
         <motion.div
           key={step.id}
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
+          style={popoverStyle}
           className={cn(
-            "fixed z-[210] w-full max-w-sm pointer-events-auto",
-            "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" // For prototype, centering it
+            "fixed z-[210] w-full max-w-sm pointer-events-auto"
           )}
         >
           <div className="bg-slate-900 border border-emerald-500/30 rounded-3xl p-8 shadow-2xl shadow-emerald-500/10 relative overflow-hidden">
