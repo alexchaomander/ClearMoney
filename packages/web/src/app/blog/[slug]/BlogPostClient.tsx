@@ -20,6 +20,9 @@ import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 import type { Post } from "@/lib/content/types";
 import { RunwayCalculator } from "@/components/tools/founder-runway/RunwayCalculator";
+import { MegaBackdoorSimulator } from "@/components/tools/mega-backdoor/MegaBackdoorSimulator";
+import { ConflictAudit } from "@/components/tools/conflict-audit/ConflictAudit";
+import { EightyThreeBGenerator } from "@/components/tools/eighty-three-b/EightyThreeBGenerator";
 
 interface BlogPostClientProps {
   post: Post;
@@ -37,24 +40,32 @@ export function BlogPostClient({ post, accentColor, categoryName }: BlogPostClie
   });
 
   const renderTool = () => {
+    const toolWrapper = (title: string, component: React.ReactNode) => (
+      <div className="mt-12 mb-16 p-1 rounded-[2.5rem] bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-900 shadow-2xl overflow-hidden">
+        <div className="bg-white dark:bg-slate-950 rounded-[2.4rem] overflow-hidden">
+          <div className="p-8 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-2">
+              <Zap className="w-4 h-4 fill-current" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Just-In-Time Tooling</span>
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{title}</h3>
+          </div>
+          <div className="p-4 sm:p-8">
+            {component}
+          </div>
+        </div>
+      </div>
+    );
+
     switch (post.tool) {
       case "RunwayCalculator":
-        return (
-          <div className="mt-12 mb-16 p-1 rounded-[2.5rem] bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-900 shadow-2xl overflow-hidden">
-            <div className="bg-white dark:bg-slate-950 rounded-[2.4rem] overflow-hidden">
-              <div className="p-8 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-2">
-                  <Zap className="w-4 h-4 fill-current" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em]">Just-In-Time Tooling</span>
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Run the math on your own situation.</h3>
-              </div>
-              <div className="p-4 sm:p-8">
-                <RunwayCalculator showShell={false} />
-              </div>
-            </div>
-          </div>
-        );
+        return toolWrapper("Run the math on your own situation.", <RunwayCalculator showShell={false} />);
+      case "MegaBackdoorSimulator":
+        return toolWrapper("Simulate your Roth opportunity.", <MegaBackdoorSimulator showShell={false} />);
+      case "ConflictAudit":
+        return toolWrapper("Audit a review for bias.", <ConflictAudit showShell={false} />);
+      case "EightyThreeBGenerator":
+        return toolWrapper("Generate your legal document.", <EightyThreeBGenerator showShell={false} />);
       default:
         return null;
     }
