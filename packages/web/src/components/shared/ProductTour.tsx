@@ -134,8 +134,6 @@ export function ProductTour() {
 
   if (!active) return null;
 
-  const step = TOUR_STEPS[currentStepIndex];
-
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[200] pointer-events-none">

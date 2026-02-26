@@ -20,11 +20,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
+interface ConflictAuditProps {
+  showShell?: boolean;
+}
+
 /**
  * ConflictAudit - "Shot #3" for the Viral Launch.
  * Targets the "Affiliate Problem" by exposing estimated commissions vs user value.
  */
-export function ConflictAudit() {
+export function ConflictAudit({ showShell = true }: ConflictAuditProps) {
   const [url, setUrl] = useState("");
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(false);
@@ -52,13 +56,7 @@ export function ConflictAudit() {
   const totalCommission = MOCK_CARDS.reduce((sum, c) => sum + c.commission, 0);
   const avgValue = Math.floor(MOCK_CARDS.reduce((sum, c) => sum + c.value, 0) / MOCK_CARDS.length);
 
-  return (
-    <AppShell
-      title="The Conflict of Interest Audit"
-      description="Paste any 'Best Credit Cards' list URL to see how much they earn from your approval."
-      category="Industry Accountability"
-      icon={<ShieldAlert className="w-6 h-6 text-rose-400" />}
-    >
+  const content = (
       <div className="max-w-4xl mx-auto space-y-12">
         {/* URL Input */}
         <section className="p-10 rounded-[2.5rem] bg-neutral-900 border border-neutral-800 shadow-2xl relative overflow-hidden">
@@ -212,6 +210,18 @@ export function ConflictAudit() {
           </div>
         )}
       </div>
+  );
+
+  if (!showShell) return content;
+
+  return (
+    <AppShell
+      title="The Conflict of Interest Audit"
+      description="Paste any 'Best Credit Cards' list URL to see how much they earn from your approval."
+      category="Industry Accountability"
+      icon={<ShieldAlert className="w-6 h-6 text-rose-400" />}
+    >
+      {content}
     </AppShell>
   );
 }
