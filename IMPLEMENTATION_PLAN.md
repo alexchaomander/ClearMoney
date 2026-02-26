@@ -13,6 +13,7 @@ This document is the engineering execution plan for the [ROADMAP.md](./ROADMAP.m
 **Frontend (Next.js 16 / React 19 / TypeScript / Tailwind 4):**
 - Unified dashboard (net worth, allocation, holdings, portfolio history)
 - Founder Operating Room (runway, commingling, tax shields, subscription audit)
+- Founder Runway & Burn Tester (JIT tool)
 - AI Advisor with specialized financial skills (Claude-based)
 - War Room with action intent lifecycle and switch kit PDF generation
 - Scenario Lab with Monte Carlo simulations
@@ -21,6 +22,7 @@ This document is the engineering execution plan for the [ROADMAP.md](./ROADMAP.m
 - Trust Hub (payout transparency, independence audits)
 - Vanish Mode, redacted sharing, ephemeral links
 - Financial Memory Wizard
+- Newsletter & Waitlist (Capture Engine)
 - Blog infrastructure
 - Light/dark mode (Strata design system)
 
@@ -41,7 +43,7 @@ This document is the engineering execution plan for the [ROADMAP.md](./ROADMAP.m
 - No web research in advisor
 - No native mobile apps
 - No real estate or vehicle valuations
-- No pricing/monetization infrastructure
+- No pricing/monetization infrastructure (Stripe)
 
 ---
 

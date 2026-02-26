@@ -16,7 +16,8 @@ import {
   ArrowUpRight,
   Cpu,
   Fingerprint,
-  CheckCircle2
+  CheckCircle2,
+  TrendingUp
 } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { VALUATIONS } from "@/lib/constants";
@@ -173,6 +174,57 @@ export default function LandingPage() {
               ))}
             </div>
           </motion.div>
+        </section>
+
+        {/* Featured JIT Tool Callout */}
+        <section className="max-w-7xl mx-auto px-6 lg:px-8 mb-40">
+          <div className="relative p-1 rounded-[2.5rem] bg-gradient-to-br from-emerald-500/20 to-transparent dark:from-emerald-500/10 dark:to-transparent">
+            <div className="bg-white dark:bg-slate-900/50 backdrop-blur-3xl rounded-[2.4rem] p-8 md:p-12 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center gap-10">
+              <div className="flex-1">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-6">
+                  <Zap className="w-3.5 h-3.5 text-brand-400" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-400">Featured JIT Tool</span>
+                </div>
+                <h2 className="text-4xl md:text-5xl font-display text-slate-900 dark:text-white mb-6 leading-tight">
+                  The Founder <br />
+                  <span className="text-emerald-600 dark:text-emerald-400 italic">Runway Tester.</span>
+                </h2>
+                <p className="text-lg text-slate-500 dark:text-slate-400 mb-8 max-w-xl leading-relaxed">
+                  Is your personal burn killing your startup? Stop using generic spreadsheets. Model your true survival runway combining personal + company assets.
+                </p>
+                <Link href="/tools/founder-runway" className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold hover:gap-3 transition-all">
+                  Run the math for your startup
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </div>
+              <div className="w-full md:w-[400px] shrink-0">
+                <ProductWindow title="Live Simulation: FOUNDER_RUNWAY_V2">
+                  <div className="p-8 space-y-6">
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Combined Runway</p>
+                        <p className="text-5xl font-mono text-emerald-600 dark:text-emerald-400 font-bold tracking-tighter">14.2 mo</p>
+                      </div>
+                      <div className="h-12 w-12 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20">
+                        <TrendingUp className="w-6 h-6 text-emerald-500" />
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: "0%" }}
+                          whileInView={{ width: "70%" }}
+                          transition={{ duration: 1.5, delay: 0.5 }}
+                          className="h-full bg-emerald-500" 
+                        />
+                      </div>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center uppercase tracking-widest font-bold">Optimal Fundraising Window: AUG 2026</p>
+                    </div>
+                  </div>
+                </ProductWindow>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* The Product Hook Section (Scroll Triggered) */}

@@ -474,6 +474,18 @@ featured: true,
     featured: true,
   },
   {
+    id: "founder-runway",
+    name: "Founder Runway & Burn Tester",
+    description:
+      "Calculate your true survival runway by combining personal and startup assets. See your fundraising triggers.",
+    href: "/tools/founder-runway",
+    categoryId: "budgeting",
+    status: "live",
+    primaryColor: "#f43f5e",
+    designStyle: "analytical",
+    featured: true,
+  },
+  {
     id: "savings-goal",
     name: "Savings Goal Planner",
     description: "Plan how to reach any savings goal with a timeline.",

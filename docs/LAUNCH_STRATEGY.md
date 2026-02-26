@@ -59,6 +59,11 @@ Traffic is vanity. We optimize our JIT tools to collect undeniable data points t
 ## 5. The Unified Intake System (The "Capture Engine")
 Every JIT mini-app must route through our shared **`UnifiedIntakeForm`** component to lock in the user.
 
+### Key Entry Points:
+- **Newsletter Signup:** Integrated with `/api/v1/waitlist/` to capture early-stage intent.
+- **Standalone Tool Routes:** Each tool (e.g., `/tools/founder-runway`) is SEO-optimized and uses the intake form to unlock deep value.
+- **Embedded Blog Tools:** JIT tools embedded in research articles provide context-aware conversion.
+
 ### The Flow:
 1. **Tool Interaction:** User inputs their data and gets 80% of the value for free (resolving the immediate anxiety).
 2. **The Reveal:** To see the final "Decision Trace," the full calculation breakdown, or to "Execute the Action," they must enter their email.
