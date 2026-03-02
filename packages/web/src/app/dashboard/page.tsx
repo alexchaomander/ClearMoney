@@ -14,6 +14,7 @@ import {
   FlaskConical,
   Link2,
   RefreshCw,
+  ShieldCheck,
 } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { NetWorthCard } from "@/components/dashboard/NetWorthCard";
@@ -299,41 +300,27 @@ export default function DashboardPage() {
   function renderContent() {
     return (
       <>
-        <DataSourceStatusStrip items={sourceItems} usingDemoData={usingDemoData} />
-        <AssumptionControl />
-        {usingDemoData ? (
-          <p className="mb-4 text-xs text-amber-600 dark:text-amber-300 inline-flex items-center gap-2">
-            <RefreshCw className="w-3 h-3" />
-            Running synthetic preview data until live Strata connections are available.
-          </p>
-        ) : null}
-
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex items-center justify-between mb-8"
+          className="flex items-center justify-between mb-10"
         >
           <div>
-            <h1 className="font-serif text-3xl text-slate-900 dark:text-white mb-1">
+            <h1 className="font-serif text-4xl text-slate-900 dark:text-white mb-2">
               Portfolio Dashboard
             </h1>
-            <p className="text-slate-600 dark:text-slate-400">
-              Your complete investment overview
+            <p className="text-slate-500 dark:text-slate-400 text-lg">
+              Your complete economic digital twin
             </p>
-            {lastSyncedAt && (
-              <p className="text-xs text-slate-500 mt-1">
-                Last synced: {lastSyncedAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-              </p>
-            )}
           </div>
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowAddDropdown((p) => !p)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-colors"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-lg shadow-emerald-900/20 hover:scale-[1.02] active:scale-[0.98]"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-5 h-5" />
               Add Account
             </button>
             <AnimatePresence>
@@ -343,21 +330,21 @@ export default function DashboardPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2 w-52 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden z-20"
+                  className="absolute right-0 mt-3 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden z-20 p-1"
                 >
                   <Link
                     href="/connect"
                     onClick={() => setShowAddDropdown(false)}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
                   >
-                    <Link2 className="w-4 h-4 text-emerald-400" />
+                    <Link2 className="w-4 h-4 text-emerald-500" />
                     Link Brokerage
                   </Link>
                   <button
                     onClick={() => { setShowAddDropdown(false); setShowAddModal(true); }}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
                   >
-                    <PenLine className="w-4 h-4 text-emerald-400" />
+                    <PenLine className="w-4 h-4 text-emerald-500" />
                     Add Manually
                   </button>
                 </motion.div>
@@ -366,21 +353,16 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Main Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left column */}
-          <div className="lg:col-span-2 space-y-6">
-            {!hasPortfolioConsent && (
-              <ConsentGate
-                scopes={["portfolio:read", "accounts:read", "connections:read"]}
-                purpose="Load your accounts, balances, and holdings for the dashboard."
-              >
-                <div className="text-sm text-slate-600 dark:text-slate-400">
-                  Authorize access to see your portfolio.
-                </div>
-              </ConsentGate>
-            )}
+        <DataSourceStatusStrip items={sourceItems} usingDemoData={usingDemoData} />
+        
+        <div className="mb-10">
+          <AssumptionControl />
+        </div>
 
+        {/* Main Grid */}
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Left column */}
+          <div className="lg:col-span-2 space-y-10">
             <div id="net-worth-card">
               <NetWorthCard
                 totalAssets={
@@ -396,6 +378,20 @@ export default function DashboardPage() {
                 unvestedEquityValue={effectivePortfolio.total_equity_unvested_value}
               />
             </div>
+
+            {!hasPortfolioConsent && (
+              <div className="p-8 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
+                <ShieldCheck className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Authorize Data Context</h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md mx-auto">To generate decision traces and rebalancing intents, Strata needs read-access to your linked accounts.</p>
+                <ConsentGate
+                  scopes={["portfolio:read", "accounts:read", "connections:read"]}
+                  purpose="Load your accounts, balances, and holdings for the dashboard."
+                >
+                  <div className="hidden" />
+                </ConsentGate>
+              </div>
+            )}
 
             <PortfolioHistoryChart
               previewHistory={usingDemoData ? previewHistory : undefined}

@@ -170,6 +170,12 @@ html.light .bg-grid {
   animation: subtlePulse 2s ease-in-out infinite;
 }
 
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 /* Reduced motion: disable animations for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -190,6 +196,13 @@ html.light .bg-grid {
 /* Selection */
 ::selection {
   @apply bg-brand-500/30;
+}
+
+.privacy-blur {
+  filter: blur(8px);
+  transition: filter 0.3s ease;
+  user-select: none;
+  pointer-events: none;
 }
 
 /* Scrollbar styling (webkit) - dark mode */
