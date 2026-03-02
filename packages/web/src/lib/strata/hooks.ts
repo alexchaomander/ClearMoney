@@ -20,6 +20,7 @@ import type {
   ActionIntentStatus,
   ActionIntentUpdate,
   SVPAttestation,
+  CryptoWalletCreate,
 } from "@clearmoney/strata-sdk";
 
 export const queryKeys = {
@@ -79,6 +80,9 @@ export const queryKeys = {
   equityGrants: ["equity", "grants"] as const,
   actionIntents: (status?: ActionIntentStatus) => ["actionIntents", status ?? "all"] as const,
   actionIntent: (id: string) => ["actionIntents", id] as const,
+  // Crypto
+  cryptoWallets: ["crypto", "wallets"] as const,
+  cryptoPortfolio: ["crypto", "portfolio"] as const,
 };
 
 export function usePortfolioSummary(options?: { enabled?: boolean }) {
@@ -159,6 +163,51 @@ export function useEquityGrantMutations() {
   });
 
   return { add, update, remove };
+}
+
+// === Crypto Hooks ===
+
+export function useCryptoWallets(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.cryptoWallets,
+    queryFn: () => client.listCryptoWallets(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useCryptoPortfolio(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.cryptoPortfolio,
+    queryFn: () => client.getCryptoPortfolio(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useCryptoWalletMutations() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  const add = useMutation({
+    mutationFn: (data: CryptoWalletCreate) => client.addCryptoWallet(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoWallets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoPortfolio });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => client.deleteCryptoWallet(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoWallets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoPortfolio });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  return { add, remove };
 }
 
 export function useRunwayMetrics(options?: { enabled?: boolean }) {
@@ -950,6 +999,7 @@ export function useExportFinancialPassport() {
 
 export function useGenerateProofOfFunds() {
   const client = useStrataClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (threshold: number) => client.generateProofOfFunds(threshold),
     onSuccess: (data: SVPAttestation) => {

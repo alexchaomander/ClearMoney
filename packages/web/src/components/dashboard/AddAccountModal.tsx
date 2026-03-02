@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
+import { X, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type {
   CashAccountType,
@@ -13,17 +13,19 @@ import {
   useCashAccountMutations, 
   useDebtAccountMutations, 
   useCreateInvestmentAccount,
-  useEquityGrantMutations
+  useEquityGrantMutations,
+  useCryptoWalletMutations
 } from "@/lib/strata/hooks";
 import { cn } from "@/lib/utils";
 
-type TabKey = "cash" | "debt" | "investment" | "equity";
+type TabKey = "cash" | "debt" | "investment" | "equity" | "crypto";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "cash", label: "Cash" },
   { key: "debt", label: "Debt" },
   { key: "investment", label: "Investment" },
   { key: "equity", label: "Equity" },
+  { key: "crypto", label: "Crypto" },
 ];
 
 const CASH_TYPES: { value: CashAccountType; label: string }[] = [
@@ -60,6 +62,15 @@ const EQUITY_TYPES = [
   { value: "nso", label: "Stock Options (NSO)" },
 ];
 
+const CRYPTO_CHAINS = [
+  { value: "ethereum", label: "Ethereum / EVM" },
+  { value: "solana", label: "Solana" },
+  { value: "bitcoin", label: "Bitcoin" },
+  { value: "polygon", label: "Polygon" },
+  { value: "arbitrum", label: "Arbitrum" },
+  { value: "base", label: "Base" },
+];
+
 const inputClass =
   "w-full rounded-xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-all";
 const selectClass =
@@ -77,6 +88,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
   const debtMutations = useDebtAccountMutations();
   const createInvestment = useCreateInvestmentAccount();
   const equityMutations = useEquityGrantMutations();
+  const cryptoMutations = useCryptoWalletMutations();
 
   // Cash form
   const [cashName, setCashName] = useState("");
@@ -107,8 +119,35 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
   const [equityStrike, setEquityStrike] = useState("");
   const [equityDate, setEquityDate] = useState("");
 
+  // Crypto form
+  const [cryptoAddress, setCryptoAddress] = useState("");
+  const [cryptoChain, setCryptoChain] = useState("ethereum");
+  const [cryptoLabel, setCryptoLabel] = useState("");
+  const [addressError, setAddressError] = useState<string | null>(null);
+
   // Common
   const [isBusiness, setIsBusiness] = useState(false);
+
+  function validateAddress(address: string, chain: string): boolean {
+    if (!address) return false;
+    
+    if (chain === "ethereum" || chain === "polygon" || chain === "arbitrum" || chain === "base" || chain === "optimism") {
+      const ethRegex = /^0x[a-fA-F0-9]{40}$/;
+      if (!ethRegex.test(address)) {
+        setAddressError("Invalid Ethereum/EVM address format.");
+        return false;
+      }
+    } else if (chain === "solana") {
+      const solRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+      if (!solRegex.test(address)) {
+        setAddressError("Invalid Solana address format.");
+        return false;
+      }
+    }
+    
+    setAddressError(null);
+    return true;
+  }
 
   function resetForms() {
     setIsBusiness(false);
@@ -136,6 +175,11 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
     setEquityQuantity("");
     setEquityStrike("");
     setEquityDate("");
+
+    setCryptoAddress("");
+    setCryptoChain("ethereum");
+    setCryptoLabel("");
+    setAddressError(null);
   }
 
   function handleClose() {
@@ -181,6 +225,13 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
         strike_price: equityStrike ? parseFloat(equityStrike) : null,
         grant_date: equityDate || new Date().toISOString().split('T')[0],
       });
+    } else if (tab === "crypto") {
+      if (!validateAddress(cryptoAddress, cryptoChain)) return;
+      await cryptoMutations.add.mutateAsync({
+        address: cryptoAddress,
+        chain: cryptoChain as any,
+        label: cryptoLabel || null,
+      });
     }
     handleClose();
   }
@@ -189,7 +240,8 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
     cashMutations.create.isPending || 
     debtMutations.create.isPending || 
     createInvestment.isPending ||
-    equityMutations.add.isPending;
+    equityMutations.add.isPending ||
+    cryptoMutations.add.isPending;
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -226,12 +278,12 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                   </div>
 
                   {/* Tabs */}
-                  <div className="flex gap-1 p-2 bg-slate-50 dark:bg-slate-950/50 mx-8 mt-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <div className="flex gap-1 p-2 bg-slate-50 dark:bg-slate-950/50 mx-8 mt-6 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-x-auto whitespace-nowrap scrollbar-none">
                     {TABS.map((t) => (
                       <button
                         key={t.key}
                         onClick={() => setTab(t.key)}
-                        className={`flex-1 px-3 py-2 text-xs font-bold uppercase tracking-widest rounded-xl transition-all ${
+                        className={`flex-1 min-w-[80px] px-3 py-2 text-xs font-bold uppercase tracking-widest rounded-xl transition-all ${
                           tab === t.key
                             ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm ring-1 ring-black/5"
                             : "text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:hover:text-neutral-300"
@@ -382,6 +434,46 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                         <div>
                           <label className={labelClass}>Grant Date</label>
                           <input className={inputClass} type="date" value={equityDate} onChange={(e) => setEquityDate(e.target.value)} required />
+                        </div>
+                      </>
+                    )}
+
+                    {tab === "crypto" && (
+                      <>
+                        <div>
+                          <label className={labelClass}>Wallet Address</label>
+                          <input 
+                            className={cn(inputClass, "font-mono", addressError && "border-rose-500 focus:border-rose-500 focus:ring-rose-500/20")} 
+                            value={cryptoAddress} 
+                            onChange={(e) => {
+                              setCryptoAddress(e.target.value);
+                              if (addressError) setAddressError(null);
+                            }} 
+                            placeholder="0x... or Solana address" 
+                            required 
+                          />
+                          {addressError && (
+                            <p className="mt-1 text-[10px] font-bold text-rose-500 uppercase tracking-tight ml-1">{addressError}</p>
+                          )}
+                        </div>
+                        <div>
+                          <label className={labelClass}>Network / Chain</label>
+                          <select className={selectClass} value={cryptoChain} onChange={(e) => {
+                            setCryptoChain(e.target.value);
+                            if (addressError) setAddressError(null);
+                          }}>
+                            {CRYPTO_CHAINS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className={labelClass}>Label (Optional)</label>
+                          <input className={inputClass} value={cryptoLabel} onChange={(e) => setCryptoLabel(e.target.value)} placeholder="e.g. Ledger Nano X" />
+                        </div>
+                        <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 leading-relaxed">
+                            <span className="font-black uppercase mr-1">Read-Only:</span>
+                            We only need your public address. ClearMoney will never ask for your private keys or seed phrase.
+                          </p>
                         </div>
                       </>
                     )}

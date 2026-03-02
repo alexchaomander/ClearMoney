@@ -1419,6 +1419,66 @@ export interface EquityProjection {
   liquid_value: string;
 }
 
+// === Crypto ===
+
+export type CryptoChain =
+  | 'ethereum'
+  | 'solana'
+  | 'polygon'
+  | 'arbitrum'
+  | 'base'
+  | 'optimism'
+  | 'bitcoin';
+
+export interface CryptoWallet {
+  id: string;
+  user_id: string;
+  address: string;
+  chain: CryptoChain;
+  label: string | null;
+  last_balance_usd: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CryptoWalletCreate {
+  address: string;
+  chain: CryptoChain;
+  label?: string | null;
+}
+
+export interface CryptoWalletUpdate {
+  address?: string;
+  chain?: CryptoChain;
+  label?: string | null;
+}
+
+export interface CryptoAsset {
+  symbol: string;
+  name: string;
+  balance: number;
+  balance_usd: number;
+  current_price: number;
+  chain: CryptoChain;
+  contract_address: string | null;
+  logo_url: string | null;
+}
+
+export interface DeFiPosition {
+  protocol_name: string;
+  protocol_logo: string | null;
+  position_type: string;
+  value_usd: number;
+  assets: CryptoAsset[];
+}
+
+export interface CryptoPortfolioResponse {
+  wallets: CryptoWallet[];
+  total_value_usd: number;
+  assets: CryptoAsset[];
+  defi_positions: DeFiPosition[];
+}
+
 // === Strata Verification Protocol (SVP) ===
 
 export interface RunwayMetrics {
