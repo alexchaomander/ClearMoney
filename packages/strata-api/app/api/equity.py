@@ -33,6 +33,19 @@ async def get_equity_portfolio(
     return await equity_valuation_service.calculate_portfolio_summary(list(grants))
 
 
+@router.get("/projections", response_model=list[dict])
+async def get_equity_projections(
+    user_id: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
+    """Get monthly equity wealth projections for the next 24 months."""
+    result = await session.execute(
+        select(EquityGrant).where(EquityGrant.user_id == user_id)
+    )
+    grants = result.scalars().all()
+    return await equity_valuation_service.calculate_portfolio_projections(list(grants))
+
+
 @router.post("/grants", response_model=EquityGrantSchema)
 async def create_equity_grant(
     user_id: uuid.UUID,

@@ -83,6 +83,60 @@ class EquityValuationService:
             grant_valuations=valuations
         )
 
+    async def calculate_portfolio_projections(
+        self, grants: list[EquityGrant]
+    ) -> list[dict]:
+        """Calculate monthly wealth projection from equity for the next 24 months."""
+        from datetime import date, timedelta
+        from dateutil.relativedelta import relativedelta
+
+        today = date.today()
+        projections = []
+        
+        # Get current prices for all symbols involved
+        symbols = list(set(g.symbol for g in grants))
+        prices = {}
+        for s in symbols:
+            prices[s] = await stock_price_service.get_price(s)
+
+        for i in range(25):  # Next 24 months + current month
+            target_date = today + relativedelta(months=i)
+            cumulative_value = Decimal("0.00")
+            liquid_value = Decimal("0.00")
+
+            for grant in grants:
+                current_price = prices.get(grant.symbol, Decimal("0.00"))
+                vested_qty = Decimal("0.00")
+                
+                # Calculate intrinsic value per share for options
+                value_per_share = current_price
+                if grant.grant_type in {EquityGrantType.iso, EquityGrantType.nso}:
+                    strike = grant.strike_price or Decimal("0")
+                    value_per_share = max(Decimal("0.00"), current_price - strike)
+
+                if grant.vesting_schedule:
+                    for event in grant.vesting_schedule:
+                        event_date = event.get("date")
+                        if isinstance(event_date, str):
+                            event_date = date.fromisoformat(event_date)
+                        
+                        if event_date <= target_date:
+                            vested_qty += Decimal(str(event.get("quantity", "0")))
+                
+                total_grant_value = grant.quantity * value_per_share
+                vested_grant_value = vested_qty * value_per_share
+                
+                cumulative_value += total_grant_value
+                liquid_value += vested_grant_value
+
+            projections.append({
+                "date": target_date.isoformat(),
+                "total_value": float(cumulative_value),
+                "liquid_value": float(liquid_value)
+            })
+
+        return projections
+
 
 # Global instance
 equity_valuation_service = EquityValuationService()

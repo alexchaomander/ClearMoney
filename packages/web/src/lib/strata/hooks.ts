@@ -75,6 +75,7 @@ export const queryKeys = {
   spendingSummary: (months?: number) => ["banking", "spending-summary", months ?? 3] as const,
   subscriptions: ["banking", "subscriptions"] as const,
   equityPortfolio: ["equity", "portfolio"] as const,
+  equityProjections: ["equity", "projections"] as const,
   equityGrants: ["equity", "grants"] as const,
   actionIntents: (status?: ActionIntentStatus) => ["actionIntents", status ?? "all"] as const,
   actionIntent: (id: string) => ["actionIntents", id] as const,
@@ -116,6 +117,15 @@ export function useEquityPortfolio(options?: { enabled?: boolean }) {
   });
 }
 
+export function useEquityProjections(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.equityProjections,
+    queryFn: () => client.getEquityProjections(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
 export function useEquityGrantMutations() {
   const client = useStrataClient();
   const queryClient = useQueryClient();
@@ -124,6 +134,7 @@ export function useEquityGrantMutations() {
     mutationFn: (data: any) => client.createEquityGrant(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.equityPortfolio });
+      queryClient.invalidateQueries({ queryKey: queryKeys.equityProjections });
       queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
     },
   });
@@ -133,6 +144,7 @@ export function useEquityGrantMutations() {
       client.updateEquityGrant(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.equityPortfolio });
+      queryClient.invalidateQueries({ queryKey: queryKeys.equityProjections });
       queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
     },
   });
@@ -141,6 +153,7 @@ export function useEquityGrantMutations() {
     mutationFn: (id: string) => client.deleteEquityGrant(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.equityPortfolio });
+      queryClient.invalidateQueries({ queryKey: queryKeys.equityProjections });
       queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
     },
   });
