@@ -1,9 +1,9 @@
+import enum
 import uuid
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
-from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 from app.models.crypto_wallet import CryptoChain
 
@@ -45,10 +45,18 @@ class CryptoAsset(BaseModel):
     logo_url: str | None = None
 
 
+class DeFiPositionType(str, enum.Enum):
+    LENDING = "lending"
+    LIQUIDITY_POOL = "liquidity_pool"
+    STAKING = "staking"
+    YIELD = "yield"
+    OTHER = "other"
+
+
 class DeFiPosition(BaseModel):
     protocol_name: str
     protocol_logo: str | None = None
-    position_type: str  # e.g., "lending", "liquidity_pool", "staking"
+    position_type: DeFiPositionType
     value_usd: Decimal
     assets: list[CryptoAsset]
 

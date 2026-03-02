@@ -320,7 +320,7 @@ export default function DashboardPage() {
   function renderContent() {
     const totalCryptoValue = Number(cryptoPortfolio?.total_value_usd ?? 0);
     const adjustedNetWorth = effectivePortfolio.net_worth + totalCryptoValue;
-    const totalAssets = 
+    const totalAssetsValue = 
       effectivePortfolio.total_investment_value +
       effectivePortfolio.total_cash_value +
       (effectivePortfolio.total_equity_vested_value ?? 0) +
@@ -393,7 +393,7 @@ export default function DashboardPage() {
           <div className="lg:col-span-2 space-y-10">
             <div id="net-worth-card">
               <NetWorthCard
-                totalAssets={totalAssets}
+                totalAssets={totalAssetsValue}
                 totalLiabilities={effectivePortfolio.total_debt_value}
                 netWorth={adjustedNetWorth}
                 taxAdvantagedValue={effectivePortfolio.tax_advantaged_value}
@@ -509,7 +509,13 @@ export default function DashboardPage() {
                 
                 <div className="mt-6">
                   <button 
-                    onClick={() => cryptoMutations.remove.mutate(cryptoPortfolio.wallets[0].id)}
+                    onClick={() => {
+                      if (cryptoPortfolio?.wallets) {
+                        for (const wallet of cryptoPortfolio.wallets) {
+                          cryptoMutations.remove.mutate(wallet.id);
+                        }
+                      }
+                    }}
                     className="w-full py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
                   >
                     Disconnect Wallets

@@ -1,8 +1,6 @@
-import asyncio
 import logging
 import uuid
 from decimal import Decimal
-from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +11,7 @@ from app.schemas.crypto import (
     CryptoPortfolioResponse,
     CryptoWalletCreate,
     DeFiPosition,
+    DeFiPositionType,
 )
 
 logger = logging.getLogger(__name__)
@@ -106,7 +105,7 @@ class CryptoService:
             defi_positions.append(DeFiPosition(
                 protocol_name="Aave V3",
                 protocol_logo="https://assets.coingecko.com/markets/images/698/small/aave.png",
-                position_type="Lending",
+                position_type=DeFiPositionType.LENDING,
                 value_usd=Decimal("25400.00"),
                 assets=[
                     CryptoAsset(
