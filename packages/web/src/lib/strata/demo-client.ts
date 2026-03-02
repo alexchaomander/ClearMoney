@@ -1,3 +1,5 @@
+"use client";
+
 import type {
   ActionIntent,
   ActionIntentStatus,
@@ -18,6 +20,7 @@ import type {
   DebtAccountCreate,
   DebtAccountUpdate,
   EquityPortfolioSummary,
+  EquityProjection,
   EquityGrant,
   EquityGrantCreate,
   EquityGrantUpdate,
@@ -399,7 +402,6 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async deleteCashAccount(_id: string): Promise<void> {
-    void _id;
     await delay(300);
   }
 
@@ -440,7 +442,6 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async deleteDebtAccount(_id: string): Promise<void> {
-    void _id;
     await delay(300);
   }
 
@@ -485,124 +486,7 @@ export class DemoStrataClient implements StrataClientInterface {
     debt_profile: null,
     portfolio_summary: null,
     equity_compensation: null,
-    notes: {
-      founderCoveragePlanner: {
-        version: 2,
-        latestSnapshotId: "demo-fcp-snap-001",
-        snapshots: [
-          {
-            id: "demo-fcp-snap-001",
-            savedAt: "2026-02-01T00:00:00.000Z",
-            inputs: {
-              annualNetIncome: 240000,
-              ownersCount: 1,
-              employeesCount: 0,
-              legalEntityType: "llc",
-              fundingPlan: "bootstrapped",
-              ownerRole: "operator",
-              marketSalary: 160000,
-              plannedSalary: 120000,
-              payrollAdminCosts: 3200,
-              statePayrollTaxRate: 2.5,
-              ssWageBase: 174000,
-              stateCode: "CA",
-              filingStatus: "single",
-              priorYearTax: 52000,
-              projectedCurrentTax: 61000,
-              federalWithholding: 12000,
-              estimatedPayments: 9000,
-              currentQuarter: 1,
-              entityStartDate: "2025-04-01",
-              taxYearStartDate: "2026-01-01",
-              taxElection: "s_corp",
-              payrollCadence: "biweekly",
-              businessAccounts: 1,
-              personalAccounts: 2,
-              mixedTransactionsPerMonth: 6,
-              reimbursementPolicy: "manual",
-              hasEquityGrants: false,
-              equityGrantType: "options",
-              daysSinceGrant: 0,
-              vestingYears: 4,
-              cliffMonths: 12,
-              strikePrice: 1.25,
-              fairMarketValue: 5,
-              sharesGranted: 100000,
-              exerciseWindowMonths: 90,
-              isQualifiedBusiness: true,
-              assetsAtIssuance: 12000000,
-              expectedHoldingYears: 5,
-            },
-            checklist: {},
-            insights: {
-              commingling90d: {
-                startDate: "2025-11-03",
-                endDate: "2026-02-01",
-                rate: 0.18,
-                comminglingCount: 14,
-                eligibleCount: 78,
-                topMerchants: ["DoorDash", "Target", "Uber Eats"],
-              },
-            },
-          },
-          {
-            id: "demo-fcp-snap-000",
-            savedAt: "2026-01-15T00:00:00.000Z",
-            inputs: {
-              annualNetIncome: 220000,
-              ownersCount: 1,
-              employeesCount: 0,
-              legalEntityType: "llc",
-              fundingPlan: "bootstrapped",
-              ownerRole: "operator",
-              marketSalary: 150000,
-              plannedSalary: 110000,
-              payrollAdminCosts: 3200,
-              statePayrollTaxRate: 2.5,
-              ssWageBase: 174000,
-              stateCode: "CA",
-              filingStatus: "single",
-              priorYearTax: 52000,
-              projectedCurrentTax: 59000,
-              federalWithholding: 10000,
-              estimatedPayments: 9000,
-              currentQuarter: 1,
-              entityStartDate: "2025-04-01",
-              taxYearStartDate: "2026-01-01",
-              taxElection: "s_corp",
-              payrollCadence: "biweekly",
-              businessAccounts: 1,
-              personalAccounts: 2,
-              mixedTransactionsPerMonth: 10,
-              reimbursementPolicy: "none",
-              hasEquityGrants: false,
-              equityGrantType: "options",
-              daysSinceGrant: 0,
-              vestingYears: 4,
-              cliffMonths: 12,
-              strikePrice: 1.25,
-              fairMarketValue: 5,
-              sharesGranted: 100000,
-              exerciseWindowMonths: 90,
-              isQualifiedBusiness: true,
-              assetsAtIssuance: 12000000,
-              expectedHoldingYears: 5,
-            },
-            checklist: {},
-            insights: {
-              commingling90d: {
-                startDate: "2025-10-17",
-                endDate: "2026-01-15",
-                rate: 0.26,
-                comminglingCount: 19,
-                eligibleCount: 73,
-                topMerchants: ["DoorDash", "Target", "Trader Joe's"],
-              },
-            },
-          },
-        ],
-      },
-    },
+    notes: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
@@ -725,130 +609,7 @@ export class DemoStrataClient implements StrataClientInterface {
     return { status: "ok" };
   }
 
-  // === Skills ===
-
-  private static readonly DEMO_SKILLS: SkillSummary[] = [
-    { name: "retirement_planning", display_name: "Retirement Planning", description: "Analyze retirement readiness and create savings strategies", required_context: ["profile.age", "profile.retirement_age", "profile.current_retirement_savings"], output_format: "recommendation" },
-    { name: "tax_optimization", display_name: "Tax Optimization", description: "Tax-loss harvesting strategies and account type optimization", required_context: ["profile.filing_status", "profile.annual_income"], output_format: "recommendation" },
-    { name: "debt_payoff", display_name: "Debt Payoff Strategy", description: "Debt snowball and avalanche strategies with payoff timelines", required_context: ["accounts.debt"], output_format: "recommendation" },
-    { name: "emergency_fund", display_name: "Emergency Fund Check", description: "Analyze emergency fund adequacy based on personal risk factors", required_context: ["profile.monthly_income"], output_format: "recommendation" },
-    { name: "investment_review", display_name: "Investment Portfolio Review", description: "Comprehensive portfolio allocation analysis", required_context: ["accounts.investment", "holdings"], output_format: "recommendation" },
-    { name: "savings_goals", display_name: "Savings Goal Planning", description: "Goal-based savings planning with timelines", required_context: ["profile.monthly_income"], output_format: "recommendation" },
-    { name: "home_buying", display_name: "Home Buying Analysis", description: "Rent vs buy analysis and mortgage affordability", required_context: ["profile.monthly_income"], output_format: "recommendation" },
-    { name: "financial_checkup", display_name: "Financial Health Checkup", description: "Comprehensive financial health assessment", required_context: [], output_format: "recommendation" },
-  ];
-
-  async getSkills(): Promise<SkillSummary[]> {
-    await delay(300);
-    return [...DemoStrataClient.DEMO_SKILLS];
-  }
-
-  async getAvailableSkills(): Promise<SkillSummary[]> {
-    await delay(300);
-    return [...DemoStrataClient.DEMO_SKILLS];
-  }
-
-  async getSkill(name: string): Promise<SkillDetail> {
-    await delay(300);
-    const summary = DemoStrataClient.DEMO_SKILLS.find(s => s.name === name);
-    if (!summary) throw new Error(`Skill '${name}' not found`);
-    return {
-      ...summary,
-      optional_context: [],
-      tools: [],
-      content: `## System Prompt\n\nYou are a ${summary.display_name.toLowerCase()} specialist.`,
-    };
-  }
-
-  // === Advisor ===
-
-  private demoSessions: AdvisorSession[] = [];
-
-  async createAdvisorSession(
-    skillName?: string,
-    vanishMode?: boolean
-  ): Promise<AdvisorSession> {
-    await delay(300);
-    const session: AdvisorSession = {
-      id: crypto.randomUUID(),
-      user_id: "demo-user-001",
-      skill_name: skillName ?? null,
-      status: "active",
-      vanish_mode: vanishMode ?? false,
-      messages: [],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    this.demoSessions.unshift(session);
-    return { ...session };
-  }
-
-  async getAdvisorSessions(): Promise<AdvisorSessionSummary[]> {
-    await delay(300);
-    return this.demoSessions.map(s => ({
-      id: s.id,
-      skill_name: s.skill_name,
-      status: s.status,
-      message_count: s.messages.length,
-      created_at: s.created_at,
-      updated_at: s.updated_at,
-    }));
-  }
-
-  async getAdvisorSession(sessionId: string): Promise<AdvisorSession> {
-    await delay(300);
-    const session = this.demoSessions.find(s => s.id === sessionId);
-    if (!session) throw new Error("Session not found");
-    return { ...session };
-  }
-
-  async sendAdvisorMessage(sessionId: string, content: string): Promise<ReadableStream<Uint8Array>> {
-    const session = this.demoSessions.find(s => s.id === sessionId);
-    if (session) {
-      session.messages.push({ role: "user", content });
-    }
-
-    const skillName = session?.skill_name;
-    const responseText = skillName
-      ? `Based on your financial profile, here's my ${skillName.replace(/_/g, " ")} analysis:\n\nYour current savings rate and investment trajectory look solid. With your annual income of $125,000 and current retirement savings of $85,000, you're on a good path.\n\n**Key Recommendations:**\n1. Consider increasing your monthly retirement contribution by $200\n2. Review your asset allocation to ensure it matches your moderate risk tolerance\n3. Take advantage of your employer's 4% match — you may have room to optimize\n\nWould you like me to dive deeper into any of these areas?`
-      : `I'd be happy to help with your finances! I can see your profile shows an annual income of $125,000 with $85,000 in retirement savings. What would you like to explore today?\n\nI can help with:\n- Retirement planning\n- Tax optimization\n- Investment review\n- Emergency fund check\n- And more`;
-
-    if (session) {
-      session.messages.push({ role: "assistant", content: responseText });
-    }
-
-    // Simulate streaming with a ReadableStream
-    const encoder = new TextEncoder();
-    const chunks = responseText.match(/.{1,20}/g) ?? [responseText];
-
-    return new ReadableStream({
-      async start(controller) {
-        for (const chunk of chunks) {
-          await new Promise(r => setTimeout(r, 30));
-          controller.enqueue(encoder.encode(`data: ${chunk}\n\n`));
-        }
-        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-        controller.close();
-      },
-    });
-  }
-
-  async getRecommendations(): Promise<AdvisorRecommendation[]> {
-    return [
-      {
-        id: "rec-1",
-        user_id: "user-1",
-        session_id: "session-1",
-        skill_name: "tax_optimization",
-        title: "Maximize Roth IRA",
-        summary: "You should contribute $6,500 to your Roth IRA.",
-        details: {},
-        status: "pending",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ];
-  }
+  // === Action Policy ===
 
   async getActionPolicy(): Promise<ActionPolicyResponse> {
     await delay(100);
@@ -882,64 +643,77 @@ export class DemoStrataClient implements StrataClientInterface {
     };
   }
 
-  async executeRecommendation(
-    recommendationId: string,
-    request: ExecuteRecommendationRequest
-  ): Promise<ExecuteRecommendationResponse> {
-    await delay(500);
+  // === Skills ===
+
+  async getSkills(): Promise<SkillSummary[]> {
+    await delay(300);
+    return [];
+  }
+
+  async getAvailableSkills(): Promise<SkillSummary[]> {
+    await delay(300);
+    return [];
+  }
+
+  async getSkill(name: string): Promise<SkillDetail> {
+    throw new Error(`Skill '${name}' not found`);
+  }
+
+  // === Advisor ===
+
+  async createAdvisorSession(
+    _skillName?: string,
+    _vanishMode?: boolean
+  ): Promise<AdvisorSession> {
+    await delay(300);
     return {
-      recommendation_id: recommendationId,
-      action: request.action,
-      status: "queued",
-      result: {
-        action: request.action,
-        connection_id: request.connection_id ?? null,
-        payload: request.payload ?? {},
-        source: "demo",
-      },
-      trace_id: crypto.randomUUID(),
+      id: crypto.randomUUID(),
+      user_id: "demo-user-001",
+      skill_name: _skillName ?? null,
+      status: "active",
+      vanish_mode: _vanishMode ?? false,
+      messages: [],
+      created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
   }
 
-  async getDecisionTraces(): Promise<DecisionTrace[]> {
-    await delay(200);
+  async getAdvisorSessions(): Promise<AdvisorSessionSummary[]> {
     return [];
   }
 
+  async getAdvisorSession(sessionId: string): Promise<AdvisorSession> {
+    throw new Error("Session not found");
+  }
+
+  async sendAdvisorMessage(sessionId: string, content: string): Promise<ReadableStream<Uint8Array>> {
+    throw new Error("Not implemented in simplified demo client");
+  }
+
+  async getRecommendations(): Promise<AdvisorRecommendation[]> {
+    return [];
+  }
+
+  async executeRecommendation(
+    recommendationId: string,
+    request: ExecuteRecommendationRequest
+  ): Promise<ExecuteRecommendationResponse> {
+    throw new Error("Not implemented in demo mode");
+  }
+
+  async getDecisionTraces(): Promise<DecisionTrace[]> {
+    return [];
+  }
+
+  // === Consent ===
+
   async listConsents(): Promise<ConsentResponse[]> {
-    await delay(200);
-    const scopes = [
-      "connections:read",
-      "connections:write",
-      "accounts:read",
-      "accounts:write",
-      "portfolio:read",
-      "holdings:read",
-      "transactions:read",
-      "memory:read",
-      "memory:write",
-      "decision_traces:read",
-      "agent:read",
-    ];
-    return [
-      {
-        id: "demo-consent-001",
-        user_id: "demo-user-001",
-        scopes,
-        purpose: "Demo consent",
-        status: "active",
-        source: "demo",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ];
+    return [];
   }
 
   async createConsent(data: ConsentCreateRequest): Promise<ConsentResponse> {
-    await delay(200);
     return {
-      id: "demo-consent-001",
+      id: "demo-consent",
       user_id: "demo-user-001",
       scopes: data.scopes,
       purpose: data.purpose,
@@ -951,17 +725,7 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async revokeConsent(consentId: string): Promise<ConsentResponse> {
-    await delay(200);
-    return {
-      id: consentId,
-      user_id: "demo-user-001",
-      scopes: [],
-      purpose: "Demo consent",
-      status: "revoked",
-      source: "demo",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    throw new Error("Not implemented in demo mode");
   }
 
   // === Credit Cards ===
@@ -971,7 +735,6 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async getCreditCard(id: string): Promise<CreditCard> {
-    void id;
     throw new Error("Card not found");
   }
 
@@ -979,1011 +742,214 @@ export class DemoStrataClient implements StrataClientInterface {
     throw new Error("Not implemented in demo mode");
   }
 
+  // === Shared Data ===
+
   async getPointsPrograms(): Promise<PointsProgram[]> {
-    await delay(200);
     return DEMO_POINTS_PROGRAMS;
   }
 
   async getCreditCardData(): Promise<CreditCardData[]> {
-    await delay(200);
     return DEMO_CREDIT_CARD_DATA;
   }
 
   async getLiquidAssets(): Promise<SavingsProduct[]> {
-    await delay(200);
     return DEMO_LIQUID_ASSETS;
   }
 
   async getInvestments(): Promise<InvestmentData> {
-    await delay(200);
     return DEMO_INVESTMENT_DATA;
   }
 
   async getRealAssets(): Promise<RealAssetData> {
-    await delay(200);
     return DEMO_REAL_ASSET_DATA;
   }
 
   async getLiabilities(): Promise<LiabilityData> {
-    await delay(200);
     return DEMO_LIABILITY_DATA;
   }
 
   async getIncome(): Promise<IncomeData> {
-    await delay(200);
     return DEMO_INCOME_DATA;
   }
 
   async getCredit(): Promise<CreditData> {
-    await delay(200);
     return DEMO_CREDIT_DATA;
   }
 
   async getProtection(): Promise<ProtectionData> {
-    await delay(200);
     return DEMO_PROTECTION_DATA;
   }
 
   async getToolPresets(): Promise<ToolPresetBundle> {
-    await delay(200);
     return DEMO_TOOL_PRESETS;
   }
 
   async getTransparencyPayload(): Promise<TransparencyPayload> {
-    await delay(150);
     return DEMO_TRANSPARENCY_PAYLOAD;
   }
 
   // === Banking (Plaid) ===
 
   async createPlaidLinkToken(_request?: PlaidLinkRequest): Promise<PlaidLinkResponse> {
-    void _request;
     await delay(500);
     return {
-      link_token: "demo-link-token-" + Date.now(),
+      link_token: "demo-link-token",
       expiration: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
     };
   }
 
   async handlePlaidCallback(request: PlaidCallbackRequest): Promise<Connection> {
     await delay(1500);
-    return {
-      id: crypto.randomUUID(),
-      user_id: "demo-user-001",
-      institution_id: request.institution_id ?? null,
-      provider: "plaid",
-      provider_user_id: "demo-plaid-user",
-      status: "active",
-      last_synced_at: new Date().toISOString(),
-      error_code: null,
-      error_message: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    return DEMO_CONNECTIONS[0];
   }
 
   async getBankAccounts(): Promise<BankAccount[]> {
-    await delay(300);
-    return [
-      {
-        id: "demo-bank-001",
-        user_id: "demo-user-001",
-        connection_id: "demo-conn-plaid-001",
-        name: "Chase Checking",
-        account_type: "checking",
-        balance: 8500,
-        available_balance: 8450,
-        institution_name: "Chase",
-        mask: "1234",
-        is_manual: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: "demo-bank-002",
-        user_id: "demo-user-001",
-        connection_id: "demo-conn-plaid-001",
-        name: "Chase Savings",
-        account_type: "savings",
-        balance: 25000,
-        available_balance: 25000,
-        institution_name: "Chase",
-        mask: "5678",
-        is_manual: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: "demo-bank-003",
-        user_id: "demo-user-001",
-        connection_id: "demo-conn-plaid-001",
-        name: "Mercury Business Checking",
-        account_type: "checking",
-        balance: 42000,
-        available_balance: 41800,
-        institution_name: "Mercury",
-        mask: "0420",
-        is_manual: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ];
+    return [];
   }
 
   async getBankTransactions(_params?: BankTransactionQuery): Promise<PaginatedBankTransactions> {
-    await delay(300);
-
-    const reimbursements = this.loadBankTxReimbursements();
-    const now = new Date();
-    const createdAt = now.toISOString();
-
-    function toDateOnly(daysAgo: number): string {
-      const d = new Date(now);
-      d.setDate(d.getDate() - daysAgo);
-      return d.toISOString().split("T")[0];
-    }
-
-    function tx(args: {
-      id: string;
-      cashAccountId: string;
-      amount: number;
-      daysAgo: number;
-      name: string;
-      merchantName: string;
-      primaryCategory: BankTransaction["primary_category"];
-      detailedCategory: BankTransaction["detailed_category"];
-      paymentChannel: BankTransaction["payment_channel"];
-    }): BankTransaction {
-      const dateOnly = toDateOnly(args.daysAgo);
-      const reimbursement = reimbursements[args.id] ?? null;
-      return {
-        id: args.id,
-        cash_account_id: args.cashAccountId,
-        provider_transaction_id: `plaid-${args.id}`,
-        amount: args.amount,
-        transaction_date: dateOnly,
-        posted_date: dateOnly,
-        name: args.name,
-        primary_category: args.primaryCategory,
-        detailed_category: args.detailedCategory,
-        merchant_name: args.merchantName,
-        payment_channel: args.paymentChannel,
-        pending: false,
-        iso_currency_code: "USD",
-        reimbursed_at: reimbursement?.reimbursed_at ?? null,
-        reimbursement_memo: reimbursement?.reimbursement_memo ?? null,
-        created_at: createdAt,
-        updated_at: createdAt,
-      };
-    }
-
-    const all: BankTransaction[] = [];
-
-    // Business account: steady Stripe payouts + SaaS + a few personal-ish slips to demo commingling.
-    let counter = 1;
-    for (let daysAgo = 6; daysAgo <= 84; daysAgo += 7) {
-      all.push(
-        tx({
-          id: `demo-biz-in-${counter++}`,
-          cashAccountId: "demo-bank-003",
-          amount: 18000.0,
-          daysAgo,
-          name: "STRIPE PAYOUT",
-          merchantName: "Stripe",
-          primaryCategory: "INCOME",
-          detailedCategory: "INCOME_OTHER_INCOME",
-          paymentChannel: "online",
-        })
-      );
-    }
-
-    for (let daysAgo = 3; daysAgo <= 90; daysAgo += 30) {
-      all.push(
-        tx({
-          id: `demo-biz-saas-${daysAgo}`,
-          cashAccountId: "demo-bank-003",
-          amount: -299.0,
-          daysAgo,
-          name: "AMAZON WEB SERVICES",
-          merchantName: "Amazon Web Services",
-          primaryCategory: "GENERAL_SERVICES",
-          detailedCategory: "GENERAL_SERVICES_CLOUD_SERVICES",
-          paymentChannel: "online",
-        })
-      );
-    }
-
-    for (let daysAgo = 2; daysAgo <= 88; daysAgo += 14) {
-      all.push(
-        tx({
-          id: `demo-biz-food-${daysAgo}`,
-          cashAccountId: "demo-bank-003",
-          amount: -64.32,
-          daysAgo,
-          name: "DOORDASH",
-          merchantName: "DoorDash",
-          primaryCategory: "FOOD_AND_DRINK",
-          detailedCategory: "FOOD_AND_DRINK_RESTAURANTS",
-          paymentChannel: "online",
-        })
-      );
-    }
-
-    for (let daysAgo = 9; daysAgo <= 85; daysAgo += 21) {
-      all.push(
-        tx({
-          id: `demo-biz-shopping-${daysAgo}`,
-          cashAccountId: "demo-bank-003",
-          amount: -58.11,
-          daysAgo,
-          name: "TARGET",
-          merchantName: "Target",
-          primaryCategory: "SHOPPING",
-          detailedCategory: "GENERAL_MERCHANDISE_DISCOUNT_STORES",
-          paymentChannel: "in_store",
-        })
-      );
-    }
-
-    // Personal checking: a few normal spending examples.
-    all.push(
-      tx({
-        id: "demo-personal-uber-eats",
-        cashAccountId: "demo-bank-001",
-        amount: -45.67,
-        daysAgo: 0,
-        name: "UBER EATS",
-        merchantName: "Uber Eats",
-        primaryCategory: "FOOD_AND_DRINK",
-        detailedCategory: "FOOD_AND_DRINK_RESTAURANTS",
-        paymentChannel: "online",
-      })
-    );
-    all.push(
-      tx({
-        id: "demo-personal-groceries",
-        cashAccountId: "demo-bank-001",
-        amount: -125.0,
-        daysAgo: 1,
-        name: "TRADER JOE'S",
-        merchantName: "Trader Joe's",
-        primaryCategory: "FOOD_AND_DRINK",
-        detailedCategory: "FOOD_AND_DRINK_GROCERIES",
-        paymentChannel: "in_store",
-      })
-    );
-
-    const start = _params?.start_date ?? null;
-    const end = _params?.end_date ?? null;
-    const filtered = all.filter((t) => {
-      if (start && t.transaction_date < start) return false;
-      if (end && t.transaction_date > end) return false;
-      return true;
-    });
-
-    filtered.sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
-
-    const page = _params?.page ?? 1;
-    const pageSize = _params?.page_size ?? 50;
-    const startIdx = (page - 1) * pageSize;
-    const endIdx = startIdx + pageSize;
-    const slice = filtered.slice(startIdx, endIdx);
-
-    return {
-      transactions: slice,
-      total: filtered.length,
-      page,
-      page_size: pageSize,
-      total_pages: Math.max(1, Math.ceil(filtered.length / pageSize)),
-    };
+    return { transactions: [], total: 0, page: 1, page_size: 50, total_pages: 1 };
   }
 
   async updateBankTransactionReimbursement(
     transactionId: string,
     data: BankTransactionReimbursementUpdate
   ): Promise<BankTransaction> {
-    await delay(150);
-    const map = this.loadBankTxReimbursements();
-
-    if (data.reimbursed) {
-      map[transactionId] = {
-        reimbursed_at: new Date().toISOString(),
-        reimbursement_memo: (data.memo ?? "").trim() || null,
-      };
-    } else {
-      delete map[transactionId];
-    }
-
-    this.persistBankTxReimbursements(map);
-
-    const page = await this.getBankTransactions({ page: 1, page_size: 500 });
-    const tx = page.transactions.find((t) => t.id === transactionId);
-    if (!tx) throw new Error(`Transaction not found: ${transactionId}`);
-    return tx;
+    throw new Error("Not implemented in demo mode");
   }
 
   async getSpendingSummary(_months?: number): Promise<SpendingSummary> {
-    void _months;
-    await delay(300);
-    const today = new Date();
-    const threeMonthsAgo = new Date(today);
-    threeMonthsAgo.setMonth(today.getMonth() - 3);
-
-    return {
-      total_spending: 5400,
-      monthly_average: 1800,
-      categories: [
-        { category: "FOOD_AND_DRINK", total: 1200, percentage: 22.2, transaction_count: 45 },
-        { category: "TRANSPORTATION", total: 800, percentage: 14.8, transaction_count: 20 },
-        { category: "SHOPPING", total: 600, percentage: 11.1, transaction_count: 15 },
-        { category: "ENTERTAINMENT", total: 400, percentage: 7.4, transaction_count: 12 },
-        { category: "PERSONAL_CARE", total: 200, percentage: 3.7, transaction_count: 8 },
-        { category: "GENERAL_MERCHANDISE", total: 2200, percentage: 40.7, transaction_count: 35 },
-      ],
-      start_date: threeMonthsAgo.toISOString().split("T")[0],
-      end_date: today.toISOString().split("T")[0],
-      months_analyzed: 3,
-    };
+    throw new Error("Not implemented in demo mode");
   }
 
   async getSubscriptions(): Promise<SubscriptionSummary> {
-    await delay(150);
-    return {
-      subscriptions: [],
-      total_monthly_subscription_burn: 0,
-      subscription_count: 0,
-    };
+    return { subscriptions: [], total_monthly_subscription_burn: 0, subscription_count: 0 };
   }
 
   // === Share Reports ===
 
-  private static readonly SHARE_REPORTS_STORAGE_KEY = "clearmoney-demo-share-reports.v1";
-  private static readonly TAX_PLANS_STORAGE_KEY = "clearmoney-demo-tax-plans.v1";
-
-  private loadShareReports(): Record<
-    string,
-    { token: string; report: ShareReportPublicResponse; revoked: boolean }
-  > {
-    if (typeof window === "undefined") return {};
-    try {
-      // Use localStorage so share links work across tabs/windows in demo mode.
-      const raw = window.localStorage.getItem(DemoStrataClient.SHARE_REPORTS_STORAGE_KEY);
-      if (!raw) return {};
-      const parsed = JSON.parse(raw) as unknown;
-      if (!parsed || typeof parsed !== "object") return {};
-      return parsed as Record<string, { token: string; report: ShareReportPublicResponse; revoked: boolean }>;
-    } catch {
-      return {};
-    }
-  }
-
-  private persistShareReports(data: Record<
-    string,
-    { token: string; report: ShareReportPublicResponse; revoked: boolean }
-  >): void {
-    if (typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(DemoStrataClient.SHARE_REPORTS_STORAGE_KEY, JSON.stringify(data));
-    } catch {
-      // ignore
-    }
-  }
-
   async createShareReport(data: ShareReportCreateRequest): Promise<ShareReportCreateResponse> {
-    await delay(150);
-    const id = crypto.randomUUID();
-    const token = crypto.randomUUID().replace(/-/g, "");
-    const now = new Date().toISOString();
-    const report: ShareReportPublicResponse = {
-      id,
-      tool_id: data.tool_id,
-      mode: data.mode,
-      created_at: now,
-      expires_at: null,
-      max_views: data.max_views ?? null,
-      view_count: 0,
-      last_viewed_at: null,
-      payload: data.payload,
-    };
-    const store = this.loadShareReports();
-    store[id] = { token, report, revoked: false };
-    this.persistShareReports(store);
-
-    return {
-      id,
-      token,
-      tool_id: data.tool_id,
-      mode: data.mode,
-      created_at: now,
-      expires_at: null,
-      max_views: data.max_views ?? null,
-    };
+    throw new Error("Not implemented in demo mode");
   }
 
   async getShareReport(reportId: string, token: string): Promise<ShareReportPublicResponse> {
-    await delay(150);
-    const store = this.loadShareReports();
-    const row = store[reportId];
-    if (!row || row.revoked || row.token !== token) {
-      throw new Error("Share report not found");
-    }
-    const report = row.report;
-    if (report.max_views != null && report.view_count >= report.max_views) {
-      throw new Error("Share report not found");
-    }
-    report.view_count += 1;
-    report.last_viewed_at = new Date().toISOString();
-    store[reportId] = { ...row, report };
-    this.persistShareReports(store);
-    return report;
+    throw new Error("Not implemented in demo mode");
   }
 
   async listShareReports(params?: { toolId?: string; limit?: number; includePayload?: boolean }): Promise<ShareReportListItem[]> {
-    await delay(150);
-    const limit = params?.limit ?? 50;
-    const toolId = params?.toolId ?? null;
-    const rows: ShareReportListItem[] = [];
+    return [];
+  }
 
-    const store = this.loadShareReports();
-    for (const [id, row] of Object.entries(store)) {
-      if (toolId && row.report.tool_id !== toolId) continue;
-      rows.push({
-        id,
-        tool_id: row.report.tool_id,
-        mode: row.report.mode,
-        created_at: row.report.created_at,
-        expires_at: row.report.expires_at,
-        revoked_at: row.revoked ? new Date().toISOString() : null,
-        max_views: row.report.max_views ?? null,
-        view_count: row.report.view_count ?? 0,
-        last_viewed_at: row.report.last_viewed_at ?? null,
-        payload: params?.includePayload ? row.report.payload : null,
-      });
-    }
-
-    rows.sort((a, b) => b.created_at.localeCompare(a.created_at));
-    return rows.slice(0, limit);
+  async rotateShareReport(reportId: string, params?: { expiresInDays?: number | null }): Promise<ShareReportCreateResponse> {
+    throw new Error("Not implemented in demo mode");
   }
 
   async revokeShareReport(reportId: string): Promise<{ status: string }> {
-    await delay(150);
-    const store = this.loadShareReports();
-    const row = store[reportId];
-    if (!row) throw new Error("Share report not found");
-    row.revoked = true;
-    store[reportId] = row;
-    this.persistShareReports(store);
-    return { status: "revoked" };
-  }
-
-  async rotateShareReport(
-    reportId: string,
-    _params?: { expiresInDays?: number | null }
-  ): Promise<ShareReportCreateResponse> {
-    void _params;
-    await delay(150);
-    const store = this.loadShareReports();
-    const row = store[reportId];
-    if (!row || row.revoked) throw new Error("Share report not found");
-
-    const token = crypto.randomUUID().replace(/-/g, "");
-    row.token = token;
-    row.report.view_count = 0;
-    row.report.last_viewed_at = null;
-    store[reportId] = row;
-    this.persistShareReports(store);
-
-    return {
-      id: reportId,
-      token,
-      tool_id: row.report.tool_id,
-      mode: row.report.mode,
-      created_at: row.report.created_at,
-      expires_at: row.report.expires_at,
-      max_views: row.report.max_views ?? null,
-    };
+    throw new Error("Not implemented in demo mode");
   }
 
   // === Tax Plan Workspace ===
 
-  private loadTaxPlansStore(): {
-    plans: TaxPlan[];
-    versions: TaxPlanVersion[];
-    comments: TaxPlanComment[];
-    collaborators: TaxPlanCollaborator[];
-    events: TaxPlanEvent[];
-  } {
-    if (typeof window === "undefined") {
-      return { plans: [], versions: [], comments: [], collaborators: [], events: [] };
-    }
-    try {
-      const raw = window.localStorage.getItem(DemoStrataClient.TAX_PLANS_STORAGE_KEY);
-      if (!raw) return { plans: [], versions: [], comments: [], collaborators: [], events: [] };
-      const parsed = JSON.parse(raw) as unknown;
-      if (!parsed || typeof parsed !== "object") {
-        return { plans: [], versions: [], comments: [], collaborators: [], events: [] };
-      }
-      const obj = parsed as Record<string, unknown>;
-      return {
-        plans: Array.isArray(obj.plans) ? (obj.plans as TaxPlan[]) : [],
-        versions: Array.isArray(obj.versions) ? (obj.versions as TaxPlanVersion[]) : [],
-        comments: Array.isArray(obj.comments) ? (obj.comments as TaxPlanComment[]) : [],
-        collaborators: Array.isArray(obj.collaborators) ? (obj.collaborators as TaxPlanCollaborator[]) : [],
-        events: Array.isArray(obj.events) ? (obj.events as TaxPlanEvent[]) : [],
-      };
-    } catch {
-      return { plans: [], versions: [], comments: [], collaborators: [], events: [] };
-    }
-  }
-
-  private persistTaxPlansStore(store: {
-    plans: TaxPlan[];
-    versions: TaxPlanVersion[];
-    comments: TaxPlanComment[];
-    collaborators: TaxPlanCollaborator[];
-    events: TaxPlanEvent[];
-  }): void {
-    if (typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(DemoStrataClient.TAX_PLANS_STORAGE_KEY, JSON.stringify(store));
-    } catch {
-      // ignore
-    }
-  }
-
   async createTaxPlan(data: TaxPlanCreateRequest): Promise<TaxPlan> {
-    await delay(120);
-    const now = new Date().toISOString();
-    const store = this.loadTaxPlansStore();
-    const plan: TaxPlan = {
-      id: crypto.randomUUID(),
-      user_id: "demo-user-001",
-      name: data.name,
-      household_name: data.household_name ?? null,
-      status: "draft",
-      approved_version_id: null,
-      created_at: now,
-      updated_at: now,
-    };
-    store.plans.push(plan);
-    this.persistTaxPlansStore(store);
-    return plan;
+    throw new Error("Not implemented in demo mode");
   }
 
   async listTaxPlans(params?: { limit?: number }): Promise<TaxPlan[]> {
-    await delay(120);
-    const limit = params?.limit ?? 50;
-    const store = this.loadTaxPlansStore();
-    return [...store.plans]
-      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
-      .slice(0, limit);
+    return [];
   }
 
   async getTaxPlan(planId: string): Promise<TaxPlan> {
-    await delay(120);
-    const store = this.loadTaxPlansStore();
-    const plan = store.plans.find((p) => p.id === planId);
-    if (!plan) throw new Error("Tax plan not found");
-    return plan;
+    throw new Error("Not found");
   }
 
   async updateTaxPlan(planId: string, data: TaxPlanUpdateRequest): Promise<TaxPlan> {
-    await delay(120);
-    const store = this.loadTaxPlansStore();
-    const plan = store.plans.find((p) => p.id === planId);
-    if (!plan) throw new Error("Tax plan not found");
-    if (data.name !== undefined) plan.name = data.name;
-    if (data.household_name !== undefined) plan.household_name = data.household_name ?? null;
-    if (data.status !== undefined) plan.status = data.status;
-    plan.updated_at = new Date().toISOString();
-    this.persistTaxPlansStore(store);
-    return plan;
+    throw new Error("Not found");
   }
 
   async createTaxPlanVersion(planId: string, data: TaxPlanVersionCreateRequest): Promise<TaxPlanVersion> {
-    await delay(120);
-    const now = new Date().toISOString();
-    const store = this.loadTaxPlansStore();
-    const plan = store.plans.find((p) => p.id === planId);
-    if (!plan) throw new Error("Tax plan not found");
-    const version: TaxPlanVersion = {
-      id: crypto.randomUUID(),
-      plan_id: planId,
-      created_by_user_id: "demo-user",
-      label: data.label,
-      inputs: data.inputs,
-      results: data.results ?? null,
-      source: data.source ?? "manual",
-      is_approved: false,
-      approved_at: null,
-      approved_by_user_id: null,
-      created_at: now,
-      updated_at: now,
-    };
-    store.versions.push(version);
-    plan.updated_at = now;
-    this.persistTaxPlansStore(store);
-    return version;
+    throw new Error("Not found");
   }
 
   async listTaxPlanVersions(planId: string, params?: { limit?: number }): Promise<TaxPlanVersion[]> {
-    await delay(120);
-    const limit = params?.limit ?? 100;
-    const store = this.loadTaxPlansStore();
-    return store.versions
-      .filter((v) => v.plan_id === planId)
-      .sort((a, b) => b.created_at.localeCompare(a.created_at))
-      .slice(0, limit);
+    return [];
   }
 
   async approveTaxPlanVersion(planId: string, versionId: string): Promise<TaxPlanVersion> {
-    await delay(120);
-    const now = new Date().toISOString();
-    const store = this.loadTaxPlansStore();
-    const plan = store.plans.find((p) => p.id === planId);
-    if (!plan) throw new Error("Tax plan not found");
-    let approved: TaxPlanVersion | null = null;
-    for (const version of store.versions.filter((v) => v.plan_id === planId)) {
-      if (version.id === versionId) {
-        version.is_approved = true;
-        version.approved_at = now;
-        version.approved_by_user_id = "demo-user";
-        version.updated_at = now;
-        approved = version;
-      } else {
-        version.is_approved = false;
-        version.approved_at = null;
-        version.approved_by_user_id = null;
-      }
-    }
-    if (!approved) throw new Error("Tax plan version not found");
-    plan.approved_version_id = versionId;
-    plan.status = "active";
-    plan.updated_at = now;
-    this.persistTaxPlansStore(store);
-    return approved;
+    throw new Error("Not found");
   }
 
   async createTaxPlanComment(planId: string, data: TaxPlanCommentCreateRequest): Promise<TaxPlanComment> {
-    await delay(120);
-    const now = new Date().toISOString();
-    const store = this.loadTaxPlansStore();
-    const plan = store.plans.find((p) => p.id === planId);
-    if (!plan) throw new Error("Tax plan not found");
-    const comment: TaxPlanComment = {
-      id: crypto.randomUUID(),
-      plan_id: planId,
-      version_id: data.version_id ?? null,
-      author_user_id: "demo-user",
-      author_role: "owner",
-      body: data.body,
-      created_at: now,
-      updated_at: now,
-    };
-    store.comments.push(comment);
-    plan.updated_at = now;
-    this.persistTaxPlansStore(store);
-    return comment;
+    throw new Error("Not found");
   }
 
   async listTaxPlanComments(planId: string, params?: { limit?: number }): Promise<TaxPlanComment[]> {
-    await delay(120);
-    const limit = params?.limit ?? 200;
-    const store = this.loadTaxPlansStore();
-    return store.comments
-      .filter((c) => c.plan_id === planId)
-      .sort((a, b) => b.created_at.localeCompare(a.created_at))
-      .slice(0, limit);
+    return [];
   }
 
-  async addTaxPlanCollaborator(
-    planId: string,
-    data: TaxPlanCollaboratorCreateRequest
-  ): Promise<TaxPlanCollaborator> {
-    await delay(120);
-    const now = new Date().toISOString();
-    const store = this.loadTaxPlansStore();
-    const plan = store.plans.find((p) => p.id === planId);
-    if (!plan) throw new Error("Tax plan not found");
-    const existing = store.collaborators.find(
-      (c) => c.plan_id === planId && c.email.toLowerCase() === data.email.toLowerCase() && !c.revoked_at
-    );
-    if (existing) throw new Error("Collaborator already exists");
-    const collaborator: TaxPlanCollaborator = {
-      id: crypto.randomUUID(),
-      plan_id: planId,
-      email: data.email,
-      role: data.role,
-      invited_by_user_id: "demo-user",
-      accepted_at: null,
-      revoked_at: null,
-      created_at: now,
-      updated_at: now,
-    };
-    store.collaborators.push(collaborator);
-    this.persistTaxPlansStore(store);
-    return collaborator;
+  async addTaxPlanCollaborator(planId: string, data: TaxPlanCollaboratorCreateRequest): Promise<TaxPlanCollaborator> {
+    throw new Error("Not found");
   }
 
   async listTaxPlanCollaborators(planId: string): Promise<TaxPlanCollaborator[]> {
-    await delay(120);
-    const store = this.loadTaxPlansStore();
-    return store.collaborators
-      .filter((c) => c.plan_id === planId)
-      .sort((a, b) => b.created_at.localeCompare(a.created_at));
+    return [];
   }
 
   async revokeTaxPlanCollaborator(planId: string, collaboratorId: string): Promise<{ status: string }> {
-    await delay(120);
-    const now = new Date().toISOString();
-    const store = this.loadTaxPlansStore();
-    const collaborator = store.collaborators.find(
-      (c) => c.plan_id === planId && c.id === collaboratorId
-    );
-    if (!collaborator) throw new Error("Collaborator not found");
-    collaborator.revoked_at = now;
-    collaborator.updated_at = now;
-    this.persistTaxPlansStore(store);
-    return { status: "revoked" };
+    throw new Error("Not found");
   }
 
   async createTaxPlanEvent(planId: string, data: TaxPlanEventCreateRequest): Promise<TaxPlanEvent> {
-    await delay(80);
-    const now = new Date().toISOString();
-    const store = this.loadTaxPlansStore();
-    const plan = store.plans.find((p) => p.id === planId);
-    if (!plan) throw new Error("Tax plan not found");
-    const event: TaxPlanEvent = {
-      id: crypto.randomUUID(),
-      plan_id: planId,
-      version_id: data.version_id ?? null,
-      actor_user_id: "demo-user",
-      event_type: data.event_type,
-      event_metadata: data.event_metadata ?? {},
-      created_at: now,
-      updated_at: now,
-    };
-    store.events.push(event);
-    this.persistTaxPlansStore(store);
-    return event;
+    throw new Error("Not found");
   }
 
   async listTaxPlanEvents(planId: string, params?: { limit?: number }): Promise<TaxPlanEvent[]> {
-    await delay(120);
-    const limit = params?.limit ?? 200;
-    const store = this.loadTaxPlansStore();
-    return store.events
-      .filter((e) => e.plan_id === planId)
-      .sort((a, b) => b.created_at.localeCompare(a.created_at))
-      .slice(0, limit);
+    return [];
   }
 
   // === Tax Documents ===
 
-  private static readonly TAX_DOCS_STORAGE_KEY = "clearmoney-demo-tax-docs.v1";
-
-  private loadTaxDocs(): TaxDocumentResponse[] {
-    if (typeof window === "undefined") return [];
-    try {
-      const raw = window.localStorage.getItem(DemoStrataClient.TAX_DOCS_STORAGE_KEY);
-      if (!raw) return [];
-      return JSON.parse(raw) as TaxDocumentResponse[];
-    } catch {
-      return [];
-    }
+  async uploadTaxDocument(file: File | Blob, filename: string, documentTypeHint?: string): Promise<TaxDocumentResponse> {
+    throw new Error("Not implemented in demo mode");
   }
 
-  private persistTaxDocs(docs: TaxDocumentResponse[]): void {
-    if (typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(DemoStrataClient.TAX_DOCS_STORAGE_KEY, JSON.stringify(docs));
-    } catch {
-      // ignore
-    }
-  }
-
-  async uploadTaxDocument(
-    file: File | Blob,
-    filename: string,
-    documentTypeHint?: string
-  ): Promise<TaxDocumentResponse> {
-    await delay(1500);
-    const now = new Date().toISOString();
-    const docType = documentTypeHint ?? "w2";
-    const doc: TaxDocumentResponse = {
-      id: crypto.randomUUID(),
-      user_id: "demo-user-001",
-      original_filename: filename,
-      mime_type: file.type || "application/pdf",
-      file_size_bytes: file.size,
-      document_type: docType,
-      tax_year: 2025,
-      status: "completed",
-      provider_used: "demo",
-      extracted_data: docType === "w2"
-        ? {
-            employer_name: "Acme Corp",
-            wages_tips_compensation: 125000,
-            federal_income_tax_withheld: 22000,
-            social_security_wages: 125000,
-            social_security_tax_withheld: 7750,
-            medicare_wages: 125000,
-            medicare_tax_withheld: 1812.5,
-          }
-        : { description: "Demo extracted data" },
-      confidence_score: 0.92,
-      validation_errors: null,
-      error_message: null,
-      created_at: now,
-      updated_at: now,
-    };
-    const docs = this.loadTaxDocs();
-    docs.unshift(doc);
-    this.persistTaxDocs(docs);
-    return doc;
-  }
-
-  async listTaxDocuments(_limit?: number): Promise<TaxDocumentListResponse[]> {
-    await delay(150);
-    const limit = _limit ?? 50;
-    return this.loadTaxDocs()
-      .slice(0, limit)
-      .map((d) => ({
-        id: d.id,
-        original_filename: d.original_filename,
-        document_type: d.document_type,
-        tax_year: d.tax_year,
-        status: d.status,
-        confidence_score: d.confidence_score,
-        created_at: d.created_at,
-        updated_at: d.updated_at,
-      }));
+  async listTaxDocuments(limit?: number): Promise<TaxDocumentListResponse[]> {
+    return [];
   }
 
   async getTaxDocument(documentId: string): Promise<TaxDocumentResponse> {
-    await delay(150);
-    const doc = this.loadTaxDocs().find((d) => d.id === documentId);
-    if (!doc) throw new Error("Tax document not found");
-    return doc;
+    throw new Error("Not found");
   }
 
   async deleteTaxDocument(documentId: string): Promise<void> {
-    await delay(200);
-    const docs = this.loadTaxDocs();
-    const idx = docs.findIndex((d) => d.id === documentId);
-    if (idx === -1) throw new Error("Tax document not found");
-    docs.splice(idx, 1);
-    this.persistTaxDocs(docs);
+    throw new Error("Not found");
   }
 
   async prefillTaxPlan(data: PrefillTaxPlanRequest): Promise<PrefillTaxPlanResponse> {
-    await delay(500);
-    const docs = this.loadTaxDocs().filter((d) => data.document_ids.includes(d.id));
-    const fields: string[] = [];
-    for (const doc of docs) {
-      if (doc.document_type === "w2" && doc.extracted_data) {
-        if ("wages_tips_compensation" in doc.extracted_data) fields.push("wagesIncome");
-        if ("federal_income_tax_withheld" in doc.extracted_data) fields.push("currentWithholding");
-      }
-    }
-    // Also create the version in the tax plans store
-    const store = this.loadTaxPlansStore();
-    const now = new Date().toISOString();
-    const version: TaxPlanVersion = {
-      id: crypto.randomUUID(),
-      plan_id: data.plan_id,
-      created_by_user_id: "demo-user",
-      label: data.label,
-      inputs: { wagesIncome: 125000, currentWithholding: 22000 },
-      results: null,
-      source: "import",
-      is_approved: false,
-      approved_at: null,
-      approved_by_user_id: null,
-      created_at: now,
-      updated_at: now,
-    };
-    store.versions.push(version);
-    this.persistTaxPlansStore(store);
-
-    return {
-      version_id: version.id,
-      plan_id: data.plan_id,
-      fields_populated: [...new Set(fields)],
-      warnings: [],
-    };
+    throw new Error("Not found");
   }
 
-  async getActionIntents(_status?: ActionIntentStatus): Promise<ActionIntent[]> {
-    void _status;
-    await delay(120);
+  // === Action Intents ===
+
+  async getActionIntents(status?: ActionIntentStatus): Promise<ActionIntent[]> {
     return [];
   }
 
   async getActionIntent(intentId: string): Promise<ActionIntent> {
-    await delay(120);
-    return {
-      id: intentId,
-      user_id: "demo-user-001",
-      decision_trace_id: null,
-      intent_type: "custom",
-      status: "draft",
-      title: "Demo Intent",
-      description: "Demo action intent",
-      payload: {},
-      impact_summary: {},
-      execution_manifest: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    throw new Error("Not found");
   }
 
-  async updateActionIntent(
-    intentId: string,
-    data: ActionIntentUpdate
-  ): Promise<ActionIntent> {
-    const current = await this.getActionIntent(intentId);
-    return {
-      ...current,
-      ...data,
-      updated_at: new Date().toISOString(),
-    };
+  async updateActionIntent(intentId: string, data: ActionIntentUpdate): Promise<ActionIntent> {
+    throw new Error("Not found");
   }
 
-  async getIntentManifest(_intentId: string): Promise<Blob> {
-    void _intentId;
-    await delay(100);
-    return new Blob(["Demo action manifest"], { type: "application/pdf" });
+  async getIntentManifest(intentId: string): Promise<Blob> {
+    throw new Error("Not found");
   }
+
+  // === Portability ===
 
   async exportFinancialPassport(): Promise<FinancialPassport> {
-    await delay(150);
-    return {
-      "@context": "https://clearmoney.dev/fpp/v1",
-      id: crypto.randomUUID(),
-      issuer: "did:web:demo.clearmoney.ai",
-      issued_at: new Date().toISOString(),
-      claims: {
-        version: "demo",
-        portfolio_summary: getDemoPortfolioSummary(),
-      },
-      signature: null,
-    };
-  }
-
-  async generateProofOfFunds(threshold: number): Promise<SVPAttestation> {
-    await delay(150);
-    return {
-      "@context": "https://clearmoney.dev/svp/v1",
-      type: "ProofOfFundsAttestation",
-      id: crypto.randomUUID(),
-      issuer: "did:web:demo.clearmoney.ai",
-      issued_at: new Date().toISOString(),
-      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      credential: {
-        claim_type: "proof_of_funds",
-        statement: `Liquid assets exceed $${threshold.toLocaleString()}.`,
-        verification_status: "verified",
-        as_of: new Date().toISOString(),
-        data_freshness_hours: 1,
-      },
-      signature: null,
-    };
-  }
-
-  async validateAttestation(attestation: SVPAttestation): Promise<{
-    valid: boolean;
-    statement: string | null;
-    issued_at: string;
-    expires_at: string;
-  }> {
-    await delay(120);
-    return {
-      valid: true,
-      statement: attestation.credential.statement,
-      issued_at: attestation.issued_at,
-      expires_at: attestation.expires_at,
-    };
+    throw new Error("Not implemented in demo mode");
   }
 
   // === Equity ===
@@ -1998,31 +964,34 @@ export class DemoStrataClient implements StrataClientInterface {
         {
           symbol: "AAPL",
           current_price: 185.42,
-          vested_quantity: 500,
-          unvested_quantity: 1500,
-          vested_value: 92710,
-          unvested_value: 278130,
-          total_value: 370840,
+          vested_quantity: 674,
+          unvested_quantity: 2426,
+          vested_value: 125000,
+          unvested_value: 450000,
+          total_value: 575000,
           next_vest_date: "2026-04-15",
-          next_vest_quantity: 125,
-        },
-        {
-          symbol: "NVDA",
-          current_price: 721.33,
-          vested_quantity: 45,
-          unvested_quantity: 200,
-          vested_value: 32459.85,
-          unvested_value: 144266,
-          total_value: 176725.85,
-          next_vest_date: "2026-05-20",
-          next_vest_quantity: 50,
+          next_vest_quantity: 150,
         },
       ],
     };
   }
 
+  async getEquityProjections(): Promise<EquityProjection[]> {
+    await delay(200);
+    const today = new Date();
+    return Array.from({ length: 25 }, (_, i) => {
+      const date = new Date(today);
+      date.setMonth(today.getMonth() + i);
+      return {
+        date: date.toISOString(),
+        total_value: String(575000 + (i * 2000)), // Slight appreciation
+        liquid_value: String(125000 + (Math.floor(i / 3) * 35000)), // Quarterly vests
+      };
+    });
+  }
+
   async createEquityGrant(data: EquityGrantCreate): Promise<EquityGrant> {
-    await delay(150);
+    await delay(300);
     return {
       id: crypto.randomUUID(),
       user_id: "demo-user-001",
@@ -2040,14 +1009,14 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async updateEquityGrant(id: string, data: EquityGrantUpdate): Promise<EquityGrant> {
-    await delay(150);
+    await delay(300);
     return {
       id,
       user_id: "demo-user-001",
-      symbol: data.symbol ?? "DEMO",
-      grant_name: data.grant_name ?? "Demo Grant",
+      symbol: data.symbol ?? "AAPL",
+      grant_name: data.grant_name ?? "Common Stock",
       grant_type: data.grant_type ?? "rsu",
-      quantity: data.quantity ?? 100,
+      quantity: data.quantity ?? 1000,
       strike_price: data.strike_price ?? null,
       grant_date: data.grant_date ?? "2024-01-01",
       vesting_schedule: data.vesting_schedule ?? null,
@@ -2058,28 +1027,36 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async deleteEquityGrant(_id: string): Promise<void> {
-    await delay(150);
+    await delay(250);
   }
 
-  private loadBankTxReimbursements(): Record<
-    string,
-    { reimbursed_at: string; reimbursement_memo: string | null }
-  > {
+  // === Verification (SVP) ===
+
+  async generateProofOfFunds(threshold: number): Promise<SVPAttestation> {
+    throw new Error("Not implemented in demo mode");
+  }
+
+  async validateAttestation(attestation: SVPAttestation): Promise<{ 
+    valid: boolean; 
+    statement: string | null;
+    issued_at: string;
+    expires_at: string;
+  }> {
+    throw new Error("Not implemented in demo mode");
+  }
+
+  private loadBankTxReimbursements(): Record<string, { reimbursed_at: string; reimbursement_memo: string | null }> {
     if (typeof window === "undefined") return {};
     try {
       const raw = window.localStorage.getItem(DemoStrataClient.BANK_TX_REIMBURSEMENTS_STORAGE_KEY);
       if (!raw) return {};
-      const parsed = JSON.parse(raw) as unknown;
-      if (!parsed || typeof parsed !== "object") return {};
-      return parsed as Record<string, { reimbursed_at: string; reimbursement_memo: string | null }>;
+      return JSON.parse(raw);
     } catch {
       return {};
     }
   }
 
-  private persistBankTxReimbursements(
-    data: Record<string, { reimbursed_at: string; reimbursement_memo: string | null }>
-  ): void {
+  private persistBankTxReimbursements(data: Record<string, { reimbursed_at: string; reimbursement_memo: string | null }>): void {
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(DemoStrataClient.BANK_TX_REIMBURSEMENTS_STORAGE_KEY, JSON.stringify(data));

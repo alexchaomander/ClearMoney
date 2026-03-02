@@ -17,6 +17,7 @@ import { AdvisorSidebar } from "@/components/advisor/AdvisorSidebar";
 import { HighlightProvider } from "@/lib/strata/highlight-context";
 import { PageTransition } from "./PageTransition";
 import { PrivacyProvider } from "@/lib/privacy-context";
+import { CommandPalette } from "./CommandPalette";
 
 const hasClerkKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -34,6 +35,7 @@ function ProvidersContent({ children }: { children: ReactNode }) {
                       <PrivacyProvider>
                         {hasClerkKey ? <StrataAuthSync /> : null}
                         <DemoBanner />
+                        <CommandPalette />
                         <div className="flex min-h-screen flex-col">
                           <main id="main-content" className="flex-1">
                             <PageTransition>{children}</PageTransition>

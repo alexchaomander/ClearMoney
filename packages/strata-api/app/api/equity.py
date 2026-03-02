@@ -9,11 +9,10 @@ from app.db.session import get_session
 from app.models.equity_grant import EquityGrant
 from app.schemas.equity import (
     EquityGrant as EquityGrantSchema,
-)
-from app.schemas.equity import (
     EquityGrantCreate,
     EquityGrantUpdate,
     EquityPortfolioSummary,
+    EquityProjection,
 )
 from app.services.equity_valuation import equity_valuation_service
 
@@ -31,6 +30,19 @@ async def get_equity_portfolio(
     )
     grants = result.scalars().all()
     return await equity_valuation_service.calculate_portfolio_summary(list(grants))
+
+
+@router.get("/projections", response_model=list[EquityProjection])
+async def get_equity_projections(
+    user_id: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
+    """Get monthly equity wealth projections for the next 24 months."""
+    result = await session.execute(
+        select(EquityGrant).where(EquityGrant.user_id == user_id)
+    )
+    grants = result.scalars().all()
+    return await equity_valuation_service.calculate_portfolio_projections(list(grants))
 
 
 @router.post("/grants", response_model=EquityGrantSchema)
