@@ -55,21 +55,28 @@ class AgentRuntime:
             tools=tools,
         )
 
-    def _get_anthropic_client(self):
+    def _get_llm_client(self):
         if self._client is None:
-            try:
-                import anthropic
-                self._client = anthropic.AsyncAnthropic(
-                    api_key=settings.anthropic_api_key
-                )
-            except ImportError:
-                raise RuntimeError(
-                    "anthropic package not installed. Run: uv pip install anthropic"
-                )
-            if not settings.anthropic_api_key:
-                raise RuntimeError(
-                    "STRATA_ANTHROPIC_API_KEY not configured"
-                )
+            if settings.advisor_provider == "openrouter":
+                try:
+                    import openai
+                    self._client = openai.AsyncOpenAI(
+                        base_url=settings.advisor_base_url,
+                        api_key=settings.openai_api_key or settings.anthropic_api_key,
+                    )
+                except ImportError:
+                    raise RuntimeError("openai package not installed. Run: uv pip install openai")
+            else:
+                try:
+                    import anthropic
+                    self._client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+                except ImportError:
+                    raise RuntimeError("anthropic package not installed. Run: uv pip install anthropic")
+
+            # Check for API key in either case
+            key = settings.openai_api_key or settings.anthropic_api_key
+            if not key:
+                raise RuntimeError(f"API key for {settings.advisor_provider} not configured")
         return self._client
 
     async def _create_message_in_process(
@@ -81,15 +88,51 @@ class AgentRuntime:
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]],
     ) -> dict:
-        client = self._get_anthropic_client()
-        response = await client.messages.create(
-            model=model,
-            max_tokens=max_tokens,
-            system=system,
-            messages=messages,
-            tools=tools,
-        )
-        return self._normalize_response(response)
+        client = self._get_llm_client()
+        
+        if settings.advisor_provider == "openrouter":
+            # Map Anthropic tools to OpenAI format if needed
+            # (OpenRouter also supports Anthropic format, but OpenAI is the standard)
+            response = await client.chat.completions.create(
+                model=model or settings.advisor_model,
+                messages=[
+                    {"role": "system", "content": system},
+                    *messages
+                ],
+                tools=[{"type": "function", "function": t} for t in tools] if tools else None,
+                max_tokens=max_tokens,
+            )
+            return self._normalize_openai_response(response)
+        else:
+            response = await client.messages.create(
+                model=model,
+                max_tokens=max_tokens,
+                system=system,
+                messages=messages,
+                tools=tools,
+            )
+            return self._normalize_response(response)
+
+    @staticmethod
+    def _normalize_openai_response(response: Any) -> dict:
+        choice = response.choices[0]
+        content = []
+        if choice.message.content:
+            content.append({"type": "text", "text": choice.message.content})
+        
+        if choice.message.tool_calls:
+            for tc in choice.message.tool_calls:
+                content.append({
+                    "type": "tool_use",
+                    "id": tc.id,
+                    "name": tc.function.name,
+                    "input": json.loads(tc.function.arguments),
+                })
+        
+        return {
+            "content": content,
+            "stop_reason": "end_turn" if choice.finish_reason == "stop" else choice.finish_reason,
+        }
 
     async def _create_message_sandbox(
         self,

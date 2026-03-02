@@ -7,15 +7,20 @@
 
 ---
 
-## 1. Executive Summary
+## 1.1 The Reference Implementation Strategy
 
-The Strata API is a multi-tenant financial connectivity platform that enables consumer applications to access, normalize, and analyze their users' financial data from multiple institutions. By abstracting the complexity of integrating with data providers (Plaid, MX, Finicity, FDX), the platform provides a unified API that any app can consume to deliver personalized, data-driven financial guidance. The platform differentiates through its decision trace system—a transparency layer that explains exactly how recommendations are generated, building user trust through explainability.
+Strata is built as a developer-first platform. To ensure its utility and reach, we develop **ClearMoney** as our primary 'Reference Implementation.'
+
+*   **Strata (The Platform)**: Provides the multi-tenant 'Action-Layer' infrastructure. It is provider-agnostic, schema-normalized, and agent-ready.
+*   **ClearMoney (The App)**: The flagship consumer application built on the Strata SDK. It is the 'AI-Native Successor to Mint,' designed to show developers and users the full potential of autonomous financial management.
+
+This 'Dogfooding' strategy ensures that the Strata API is always battle-tested by a world-class consumer product before it is released to third-party developers.
 
 **Key Value Propositions:**
 
-1. **Unified API**: Single integration point for all financial data providers, eliminating the need for apps to manage multiple provider SDKs
-2. **Multi-Tenant Architecture**: Complete data isolation between apps with per-app API keys, enabling multiple consumer applications to share infrastructure
-3. **Explainable Recommendations**: Decision trace system that shows users exactly what data and rules drove each recommendation, building trust through transparency
+1. **The Financial Context Graph**: A high-fidelity 'Digital Twin' of a user's entire economic life, including RSUs, crypto, and real estate.
+2. **Explainable Agentic Reasoning**: A Decision Trace system that turns raw data into transparent, actionable advice using LLMs.
+3. **The Intent Gateway**: Standardizing financial actions (ACH, ACATS, Rebalancing) as programmable primitives for autonomous execution.
 4. **Provider Resilience**: Automatic failover between providers with health-based routing, ensuring high availability even when individual providers have outages
 5. **Compliance-Ready**: Built-in consent management, audit logging, and data lifecycle controls to meet SOC 2, GDPR, and CCPA requirements
 
