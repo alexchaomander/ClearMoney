@@ -1413,6 +1413,12 @@ export interface EquityPortfolioSummary {
   grant_valuations: EquityValuation[];
 }
 
+export interface EquityProjection {
+  date: string;
+  total_value: string;
+  liquid_value: string;
+}
+
 // === Strata Verification Protocol (SVP) ===
 
 export interface RunwayMetrics {

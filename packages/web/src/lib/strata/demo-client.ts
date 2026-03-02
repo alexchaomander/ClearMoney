@@ -20,6 +20,7 @@ import type {
   DebtAccountCreate,
   DebtAccountUpdate,
   EquityPortfolioSummary,
+  EquityProjection,
   EquityGrant,
   EquityGrantCreate,
   EquityGrantUpdate,
@@ -975,7 +976,7 @@ export class DemoStrataClient implements StrataClientInterface {
     };
   }
 
-  async getEquityProjections(): Promise<Array<{ date: string; total_value: number; liquid_value: number }>> {
+  async getEquityProjections(): Promise<EquityProjection[]> {
     await delay(200);
     const today = new Date();
     return Array.from({ length: 25 }, (_, i) => {
@@ -983,8 +984,8 @@ export class DemoStrataClient implements StrataClientInterface {
       date.setMonth(today.getMonth() + i);
       return {
         date: date.toISOString(),
-        total_value: 575000 + (i * 2000), // Slight appreciation
-        liquid_value: 125000 + (Math.floor(i / 3) * 35000), // Quarterly vests
+        total_value: String(575000 + (i * 2000)), // Slight appreciation
+        liquid_value: String(125000 + (Math.floor(i / 3) * 35000)), // Quarterly vests
       };
     });
   }

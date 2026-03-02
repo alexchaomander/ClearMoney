@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -13,15 +13,10 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { formatCurrency } from "@/lib/shared/formatters";
-
-interface ProjectionPoint {
-  date: string;
-  total_value: number;
-  liquid_value: number;
-}
+import type { EquityProjection } from "@clearmoney/strata-sdk";
 
 interface EquityVestChartProps {
-  data: ProjectionPoint[];
+  data: EquityProjection[];
 }
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
@@ -52,11 +47,19 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 };
 
 export function EquityVestChart({ data }: EquityVestChartProps) {
+  const parsedData = useMemo(() => {
+    return data.map(point => ({
+      ...point,
+      total_value: typeof point.total_value === 'string' ? parseFloat(point.total_value) : point.total_value,
+      liquid_value: typeof point.liquid_value === 'string' ? parseFloat(point.liquid_value) : point.liquid_value,
+    }));
+  }, [data]);
+
   return (
     <div className="h-[300px] w-full mt-8">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
-          data={data}
+          data={parsedData}
           margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
         >
           <defs>

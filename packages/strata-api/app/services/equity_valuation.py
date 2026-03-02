@@ -1,9 +1,12 @@
+import asyncio
 import logging
 from datetime import date
 from decimal import Decimal
 
+from dateutil.relativedelta import relativedelta
+
 from app.models.equity_grant import EquityGrant, EquityGrantType
-from app.schemas.equity import EquityPortfolioSummary, EquityValuation
+from app.schemas.equity import EquityPortfolioSummary, EquityValuation, EquityProjection
 from app.services.providers.stock_price import stock_price_service
 
 logger = logging.getLogger(__name__)
@@ -85,35 +88,44 @@ class EquityValuationService:
 
     async def calculate_portfolio_projections(
         self, grants: list[EquityGrant]
-    ) -> list[dict]:
+    ) -> list[EquityProjection]:
         """Calculate monthly wealth projection from equity for the next 24 months."""
-        from datetime import date, timedelta
-        from dateutil.relativedelta import relativedelta
-
         today = date.today()
-        projections = []
         
-        # Get current prices for all symbols involved
+        # Get current prices for all symbols involved concurrently
         symbols = list(set(g.symbol for g in grants))
-        prices = {}
-        for s in symbols:
-            prices[s] = await stock_price_service.get_price(s)
+        price_tasks = [stock_price_service.get_price(s) for s in symbols]
+        price_results = await asyncio.gather(*price_tasks)
+        prices = dict(zip(symbols, price_results))
 
+        # Pre-calculate intrinsic value per share and total potential value once
+        total_potential_value = Decimal("0.00")
+        grant_data = []
+        for grant in grants:
+            current_price = prices.get(grant.symbol, Decimal("0.00"))
+            
+            # Calculate intrinsic value per share
+            value_per_share = current_price
+            if grant.grant_type in {EquityGrantType.iso, EquityGrantType.nso}:
+                strike = grant.strike_price or Decimal("0")
+                value_per_share = max(Decimal("0.00"), current_price - strike)
+            
+            total_potential_value += grant.quantity * value_per_share
+            grant_data.append({
+                "grant": grant,
+                "value_per_share": value_per_share
+            })
+
+        projections = []
         for i in range(25):  # Next 24 months + current month
             target_date = today + relativedelta(months=i)
-            cumulative_value = Decimal("0.00")
             liquid_value = Decimal("0.00")
 
-            for grant in grants:
-                current_price = prices.get(grant.symbol, Decimal("0.00"))
+            for item in grant_data:
+                grant = item["grant"]
+                value_per_share = item["value_per_share"]
                 vested_qty = Decimal("0.00")
                 
-                # Calculate intrinsic value per share for options
-                value_per_share = current_price
-                if grant.grant_type in {EquityGrantType.iso, EquityGrantType.nso}:
-                    strike = grant.strike_price or Decimal("0")
-                    value_per_share = max(Decimal("0.00"), current_price - strike)
-
                 if grant.vesting_schedule:
                     for event in grant.vesting_schedule:
                         event_date = event.get("date")
@@ -123,17 +135,13 @@ class EquityValuationService:
                         if event_date <= target_date:
                             vested_qty += Decimal(str(event.get("quantity", "0")))
                 
-                total_grant_value = grant.quantity * value_per_share
-                vested_grant_value = vested_qty * value_per_share
-                
-                cumulative_value += total_grant_value
-                liquid_value += vested_grant_value
+                liquid_value += vested_qty * value_per_share
 
-            projections.append({
-                "date": target_date.isoformat(),
-                "total_value": float(cumulative_value),
-                "liquid_value": float(liquid_value)
-            })
+            projections.append(EquityProjection(
+                date=target_date,
+                total_value=total_potential_value,
+                liquid_value=liquid_value
+            ))
 
         return projections
 
