@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
-import { formatCurrency, formatTitleCase } from "@/lib/shared/formatters";
+import { formatTitleCase } from "@/lib/shared/formatters";
+import { AnimatedAmount } from "@/components/shared/AnimatedAmount";
 
 interface Holding {
   id: string;
@@ -141,17 +142,22 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden"
+      className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm dark:shadow-none"
     >
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+      <div className="p-6 border-b border-slate-200 dark:border-slate-800">
         <h3 className="font-serif text-xl text-slate-900 dark:text-white">Holdings</h3>
-        <p className="text-sm text-slate-500">
-          {holdings.length} positions • {formatCurrency(totalValue)} total
-        </p>
+        <div className="flex items-center gap-1.5 text-sm text-slate-500 mt-1">
+          <span>{holdings.length} positions</span>
+          <span>•</span>
+          <div className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-300">
+            <AnimatedAmount value={totalValue} />
+            <span>total</span>
+          </div>
+        </div>
       </div>
 
       {/* Table Header */}
-      <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-slate-100 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+      <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
         <div className="col-span-4">
           <SortHeader
             label="Name"
@@ -182,7 +188,7 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
           />
         </div>
         <div className="col-span-2 text-right">
-          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">% of Portfolio</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Allocation</span>
         </div>
         <div className="col-span-2">
           <SortHeader
@@ -196,7 +202,7 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
       </div>
 
       {/* Table Body */}
-      <div className="divide-y divide-slate-200 dark:divide-slate-800">
+      <div className="divide-y divide-slate-100 dark:divide-slate-800">
         {paginatedHoldings.map((holding) => {
           const percentOfPortfolio = totalValue > 0
             ? (holding.market_value / totalValue) * 100
@@ -213,18 +219,18 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
             <div key={holding.id}>
               <button
                 onClick={() => setExpandedHolding(isExpanded ? null : holding.id)}
-                className="w-full grid grid-cols-12 gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors text-left"
+                className="w-full grid grid-cols-12 gap-4 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors text-left group"
               >
                 {/* Name */}
                 <div className="col-span-4 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-medium text-slate-700 dark:text-slate-300">
+                  <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black uppercase tracking-tighter text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700">
                     {holding.ticker ? holding.ticker.slice(0, 3) : "—"}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-slate-900 dark:text-white truncate">
+                    <p className="font-bold text-sm text-slate-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                       {holding.ticker || holding.name}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                       {formatSecurityType(holding.security_type)}
                     </p>
                   </div>
@@ -232,38 +238,39 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
 
                 {/* Quantity */}
                 <div className="col-span-2 text-right self-center">
-                  <p className="text-sm text-slate-800 dark:text-slate-200">
+                  <p className="text-sm font-mono text-slate-600 dark:text-slate-400">
                     {holding.quantity.toLocaleString(undefined, {
-                      maximumFractionDigits: 4,
+                      maximumFractionDigits: 2,
                     })}
                   </p>
                 </div>
 
                 {/* Value */}
                 <div className="col-span-2 text-right self-center">
-                  <p className="font-medium text-slate-900 dark:text-white">
-                    {formatCurrency(holding.market_value)}
+                  <p className="font-bold text-sm text-slate-900 dark:text-white">
+                    <AnimatedAmount value={holding.market_value} />
                   </p>
                 </div>
 
                 {/* % of Portfolio */}
                 <div className="col-span-2 text-right self-center">
-                  <div className="inline-flex items-center gap-2">
-                    <div className="w-16 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-emerald-500"
-                        style={{ width: `${Math.min(percentOfPortfolio, 100)}%` }}
-                      />
-                    </div>
-                    <span className="text-sm text-slate-500 dark:text-slate-400 w-12">
+                  <div className="inline-flex flex-col items-end gap-1.5 w-full">
+                    <span className="text-[10px] font-black text-slate-400">
                       {percentOfPortfolio.toFixed(1)}%
                     </span>
+                    <div className="w-full h-1 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(percentOfPortfolio, 100)}%` }}
+                        className="h-full rounded-full bg-emerald-500/60"
+                      />
+                    </div>
                   </div>
                 </div>
 
                 {/* Account */}
                 <div className="col-span-2 self-center">
-                  <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
                     {holding.account_name}
                   </p>
                 </div>
@@ -276,45 +283,45 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="px-4 pb-4 bg-slate-50 dark:bg-slate-800/20"
+                  className="px-6 pb-6 bg-slate-50 dark:bg-slate-950/30"
                 >
-                  <div className="grid grid-cols-3 gap-4 pt-4 pl-11">
+                  <div className="grid grid-cols-3 gap-8 pt-6 pl-12">
                     {holding.cost_basis !== null && holding.cost_basis !== undefined && (
                       <>
                         <div>
-                          <p className="text-xs text-slate-500 mb-1">Cost Basis</p>
-                          <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                            {formatCurrency(holding.cost_basis)}
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Cost Basis</p>
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                            <AnimatedAmount value={holding.cost_basis} />
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 mb-1">Gain/Loss</p>
-                          <p
-                            className={`text-sm font-medium ${
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Unrealized Gain</p>
+                          <div
+                            className={`flex items-center gap-1.5 text-sm font-black ${
                               gainLoss && gainLoss >= 0
-                                ? "text-emerald-400"
-                                : "text-red-400"
+                                ? "text-emerald-600 dark:text-emerald-400"
+                                : "text-rose-600 dark:text-rose-400"
                             }`}
                           >
                             {gainLoss !== null && (
                               <>
-                                {gainLoss >= 0 ? "+" : ""}
-                                {formatCurrency(gainLoss)}
+                                <span>{gainLoss >= 0 ? "+" : ""}</span>
+                                <AnimatedAmount value={Math.abs(gainLoss)} />
                                 {gainLossPercent !== null && (
-                                  <span className="ml-1 text-xs">
-                                    ({gainLossPercent >= 0 ? "+" : ""}
-                                    {gainLossPercent.toFixed(2)}%)
+                                  <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-current/10">
+                                    {gainLossPercent >= 0 ? "+" : ""}
+                                    {gainLossPercent.toFixed(2)}%
                                   </span>
                                 )}
                               </>
                             )}
-                          </p>
+                          </div>
                         </div>
                       </>
                     )}
                     <div>
-                      <p className="text-xs text-slate-500 mb-1">Account Type</p>
-                      <p className="text-sm text-slate-800 dark:text-slate-200">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Account Strategy</p>
+                      <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
                         {formatTitleCase(holding.account_type)}
                       </p>
                     </div>
@@ -327,26 +334,26 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
       </div>
 
       {showPagination && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-slate-800">
-          <span className="text-sm text-slate-500 dark:text-slate-400">
-            Showing {rangeStart}-{rangeEnd} of {sortedHoldings.length}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-transparent">
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+            Page {currentPage + 1} of {totalPages}
           </span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCurrentPage((p) => p - 1)}
               disabled={currentPage === 0}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold uppercase tracking-widest rounded-lg bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
             >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
+              <ChevronLeft className="w-3 h-3" />
+              Prev
             </button>
             <button
               onClick={() => setCurrentPage((p) => p + 1)}
               disabled={currentPage >= totalPages - 1}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold uppercase tracking-widest rounded-lg bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
             >
               Next
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3 h-3" />
             </button>
           </div>
         </div>

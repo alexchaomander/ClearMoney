@@ -63,3 +63,9 @@ class EquityPortfolioSummary(BaseModel):
     total_unvested_value: Decimal
     total_value: Decimal
     grant_valuations: list[EquityValuation]
+
+
+class EquityProjection(BaseModel):
+    date: date
+    total_value: Decimal
+    liquid_value: Decimal
