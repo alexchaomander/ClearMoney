@@ -20,12 +20,18 @@ interface ResultItem {
 
 interface ResultCardProps {
   title: string;
-  primaryValue: string;
-  primaryLabel: string;
+  primaryValue?: string;
+  primaryLabel?: string;
   items?: ResultItem[];
   variant?: ColorVariant;
   className?: string;
   footer?: React.ReactNode;
+  // Legacy props
+  value?: string;
+  description?: string;
+  trend?: "up" | "down" | "neutral";
+  icon?: React.ReactNode;
+  color?: string;
 }
 
 const variantStyles: Record<
@@ -86,8 +92,18 @@ export function ResultCard({
   variant = "neutral",
   className,
   footer,
+  // Legacy props
+  value,
+  description,
+  trend,
+  icon,
+  color,
 }: ResultCardProps) {
   const styles = variantStyles[variant];
+
+  // Map legacy props to new ones if they are used
+  const displayValue = primaryValue ?? value ?? "";
+  const displayLabel = primaryLabel ?? description ?? "";
 
   return (
     <div
@@ -95,18 +111,31 @@ export function ResultCard({
         "rounded-2xl bg-neutral-900 border border-neutral-800 overflow-hidden",
         className
       )}
+      style={color ? { borderColor: `${color}33` } : undefined}
     >
       {/* Header */}
-      <div className="px-6 py-4 border-b border-neutral-800">
+      <div className="px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-white">{title}</h3>
+        {icon && <div style={{ color }}>{icon}</div>}
       </div>
 
       {/* Primary Value */}
       <div className="px-6 py-8 text-center">
-        <p className={cn("text-4xl sm:text-5xl font-bold tracking-tight", styles.accent)}>
-          {primaryValue}
+        <p
+          className={cn("text-4xl sm:text-5xl font-bold tracking-tight", styles.accent)}
+          style={color ? { color } : undefined}
+        >
+          {displayValue}
         </p>
-        <p className="text-sm text-neutral-400 mt-2">{primaryLabel}</p>
+        <p className="text-sm text-neutral-400 mt-2">{displayLabel}</p>
+        {trend && (
+          <div className={cn(
+            "mt-2 text-xs font-bold uppercase tracking-widest",
+            trend === "up" ? "text-emerald-400" : trend === "down" ? "text-rose-400" : "text-neutral-400"
+          )}>
+            {trend} trend
+          </div>
+        )}
       </div>
 
       {/* Breakdown Items */}

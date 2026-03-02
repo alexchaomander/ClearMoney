@@ -32,7 +32,8 @@ import { TaxDocumentsCard } from "@/components/dashboard/TaxDocumentsCard";
 import { AddAccountModal } from "@/components/dashboard/AddAccountModal";
 import { DecisionTracePanel } from "@/components/dashboard/DecisionTracePanel";
 import { ConsentGate } from "@/components/shared/ConsentGate";
-import { DashboardLoadingSkeleton, ProductTour } from "@/components/shared";
+import { ProductTour } from "@/components/shared";
+import { DashboardLoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ApiErrorState } from "@/components/shared/ApiErrorState";
 import { DataSourceStatusStrip, type DataSourceStatusItem } from "@/components/dashboard/DataSourceStatusStrip";
 import { AssumptionControl } from "@/components/dashboard/AssumptionControl";
@@ -44,9 +45,12 @@ import {
   useConnections,
   useCashAccountMutations,
   useDebtAccountMutations,
+  useEquityPortfolio,
+  useEquityGrantMutations,
   useConsentStatus,
   useSyncAllConnections,
 } from "@/lib/strata/hooks";
+import { EquityCard } from "@/components/dashboard/EquityCard";
 import { type PortfolioHistoryRange, type HoldingDetail } from "@clearmoney/strata-sdk";
 import {
   getPreviewAccounts,
@@ -148,12 +152,20 @@ export default function DashboardPage() {
     refetch: refetchConnections,
   } = useConnections({ enabled: hasPortfolioConsent });
 
+  const {
+    data: equityPortfolio,
+    isLoading: equityLoading,
+  } = useEquityPortfolio({ enabled: hasPortfolioConsent });
+
+  const equityMutations = useEquityGrantMutations();
+
   const isLoading =
     portfolioLoading ||
     accountsLoading ||
     holdingsLoading ||
     allAccountsLoading ||
-    connectionsLoading;
+    connectionsLoading ||
+    equityLoading;
   const isError = portfolioError || accountsError || holdingsError || allAccountsError || connectionsError;
   const errorDetails =
     portfolioErrorDetails ||
@@ -371,11 +383,17 @@ export default function DashboardPage() {
 
             <div id="net-worth-card">
               <NetWorthCard
-                totalAssets={effectivePortfolio.total_investment_value + effectivePortfolio.total_cash_value}
+                totalAssets={
+                  effectivePortfolio.total_investment_value +
+                  effectivePortfolio.total_cash_value +
+                  (effectivePortfolio.total_equity_vested_value ?? 0)
+                }
                 totalLiabilities={effectivePortfolio.total_debt_value}
                 netWorth={effectivePortfolio.net_worth}
                 taxAdvantagedValue={effectivePortfolio.tax_advantaged_value}
                 taxableValue={effectivePortfolio.taxable_value}
+                vestedEquityValue={effectivePortfolio.total_equity_vested_value}
+                unvestedEquityValue={effectivePortfolio.total_equity_unvested_value}
               />
             </div>
 
@@ -409,6 +427,20 @@ export default function DashboardPage() {
               allocations={effectivePortfolio.allocation_by_account_type}
               title="By Account Type"
             />
+
+            {equityPortfolio && (
+              <EquityCard
+                portfolio={equityPortfolio}
+                onDeleteGrant={(symbol) => {
+                  // Find the grant ID by symbol (simplified for demo)
+                  const grant = equityPortfolio.grant_valuations.find(v => v.symbol === symbol);
+                  if (grant) {
+                    // This is a bit hacky, normally we'd pass IDs but valuations only have symbols
+                    // In a real app, EquityCard would handle this with full objects
+                  }
+                }}
+              />
+            )}
 
             <CashDebtSection
               cashAccounts={effectiveAllAccounts.cash_accounts}

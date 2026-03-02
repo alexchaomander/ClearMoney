@@ -11,13 +11,13 @@
 // Calculator building blocks
 export { SliderInput } from "./SliderInput";
 export { ResultCard, ComparisonCard } from "./ResultCard";
-export { AppShell, MethodologySection, VerdictCard } from "./AppShell";
+export { AppShell, VerdictCard } from "./AppShell";
 
 // Site-wide components
 export { RelatedTools, getRelatedToolIds } from "./RelatedTools";
 export { NewsletterSignup } from "./NewsletterSignup";
 export { FeaturedTools, FeaturedToolsCompact } from "./FeaturedTools";
-export { MethodologyDetails, MethodologyInline } from "./MethodologySection";
+export { MethodologySection, MethodologyInline } from "./MethodologySection";
 export { ShareResults, useSharedParams } from "./ShareResults";
 export { CategoryPage } from "./CategoryPage";
 export { UnifiedIntakeForm } from "./UnifiedIntakeForm";

@@ -11,6 +11,10 @@ interface AppShellProps {
   backHref?: string;
   backLabel?: string;
   className?: string;
+  title?: string;
+  description?: string;
+  category?: string;
+  icon?: React.ReactNode;
 }
 
 /**
@@ -28,6 +32,10 @@ export function AppShell({
   backHref = "/",
   backLabel = "Back to ClearMoney",
   className,
+  title,
+  description,
+  category,
+  icon,
 }: AppShellProps) {
   return (
     <div className={cn("min-h-screen bg-neutral-950 text-white", className)}>
@@ -56,7 +64,35 @@ export function AppShell({
       </header>
 
       {/* Main Content */}
-      <main>{children}</main>
+      <main>
+        {(title || description) && (
+          <div className="max-w-4xl mx-auto px-4 pt-12 pb-8">
+            <div className="flex items-center gap-4 mb-6">
+              {icon && (
+                <div className="w-12 h-12 rounded-2xl bg-neutral-900 border border-neutral-800 flex items-center justify-center">
+                  {icon}
+                </div>
+              )}
+              <div>
+                {category && (
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mb-1">
+                    {category}
+                  </p>
+                )}
+                <h1 className="text-3xl font-bold text-white tracking-tight">
+                  {title}
+                </h1>
+              </div>
+            </div>
+            {description && (
+              <p className="text-neutral-400 text-lg max-w-2xl leading-relaxed">
+                {description}
+              </p>
+            )}
+          </div>
+        )}
+        {children}
+      </main>
 
       {/* Footer */}
       <footer className="border-t border-neutral-800 bg-neutral-900/50 mt-16">
@@ -120,13 +156,15 @@ export function AppShell({
  */
 interface MethodologySectionProps {
   title?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  steps?: string[];
   defaultOpen?: boolean;
 }
 
 export function MethodologySection({
   title = "How we calculate this",
   children,
+  steps,
   defaultOpen = false,
 }: MethodologySectionProps) {
   return (
@@ -140,7 +178,21 @@ export function MethodologySection({
           ▼
         </span>
       </summary>
-      <div className="px-6 pb-6 text-neutral-400 space-y-4">{children}</div>
+      <div className="px-6 pb-6 text-neutral-400 space-y-4">
+        {steps && (
+          <ul className="space-y-3">
+            {steps.map((step, i) => (
+              <li key={i} className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center justify-center font-bold">
+                  {i + 1}
+                </span>
+                <span className="text-sm leading-relaxed">{step}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {children}
+      </div>
     </details>
   );
 }

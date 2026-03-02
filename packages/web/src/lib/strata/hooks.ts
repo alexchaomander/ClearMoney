@@ -74,6 +74,8 @@ export const queryKeys = {
     ["banking", "transactions", params ?? {}] as const,
   spendingSummary: (months?: number) => ["banking", "spending-summary", months ?? 3] as const,
   subscriptions: ["banking", "subscriptions"] as const,
+  equityPortfolio: ["equity", "portfolio"] as const,
+  equityGrants: ["equity", "grants"] as const,
   actionIntents: (status?: ActionIntentStatus) => ["actionIntents", status ?? "all"] as const,
   actionIntent: (id: string) => ["actionIntents", id] as const,
 };
@@ -103,6 +105,47 @@ export function useVulnerabilityReport(options?: { enabled?: boolean }) {
     queryFn: () => client.getVulnerabilityReport(),
     enabled: options?.enabled ?? true,
   });
+}
+
+export function useEquityPortfolio(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.equityPortfolio,
+    queryFn: () => client.getEquityPortfolio(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useEquityGrantMutations() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  const add = useMutation({
+    mutationFn: (data: any) => client.createEquityGrant(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.equityPortfolio });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const update = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      client.updateEquityGrant(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.equityPortfolio });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => client.deleteEquityGrant(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.equityPortfolio });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  return { add, update, remove };
 }
 
 export function useRunwayMetrics(options?: { enabled?: boolean }) {

@@ -10,6 +10,8 @@ interface NetWorthCardProps {
   netWorth: number;
   taxAdvantagedValue?: number;
   taxableValue?: number;
+  vestedEquityValue?: number;
+  unvestedEquityValue?: number;
 }
 
 export function NetWorthCard({
@@ -18,6 +20,8 @@ export function NetWorthCard({
   netWorth,
   taxAdvantagedValue = 0,
   taxableValue = 0,
+  vestedEquityValue = 0,
+  unvestedEquityValue = 0,
 }: NetWorthCardProps) {
   return (
     <motion.div
@@ -56,12 +60,27 @@ export function NetWorthCard({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="p-3 rounded-lg bg-neutral-800/50">
+          <p className="text-xs text-neutral-400 mb-1">Vested Equity</p>
+          <p className="font-medium text-emerald-400">
+            {formatCurrency(vestedEquityValue)}
+          </p>
+        </div>
+        <div className="p-3 rounded-lg bg-neutral-800/50">
+          <p className="text-xs text-neutral-400 mb-1">Unvested</p>
+          <p className="font-medium text-neutral-400 italic">
+            {formatCurrency(unvestedEquityValue)}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="p-3 rounded-lg bg-neutral-800/50 border-t border-neutral-700">
           <p className="text-xs text-neutral-400 mb-1">Tax-Advantaged</p>
           <p className="font-medium text-emerald-400">
             {formatCurrency(taxAdvantagedValue)}
           </p>
         </div>
-        <div className="p-3 rounded-lg bg-neutral-800/50">
+        <div className="p-3 rounded-lg bg-neutral-800/50 border-t border-neutral-700">
           <p className="text-xs text-neutral-400 mb-1">Taxable</p>
           <p className="font-medium text-neutral-200">
             {formatCurrency(taxableValue)}

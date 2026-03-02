@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     # Sentry (error tracking)
     sentry_dsn: str = ""
 
+    # Financial Data Providers (DIY)
+    alpha_vantage_api_key: str = ""
+    alchemy_api_key: str = ""
+
     # Advisor configuration
     advisor_provider: str = "anthropic"  # anthropic | openrouter
     anthropic_api_key: str = ""

@@ -28,6 +28,10 @@ import type {
   LinkSessionRequest,
   LinkSessionResponse,
   FinancialContext,
+  EquityGrant,
+  EquityGrantCreate,
+  EquityGrantUpdate,
+  EquityPortfolioSummary,
   MemoryEvent,
   PaginatedBankTransactions,
   PlaidCallbackRequest,
@@ -228,6 +232,11 @@ export interface StrataClientInterface {
   getIntentManifest(intentId: string): Promise<Blob>;
   // Portability
   exportFinancialPassport(): Promise<FinancialPassport>;
+  // Equity
+  getEquityPortfolio(): Promise<EquityPortfolioSummary>;
+  createEquityGrant(data: EquityGrantCreate): Promise<EquityGrant>;
+  updateEquityGrant(id: string, data: EquityGrantUpdate): Promise<EquityGrant>;
+  deleteEquityGrant(id: string): Promise<void>;
   // Verification (SVP)
   generateProofOfFunds(threshold: number): Promise<SVPAttestation>;
   validateAttestation(attestation: SVPAttestation): Promise<{ 
@@ -1125,6 +1134,32 @@ export class StrataClient implements StrataClientInterface {
 
   async exportFinancialPassport(): Promise<FinancialPassport> {
     return this.request<FinancialPassport>('/api/v1/portability/export');
+  }
+
+  // === Equity ===
+
+  async getEquityPortfolio(): Promise<EquityPortfolioSummary> {
+    return this.request<EquityPortfolioSummary>('/api/v1/equity/portfolio');
+  }
+
+  async createEquityGrant(data: EquityGrantCreate): Promise<EquityGrant> {
+    return this.request<EquityGrant>('/api/v1/equity/grants', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateEquityGrant(id: string, data: EquityGrantUpdate): Promise<EquityGrant> {
+    return this.request<EquityGrant>(`/api/v1/equity/grants/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteEquityGrant(id: string): Promise<void> {
+    await this.request<{ status: string }>(`/api/v1/equity/grants/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   async generateProofOfFunds(threshold: number): Promise<SVPAttestation> {
