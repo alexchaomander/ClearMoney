@@ -42,9 +42,11 @@ class Settings(BaseSettings):
     # Sentry (error tracking)
     sentry_dsn: str = ""
 
-    # Anthropic API (for Financial Advisor)
+    # Advisor configuration
+    advisor_provider: str = "anthropic"  # anthropic | openrouter
     anthropic_api_key: str = ""
-    advisor_model: str = "claude-sonnet-4-20250514"
+    advisor_model: str = "claude-3-5-sonnet-20241022"
+    advisor_base_url: str = "https://openrouter.ai/api/v1"
 
     # Document Extraction
     extraction_provider: str = "claude"
