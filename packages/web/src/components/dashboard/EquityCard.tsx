@@ -4,35 +4,11 @@ import React from "react";
 import { TrendingUp, Calendar, AlertCircle, Trash2, LineChart } from "lucide-react";
 import { motion } from "framer-motion";
 import { EquityVestChart } from "./EquityVestChart";
-
-interface ProjectionPoint {
-  date: string;
-  total_value: number;
-  liquid_value: number;
-}
-
-interface EquityValuation {
-  symbol: string;
-  current_price: number;
-  vested_quantity: number;
-  unvested_quantity: number;
-  vested_value: number;
-  unvested_value: number;
-  total_value: number;
-  next_vest_date: string | null;
-  next_vest_quantity: number | null;
-}
-
-interface EquityPortfolioSummary {
-  total_vested_value: number;
-  total_unvested_value: number;
-  total_value: number;
-  grant_valuations: EquityValuation[];
-}
+import type { EquityPortfolioSummary, EquityProjection } from "@clearmoney/strata-sdk";
 
 interface EquityCardProps {
   portfolio: EquityPortfolioSummary;
-  projections?: ProjectionPoint[];
+  projections?: EquityProjection[];
   onDeleteGrant?: (symbol: string) => void;
 }
 

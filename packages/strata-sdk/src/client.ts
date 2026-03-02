@@ -32,6 +32,7 @@ import type {
   EquityGrantCreate,
   EquityGrantUpdate,
   EquityPortfolioSummary,
+  EquityProjection,
   MemoryEvent,
   PaginatedBankTransactions,
   PlaidCallbackRequest,
@@ -234,7 +235,7 @@ export interface StrataClientInterface {
   exportFinancialPassport(): Promise<FinancialPassport>;
   // Equity
   getEquityPortfolio(): Promise<EquityPortfolioSummary>;
-  getEquityProjections(): Promise<Array<{ date: string; total_value: number; liquid_value: number }>>;
+  getEquityProjections(): Promise<EquityProjection[]>;
   createEquityGrant(data: EquityGrantCreate): Promise<EquityGrant>;
   updateEquityGrant(id: string, data: EquityGrantUpdate): Promise<EquityGrant>;
   deleteEquityGrant(id: string): Promise<void>;
@@ -615,7 +616,7 @@ export class StrataClient implements StrataClientInterface {
     });
   }
 
-  async getFinancialContext(format: 'json' | 'markdown' = 'json'): Promise<FinancialContext | string> {
+  async getFinancialContext(format?: 'json' | 'markdown'): Promise<FinancialContext | string> {
     if (format === 'markdown') {
       const response = await fetch(
         `${this.baseUrl}/api/v1/memory/context?format=markdown`,
@@ -1143,8 +1144,8 @@ export class StrataClient implements StrataClientInterface {
     return this.request<EquityPortfolioSummary>('/api/v1/equity/portfolio');
   }
 
-  async getEquityProjections(): Promise<Array<{ date: string; total_value: number; liquid_value: number }>> {
-    return this.request('/api/v1/equity/projections');
+  async getEquityProjections(): Promise<EquityProjection[]> {
+    return this.request<EquityProjection[]>('/api/v1/equity/projections');
   }
 
   async createEquityGrant(data: EquityGrantCreate): Promise<EquityGrant> {
