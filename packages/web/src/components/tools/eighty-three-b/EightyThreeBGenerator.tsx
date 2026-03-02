@@ -11,7 +11,8 @@ import {
   ArrowRight,
   ShieldCheck,
   Clock,
-  Lock
+  Lock,
+  CheckCircle2
 } from "lucide-react";
 import { ResultCard } from "@/components/shared/ResultCard";
 import { AppShell, MethodologySection } from "@/components/shared/AppShell";

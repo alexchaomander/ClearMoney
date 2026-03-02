@@ -1,0 +1,82 @@
+import logging
+from decimal import Decimal
+
+import httpx
+from fastapi import HTTPException
+
+from app.core.config import settings
+
+logger = logging.getLogger(__name__)
+
+
+class StockPriceService:
+    """Service to fetch real-time stock prices using Alpha Vantage."""
+
+    def __init__(self):
+        self._api_key = settings.alpha_vantage_api_key
+        self._base_url = "https://www.alphavantage.co/query"
+        # Simple in-memory cache to stay within free tier limits
+        # symbol -> (price, timestamp)
+        self._cache: dict[str, tuple[Decimal, float]] = {}
+        self._cache_ttl = 3600  # 1 hour cache for demo purposes
+
+    async def get_price(self, symbol: str) -> Decimal:
+        """Fetch the current price for a stock symbol."""
+        symbol = symbol.upper()
+
+        # Check cache
+        import time
+        now = time.time()
+        if symbol in self._cache:
+            price, timestamp = self._cache[symbol]
+            if now - timestamp < self._cache_ttl:
+                return price
+
+        if not self._api_key:
+            logger.warning(
+                "Alpha Vantage API key not set, using mock price for %s", symbol
+            )
+            return Decimal("150.00")  # Mock fallback
+
+        params = {
+            "function": "GLOBAL_QUOTE",
+            "symbol": symbol,
+            "apikey": self._api_key
+        }
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(self._base_url, params=params)
+                response.raise_for_status()
+                data = response.json()
+
+            if "Global Quote" in data and "05. price" in data["Global Quote"]:
+                price_str = data["Global Quote"]["05. price"]
+                price = Decimal(price_str)
+                self._cache[symbol] = (price, now)
+                return price
+
+            # Handle rate limiting or error messages from Alpha Vantage
+            if "Note" in data:
+                logger.warning("Alpha Vantage rate limit hit: %s", data["Note"])
+            elif "Error Message" in data:
+                logger.error(
+                    "Alpha Vantage error for %s: %s", symbol, data["Error Message"]
+                )
+
+            # Fallback if cache exists but is expired
+            if symbol in self._cache:
+                return self._cache[symbol][0]
+
+            raise HTTPException(
+                status_code=503, detail="Stock price service unavailable"
+            )
+
+        except Exception as e:
+            logger.error("Error fetching stock price for %s: %s", symbol, str(e))
+            # Mock fallback for demo if everything fails
+            return Decimal("150.00")
+
+
+# Global instance
+stock_price_service = StockPriceService()

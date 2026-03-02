@@ -346,6 +346,8 @@ export interface PortfolioSummary {
   total_investment_value: number;
   total_cash_value: number;
   total_debt_value: number;
+  total_equity_vested_value: number;
+  total_equity_unvested_value: number;
   net_worth: number;
   tax_advantaged_value: number;
   taxable_value: number;
@@ -1344,6 +1346,71 @@ export interface FinancialPassport {
   issued_at: string;
   claims: Record<string, unknown>;
   signature: string | null;
+}
+
+// === Equity ===
+
+export type EquityGrantType = 'rsu' | 'iso' | 'nso' | 'restricted_stock' | 'phantom_stock';
+
+export interface VestingEvent {
+  date: string;
+  quantity: number;
+}
+
+export interface EquityGrant {
+  id: string;
+  user_id: string;
+  symbol: string;
+  grant_name: string;
+  grant_type: EquityGrantType;
+  quantity: number;
+  strike_price: number | null;
+  grant_date: string;
+  vesting_schedule: VestingEvent[] | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EquityGrantCreate {
+  symbol: string;
+  grant_name: string;
+  grant_type: EquityGrantType;
+  quantity: number;
+  strike_price?: number | null;
+  grant_date: string;
+  vesting_schedule?: VestingEvent[] | null;
+  notes?: string | null;
+}
+
+export interface EquityGrantUpdate {
+  symbol?: string;
+  grant_name?: string;
+  grant_type?: EquityGrantType;
+  quantity?: number;
+  strike_price?: number | null;
+  grant_date?: string;
+  vesting_schedule?: VestingEvent[] | null;
+  notes?: string | null;
+}
+
+export interface EquityValuation {
+  symbol: string;
+  current_price: number;
+  vested_quantity: number;
+  unvested_quantity: number;
+  vested_value: number;
+  unvested_value: number;
+  total_value: number;
+  next_vest_date: string | null;
+  next_vest_quantity: number | null;
+}
+
+export interface EquityPortfolioSummary {
+  total_vested_value: number;
+  total_unvested_value: number;
+  total_value: number;
+  grant_valuations: EquityValuation[];
 }
 
 // === Strata Verification Protocol (SVP) ===

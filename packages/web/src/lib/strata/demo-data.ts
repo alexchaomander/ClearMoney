@@ -1561,11 +1561,16 @@ function computePortfolioSummary(allHoldings: HoldingDetail[]): PortfolioSummary
       message: `${h.security.ticker ?? h.security.name} represents ${(((h.market_value ?? 0) / totalInvestment) * 100).toFixed(1)}% of your portfolio`,
     }));
 
+  const totalEquityVested = 125000;
+  const totalEquityUnvested = 450000;
+
   return {
     total_investment_value: totalInvestment,
     total_cash_value: totalCash,
     total_debt_value: totalDebt,
-    net_worth: totalInvestment + totalCash - totalDebt,
+    total_equity_vested_value: totalEquityVested,
+    total_equity_unvested_value: totalEquityUnvested,
+    net_worth: totalInvestment + totalCash + totalEquityVested - totalDebt,
     tax_advantaged_value: taxAdvantaged,
     taxable_value: taxable,
     allocation_by_asset_type: allocationByAssetType,

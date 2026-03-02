@@ -17,6 +17,10 @@ import type {
   DebtAccount,
   DebtAccountCreate,
   DebtAccountUpdate,
+  EquityPortfolioSummary,
+  EquityGrant,
+  EquityGrantCreate,
+  EquityGrantUpdate,
   AdvisorRecommendation,
   AdvisorSession,
   AdvisorSessionSummary,
@@ -1980,6 +1984,81 @@ export class DemoStrataClient implements StrataClientInterface {
       issued_at: attestation.issued_at,
       expires_at: attestation.expires_at,
     };
+  }
+
+  // === Equity ===
+
+  async getEquityPortfolio(): Promise<EquityPortfolioSummary> {
+    await delay(150);
+    return {
+      total_vested_value: 125000,
+      total_unvested_value: 450000,
+      total_value: 575000,
+      grant_valuations: [
+        {
+          symbol: "AAPL",
+          current_price: 185.42,
+          vested_quantity: 500,
+          unvested_quantity: 1500,
+          vested_value: 92710,
+          unvested_value: 278130,
+          total_value: 370840,
+          next_vest_date: "2026-04-15",
+          next_vest_quantity: 125,
+        },
+        {
+          symbol: "NVDA",
+          current_price: 721.33,
+          vested_quantity: 45,
+          unvested_quantity: 200,
+          vested_value: 32459.85,
+          unvested_value: 144266,
+          total_value: 176725.85,
+          next_vest_date: "2026-05-20",
+          next_vest_quantity: 50,
+        },
+      ],
+    };
+  }
+
+  async createEquityGrant(data: EquityGrantCreate): Promise<EquityGrant> {
+    await delay(150);
+    return {
+      id: crypto.randomUUID(),
+      user_id: "demo-user-001",
+      symbol: data.symbol,
+      grant_name: data.grant_name,
+      grant_type: data.grant_type,
+      quantity: data.quantity,
+      strike_price: data.strike_price ?? null,
+      grant_date: data.grant_date,
+      vesting_schedule: data.vesting_schedule ?? null,
+      notes: data.notes ?? null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  async updateEquityGrant(id: string, data: EquityGrantUpdate): Promise<EquityGrant> {
+    await delay(150);
+    return {
+      id,
+      user_id: "demo-user-001",
+      symbol: data.symbol ?? "DEMO",
+      grant_name: data.grant_name ?? "Demo Grant",
+      grant_type: data.grant_type ?? "rsu",
+      quantity: data.quantity ?? 100,
+      strike_price: data.strike_price ?? null,
+      grant_date: data.grant_date ?? "2024-01-01",
+      vesting_schedule: data.vesting_schedule ?? null,
+      notes: data.notes ?? null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  async deleteEquityGrant(_id: string): Promise<void> {
+    await delay(150);
   }
 
   private loadBankTxReimbursements(): Record<

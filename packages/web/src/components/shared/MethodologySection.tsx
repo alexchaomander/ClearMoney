@@ -54,6 +54,10 @@ interface MethodologySectionProps {
   defaultExpanded?: boolean;
   /** Additional className */
   className?: string;
+  /** Legacy support: Children content */
+  children?: React.ReactNode;
+  /** Legacy support: Steps list */
+  steps?: string[];
 }
 
 /**
@@ -62,7 +66,7 @@ interface MethodologySectionProps {
  * Shows formulas, sources, and assumptions in an expandable format.
  * Key differentiator from TPG - we show our math.
  */
-export function MethodologyDetails({
+export function MethodologySection({
   title = "How We Calculate This",
   overview,
   formulas = [],
@@ -71,6 +75,8 @@ export function MethodologyDetails({
   notes = [],
   defaultExpanded = false,
   className,
+  children,
+  steps = [],
 }: MethodologySectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
@@ -79,7 +85,9 @@ export function MethodologyDetails({
     formulas.length > 0 ||
     sources.length > 0 ||
     assumptions.length > 0 ||
-    notes.length > 0;
+    notes.length > 0 ||
+    children ||
+    steps.length > 0;
 
   if (!hasContent) {
     return null;
@@ -134,6 +142,27 @@ export function MethodologyDetails({
                 <p className="text-sm text-neutral-300 leading-relaxed">
                   {overview}
                 </p>
+              </div>
+            )}
+
+            {/* Steps (Legacy Support) */}
+            {steps.length > 0 && (
+              <ul className="space-y-3">
+                {steps.map((step, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center justify-center font-bold">
+                      {i + 1}
+                    </span>
+                    <span className="text-sm text-neutral-300 leading-relaxed">{step}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* Children (Legacy Support) */}
+            {children && (
+              <div className="text-sm text-neutral-400 space-y-4">
+                {children}
               </div>
             )}
 
@@ -317,4 +346,4 @@ export function MethodologyInline({
   );
 }
 
-export default MethodologyDetails;
+export default MethodologySection;

@@ -8,11 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.cash_account import CashAccount
 from app.models.connection import Connection
 from app.models.debt_account import DebtAccount
+from app.models.equity_grant import EquityGrant
 from app.models.financial_memory import FinancialMemory
 from app.models.holding import Holding
 from app.models.investment_account import InvestmentAccount
 from app.models.security import Security
 from app.models.transaction import Transaction
+from app.services.equity_valuation import equity_valuation_service
 
 
 def _decimal_to_float(v: Decimal | None) -> float | None:
@@ -52,6 +54,12 @@ async def build_financial_context(
         select(DebtAccount).where(DebtAccount.user_id == user_id)
     )
     debt_accounts = debt_result.scalars().all()
+
+    equity_result = await session.execute(
+        select(EquityGrant).where(EquityGrant.user_id == user_id)
+    )
+    equity_grants = equity_result.scalars().all()
+    equity_summary = await equity_valuation_service.calculate_portfolio_summary(list(equity_grants))
 
     conn_result = await session.execute(
         select(Connection).where(Connection.user_id == user_id)
@@ -157,7 +165,10 @@ async def build_financial_context(
     total_debt = sum(
         (float(a.balance) for a in debt_accounts if a.balance), 0.0
     )
-    net_worth = total_investment + total_cash - total_debt
+    total_equity_vested = float(equity_summary.total_vested_value)
+    total_equity_unvested = float(equity_summary.total_unvested_value)
+    
+    net_worth = total_investment + total_cash + total_equity_vested - total_debt
 
     tax_advantaged = sum(
         (float(a.balance) for a in investment_accounts if a.is_tax_advantaged and a.balance),
@@ -196,6 +207,8 @@ async def build_financial_context(
         "total_investment_value": round(total_investment, 2),
         "total_cash_value": round(total_cash, 2),
         "total_debt_value": round(total_debt, 2),
+        "total_equity_vested_value": round(total_equity_vested, 2),
+        "total_equity_unvested_value": round(total_equity_unvested, 2),
         "tax_advantaged_value": round(tax_advantaged, 2),
         "taxable_value": round(taxable, 2),
         "allocation_by_asset_type": allocation_by_asset_type,
@@ -232,6 +245,7 @@ async def build_financial_context(
         "profile": profile,
         "accounts": accounts_section,
         "holdings": holdings_section,
+        "equity": equity_summary.model_dump(),
         "recent_transactions": transactions_section,
         "portfolio_metrics": portfolio_metrics,
         "data_freshness": data_freshness,

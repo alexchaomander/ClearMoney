@@ -19,6 +19,7 @@ from app.api.connections import router as connections_router
 from app.api.consent import router as consent_router
 from app.api.credit_cards import router as credit_cards_router
 from app.api.data import router as data_router
+from app.api.equity import router as equity_router
 from app.api.health import router as health_router
 from app.api.institutions import router as institutions_router
 from app.api.memory import router as memory_router
@@ -111,4 +112,5 @@ app.include_router(calculators_router, prefix="/api/v1")
 app.include_router(tax_documents_router, prefix="/api/v1")
 app.include_router(tax_plan_workspace_router, prefix="/api/v1")
 app.include_router(data_router, prefix="/api/v1")
+app.include_router(equity_router, prefix="/api/v1")
 app.include_router(waitlist_router, prefix="/api/v1/waitlist", tags=["Waitlist"])

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.models.debt_account import DebtAccount
     from app.models.income_source import IncomeSource
     from app.models.investment_account import InvestmentAccount
+    from app.models.equity_grant import EquityGrant
     from app.models.portfolio_snapshot import PortfolioSnapshot
     from app.models.tax_document import TaxDocument
     from app.models.tax_plan_workspace import TaxPlan
@@ -38,6 +39,9 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     investment_accounts: Mapped[list["InvestmentAccount"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    equity_grants: Mapped[list["EquityGrant"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
     portfolio_snapshots: Mapped[list["PortfolioSnapshot"]] = relationship(

@@ -12,6 +12,7 @@ from app.api.deps import require_scopes
 from app.db.session import get_async_session
 from app.models.holding import Holding
 from app.models.investment_account import InvestmentAccount
+from app.models.equity_grant import EquityGrant
 from app.models.portfolio_snapshot import PortfolioSnapshot
 from app.models.user import User
 from app.schemas.portfolio import (
@@ -22,6 +23,7 @@ from app.schemas.portfolio import (
     TopHolding,
 )
 from app.services.commingling import ComminglingDetectionEngine
+from app.services.equity_valuation import equity_valuation_service
 from app.services.portfolio_metrics import (
     get_cash_and_debt_totals,
     get_investment_total,
@@ -45,6 +47,15 @@ async def get_portfolio_summary(
     Includes net worth calculation, asset allocation, and concentration alerts.
     """
     total_cash, total_debt = await get_cash_and_debt_totals(session, user.id)
+
+    # Get equity grants and calculate valuation
+    equity_result = await session.execute(
+        select(EquityGrant).where(EquityGrant.user_id == user.id)
+    )
+    equity_grants = equity_result.scalars().all()
+    equity_summary = await equity_valuation_service.calculate_portfolio_summary(list(equity_grants))
+    total_equity_vested = equity_summary.total_vested_value
+    total_equity_unvested = equity_summary.total_unvested_value
 
     # Get investment accounts with holdings
     investment_result = await session.execute(
@@ -99,13 +110,14 @@ async def get_portfolio_summary(
             ))
 
     # Calculate net worth
-    net_worth = total_cash + total_investment - total_debt
+    net_worth = total_cash + total_investment + total_equity_vested - total_debt
 
     # Calculate allocation percentages
-    total_assets = total_cash + total_investment
+    total_assets = total_cash + total_investment + total_equity_vested
     if total_assets > 0:
-        # Add cash to asset allocation
+        # Add cash and equity to asset allocation
         allocation_by_asset_type["cash"] += total_cash
+        allocation_by_asset_type["equity"] += total_equity_vested
 
         asset_type_allocations = [
             AssetAllocation(
@@ -165,6 +177,8 @@ async def get_portfolio_summary(
         total_investment_value=total_investment,
         total_cash_value=total_cash,
         total_debt_value=total_debt,
+        total_equity_vested_value=total_equity_vested,
+        total_equity_unvested_value=total_equity_unvested,
         net_worth=net_worth,
         tax_advantaged_value=tax_advantaged_value,
         taxable_value=taxable_value,
