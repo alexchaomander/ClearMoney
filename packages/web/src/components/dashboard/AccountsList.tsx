@@ -3,8 +3,9 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ChevronRight, RefreshCw, AlertCircle } from "lucide-react";
-import { formatCurrency, formatTitleCase, getInitials } from "@/lib/shared/formatters";
+import { formatTitleCase, getInitials } from "@/lib/shared/formatters";
 import { staggerContainer, staggerItemHorizontal } from "@/lib/shared/animations";
+import { AnimatedAmount } from "@/components/shared/AnimatedAmount";
 
 interface Account {
   id: string;
@@ -34,7 +35,7 @@ export function AccountsList({ accounts }: AccountsListProps) {
 
   const renderAccountGroup = (title: string, accounts: Account[]) => (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium text-neutral-400 px-1">{title}</h3>
+      <h3 className="text-sm font-medium text-slate-400 dark:text-neutral-400 px-1">{title}</h3>
       <motion.div
         variants={staggerContainer}
         initial="hidden"
@@ -48,32 +49,32 @@ export function AccountsList({ accounts }: AccountsListProps) {
           >
             <Link
               href={`/dashboard/accounts/${account.id}`}
-              className="group flex items-center gap-3 p-3 rounded-xl bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-all duration-200"
+              className="group flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700 transition-all duration-200 shadow-sm dark:shadow-none"
             >
               {/* Logo/Initials */}
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-neutral-800 text-neutral-300 text-sm font-medium">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-300 text-sm font-medium">
                 {getInitials(account.name)}
               </div>
 
               {/* Account Info + Balance stacked */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="font-medium text-sm text-neutral-100 truncate">
+                  <p className="font-medium text-sm text-slate-900 dark:text-neutral-100 truncate">
                     {account.name}
                   </p>
-                  <p className="font-medium text-sm text-emerald-300 shrink-0">
-                    {formatCurrency(account.balance)}
+                  <p className="font-medium text-sm text-emerald-600 dark:text-emerald-300 shrink-0">
+                    <AnimatedAmount value={account.balance} />
                   </p>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-slate-500 dark:text-neutral-500">
                     {formatTitleCase(account.account_type)}
                     {account.status === "error" && (
-                      <AlertCircle className="inline w-3 h-3 text-red-400 ml-1" />
+                      <AlertCircle className="inline w-3 h-3 text-rose-500 dark:text-red-400 ml-1" />
                     )}
                   </p>
                   {account.last_synced_at && (
-                    <p className="text-xs text-neutral-500 shrink-0">
+                    <p className="text-xs text-slate-400 dark:text-neutral-500 shrink-0">
                       {new Date(account.last_synced_at).toLocaleDateString()}
                     </p>
                   )}

@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calculator, RefreshCw } from "lucide-react";
+import { Calculator, RefreshCw, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { NotificationCenter } from "@/components/dashboard/NotificationCenter";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { usePrivacy } from "@/lib/privacy-context";
 
 const hasClerkKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -22,6 +23,7 @@ export function DashboardHeader({
   showRefresh = false,
 }: DashboardHeaderProps) {
   const pathname = usePathname();
+  const { isVanished, toggleVanish } = usePrivacy();
 
   const navItems = [
     { label: "Tools", href: "/tools" },
@@ -77,6 +79,20 @@ export function DashboardHeader({
             </div>
 
             <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
+            
+            <button
+              onClick={toggleVanish}
+              className={`p-2 rounded-lg transition-colors ${
+                isVanished 
+                  ? "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20" 
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+              }`}
+              title={isVanished ? "Disable Vanish Mode (Cmd+I)" : "Enable Vanish Mode (Cmd+I)"}
+              aria-label="Toggle privacy mode"
+            >
+              {isVanished ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+
             <ThemeToggle />
 
             {showRefresh && onRefresh && (

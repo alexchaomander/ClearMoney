@@ -48,9 +48,9 @@ interface PortfolioHistoryChartProps {
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length || !label) return null;
   return (
-    <div className="rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 shadow-xl">
-      <p className="text-xs text-neutral-400">{formatTooltipDate(label)}</p>
-      <p className="text-sm font-medium text-white">
+    <div className="rounded-lg border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 shadow-xl">
+      <p className="text-xs text-slate-500 dark:text-neutral-400">{formatTooltipDate(label)}</p>
+      <p className="text-sm font-medium text-slate-900 dark:text-white">
         {formatCurrency(payload[0].value)}
       </p>
     </div>
@@ -70,9 +70,9 @@ export function PortfolioHistoryChart({ previewHistory }: PortfolioHistoryChartP
   const isLiveLoading = !hasPreview && isLoading;
 
   return (
-    <div className="p-6 rounded-xl bg-neutral-900 border border-neutral-800">
+    <div className="p-6 rounded-xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 shadow-sm dark:shadow-none">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-serif text-xl text-neutral-100">
+        <h3 className="font-serif text-xl text-slate-900 dark:text-neutral-100">
           Portfolio History
         </h3>
         <div className="flex gap-1">
@@ -83,7 +83,7 @@ export function PortfolioHistoryChart({ previewHistory }: PortfolioHistoryChartP
               className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
                 selectedRange === r.value
                   ? "bg-emerald-600 text-white"
-                  : "bg-neutral-800 text-neutral-400 hover:text-neutral-200"
+                  : "bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200"
               }`}
             >
               {r.label}
@@ -93,7 +93,7 @@ export function PortfolioHistoryChart({ previewHistory }: PortfolioHistoryChartP
       </div>
 
       {isLiveLoading || !historyData ? (
-        <div className="h-[280px] rounded-lg bg-neutral-800/50 animate-pulse" />
+        <div className="h-[280px] rounded-lg bg-slate-50 dark:bg-neutral-800/50 animate-pulse" />
       ) : (
         <ResponsiveContainer width="100%" height={280}>
           <AreaChart
@@ -107,21 +107,24 @@ export function PortfolioHistoryChart({ previewHistory }: PortfolioHistoryChartP
               </linearGradient>
             </defs>
             <CartesianGrid
-              stroke="#262626"
+              stroke="currentColor"
+              className="text-slate-200 dark:text-neutral-800"
               strokeDasharray="3 3"
               vertical={false}
             />
             <XAxis
               dataKey="date"
               tickFormatter={formatAxisDate}
-              tick={{ fill: "#737373", fontSize: 11 }}
+              tick={{ fill: "currentColor", fontSize: 11 }}
+              className="text-slate-400 dark:text-neutral-500"
               axisLine={false}
               tickLine={false}
               minTickGap={40}
             />
             <YAxis
               tickFormatter={(v: number) => formatCurrency(v)}
-              tick={{ fill: "#737373", fontSize: 11 }}
+              tick={{ fill: "currentColor", fontSize: 11 }}
+              className="text-slate-400 dark:text-neutral-500"
               axisLine={false}
               tickLine={false}
               width={80}
