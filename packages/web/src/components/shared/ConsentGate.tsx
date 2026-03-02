@@ -39,19 +39,19 @@ export function ConsentGate({
   }
 
   return (
-    <div className={cn("rounded-2xl border border-neutral-800 bg-neutral-950/70 p-6 text-neutral-100", className)}>
-      <div className="flex items-start gap-4">
-        <div className="rounded-xl bg-emerald-500/10 p-3 text-emerald-400">
+    <div className={cn("rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/70 p-6 text-slate-900 dark:text-neutral-100 shadow-sm dark:shadow-none", className)}>
+      <div className="flex items-start gap-4 text-left">
+        <div className="rounded-xl bg-emerald-500/10 p-3 text-emerald-600 dark:text-emerald-400">
           <ShieldCheck className="h-5 w-5" />
         </div>
         <div className="flex-1">
           <h3 className="text-lg font-semibold">{title}</h3>
-          <p className="mt-2 text-sm text-neutral-400">{description}</p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-neutral-400">{description}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {scopes.map((scope) => (
               <span
                 key={scope}
-                className="rounded-full border border-neutral-800 bg-neutral-900 px-3 py-1 text-xs uppercase tracking-wide text-neutral-300"
+                className="rounded-full border border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-600 dark:text-neutral-300"
               >
                 {scope.replace(/:/g, " ")}
               </span>
@@ -67,13 +67,13 @@ export function ConsentGate({
                   source: "web",
                 })
               }
-              className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-neutral-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-full bg-emerald-600 dark:bg-emerald-500 px-5 py-2 text-sm font-semibold text-white dark:text-neutral-950 transition hover:bg-emerald-500 dark:hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
               disabled={createConsent.isPending || isLoading}
             >
               Authorize access
               <ArrowRight className="h-4 w-4" />
             </button>
-            <div className="flex items-center gap-2 text-xs text-neutral-500">
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-neutral-500">
               <Lock className="h-4 w-4" />
               You control and can revoke this consent anytime.
             </div>

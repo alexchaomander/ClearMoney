@@ -33,15 +33,15 @@ export function DecisionTracePanel() {
   }, [activeTrace]);
 
   return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-950/70 p-6">
+    <div className="rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/70 p-6 shadow-sm dark:shadow-none">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-white">Decision Traces</h2>
-          <p className="text-sm text-neutral-400">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Decision Traces</h2>
+          <p className="text-sm text-slate-500 dark:text-neutral-400">
             See the data, rules, and reasoning behind every recommendation.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-neutral-500">
+        <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-neutral-500">
           <Database className="h-4 w-4" />
           Auditable history
         </div>
@@ -49,11 +49,11 @@ export function DecisionTracePanel() {
 
       <div className="mt-6 space-y-3">
         {isLoading ? (
-          <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 text-sm text-neutral-400">
+          <div className="rounded-xl border border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900/50 p-4 text-sm text-slate-400 dark:text-neutral-400">
             Loading traces...
           </div>
         ) : recentTraces.length === 0 ? (
-          <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 text-sm text-neutral-400">
+          <div className="rounded-xl border border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900/50 p-4 text-sm text-slate-400 dark:text-neutral-400">
             No decision traces yet. Create recommendations in the advisor to see them here.
           </div>
         ) : (
@@ -61,18 +61,18 @@ export function DecisionTracePanel() {
             <button
               key={trace.id}
               onClick={() => setActiveTrace(trace)}
-              className="w-full rounded-xl border border-neutral-800 bg-neutral-900/40 p-4 text-left transition hover:border-emerald-500/50 hover:bg-neutral-900/70"
+              className="w-full rounded-xl border border-slate-200 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-900/40 p-4 text-left transition hover:border-emerald-500/50 hover:bg-slate-100 dark:hover:bg-neutral-900/70 shadow-sm dark:shadow-none"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-white">
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">
                     {formatTraceType(trace.trace_type)} Trace
                   </p>
-                  <p className="text-xs text-neutral-400">
+                  <p className="text-xs text-slate-500 dark:text-neutral-400">
                     {format(new Date(trace.created_at), "MMM d, yyyy · h:mm a")}
                   </p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-neutral-500" />
+                <ChevronRight className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
               </div>
             </button>
           ))
@@ -81,25 +81,25 @@ export function DecisionTracePanel() {
 
       {activeTrace && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950">
-            <div className="flex items-start justify-between border-b border-neutral-800 px-6 py-4">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-2xl">
+            <div className="flex items-start justify-between border-b border-slate-100 dark:border-neutral-800 px-6 py-4">
               <div>
-                <p className="text-sm text-emerald-400">Decision Trace</p>
-                <h3 className="text-lg font-semibold text-white">
+                <p className="text-sm text-emerald-600 dark:text-emerald-400">Decision Trace</p>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                   {formatTraceType(activeTrace.trace_type)} #{activeTrace.id.slice(0, 8)}
                 </h3>
               </div>
               <button
                 onClick={() => setActiveTrace(null)}
-                className="text-sm text-neutral-400 hover:text-white"
+                className="text-sm text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white"
               >
                 Close
               </button>
             </div>
-            <div className="grid gap-4 overflow-y-auto p-6 text-sm text-neutral-200">
+            <div className="grid gap-4 overflow-y-auto p-6 text-sm text-slate-700 dark:text-neutral-200">
               {deterministic?.rules_applied?.length ? (
-                <section className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-neutral-400">
+                <section className="rounded-xl border border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900/40 p-4">
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-slate-500 dark:text-neutral-400">
                     <Info className="h-4 w-4" />
                     Deterministic Rules
                   </div>
@@ -107,17 +107,17 @@ export function DecisionTracePanel() {
                     {deterministic.rules_applied.map((rule, idx) => (
                       <div
                         key={`${rule.name}-${idx}`}
-                        className="flex items-start justify-between gap-4 rounded-lg border border-neutral-800 bg-neutral-950/60 px-3 py-2"
+                        className="flex items-start justify-between gap-4 rounded-lg border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/60 px-3 py-2"
                       >
                         <div>
-                          <p className="text-sm text-white">{rule.name}</p>
+                          <p className="text-sm text-slate-900 dark:text-white">{rule.name}</p>
                           {rule.message ? (
-                            <p className="text-xs text-neutral-400">{rule.message}</p>
+                            <p className="text-xs text-slate-500 dark:text-neutral-400">{rule.message}</p>
                           ) : null}
                         </div>
                         <span
                           className={`text-xs font-semibold ${
-                            rule.passed ? "text-emerald-300" : "text-rose-300"
+                            rule.passed ? "text-emerald-600 dark:text-emerald-300" : "text-rose-600 dark:text-rose-300"
                           }`}
                         >
                           {rule.passed ? "PASS" : "FLAG"}
@@ -128,55 +128,55 @@ export function DecisionTracePanel() {
                 </section>
               ) : null}
               {deterministic?.insights?.length ? (
-                <section className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-neutral-400">
+                <section className="rounded-xl border border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900/40 p-4">
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-slate-500 dark:text-neutral-400">
                     <Info className="h-4 w-4" />
                     Deterministic Insights
                   </div>
                   <div className="mt-3 space-y-3">
                     {deterministic.insights.map((insight, idx) => (
-                      <div key={`${insight.title}-${idx}`} className="rounded-lg border border-neutral-800 bg-neutral-950/60 px-3 py-2">
+                      <div key={`${insight.title}-${idx}`} className="rounded-lg border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/60 px-3 py-2">
                         <div className="flex items-center justify-between">
-                          <p className="text-sm text-white">{insight.title}</p>
+                          <p className="text-sm text-slate-900 dark:text-white">{insight.title}</p>
                           {insight.severity ? (
-                            <span className="text-xs uppercase text-neutral-500">{insight.severity}</span>
+                            <span className="text-xs uppercase text-slate-400 dark:text-neutral-500">{insight.severity}</span>
                           ) : null}
                         </div>
                         {insight.summary ? (
-                          <p className="mt-1 text-xs text-neutral-400">{insight.summary}</p>
+                          <p className="mt-1 text-xs text-slate-500 dark:text-neutral-400">{insight.summary}</p>
                         ) : null}
                         {insight.recommendation ? (
-                          <p className="mt-2 text-xs text-emerald-300">{insight.recommendation}</p>
+                          <p className="mt-2 text-xs text-emerald-600 dark:text-emerald-300">{insight.recommendation}</p>
                         ) : null}
                       </div>
                     ))}
                   </div>
                 </section>
               ) : null}
-              <section className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-neutral-400">
+              <section className="rounded-xl border border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900/40 p-4">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-slate-500 dark:text-neutral-400">
                   <Info className="h-4 w-4" />
                   Inputs
                 </div>
-                <pre className="mt-3 whitespace-pre-wrap text-xs text-neutral-300">
+                <pre className="mt-3 whitespace-pre-wrap text-xs text-slate-600 dark:text-neutral-300">
                   {JSON.stringify(activeTrace.input_data, null, 2)}
                 </pre>
               </section>
-              <section className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-neutral-400">
+              <section className="rounded-xl border border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900/40 p-4">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-slate-500 dark:text-neutral-400">
                   <Info className="h-4 w-4" />
                   Reasoning
                 </div>
-                <pre className="mt-3 whitespace-pre-wrap text-xs text-neutral-300">
+                <pre className="mt-3 whitespace-pre-wrap text-xs text-slate-600 dark:text-neutral-300">
                   {JSON.stringify(activeTrace.reasoning_steps, null, 2)}
                 </pre>
               </section>
-              <section className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-neutral-400">
+              <section className="rounded-xl border border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900/40 p-4">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-slate-500 dark:text-neutral-400">
                   <Info className="h-4 w-4" />
                   Outputs
                 </div>
-                <pre className="mt-3 whitespace-pre-wrap text-xs text-neutral-300">
+                <pre className="mt-3 whitespace-pre-wrap text-xs text-slate-600 dark:text-neutral-300">
                   {JSON.stringify(activeTrace.outputs, null, 2)}
                 </pre>
               </section>
