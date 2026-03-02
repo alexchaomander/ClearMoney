@@ -54,8 +54,8 @@ export function AssumptionControl() {
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-sm font-medium ${
           isOpen 
-            ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-400" 
-            : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200"
+            ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-600 dark:text-emerald-400" 
+            : "bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 text-slate-600 dark:text-neutral-400 hover:border-slate-300 dark:hover:border-neutral-700 hover:text-slate-900 dark:hover:text-neutral-200 shadow-sm dark:shadow-none"
         }`}
       >
         <TrendingUp className="w-4 h-4" />
@@ -73,14 +73,14 @@ export function AssumptionControl() {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="mt-4 p-6 rounded-2xl bg-neutral-900 border border-neutral-800 grid sm:grid-cols-3 gap-8">
+            <div className="mt-4 p-6 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 shadow-xl dark:shadow-none grid sm:grid-cols-3 gap-8">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-bold text-neutral-500 uppercase tracking-widest">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-widest">
                     <Percent className="w-3 h-3" />
                     Inflation
                   </div>
-                  <span className="text-sm font-bold text-emerald-400">{assumptions.inflation}%</span>
+                  <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{assumptions.inflation}%</span>
                 </div>
                 <Slider 
                   value={[assumptions.inflation]} 
@@ -91,11 +91,11 @@ export function AssumptionControl() {
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-bold text-neutral-500 uppercase tracking-widest">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-widest">
                     <TrendingUp className="w-3 h-3" />
                     Market Return
                   </div>
-                  <span className="text-sm font-bold text-emerald-400">{assumptions.marketReturn}%</span>
+                  <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{assumptions.marketReturn}%</span>
                 </div>
                 <Slider 
                   value={[assumptions.marketReturn]} 
@@ -106,11 +106,11 @@ export function AssumptionControl() {
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-bold text-neutral-500 uppercase tracking-widest">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-widest">
                     <Home className="w-3 h-3" />
                     Mortgage Baseline
                   </div>
-                  <span className="text-sm font-bold text-emerald-400">{assumptions.mortgageRate}%</span>
+                  <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{assumptions.mortgageRate}%</span>
                 </div>
                 <Slider 
                   value={[assumptions.mortgageRate]} 
@@ -119,15 +119,15 @@ export function AssumptionControl() {
                 />
               </div>
 
-              <div className="sm:col-span-3 pt-4 border-t border-neutral-800 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[10px] text-neutral-500">
+              <div className="sm:col-span-3 pt-4 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-[10px] text-slate-400 dark:text-neutral-500">
                   <Info className="w-3 h-3" />
                   Overrides are applied locally to all calculations on this page.
                 </div>
                 {isDirty && (
                   <button 
                     onClick={reset}
-                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors"
+                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white transition-colors"
                   >
                     <RotateCcw className="w-3 h-3" />
                     Reset Defaults
