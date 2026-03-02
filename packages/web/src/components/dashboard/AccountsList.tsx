@@ -3,8 +3,9 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ChevronRight, RefreshCw, AlertCircle } from "lucide-react";
-import { formatCurrency, formatTitleCase, getInitials } from "@/lib/shared/formatters";
+import { formatTitleCase, getInitials } from "@/lib/shared/formatters";
 import { staggerContainer, staggerItemHorizontal } from "@/lib/shared/animations";
+import { AnimatedAmount } from "@/components/shared/AnimatedAmount";
 
 interface Account {
   id: string;
@@ -62,7 +63,7 @@ export function AccountsList({ accounts }: AccountsListProps) {
                     {account.name}
                   </p>
                   <p className="font-medium text-sm text-emerald-600 dark:text-emerald-300 shrink-0">
-                    {formatCurrency(account.balance)}
+                    <AnimatedAmount value={account.balance} />
                   </p>
                 </div>
                 <div className="flex items-center justify-between gap-2">

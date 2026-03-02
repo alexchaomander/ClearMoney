@@ -15,6 +15,8 @@ import { ActionExecutionProvider } from "@/lib/strata/action-execution-context";
 import { DensityProvider } from "@/components/layout/DensityContext";
 import { AdvisorSidebar } from "@/components/advisor/AdvisorSidebar";
 import { HighlightProvider } from "@/lib/strata/highlight-context";
+import { PageTransition } from "./PageTransition";
+import { PrivacyProvider } from "@/lib/privacy-context";
 
 const hasClerkKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -29,12 +31,16 @@ function ProvidersContent({ children }: { children: ReactNode }) {
                 <AssumptionProvider>
                   <DensityProvider>
                     <HighlightProvider>
-                      {hasClerkKey ? <StrataAuthSync /> : null}
-                      <DemoBanner />
-                      <div className="flex min-h-screen flex-col">
-                        <main id="main-content" className="flex-1">{children}</main>
-                      </div>
-                      <AdvisorSidebar />
+                      <PrivacyProvider>
+                        {hasClerkKey ? <StrataAuthSync /> : null}
+                        <DemoBanner />
+                        <div className="flex min-h-screen flex-col">
+                          <main id="main-content" className="flex-1">
+                            <PageTransition>{children}</PageTransition>
+                          </main>
+                        </div>
+                        <AdvisorSidebar />
+                      </PrivacyProvider>
                     </HighlightProvider>
                   </DensityProvider>
                 </AssumptionProvider>

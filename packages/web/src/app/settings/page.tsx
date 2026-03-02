@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Trash2, RefreshCw, Wifi, Landmark, CreditCard, Info, Check, Shield, Lock, AlertCircle, TrendingUp } from "lucide-react";
+import { Trash2, RefreshCw, Wifi, Landmark, CreditCard, Info, Check, Shield, Lock, AlertCircle, TrendingUp, History, Plus } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import {
   useConnections,
@@ -27,6 +27,9 @@ import { ConsentGate } from "@/components/shared/ConsentGate";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/shared/toast";
+
+import { useSearchParams, useRouter } from "next/navigation";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const CONSENT_SCOPES = [
   "connections:read",
@@ -93,6 +96,105 @@ function PreferenceField({
         />
         {suffix && <span className="text-xs text-slate-500 w-4">{suffix}</span>}
       </div>
+    </div>
+  );
+}
+
+function SectionHeader({ icon: Icon, title, description }: { icon: any, title: string, description?: string }) {
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-1">
+        <Icon className="w-5 h-5 text-emerald-500" />
+        <h2 className="font-serif text-xl text-slate-900 dark:text-white">
+          {title}
+        </h2>
+      </div>
+      {description && (
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          {description}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function BillingSettings() {
+  const sectionClass = "p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800";
+  const { data: consents } = useConsents();
+  const { data: connections } = useConnections();
+  
+  return (
+    <div className="space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={sectionClass}
+      >
+        <SectionHeader 
+          icon={CreditCard} 
+          title="Current Plan" 
+          description="You are currently on the Free tier."
+        />
+        
+        <div className="grid sm:grid-cols-2 gap-4 mt-6">
+          <div className="p-4 rounded-xl border-2 border-emerald-500/20 bg-emerald-500/5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-2">
+              <div className="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
+                Active
+              </div>
+            </div>
+            <h4 className="font-bold text-slate-900 dark:text-white mb-1">ClearMoney Free</h4>
+            <p className="text-2xl font-black text-slate-900 dark:text-white">$0<span className="text-xs font-normal text-slate-500">/mo</span></p>
+            <ul className="mt-4 space-y-2">
+              {[
+                { label: "3 connected accounts", current: connections?.length || 0, max: 3 },
+                { label: "Show the Math traces", current: true },
+                { label: "Basic AI advisor", current: true },
+                { label: "Manual asset tracking", current: true }
+              ].map((feat, i) => (
+                <li key={i} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                  <Check className="w-3 h-3 text-emerald-500" />
+                  {feat.label}
+                  {typeof feat.current === 'number' && (
+                    <span className="ml-auto text-[10px] font-medium text-slate-400">
+                      {feat.current}/{feat.max}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          <button className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500/50 transition-all text-left group">
+            <h4 className="font-bold text-slate-900 dark:text-white mb-1 group-hover:text-emerald-500 transition-colors">ClearMoney Premium</h4>
+            <p className="text-2xl font-black text-slate-900 dark:text-white">$29<span className="text-xs font-normal text-slate-500">/mo</span></p>
+            <ul className="mt-4 space-y-2">
+              {["Unlimited accounts", "SMS/Voice access", "Tax doc ingestion", "Action execution"].map(feat => (
+                <li key={feat} className="flex items-center gap-2 text-xs text-slate-500">
+                  <Plus className="w-3 h-3 text-slate-300" />
+                  {feat}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-6 w-full py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg text-center text-xs font-bold transition-transform active:scale-95">
+              Upgrade to Premium
+            </div>
+          </button>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className={sectionClass}
+      >
+        <SectionHeader 
+          icon={History} 
+          title="Billing History" 
+          description="No invoices found."
+        />
+      </motion.div>
     </div>
   );
 }
@@ -210,6 +312,16 @@ function ActionPolicySettings() {
 }
 
 export default function SettingsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const activeTab = searchParams.get("tab") || "general";
+  
+  const setTab = (tab: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", tab);
+    router.push(`/settings?${params.toString()}`);
+  };
+
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const { pushToast } = useToast();
 
@@ -265,479 +377,474 @@ export default function SettingsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="font-serif text-3xl text-slate-900 dark:text-white mb-1">Settings</h1>
-          <p className="text-slate-500 dark:text-slate-400 mb-8">
-            Manage your accounts, connections, and preferences
-          </p>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="font-serif text-3xl text-slate-900 dark:text-white mb-1">Settings</h1>
+              <p className="text-slate-500 dark:text-slate-400">
+                Manage your accounts, connections, and preferences
+              </p>
+            </div>
+          </div>
         </motion.div>
 
-        <ConsentGate
-          scopes={["connections:read", "connections:write", "accounts:read", "accounts:write"]}
-          purpose="Manage connected accounts and manual entries."
-        >
-        <div className="space-y-6">
-          {/* Connected Accounts */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className={sectionClass}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <Wifi className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-slate-900 dark:text-white">
-                Connected Accounts
-              </h2>
-            </div>
+        <Tabs value={activeTab} onValueChange={setTab} className="space-y-8">
+          <TabsList className="mb-4">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="billing">Billing & Plan</TabsTrigger>
+          </TabsList>
 
-            {connectionsLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-14 rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse" />
-                ))}
-              </div>
-            ) : connections && connections.length > 0 ? (
-              <div className="space-y-2">
-                {connections.map((conn) => (
-                  <div key={conn.id} className={rowClass}>
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium">
-                      {getInitials(getInstitutionName(conn.institution_id, institutions))}
+          <TabsContent value="general" className="space-y-8 outline-none">
+            <ConsentGate
+              scopes={["connections:read", "connections:write", "accounts:read", "accounts:write"]}
+              purpose="Manage connected accounts and manual entries."
+            >
+              <div className="space-y-6">
+                {/* Connected Accounts */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className={sectionClass}
+                >
+                  <SectionHeader icon={Wifi} title="Connected Accounts" />
+
+                  {connectionsLoading ? (
+                    <div className="space-y-2">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="h-14 rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse" />
+                      ))}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
-                        {getInstitutionName(conn.institution_id, institutions)}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Status: {conn.status} &middot; Provider: {conn.provider}
-                      </p>
-                    </div>
-                    <div className="flex gap-1 shrink-0">
-                      <button
-                        onClick={() => syncConnection.mutate(conn.id)}
-                        disabled={syncConnection.isPending}
-                        className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-400 hover:bg-emerald-400/10 transition-all"
-                        title="Sync"
-                        aria-label="Sync connection"
-                      >
-                        <RefreshCw className={`w-4 h-4 ${syncConnection.isPending ? "animate-spin" : ""}`} />
-                      </button>
-                      {pendingDeleteId === conn.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-slate-500 dark:text-slate-400">Delete?</span>
-                          <button
-                            onClick={() => {
-                              deleteConnection.mutate(conn.id);
-                              setPendingDeleteId(null);
-                            }}
-                            className="text-xs font-medium px-2 py-0.5 rounded-md text-red-400 hover:bg-red-400/10 transition-all"
-                          >
-                            Yes
-                          </button>
-                          <button
-                            onClick={() => setPendingDeleteId(null)}
-                            className="text-xs font-medium px-2 py-0.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
-                          >
-                            Cancel
-                          </button>
+                  ) : connections && connections.length > 0 ? (
+                    <div className="space-y-2">
+                      {connections.map((conn) => (
+                        <div key={conn.id} className={rowClass}>
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium">
+                            {getInitials(getInstitutionName(conn.institution_id, institutions))}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
+                              {getInstitutionName(conn.institution_id, institutions)}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Status: {conn.status} &middot; Provider: {conn.provider}
+                            </p>
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            <button
+                              onClick={() => syncConnection.mutate(conn.id)}
+                              disabled={syncConnection.isPending}
+                              className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-400 hover:bg-emerald-400/10 transition-all"
+                              title="Sync"
+                              aria-label="Sync connection"
+                            >
+                              <RefreshCw className={`w-4 h-4 ${syncConnection.isPending ? "animate-spin" : ""}`} />
+                            </button>
+                            {pendingDeleteId === conn.id ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs text-slate-500 dark:text-slate-400">Delete?</span>
+                                <button
+                                  onClick={() => {
+                                    deleteConnection.mutate(conn.id);
+                                    setPendingDeleteId(null);
+                                  }}
+                                  className="text-xs font-medium px-2 py-0.5 rounded-md text-red-400 hover:bg-red-400/10 transition-all"
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  onClick={() => setPendingDeleteId(null)}
+                                  className="text-xs font-medium px-2 py-0.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setPendingDeleteId(conn.id)}
+                                className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                                title="Disconnect"
+                                aria-label="Disconnect account"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      ) : (
-                        <button
-                          onClick={() => setPendingDeleteId(conn.id)}
-                          className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all"
-                          title="Disconnect"
-                          aria-label="Disconnect account"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500">No connected accounts</p>
+                  )}
+                </motion.div>
+
+                {/* Manual Accounts */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className={sectionClass}
+                >
+                  <SectionHeader icon={Landmark} title="Manual Accounts" />
+
+                  {accountsLoading ? (
+                    <div className="space-y-2">
+                      {[1, 2].map((i) => (
+                        <div key={i} className="h-14 rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {allAccounts?.cash_accounts.map((account) => (
+                        <div key={account.id} className={rowClass}>
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-emerald-900/30 text-emerald-400 text-sm font-medium">
+                            {getInitials(account.name)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
+                              {account.name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Cash &middot; {formatTitleCase(account.account_type)}
+                              {account.institution_name ? ` &middot; ${account.institution_name}` : ""}
+                            </p>
+                          </div>
+                          <div className="flex gap-1 shrink-0 items-center">
+                            <button
+                              onClick={() => cashMutations.update.mutate({ id: account.id, data: { is_business: !account.is_business } })}
+                              className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
+                                account.is_business
+                                  ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-400"
+                                  : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-500 dark:hover:text-slate-400"
+                              }`}
+                            >
+                              {account.is_business ? "Business" : "Personal"}
+                            </button>
+                            {pendingDeleteId === account.id ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs text-slate-500 dark:text-slate-400">Delete?</span>
+                                <button
+                                  onClick={() => {
+                                    cashMutations.remove.mutate(account.id);
+                                    setPendingDeleteId(null);
+                                  }}
+                                  className="text-xs font-medium px-2 py-0.5 rounded-md text-red-400 hover:bg-red-400/10 transition-all"
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  onClick={() => setPendingDeleteId(null)}
+                                  className="text-xs font-medium px-2 py-0.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setPendingDeleteId(account.id)}
+                                className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
+                                title="Delete"
+                                aria-label="Delete cash account"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+
+                      {allAccounts?.debt_accounts.map((account) => (
+                        <div key={account.id} className={rowClass}>
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-red-900/30 text-red-400 text-sm font-medium">
+                            <CreditCard className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
+                              {account.name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Debt &middot; {formatTitleCase(account.debt_type)}
+                              {account.institution_name ? ` &middot; ${account.institution_name}` : ""}
+                            </p>
+                          </div>
+                          <div className="flex gap-1 shrink-0 items-center">
+                            <button
+                              onClick={() => debtMutations.update.mutate({ id: account.id, data: { is_business: !account.is_business } })}
+                              className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
+                                account.is_business
+                                  ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-400"
+                                  : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-500 dark:hover:text-slate-400"
+                              }`}
+                            >
+                              {account.is_business ? "Business" : "Personal"}
+                            </button>
+                            {pendingDeleteId === account.id ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs text-slate-500 dark:text-slate-400">Delete?</span>
+                                <button
+                                  onClick={() => {
+                                    debtMutations.remove.mutate(account.id);
+                                    setPendingDeleteId(null);
+                                  }}
+                                  className="text-xs font-medium px-2 py-0.5 rounded-md text-red-400 hover:bg-red-400/10 transition-all"
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  onClick={() => setPendingDeleteId(null)}
+                                  className="text-xs font-medium px-2 py-0.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setPendingDeleteId(account.id)}
+                                className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
+                                title="Delete"
+                                aria-label="Delete debt account"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+
+                      {allAccounts?.investment_accounts.filter(a => !a.connection_id).map((account) => (
+                        <div key={account.id} className={rowClass}>
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-sky-900/30 text-sky-400 text-sm font-medium">
+                            <TrendingUp className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
+                              {account.name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Investment &middot; {formatTitleCase(account.account_type)}
+                            </p>
+                          </div>
+                          <div className="flex gap-1 shrink-0 items-center">
+                            <button
+                              onClick={() => investmentMutations.update.mutate({ id: account.id, data: { is_business: !account.is_business } })}
+                              className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
+                                account.is_business
+                                  ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-400"
+                                  : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-500 dark:hover:text-slate-400"
+                              }`}
+                            >
+                              {account.is_business ? "Business" : "Personal"}
+                            </button>
+                            {pendingDeleteId === account.id ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs text-slate-500 dark:text-slate-400">Delete?</span>
+                                <button
+                                  onClick={() => {
+                                    investmentMutations.remove.mutate(account.id);
+                                    setPendingDeleteId(null);
+                                  }}
+                                  className="text-xs font-medium px-2 py-0.5 rounded-md text-red-400 hover:bg-red-400/10 transition-all"
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  onClick={() => setPendingDeleteId(null)}
+                                  className="text-xs font-medium px-2 py-0.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setPendingDeleteId(account.id)}
+                                className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+
+                      {(!allAccounts?.cash_accounts.length && !allAccounts?.debt_accounts.length && !allAccounts?.investment_accounts.filter(a => !a.connection_id).length) && (
+                        <p className="text-sm text-slate-500">No manual accounts</p>
                       )}
                     </div>
-                  </div>
-                ))}
+                  )}
+                </motion.div>
               </div>
-            ) : (
-              <p className="text-sm text-slate-500">No connected accounts</p>
-            )}
-          </motion.div>
+            </ConsentGate>
 
-          {/* Manual Accounts */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className={sectionClass}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <Landmark className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-slate-900 dark:text-white">
-                Manual Accounts
-              </h2>
-            </div>
+            <div className="space-y-6">
+              {/* Security Policy */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className={sectionClass}
+              >
+                <SectionHeader 
+                  icon={Shield} 
+                  title="Action Policy & Guardrails" 
+                  description="Define the boundaries for the AI Advisor's execution capabilities."
+                />
+                <ActionPolicySettings />
+              </motion.div>
 
-            {accountsLoading ? (
-              <div className="space-y-2">
-                {[1, 2].map((i) => (
-                  <div key={i} className="h-14 rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse" />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {allAccounts?.cash_accounts.map((account) => (
-                  <div key={account.id} className={rowClass}>
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-emerald-900/30 text-emerald-400 text-sm font-medium">
-                      {getInitials(account.name)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
-                        {account.name}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Cash &middot; {formatTitleCase(account.account_type)}
-                        {account.institution_name ? ` &middot; ${account.institution_name}` : ""}
-                      </p>
-                    </div>
-                    <div className="flex gap-1 shrink-0 items-center">
-                      <button
-                        onClick={() => cashMutations.update.mutate({ id: account.id, data: { is_business: !account.is_business } })}
-                        className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
-                          account.is_business
-                            ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-400"
-                            : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-500 dark:hover:text-slate-400"
-                        }`}
-                      >
-                        {account.is_business ? "Business" : "Personal"}
-                      </button>
-                      {pendingDeleteId === account.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-slate-500 dark:text-slate-400">Delete?</span>
-                          <button
-                            onClick={() => {
-                              cashMutations.remove.mutate(account.id);
-                              setPendingDeleteId(null);
-                            }}
-                            className="text-xs font-medium px-2 py-0.5 rounded-md text-red-400 hover:bg-red-400/10 transition-all"
-                          >
-                            Yes
-                          </button>
-                          <button
-                            onClick={() => setPendingDeleteId(null)}
-                            className="text-xs font-medium px-2 py-0.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
-                          >
-                            Cancel
-                          </button>
+              {/* Consent Controls */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className={sectionClass}
+              >
+                <SectionHeader 
+                  icon={Info} 
+                  title="Data Access & Consent" 
+                  description="You control what data ClearMoney can use. Revoke access at any time."
+                />
+                <div className="space-y-3">
+                  {CONSENT_SCOPES.map((scope) => {
+                    const active = consents?.find(
+                      (c) =>
+                        c.status === "active" && c.scopes.includes(scope)
+                    );
+                    return (
+                      <div key={scope} className={rowClass}>
+                        <div className="flex-1">
+                          <p className="text-sm text-slate-900 dark:text-white">{scope.replace(/:/g, " ")}</p>
+                          <p className="text-xs text-slate-500">
+                            {active ? "Active consent" : "Not granted"}
+                          </p>
                         </div>
-                      ) : (
-                        <button
-                          onClick={() => setPendingDeleteId(account.id)}
-                          className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
-                          title="Delete"
-                          aria-label="Delete cash account"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {allAccounts?.debt_accounts.map((account) => (
-                  <div key={account.id} className={rowClass}>
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-red-900/30 text-red-400 text-sm font-medium">
-                      <CreditCard className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
-                        {account.name}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Debt &middot; {formatTitleCase(account.debt_type)}
-                        {account.institution_name ? ` &middot; ${account.institution_name}` : ""}
-                      </p>
-                    </div>
-                    <div className="flex gap-1 shrink-0 items-center">
-                      <button
-                        onClick={() => debtMutations.update.mutate({ id: account.id, data: { is_business: !account.is_business } })}
-                        className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
-                          account.is_business
-                            ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-400"
-                            : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-500 dark:hover:text-slate-400"
-                        }`}
-                      >
-                        {account.is_business ? "Business" : "Personal"}
-                      </button>
-                      {pendingDeleteId === account.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-slate-500 dark:text-slate-400">Delete?</span>
+                        {active ? (
                           <button
-                            onClick={() => {
-                              debtMutations.remove.mutate(account.id);
-                              setPendingDeleteId(null);
-                            }}
-                            className="text-xs font-medium px-2 py-0.5 rounded-md text-red-400 hover:bg-red-400/10 transition-all"
+                            onClick={() => revokeConsent.mutate(active.id)}
+                            disabled={revokeConsent.isPending}
+                            className="text-xs rounded-full border border-slate-300 dark:border-slate-700 px-3 py-1 text-slate-700 dark:text-slate-300 hover:border-rose-400 hover:text-rose-300 transition"
                           >
-                            Yes
+                            Revoke
                           </button>
-                          <button
-                            onClick={() => setPendingDeleteId(null)}
-                            className="text-xs font-medium px-2 py-0.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setPendingDeleteId(account.id)}
-                          className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
-                          title="Delete"
-                          aria-label="Delete debt account"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {allAccounts?.investment_accounts.filter(a => !a.connection_id).map((account) => (
-                  <div key={account.id} className={rowClass}>
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-sky-900/30 text-sky-400 text-sm font-medium">
-                      <TrendingUp className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
-                        {account.name}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Investment &middot; {formatTitleCase(account.account_type)}
-                      </p>
-                    </div>
-                    <div className="flex gap-1 shrink-0 items-center">
-                      <button
-                        onClick={() => investmentMutations.update.mutate({ id: account.id, data: { is_business: !account.is_business } })}
-                        className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
-                          account.is_business
-                            ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-400"
-                            : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-500 dark:hover:text-slate-400"
-                        }`}
-                      >
-                        {account.is_business ? "Business" : "Personal"}
-                      </button>
-                      {pendingDeleteId === account.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-slate-500 dark:text-slate-400">Delete?</span>
-                          <button
-                            onClick={() => {
-                              investmentMutations.remove.mutate(account.id);
-                              setPendingDeleteId(null);
-                            }}
-                            className="text-xs font-medium px-2 py-0.5 rounded-md text-red-400 hover:bg-red-400/10 transition-all"
-                          >
-                            Yes
-                          </button>
-                          <button
-                            onClick={() => setPendingDeleteId(null)}
-                            className="text-xs font-medium px-2 py-0.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setPendingDeleteId(account.id)}
-                          className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {(!allAccounts?.cash_accounts.length && !allAccounts?.debt_accounts.length && !allAccounts?.investment_accounts.filter(a => !a.connection_id).length) && (
-                  <p className="text-sm text-slate-500">No manual accounts</p>
-                )}
-              </div>
-            )}
-          </motion.div>
-        </div>
-        </ConsentGate>
-
-        <div className="space-y-6">
-          {/* Security Policy */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className={sectionClass}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <Shield className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-slate-900 dark:text-white">
-                Action Policy & Guardrails
-              </h2>
-            </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-              Define the boundaries for the AI Advisor&apos;s execution capabilities.
-            </p>
-            <ActionPolicySettings />
-          </motion.div>
-
-          {/* Consent Controls */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className={sectionClass}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <Info className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-slate-900 dark:text-white">
-                Data Access & Consent
-              </h2>
-            </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-              You control what data ClearMoney can use. Revoke access at any time.
-            </p>
-            <div className="space-y-3">
-              {CONSENT_SCOPES.map((scope) => {
-                const active = consents?.find(
-                  (c) =>
-                    c.status === "active" && c.scopes.includes(scope)
-                );
-                return (
-                  <div key={scope} className={rowClass}>
-                    <div className="flex-1">
-                      <p className="text-sm text-slate-900 dark:text-white">{scope.replace(/:/g, " ")}</p>
-                      <p className="text-xs text-slate-500">
-                        {active ? "Active consent" : "Not granted"}
-                      </p>
-                    </div>
-                    {active ? (
-                      <button
-                        onClick={() => revokeConsent.mutate(active.id)}
-                        disabled={revokeConsent.isPending}
-                        className="text-xs rounded-full border border-slate-300 dark:border-slate-700 px-3 py-1 text-slate-700 dark:text-slate-300 hover:border-rose-400 hover:text-rose-300 transition"
-                      >
-                        Revoke
-                      </button>
-                    ) : (
-                      <span className="text-xs text-slate-500">—</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-
-          {/* Preferences */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className={sectionClass}
-          >
-            <h2 className="font-serif text-xl text-slate-900 dark:text-white mb-4">
-              Financial Assumptions (Seven Pillars)
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-              Customize the global constants used for projections and analysis.
-            </p>
-            <div className="divide-y divide-slate-200 dark:divide-slate-800">
-              <PreferenceField
-                label="Inflation Target"
-                prefKey="inflation_target"
-                preferences={preferences}
-                onSave={(v) => savePreference("inflation_target", v)}
-                suffix="%"
-              />
-              <PreferenceField
-                label="Market Return Target (Conservative)"
-                prefKey="market_return_conservative"
-                preferences={preferences}
-                onSave={(v) => savePreference("market_return_conservative", v)}
-                suffix="%"
-              />
-              <PreferenceField
-                label="Market Return Target (Moderate)"
-                prefKey="market_return_moderate"
-                preferences={preferences}
-                onSave={(v) => savePreference("market_return_moderate", v)}
-                suffix="%"
-              />
-              <PreferenceField
-                label="Market Return Target (Aggressive)"
-                prefKey="market_return_aggressive"
-                preferences={preferences}
-                onSave={(v) => savePreference("market_return_aggressive", v)}
-                suffix="%"
-              />
-              <PreferenceField
-                label="Mortgage Rate Baseline"
-                prefKey="mortgage_rate_baseline"
-                preferences={preferences}
-                onSave={(v) => savePreference("mortgage_rate_baseline", v)}
-                suffix="%"
-              />
-              <PreferenceField
-                label="Home Price Appreciation"
-                prefKey="home_appreciation"
-                preferences={preferences}
-                onSave={(v) => savePreference("home_appreciation", v)}
-                suffix="%"
-              />
-            </div>
-          </motion.div>
-
-          {/* Account Settings */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className={sectionClass}
-          >
-            <h2 className="font-serif text-xl text-slate-900 dark:text-white mb-4">
-              Notifications
-            </h2>
-            <div className="space-y-3">
-              <label className="flex items-center justify-between">
-                <span className="text-sm text-slate-700 dark:text-slate-300">
-                  Email notifications
-                </span>
-                <div className="w-10 h-6 rounded-full bg-slate-200 dark:bg-slate-700 relative cursor-not-allowed opacity-50">
-                  <div className="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-400 absolute top-1 left-1" />
+                        ) : (
+                          <span className="text-xs text-slate-500">—</span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              </label>
-              <label className="flex items-center justify-between">
-                <span className="text-sm text-slate-700 dark:text-slate-300">
-                  Weekly portfolio summary
-                </span>
-                <div className="w-10 h-6 rounded-full bg-slate-200 dark:bg-slate-700 relative cursor-not-allowed opacity-50">
-                  <div className="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-400 absolute top-1 left-1" />
-                </div>
-              </label>
-            </div>
-          </motion.div>
+              </motion.div>
 
-          {/* About */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className={sectionClass}
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <Info className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-slate-900 dark:text-white">About</h2>
+              {/* Preferences */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className={sectionClass}
+              >
+                <SectionHeader 
+                  icon={TrendingUp} 
+                  title="Financial Assumptions (Seven Pillars)" 
+                  description="Customize the global constants used for projections and analysis."
+                />
+                <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                  <PreferenceField
+                    label="Inflation Target"
+                    prefKey="inflation_target"
+                    preferences={preferences}
+                    onSave={(v) => savePreference("inflation_target", v)}
+                    suffix="%"
+                  />
+                  <PreferenceField
+                    label="Market Return Target (Conservative)"
+                    prefKey="market_return_conservative"
+                    preferences={preferences}
+                    onSave={(v) => savePreference("market_return_conservative", v)}
+                    suffix="%"
+                  />
+                  <PreferenceField
+                    label="Market Return Target (Moderate)"
+                    prefKey="market_return_moderate"
+                    preferences={preferences}
+                    onSave={(v) => savePreference("market_return_moderate", v)}
+                    suffix="%"
+                  />
+                  <PreferenceField
+                    label="Market Return Target (Aggressive)"
+                    prefKey="market_return_aggressive"
+                    preferences={preferences}
+                    onSave={(v) => savePreference("market_return_aggressive", v)}
+                    suffix="%"
+                  />
+                  <PreferenceField
+                    label="Mortgage Rate Baseline"
+                    prefKey="mortgage_rate_baseline"
+                    preferences={preferences}
+                    onSave={(v) => savePreference("mortgage_rate_baseline", v)}
+                    suffix="%"
+                  />
+                  <PreferenceField
+                    label="Home Price Appreciation"
+                    prefKey="home_appreciation"
+                    preferences={preferences}
+                    onSave={(v) => savePreference("home_appreciation", v)}
+                    suffix="%"
+                  />
+                </div>
+              </motion.div>
+
+              {/* Account Settings */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+                className={sectionClass}
+              >
+                <h2 className="font-serif text-xl text-slate-900 dark:text-white mb-4">
+                  Notifications
+                </h2>
+                <div className="space-y-3">
+                  <label className="flex items-center justify-between">
+                    <span className="text-sm text-slate-700 dark:text-slate-300">
+                      Email notifications
+                    </span>
+                    <div className="w-10 h-6 rounded-full bg-slate-200 dark:bg-slate-700 relative cursor-not-allowed opacity-50">
+                      <div className="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-400 absolute top-1 left-1" />
+                    </div>
+                  </label>
+                  <label className="flex items-center justify-between">
+                    <span className="text-sm text-slate-700 dark:text-slate-300">
+                      Weekly portfolio summary
+                    </span>
+                    <div className="w-10 h-6 rounded-full bg-slate-200 dark:bg-slate-700 relative cursor-not-allowed opacity-50">
+                      <div className="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-400 absolute top-1 left-1" />
+                    </div>
+                  </label>
+                </div>
+              </motion.div>
+
+              {/* About */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className={sectionClass}
+              >
+                <SectionHeader icon={Info} title="About" />
+                <div className="space-y-1 text-sm text-slate-500 dark:text-slate-400">
+                  <p>
+                    <span className="text-slate-700 dark:text-slate-300 font-medium">ClearMoney</span>{" "}
+                    — Portfolio Dashboard
+                  </p>
+                  <p>Version 0.1.0</p>
+                </div>
+              </motion.div>
             </div>
-            <div className="space-y-1 text-sm text-slate-500 dark:text-slate-400">
-              <p>
-                <span className="text-slate-700 dark:text-slate-300 font-medium">ClearMoney</span>{" "}
-                — Portfolio Dashboard
-              </p>
-              <p>Version 0.1.0</p>
-            </div>
-          </motion.div>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="billing" className="outline-none">
+            <BillingSettings />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
