@@ -234,6 +234,7 @@ export interface StrataClientInterface {
   exportFinancialPassport(): Promise<FinancialPassport>;
   // Equity
   getEquityPortfolio(): Promise<EquityPortfolioSummary>;
+  getEquityProjections(): Promise<Array<{ date: string; total_value: number; liquid_value: number }>>;
   createEquityGrant(data: EquityGrantCreate): Promise<EquityGrant>;
   updateEquityGrant(id: string, data: EquityGrantUpdate): Promise<EquityGrant>;
   deleteEquityGrant(id: string): Promise<void>;
@@ -1140,6 +1141,10 @@ export class StrataClient implements StrataClientInterface {
 
   async getEquityPortfolio(): Promise<EquityPortfolioSummary> {
     return this.request<EquityPortfolioSummary>('/api/v1/equity/portfolio');
+  }
+
+  async getEquityProjections(): Promise<Array<{ date: string; total_value: number; liquid_value: number }>> {
+    return this.request('/api/v1/equity/projections');
   }
 
   async createEquityGrant(data: EquityGrantCreate): Promise<EquityGrant> {

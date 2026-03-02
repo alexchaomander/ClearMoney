@@ -47,6 +47,7 @@ import {
   useCashAccountMutations,
   useDebtAccountMutations,
   useEquityPortfolio,
+  useEquityProjections,
   useEquityGrantMutations,
   useConsentStatus,
   useSyncAllConnections,
@@ -158,6 +159,11 @@ export default function DashboardPage() {
     isLoading: equityLoading,
   } = useEquityPortfolio({ enabled: hasPortfolioConsent });
 
+  const {
+    data: equityProjections,
+    isLoading: projectionsLoading,
+  } = useEquityProjections({ enabled: hasPortfolioConsent });
+
   const equityMutations = useEquityGrantMutations();
 
   const isLoading =
@@ -166,7 +172,8 @@ export default function DashboardPage() {
     holdingsLoading ||
     allAccountsLoading ||
     connectionsLoading ||
-    equityLoading;
+    equityLoading ||
+    projectionsLoading;
   const isError = portfolioError || accountsError || holdingsError || allAccountsError || connectionsError;
   const errorDetails =
     portfolioErrorDetails ||
@@ -427,6 +434,7 @@ export default function DashboardPage() {
             {equityPortfolio && (
               <EquityCard
                 portfolio={equityPortfolio}
+                projections={equityProjections}
                 onDeleteGrant={(symbol) => {
                   // Find the grant ID by symbol (simplified for demo)
                   const grant = equityPortfolio.grant_valuations.find(v => v.symbol === symbol);
