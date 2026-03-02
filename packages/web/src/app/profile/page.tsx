@@ -69,8 +69,8 @@ function SliderField({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="text-sm text-neutral-400">{label}</label>
-        <span className="text-sm font-medium text-emerald-400">
+        <label className="text-sm text-slate-500 dark:text-slate-400">{label}</label>
+        <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
           {formatValue(localValue)}
         </span>
       </div>
@@ -123,10 +123,10 @@ function NumberField({
 
   return (
     <div>
-      <label className="block text-sm text-neutral-400 mb-1">{label}</label>
+      <label className="block text-sm text-slate-500 dark:text-slate-400 mb-1">{label}</label>
       <div className="flex items-center gap-1">
         {prefix && (
-          <span className="text-sm text-neutral-500">{prefix}</span>
+          <span className="text-sm text-slate-400 dark:text-slate-500">{prefix}</span>
         )}
         <input
           type="number"
@@ -140,10 +140,10 @@ function NumberField({
           }}
           onBlur={handleBlur}
           onKeyDown={(e) => e.key === "Enter" && handleBlur()}
-          className="w-full rounded-lg bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+          className="w-full rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50"
         />
         {suffix && (
-          <span className="text-sm text-neutral-500">{suffix}</span>
+          <span className="text-sm text-slate-400 dark:text-slate-500">{suffix}</span>
         )}
       </div>
     </div>
@@ -167,14 +167,14 @@ function SelectField({
 
   return (
     <div>
-      <label className="block text-sm text-neutral-400 mb-1">{label}</label>
+      <label className="block text-sm text-slate-500 dark:text-slate-400 mb-1">{label}</label>
       <select
         value={currentValue ?? ""}
         onChange={(e) => {
           const val = e.target.value || null;
           onSave({ [memoryKey]: val } as unknown as FinancialMemoryUpdate);
         }}
-        className="w-full rounded-lg bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+        className="w-full rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 appearance-none"
       >
         <option value="">--</option>
         {options.map((o) => (
@@ -235,19 +235,19 @@ export default function ProfilePage() {
   );
 
   const sectionClass =
-    "p-6 rounded-xl bg-neutral-900 border border-neutral-800";
+    "p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none";
 
   if (isLoading || !memory) {
     return (
-      <div className="min-h-screen bg-neutral-950">
+      <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
         <DashboardHeader />
         <main className="max-w-4xl mx-auto px-6 lg:px-8 py-8">
           {!hasMemoryConsent && (
             <ConsentGate
               scopes={["memory:read", "memory:write"]}
-              purpose="Store and update your financial profile."
+              purpose="Store and update your financial profile to power advisors."
             >
-              <div className="text-sm text-neutral-400">
+              <div className="text-sm text-slate-500 dark:text-slate-400">
                 Authorize access to load your profile.
               </div>
             </ConsentGate>
@@ -256,7 +256,7 @@ export default function ProfilePage() {
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="h-48 rounded-xl bg-neutral-800/50 animate-pulse"
+                className="h-48 rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse"
               />
             ))}
           </div>
@@ -266,9 +266,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 transition-colors duration-500">
       <div
-        className="fixed inset-0 opacity-30 pointer-events-none"
+        className="fixed inset-0 opacity-0 dark:opacity-30 pointer-events-none"
         style={{
           background:
             "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 60%)",
@@ -280,7 +280,7 @@ export default function ProfilePage() {
       <main className="relative z-10 max-w-4xl mx-auto px-6 lg:px-8 py-8">
         <ConsentGate
           scopes={["memory:read", "memory:write"]}
-          purpose="Store and update your financial profile."
+          purpose="Store and update your financial profile to power advisors."
         >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -289,10 +289,10 @@ export default function ProfilePage() {
         >
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="font-serif text-3xl text-white mb-1">
+              <h1 className="font-serif text-3xl text-slate-900 dark:text-white mb-1">
                 Financial Profile
               </h1>
-              <p className="text-neutral-400">
+              <p className="text-slate-500 dark:text-slate-400">
                 Your financial facts power pre-filled calculators and the AI
                 advisor
               </p>
@@ -301,7 +301,7 @@ export default function ProfilePage() {
               <button
                 onClick={() => deriveMemory.mutate()}
                 disabled={deriveMemory.isPending}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-emerald-900/40 text-emerald-300 hover:bg-emerald-900/60 border border-emerald-800/40 transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-emerald-900/20 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-900/30 border border-emerald-800/40 transition-all disabled:opacity-50"
               >
                 <RefreshCw
                   className={`w-4 h-4 ${deriveMemory.isPending ? "animate-spin" : ""}`}
@@ -310,7 +310,7 @@ export default function ProfilePage() {
               </button>
               <button
                 onClick={() => setShowEvents((v) => !v)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-neutral-800 text-neutral-300 hover:bg-neutral-700 border border-neutral-700 transition-all"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all shadow-sm"
               >
                 <History className="w-4 h-4" />
                 History
@@ -324,7 +324,7 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="mb-4 flex items-center gap-2 text-sm text-emerald-400"
+            className="mb-4 flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400"
           >
             <Check className="w-4 h-4" />
             Profile updated
@@ -340,8 +340,8 @@ export default function ProfilePage() {
             className={sectionClass}
           >
             <div className="flex items-center gap-2 mb-4">
-              <User className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-neutral-100">
+              <User className="w-5 h-5 text-emerald-500" />
+              <h2 className="font-serif text-xl text-slate-900 dark:text-slate-100">
                 Demographics
               </h2>
             </div>
@@ -387,8 +387,8 @@ export default function ProfilePage() {
             className={sectionClass}
           >
             <div className="flex items-center gap-2 mb-4">
-              <DollarSign className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-neutral-100">Income</h2>
+              <DollarSign className="w-5 h-5 text-emerald-500" />
+              <h2 className="font-serif text-xl text-slate-900 dark:text-slate-100">Income</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <NumberField
@@ -439,8 +439,8 @@ export default function ProfilePage() {
             className={sectionClass}
           >
             <div className="flex items-center gap-2 mb-4">
-              <Percent className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-neutral-100">
+              <Percent className="w-5 h-5 text-emerald-500" />
+              <h2 className="font-serif text-xl text-slate-900 dark:text-slate-100">
                 Tax Rates
               </h2>
             </div>
@@ -486,8 +486,8 @@ export default function ProfilePage() {
             className={sectionClass}
           >
             <div className="flex items-center gap-2 mb-4">
-              <PiggyBank className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-neutral-100">
+              <PiggyBank className="w-5 h-5 text-emerald-500" />
+              <h2 className="font-serif text-xl text-slate-900 dark:text-slate-100">
                 Retirement
               </h2>
             </div>
@@ -562,8 +562,8 @@ export default function ProfilePage() {
             className={sectionClass}
           >
             <div className="flex items-center gap-2 mb-4">
-              <Home className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-neutral-100">Housing</h2>
+              <Home className="w-5 h-5 text-emerald-500" />
+              <h2 className="font-serif text-xl text-slate-900 dark:text-slate-100">Housing</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <NumberField
@@ -614,16 +614,16 @@ export default function ProfilePage() {
             className={sectionClass}
           >
             <div className="flex items-center gap-2 mb-4">
-              <Target className="w-5 h-5 text-emerald-400" />
-              <h2 className="font-serif text-xl text-neutral-100">
+              <Target className="w-5 h-5 text-emerald-500" />
+              <h2 className="font-serif text-xl text-slate-900 dark:text-slate-100">
                 Goals & Preferences
               </h2>
             </div>
             <div className="space-y-6">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm text-neutral-400">Risk Tolerance</label>
-                  <span className="text-sm font-medium text-emerald-400 capitalize">
+                  <label className="text-sm text-slate-500 dark:text-slate-400">Risk Tolerance</label>
+                  <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400 capitalize">
                     {memory.risk_tolerance || "Not set"}
                   </span>
                 </div>
@@ -641,7 +641,7 @@ export default function ProfilePage() {
                   }}
                   className="py-4"
                 />
-                <div className="flex justify-between text-[10px] text-neutral-500 uppercase tracking-widest px-1">
+                <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">
                   <span>Conservative</span>
                   <span>Moderate</span>
                   <span>Aggressive</span>
@@ -686,8 +686,8 @@ export default function ProfilePage() {
               className={sectionClass}
             >
               <div className="flex items-center gap-2 mb-4">
-                <History className="w-5 h-5 text-emerald-400" />
-                <h2 className="font-serif text-xl text-neutral-100">
+                <History className="w-5 h-5 text-emerald-500" />
+                <h2 className="font-serif text-xl text-slate-900 dark:text-slate-100">
                   Change History
                 </h2>
               </div>
@@ -696,24 +696,24 @@ export default function ProfilePage() {
                   {events.map((event) => (
                     <div
                       key={event.id}
-                      className="flex items-start gap-3 p-3 rounded-lg bg-neutral-800/50 text-sm"
+                      className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-sm border border-slate-100 dark:border-slate-800"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="text-neutral-200">
-                          <span className="font-medium text-neutral-100">
+                        <p className="text-slate-700 dark:text-slate-200">
+                          <span className="font-medium text-slate-900 dark:text-slate-100">
                             {event.field_name}
                           </span>
                           {" "}
                           changed from{" "}
-                          <span className="text-red-400">
+                          <span className="text-rose-500 dark:text-red-400">
                             {event.old_value ?? "empty"}
                           </span>{" "}
                           to{" "}
-                          <span className="text-emerald-400">
+                          <span className="text-emerald-600 dark:text-emerald-400">
                             {event.new_value ?? "empty"}
                           </span>
                         </p>
-                        <p className="text-xs text-neutral-500 mt-0.5">
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                           {event.source}
                           {event.context ? ` — ${event.context}` : ""} &middot;{" "}
                           {new Date(event.created_at).toLocaleString()}
@@ -723,7 +723,7 @@ export default function ProfilePage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-neutral-500">No changes recorded yet</p>
+                <p className="text-sm text-slate-500">No changes recorded yet</p>
               )}
             </motion.div>
           )}
