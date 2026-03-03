@@ -14,6 +14,7 @@ class CashAccountCreate(BaseModel):
     apy: Decimal | None = None
     institution_name: str | None = None
     is_business: bool = False
+    entity_id: uuid.UUID | None = None
 
 
 class CashAccountUpdate(BaseModel):
@@ -23,6 +24,7 @@ class CashAccountUpdate(BaseModel):
     apy: Decimal | None = None
     institution_name: str | None = None
     is_business: bool | None = None
+    entity_id: uuid.UUID | None = None
 
 
 class CashAccountResponse(BaseModel):
@@ -34,6 +36,7 @@ class CashAccountResponse(BaseModel):
     apy: Decimal | None
     institution_name: str | None
     is_business: bool
+    entity_id: uuid.UUID | None = None
     created_at: datetime
     updated_at: datetime
 

@@ -24,7 +24,7 @@ def upgrade() -> None:
     op.create_table('entities',
     sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
-    sa.Column('entity_type', sa.Enum('personal', 'c_corp', 'llc', 'spv', 'trust', name='entitytype'), server_default='personal', nullable=False),
+    sa.Column('entity_type', sa.Enum('personal', 'c_corp', 's_corp', 'llc', 'spv', 'trust', name='entitytype'), server_default='personal', nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),

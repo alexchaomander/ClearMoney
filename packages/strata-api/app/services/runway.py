@@ -1,4 +1,5 @@
 import uuid
+from datetime import date, timedelta
 from decimal import Decimal
 
 from sqlalchemy import select
@@ -63,9 +64,7 @@ class RunwayService:
 
     async def _calculate_observed_burn(self, user_id: uuid.UUID, is_business: bool) -> Decimal:
         """Calculate average monthly burn based on debits in the last 90 days."""
-        # We handle entity vs is_business gracefully here:
-        # If an account has an entity, we check the entity_type.
-        # If not, we fall back to the old is_business flag.
+        cutoff = date.today() - timedelta(days=90)
         result = await self._session.execute(
             select(BankTransaction)
             .join(CashAccount)
@@ -73,7 +72,8 @@ class RunwayService:
             .options(joinedload(BankTransaction.cash_account).joinedload(CashAccount.entity))
             .where(
                 CashAccount.user_id == user_id,
-                BankTransaction.amount < 0  # Debits
+                BankTransaction.amount < 0,  # Debits
+                BankTransaction.transaction_date >= cutoff,
             )
         )
         transactions = result.scalars().all()

@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 class EntityType(str, enum.Enum):
     personal = "personal"
     c_corp = "c_corp"
+    s_corp = "s_corp"
     llc = "llc"
     spv = "spv"
     trust = "trust"
@@ -35,11 +36,11 @@ class LegalEntity(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     user: Mapped["User"] = relationship(back_populates="entities")
     cash_accounts: Mapped[list["CashAccount"]] = relationship(
-        back_populates="entity", cascade="all, delete-orphan"
+        back_populates="entity", cascade="save-update, merge"
     )
     debt_accounts: Mapped[list["DebtAccount"]] = relationship(
-        back_populates="entity", cascade="all, delete-orphan"
+        back_populates="entity", cascade="save-update, merge"
     )
     investment_accounts: Mapped[list["InvestmentAccount"]] = relationship(
-        back_populates="entity", cascade="all, delete-orphan"
+        back_populates="entity", cascade="save-update, merge"
     )
