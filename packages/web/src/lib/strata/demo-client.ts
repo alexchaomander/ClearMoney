@@ -1074,6 +1074,11 @@ export class DemoStrataClient implements StrataClientInterface {
     this.cryptoWallets = this.cryptoWallets.filter(w => w.id !== walletId);
   }
 
+  async deleteAllCryptoWallets(): Promise<void> {
+    await delay(300);
+    this.cryptoWallets = [];
+  }
+
   async getCryptoPortfolio(): Promise<CryptoPortfolioResponse> {
     await delay(600);
     if (this.cryptoWallets.length === 0) {
@@ -1085,51 +1090,58 @@ export class DemoStrataClient implements StrataClientInterface {
       };
     }
 
+    const assets = [
+      {
+        symbol: "ETH",
+        name: "Ethereum",
+        balance: 4.25,
+        balance_usd: 9850.50,
+        current_price: 2317.76,
+        chain: "ethereum" as const,
+        contract_address: null,
+        logo_url: "https://assets.coingecko.com/coins/images/279/small/ethereum.png"
+      },
+      {
+        symbol: "USDC",
+        name: "USD Coin",
+        balance: 12500.00,
+        balance_usd: 12500.00,
+        current_price: 1.00,
+        chain: "ethereum" as const,
+        contract_address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        logo_url: "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png"
+      }
+    ];
+    const defi_positions = [
+      {
+        protocol_name: "Aave V3",
+        protocol_logo: "https://assets.coingecko.com/markets/images/698/small/aave.png",
+        position_type: "Lending",
+        value_usd: 22850.00,
+        assets: [
+          {
+            symbol: "WETH",
+            name: "Wrapped Ether",
+            balance: 10.0,
+            balance_usd: 23177.60,
+            current_price: 2317.76,
+            chain: "ethereum" as const,
+            contract_address: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+            logo_url: null
+          }
+        ]
+      }
+    ];
+
+    const total_value_usd =
+      assets.reduce((sum, a) => sum + a.balance_usd, 0) +
+      defi_positions.reduce((sum, p) => sum + p.value_usd, 0);
+
     return {
       wallets: this.cryptoWallets,
-      total_value_usd: 45200.50,
-      assets: [
-        {
-          symbol: "ETH",
-          name: "Ethereum",
-          balance: 4.25,
-          balance_usd: 9850.50,
-          current_price: 2317.76,
-          chain: "ethereum",
-          contract_address: null,
-          logo_url: "https://assets.coingecko.com/coins/images/279/small/ethereum.png"
-        },
-        {
-          symbol: "USDC",
-          name: "USD Coin",
-          balance: 12500.00,
-          balance_usd: 12500.00,
-          current_price: 1.00,
-          chain: "ethereum",
-          contract_address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-          logo_url: "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png"
-        }
-      ],
-      defi_positions: [
-        {
-          protocol_name: "Aave V3",
-          protocol_logo: "https://assets.coingecko.com/markets/images/698/small/aave.png",
-          position_type: "Lending",
-          value_usd: 22850.00,
-          assets: [
-            {
-              symbol: "WETH",
-              name: "Wrapped Ether",
-              balance: 10.0,
-              balance_usd: 23177.60,
-              current_price: 2317.76,
-              chain: "ethereum",
-              contract_address: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-              logo_url: null
-            }
-          ]
-        }
-      ]
+      total_value_usd,
+      assets,
+      defi_positions,
     };
   }
 

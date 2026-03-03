@@ -73,7 +73,7 @@ __all__ = [
     "MemoryEventSource",
     "PortfolioSnapshot",
     "Recommendation",
-  "RecommendationStatus",
+    "RecommendationStatus",
     "RiskTolerance",
     "SessionStatus",
     "Security",

@@ -18,12 +18,6 @@ class CryptoWalletCreate(CryptoWalletBase):
     pass
 
 
-class CryptoWalletUpdate(BaseModel):
-    address: str | None = None
-    chain: CryptoChain | None = None
-    label: str | None = None
-
-
 class CryptoWallet(CryptoWalletBase):
     id: uuid.UUID
     user_id: uuid.UUID

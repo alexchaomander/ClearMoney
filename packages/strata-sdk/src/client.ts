@@ -246,6 +246,7 @@ export interface StrataClientInterface {
   listCryptoWallets(): Promise<CryptoWallet[]>;
   addCryptoWallet(data: CryptoWalletCreate): Promise<CryptoWallet>;
   deleteCryptoWallet(walletId: string): Promise<void>;
+  deleteAllCryptoWallets(): Promise<void>;
   getCryptoPortfolio(): Promise<CryptoPortfolioResponse>;
   // Verification (SVP)
   generateProofOfFunds(threshold: number): Promise<SVPAttestation>;
@@ -1191,6 +1192,12 @@ export class StrataClient implements StrataClientInterface {
 
   async deleteCryptoWallet(walletId: string): Promise<void> {
     await this.request<void>(`/api/v1/crypto/wallets/${walletId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async deleteAllCryptoWallets(): Promise<void> {
+    await this.request<void>('/api/v1/crypto/wallets', {
       method: 'DELETE',
     });
   }

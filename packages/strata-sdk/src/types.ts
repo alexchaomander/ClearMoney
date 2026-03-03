@@ -1447,12 +1447,6 @@ export interface CryptoWalletCreate {
   label?: string | null;
 }
 
-export interface CryptoWalletUpdate {
-  address?: string;
-  chain?: CryptoChain;
-  label?: string | null;
-}
-
 export interface CryptoAsset {
   symbol: string;
   name: string;

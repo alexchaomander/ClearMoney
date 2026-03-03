@@ -25,6 +25,16 @@ class CryptoService:
 
     async def add_wallet(self, user_id: uuid.UUID, wallet_in: CryptoWalletCreate) -> CryptoWallet:
         """Add a new crypto wallet address to track."""
+        existing = await self.session.execute(
+            select(CryptoWallet).where(
+                CryptoWallet.user_id == user_id,
+                CryptoWallet.address == wallet_in.address,
+                CryptoWallet.chain == wallet_in.chain,
+            )
+        )
+        if existing.scalar_one_or_none():
+            raise ValueError("Wallet already tracked for this address and chain")
+
         wallet = CryptoWallet(
             user_id=user_id,
             address=wallet_in.address,
@@ -56,6 +66,18 @@ class CryptoService:
         await self.session.delete(wallet)
         await self.session.commit()
         return True
+
+    async def delete_all_wallets(self, user_id: uuid.UUID) -> int:
+        """Remove all tracked wallets for a user. Returns the count deleted."""
+        result = await self.session.execute(
+            select(CryptoWallet).where(CryptoWallet.user_id == user_id)
+        )
+        wallets = list(result.scalars().all())
+        for wallet in wallets:
+            await self.session.delete(wallet)
+        if wallets:
+            await self.session.commit()
+        return len(wallets)
 
     async def get_portfolio(self, user_id: uuid.UUID) -> CryptoPortfolioResponse:
         """

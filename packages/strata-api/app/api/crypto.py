@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -35,7 +35,10 @@ async def add_wallet(
 ):
     """Add a new crypto wallet address to track."""
     service = CryptoService(session)
-    return await service.add_wallet(user.id, wallet_in)
+    try:
+        return await service.add_wallet(user.id, wallet_in)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.delete("/wallets/{wallet_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -49,6 +52,16 @@ async def delete_wallet(
     success = await service.delete_wallet(user.id, wallet_id)
     if not success:
         raise HTTPException(status_code=404, detail="Wallet not found")
+
+
+@router.delete("/wallets", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_all_wallets(
+    user: Annotated[User, Depends(require_scopes(["portfolio:write"]))],
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
+    """Remove all tracked crypto wallets for the user."""
+    service = CryptoService(session)
+    await service.delete_all_wallets(user.id)
 
 
 @router.get("/portfolio", response_model=CryptoPortfolioResponse)

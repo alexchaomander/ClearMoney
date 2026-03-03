@@ -207,7 +207,16 @@ export function useCryptoWalletMutations() {
     },
   });
 
-  return { add, remove };
+  const removeAll = useMutation({
+    mutationFn: () => client.deleteAllCryptoWallets(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoWallets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoPortfolio });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  return { add, remove, removeAll };
 }
 
 export function useRunwayMetrics(options?: { enabled?: boolean }) {

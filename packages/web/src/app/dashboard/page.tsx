@@ -397,6 +397,7 @@ export default function DashboardPage() {
                 totalLiabilities={effectivePortfolio.total_debt_value}
                 netWorth={adjustedNetWorth}
                 taxAdvantagedValue={effectivePortfolio.tax_advantaged_value}
+                // Simplification: all crypto treated as taxable for now
                 taxableValue={effectivePortfolio.taxable_value + totalCryptoValue}
                 vestedEquityValue={effectivePortfolio.total_equity_vested_value}
                 unvestedEquityValue={effectivePortfolio.total_equity_unvested_value}
@@ -448,7 +449,39 @@ export default function DashboardPage() {
               title="By Account Type"
             />
 
-            {cryptoPortfolio && cryptoPortfolio.wallets.length > 0 && (
+            {cryptoLoading && (
+              <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm animate-pulse">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="space-y-2">
+                    <div className="h-5 w-28 rounded bg-slate-200 dark:bg-slate-800" />
+                    <div className="h-3 w-40 rounded bg-slate-100 dark:bg-slate-800/50" />
+                  </div>
+                  <div className="space-y-2 flex flex-col items-end">
+                    <div className="h-5 w-24 rounded bg-slate-200 dark:bg-slate-800" />
+                    <div className="h-3 w-16 rounded bg-slate-100 dark:bg-slate-800/50" />
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center justify-between p-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800" />
+                        <div className="space-y-1">
+                          <div className="h-3 w-12 rounded bg-slate-200 dark:bg-slate-800" />
+                          <div className="h-2 w-16 rounded bg-slate-100 dark:bg-slate-800/50" />
+                        </div>
+                      </div>
+                      <div className="space-y-1 flex flex-col items-end">
+                        <div className="h-3 w-16 rounded bg-slate-200 dark:bg-slate-800" />
+                        <div className="h-2 w-12 rounded bg-slate-100 dark:bg-slate-800/50" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!cryptoLoading && cryptoPortfolio && cryptoPortfolio.wallets.length > 0 && (
               <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden relative group">
                 <div className="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.05] pointer-events-none group-hover:rotate-12 transition-transform duration-700">
                   <Coins className="w-24 h-24" />
@@ -508,14 +541,8 @@ export default function DashboardPage() {
                 </div>
                 
                 <div className="mt-6">
-                  <button 
-                    onClick={() => {
-                      if (cryptoPortfolio?.wallets) {
-                        for (const wallet of cryptoPortfolio.wallets) {
-                          cryptoMutations.remove.mutate(wallet.id);
-                        }
-                      }
-                    }}
+                  <button
+                    onClick={() => cryptoMutations.removeAll.mutate()}
                     className="w-full py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
                   >
                     Disconnect Wallets

@@ -6,6 +6,7 @@ import { X, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type {
   CashAccountType,
+  CryptoChain,
   DebtType,
   InvestmentAccountType,
 } from "@clearmoney/strata-sdk";
@@ -121,7 +122,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
 
   // Crypto form
   const [cryptoAddress, setCryptoAddress] = useState("");
-  const [cryptoChain, setCryptoChain] = useState("ethereum");
+  const [cryptoChain, setCryptoChain] = useState<CryptoChain>("ethereum");
   const [cryptoLabel, setCryptoLabel] = useState("");
   const [addressError, setAddressError] = useState<string | null>(null);
 
@@ -141,6 +142,12 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
       const solRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
       if (!solRegex.test(address)) {
         setAddressError("Invalid Solana address format.");
+        return false;
+      }
+    } else if (chain === "bitcoin") {
+      const btcRegex = /^(1|3|bc1)[a-zA-HJ-NP-Z0-9]{25,62}$/;
+      if (!btcRegex.test(address)) {
+        setAddressError("Invalid Bitcoin address format.");
         return false;
       }
     }
@@ -229,7 +236,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
       if (!validateAddress(cryptoAddress, cryptoChain)) return;
       await cryptoMutations.add.mutateAsync({
         address: cryptoAddress,
-        chain: cryptoChain as any,
+        chain: cryptoChain,
         label: cryptoLabel || null,
       });
     }
@@ -459,7 +466,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                         <div>
                           <label className={labelClass}>Network / Chain</label>
                           <select className={selectClass} value={cryptoChain} onChange={(e) => {
-                            setCryptoChain(e.target.value);
+                            setCryptoChain(e.target.value as CryptoChain);
                             if (addressError) setAddressError(null);
                           }}>
                             {CRYPTO_CHAINS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
