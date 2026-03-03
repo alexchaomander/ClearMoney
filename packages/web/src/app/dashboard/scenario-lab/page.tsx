@@ -14,16 +14,23 @@ const RetirementMonteCarloChart = dynamic(
 import { ConsentGate } from "@/components/shared/ConsentGate";
 import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
 import { ScenarioLab } from "@/components/dashboard/ScenarioLab";
-import { usePortfolioSummary, useRunwayMetrics } from "@/lib/strata/hooks";
+import { usePortfolioSummary, useRunwayMetrics, useTaxShieldMetrics } from "@/lib/strata/hooks";
+
+const DEMO_YTD_MONTHS = 6;
 
 export default function ScenarioLabPage() {
   const { data: portfolio } = usePortfolioSummary();
   const { data: runwayMetrics } = useRunwayMetrics();
+  const { data: taxShield } = useTaxShieldMetrics();
 
   // Fallbacks for demo
-  const baseMonthlyBurn = runwayMetrics?.personal.monthly_burn ?? 12000;
-  const baseTotalLiquid = (portfolio?.total_cash_value ?? 0) + (portfolio?.total_investment_value ?? 0) || 150000;
-  const baseRevenue = 0;
+  const baseMonthlyBurn = runwayMetrics?.entity.monthly_burn ?? runwayMetrics?.personal.monthly_burn ?? 12000;
+  const baseTotalLiquid = runwayMetrics?.entity.liquid_cash ?? ((portfolio?.total_cash_value ?? 0) + (portfolio?.total_investment_value ?? 0) || 150000);
+
+  // Estimate monthly revenue from YTD business income.
+  // Cap at 60% of burn so net burn stays meaningful in the scenario simulation.
+  const grossMonthlyRevenue = taxShield ? Math.round(taxShield.ytd_business_income / DEMO_YTD_MONTHS) : 0;
+  const baseRevenue = Math.min(grossMonthlyRevenue, Math.round(baseMonthlyBurn * 0.6));
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950">
