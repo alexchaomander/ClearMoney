@@ -40,9 +40,16 @@ export function CashDebtSection({ cashAccounts, debtAccounts, onDeleteCashAccoun
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <p className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                  {account.name}
-                </p>
+                <div className="flex items-center gap-2 min-w-0">
+                  <p className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                    {account.name}
+                  </p>
+                  {account.is_business && (
+                    <span className="shrink-0 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">
+                      Biz
+                    </span>
+                  )}
+                </div>
                 <p className="font-black text-sm text-emerald-600 dark:text-emerald-400 shrink-0">
                   <AnimatedAmount value={account.balance} />
                 </p>
@@ -81,9 +88,16 @@ export function CashDebtSection({ cashAccounts, debtAccounts, onDeleteCashAccoun
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <p className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
-                  {account.name}
-                </p>
+                <div className="flex items-center gap-2 min-w-0">
+                  <p className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                    {account.name}
+                  </p>
+                  {account.is_business && (
+                    <span className="shrink-0 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">
+                      Biz
+                    </span>
+                  )}
+                </div>
                 <p className="font-black text-sm text-rose-600 dark:text-rose-400 shrink-0">
                   <AnimatedAmount value={account.balance} prefix="-$" />
                 </p>

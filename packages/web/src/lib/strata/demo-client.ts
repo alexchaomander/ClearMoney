@@ -141,6 +141,16 @@ export class DemoStrataClient implements StrataClientInterface {
       last_balance_usd: 45200.50,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+    },
+    {
+      id: "demo-wallet-002",
+      user_id: "demo-user-001",
+      address: "H8S9Pjdb6p56T3fSjS3vSjS3vSjS3vSjS3vSjS3vSjS3",
+      chain: "solana",
+      label: "Solana Phantom",
+      last_balance_usd: 12450.75,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     }
   ];
 
@@ -260,9 +270,9 @@ export class DemoStrataClient implements StrataClientInterface {
     await delay(150);
     return {
       risk_score: 26,
-      commingled_count: 1,
-      commingled_amount: 320,
-      total_analyzed: 42,
+      commingled_count: 3,
+      commingled_amount: 1420.50,
+      total_analyzed: 142,
       status: "warning",
     };
   }
@@ -270,7 +280,7 @@ export class DemoStrataClient implements StrataClientInterface {
   async getRunwayMetrics(): Promise<RunwayMetrics> {
     await delay(150);
     return {
-      personal: { liquid_cash: 120000, monthly_burn: 7000, runway_months: 17.1 },
+      personal: { liquid_cash: 57340, monthly_burn: 6200, runway_months: 9.2 },
       entity: { liquid_cash: 410000, monthly_burn: 28000, runway_months: 14.6 },
     };
   }
@@ -290,6 +300,7 @@ export class DemoStrataClient implements StrataClientInterface {
     await delay(300);
     return getDemoHoldings();
   }
+
 
   async getTransactions(
     _params?: { accountId?: string; startDate?: string; endDate?: string }
@@ -820,11 +831,120 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async getBankAccounts(): Promise<BankAccount[]> {
-    return [];
+    await delay(300);
+    return [
+      {
+        id: "demo-cash-001",
+        user_id: "demo-user-001",
+        connection_id: "demo-conn-chase",
+        name: "Chase Checking",
+        account_type: "checking",
+        balance: 12340.0,
+        available_balance: 12100.0,
+        institution_name: "Chase",
+        mask: "1234",
+        is_manual: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "demo-cash-biz-001",
+        user_id: "demo-user-001",
+        connection_id: "demo-conn-mercury",
+        name: "ClearMoney Operating",
+        account_type: "checking",
+        balance: 410000.0,
+        available_balance: 408500.0,
+        institution_name: "Mercury",
+        mask: "0420",
+        is_manual: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ];
   }
 
-  async getBankTransactions(_params?: BankTransactionQuery): Promise<PaginatedBankTransactions> {
-    return { transactions: [], total: 0, page: 1, page_size: 50, total_pages: 1 };
+  async getBankTransactions(params?: BankTransactionQuery): Promise<PaginatedBankTransactions> {
+    await delay(500);
+    const transactions = [
+      {
+        id: "demo-tx-1",
+        cash_account_id: "demo-cash-biz-001",
+        provider_transaction_id: "ptx-1",
+        amount: 18000,
+        transaction_date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        posted_date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        name: "STRIPE PAYOUT",
+        primary_category: "INCOME",
+        detailed_category: "INCOME_OTHER_INCOME",
+        merchant_name: "Stripe",
+        payment_channel: "online",
+        pending: false,
+        iso_currency_code: "USD",
+        reimbursed_at: null,
+        reimbursement_memo: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "demo-tx-2",
+        cash_account_id: "demo-cash-biz-001",
+        provider_transaction_id: "ptx-2",
+        amount: -1250.00,
+        transaction_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        posted_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        name: "AWS",
+        primary_category: "GENERAL_SERVICES",
+        detailed_category: "GENERAL_SERVICES_CLOUD_SERVICES",
+        merchant_name: "Amazon Web Services",
+        payment_channel: "online",
+        pending: false,
+        iso_currency_code: "USD",
+        reimbursed_at: null,
+        reimbursement_memo: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "demo-tx-3",
+        cash_account_id: "demo-cash-001",
+        provider_transaction_id: "ptx-3",
+        amount: -45.67,
+        transaction_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        posted_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        name: "UBER EATS",
+        primary_category: "FOOD_AND_DRINK",
+        detailed_category: "FOOD_AND_DRINK_RESTAURANTS",
+        merchant_name: "Uber Eats",
+        payment_channel: "online",
+        pending: false,
+        iso_currency_code: "USD",
+        reimbursed_at: null,
+        reimbursement_memo: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "demo-tx-4",
+        cash_account_id: "demo-cash-biz-001",
+        provider_transaction_id: "ptx-4",
+        amount: -2000.00,
+        transaction_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        posted_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        name: "OPENAI",
+        primary_category: "GENERAL_SERVICES",
+        detailed_category: "GENERAL_SERVICES_SOFTWARE",
+        merchant_name: "OpenAI",
+        payment_channel: "online",
+        pending: false,
+        iso_currency_code: "USD",
+        reimbursed_at: null,
+        reimbursement_memo: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ];
+    return { transactions, total: transactions.length, page: 1, page_size: 50, total_pages: 1 };
   }
 
   async updateBankTransactionReimbursement(
@@ -834,12 +954,39 @@ export class DemoStrataClient implements StrataClientInterface {
     throw new Error("Not implemented in demo mode");
   }
 
-  async getSpendingSummary(_months?: number): Promise<SpendingSummary> {
-    throw new Error("Not implemented in demo mode");
+  async getSpendingSummary(_months: number = 3): Promise<SpendingSummary> {
+    await delay(300);
+    return {
+      total_spending: 31200,
+      monthly_average: 10400,
+      categories: [
+        { category: "GENERAL_SERVICES", total: 18000, percentage: 57.7, transaction_count: 24 },
+        { category: "FOOD_AND_DRINK", total: 4200, percentage: 13.5, transaction_count: 58 },
+        { category: "TRANSPORTATION", total: 3500, percentage: 11.2, transaction_count: 42 },
+        { category: "SHOPPING", total: 2500, percentage: 8.0, transaction_count: 15 },
+        { category: "RENT_AND_UTILITIES", total: 3000, percentage: 9.6, transaction_count: 3 },
+      ],
+      start_date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      end_date: new Date().toISOString().slice(0, 10),
+      months_analyzed: 3,
+    };
   }
 
   async getSubscriptions(): Promise<SubscriptionSummary> {
-    return { subscriptions: [], total_monthly_subscription_burn: 0, subscription_count: 0 };
+    await delay(200);
+    const subscriptions: Subscription[] = [
+      { merchant: "AWS", amount: 1250.00, monthly_impact: 1250.00, frequency: "monthly", last_date: "2026-01-01", category: "Cloud" },
+      { merchant: "Google Workspace", amount: 144.00, monthly_impact: 144.00, frequency: "monthly", last_date: "2026-01-12", category: "Productivity" },
+      { merchant: "Slack", amount: 88.00, monthly_impact: 88.00, frequency: "monthly", last_date: "2026-01-15", category: "Communication" },
+      { merchant: "OpenAI", amount: 2000.00, monthly_impact: 2000.00, frequency: "monthly", last_date: "2026-01-20", category: "AI" },
+      { merchant: "GitHub", amount: 42.00, monthly_impact: 42.00, frequency: "monthly", last_date: "2026-01-22", category: "Development" },
+    ];
+    const total = subscriptions.reduce((sum, s) => sum + s.monthly_impact, 0);
+    return { 
+      subscriptions, 
+      total_monthly_subscription_burn: total, 
+      subscription_count: subscriptions.length 
+    };
   }
 
   // === Share Reports ===
@@ -1110,6 +1257,26 @@ export class DemoStrataClient implements StrataClientInterface {
         chain: "ethereum" as const,
         contract_address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
         logo_url: "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png"
+      },
+      {
+        symbol: "SOL",
+        name: "Solana",
+        balance: 42.5,
+        balance_usd: 5418.75,
+        current_price: 127.50,
+        chain: "solana" as const,
+        contract_address: null,
+        logo_url: "https://assets.coingecko.com/coins/images/4128/small/solana.png"
+      },
+      {
+        symbol: "JUP",
+        name: "Jupiter",
+        balance: 1200,
+        balance_usd: 1320.00,
+        current_price: 1.10,
+        chain: "solana" as const,
+        contract_address: "JUPyiKBSn7W9zFicNsSQQWYC8U61TNjJ6H27vj9F9D6",
+        logo_url: "https://assets.coingecko.com/coins/images/34188/small/jup.png"
       }
     ];
     const defi_positions = [
@@ -1127,6 +1294,24 @@ export class DemoStrataClient implements StrataClientInterface {
             current_price: 2317.76,
             chain: "ethereum" as const,
             contract_address: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+            logo_url: null
+          }
+        ]
+      },
+      {
+        protocol_name: "Uniswap V3",
+        protocol_logo: "https://assets.coingecko.com/markets/images/665/small/uniswap-v3.png",
+        position_type: "LP",
+        value_usd: 5640.25,
+        assets: [
+          {
+            symbol: "USDC/ETH",
+            name: "USDC/ETH LP",
+            balance: 1.0,
+            balance_usd: 5640.25,
+            current_price: 5640.25,
+            chain: "ethereum" as const,
+            contract_address: null,
             logo_url: null
           }
         ]
