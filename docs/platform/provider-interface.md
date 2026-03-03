@@ -1,7 +1,7 @@
 # Provider Abstraction Interface
 
-Version: 1.1.0
-Last Updated: 2026-02-05
+Version: 1.2.0
+Last Updated: 2026-03-03
 
 ## Overview
 
@@ -9,6 +9,7 @@ This document defines the internal provider abstraction layer that enables the S
 
 1. **Investment Providers** (`BaseProvider`) — For brokerage and investment account connectivity (SnapTrade, etc.)
 2. **Banking Providers** (`BaseBankingProvider`) — For bank account and transaction data (Plaid)
+3. **Crypto Providers** (`CryptoService`) — For public blockchain wallet tracking and DeFi position aggregation
 
 The abstraction handles:
 
@@ -24,22 +25,22 @@ The abstraction handles:
 │                            Strata API                               │
 └─────────────────────────────────────────────────────────────────────┘
                                   │
-          ┌───────────────────────┴───────────────────────┐
-          ▼                                               ▼
-┌───────────────────────────────────┐   ┌───────────────────────────────────┐
-│   Investment Provider Layer        │   │     Banking Provider Layer         │
-│         (BaseProvider)             │   │     (BaseBankingProvider)          │
-│  ┌──────────┐  ┌──────────────┐   │   │  ┌──────────┐  ┌──────────────┐   │
-│  │Normalizer│  │ Error Mapper │   │   │  │Normalizer│  │ Error Mapper │   │
-│  └──────────┘  └──────────────┘   │   │  └──────────┘  └──────────────┘   │
-└────────────────┬──────────────────┘   └────────────────┬──────────────────┘
-                 │                                       │
-    ┌────────────┼────────────┐                  ┌───────┴───────┐
-    ▼            ▼            ▼                  ▼               ▼
-┌─────────┐ ┌─────────┐ ┌─────────┐        ┌─────────┐    ┌─────────┐
-│SnapTrade│ │   MX    │ │ Future  │        │  Plaid  │    │ Future  │
-│(invest) │ │(invest) │ │Providers│        │(banking)│    │Providers│
-└─────────┘ └─────────┘ └─────────┘        └─────────┘    └─────────┘
+          ┌───────────────────────┼───────────────────────┐
+          ▼                       ▼                       ▼
+┌──────────────────────┐ ┌──────────────────────┐ ┌──────────────────────┐
+│ Investment Provider   │ │  Banking Provider    │ │  Crypto Provider     │
+│   (BaseProvider)      │ │ (BaseBankingProvider)│ │  (CryptoService)     │
+│ ┌─────────┐┌───────┐ │ │ ┌─────────┐┌───────┐│ │ ┌─────────┐┌───────┐│
+│ │Normalize││ Error ││ │ │ │Normalize││ Error │││ │ │Aggregate││ DeFi  ││
+│ └─────────┘└───────┘ │ │ └─────────┘└───────┘│ │ └─────────┘└───────┘│
+└──────────┬───────────┘ └──────────┬───────────┘ └──────────┬─────────┘
+           │                        │                        │
+  ┌────────┼────────┐        ┌──────┴──────┐        ┌───────┼───────┐
+  ▼        ▼        ▼        ▼             ▼        ▼       ▼       ▼
+┌──────┐┌──────┐┌──────┐ ┌──────┐     ┌──────┐ ┌───────┐┌──────┐┌──────┐
+│Snap  ││ MX   ││Future│ │Plaid │     │Future│ │Moralis││Zapper││Alchemy│
+│Trade │││      ││Prov. │ │      │     │Prov. │ │       ││      ││      │
+└──────┘└──────┘└──────┘ └──────┘     └──────┘ └───────┘└──────┘└──────┘
 ```
 
 **Key Design Decision:** Banking and investment providers are separate interfaces because they serve fundamentally different data models:
@@ -1050,9 +1051,81 @@ interface ProviderLogEvent {
 
 ---
 
+## Crypto Provider Interface
+
+The crypto provider layer is architecturally distinct from investment and banking providers. Unlike traditional finance providers that use OAuth-based connection flows, crypto providers aggregate data from **public blockchain addresses** — no authentication or private keys are required.
+
+### Design Rationale
+
+| Aspect | Traditional Providers | Crypto Providers |
+|--------|----------------------|------------------|
+| **Authentication** | OAuth tokens stored in token vault | None — public address only |
+| **Connection Model** | User links via institution login | User provides public wallet address |
+| **Data Access** | Provider-mediated, requires tokens | Direct blockchain/indexer query |
+| **Security** | Read-only via scoped OAuth tokens | Inherently read-only (public data) |
+| **Supported Chains** | N/A | Ethereum, Solana, Polygon, Arbitrum, Base, Optimism, Bitcoin |
+
+### Service Interface
+
+The `CryptoService` handles wallet management and portfolio aggregation:
+
+```python
+class CryptoService:
+    """Service to handle crypto wallet aggregation and DeFi positions."""
+
+    async def add_wallet(self, user_id: UUID, wallet_in: CryptoWalletCreate) -> CryptoWallet:
+        """Add a new crypto wallet address to track."""
+
+    async def list_wallets(self, user_id: UUID) -> list[CryptoWallet]:
+        """List all tracked wallets for a user."""
+
+    async def delete_wallet(self, user_id: UUID, wallet_id: UUID) -> bool:
+        """Remove a tracked wallet."""
+
+    async def delete_all_wallets(self, user_id: UUID) -> int:
+        """Remove all tracked wallets for a user."""
+
+    async def get_portfolio(self, user_id: UUID) -> CryptoPortfolioResponse:
+        """Aggregate crypto assets and DeFi positions across all wallets."""
+```
+
+### Data Types
+
+| Type | Description |
+|------|-------------|
+| `CryptoWallet` | A tracked public wallet address with chain and optional label |
+| `CryptoAsset` | A token held in a wallet (symbol, balance, USD value, chain) |
+| `DeFiPosition` | A DeFi protocol position (lending, LP, staking, yield) |
+| `CryptoPortfolioResponse` | Aggregated view of all wallets, assets, and DeFi positions |
+
+### API Endpoints
+
+| Method | Path | Scope | Description |
+|--------|------|-------|-------------|
+| `GET` | `/v1/crypto/wallets` | `portfolio:read` | List tracked wallets |
+| `POST` | `/v1/crypto/wallets` | `portfolio:write` | Add a wallet address |
+| `DELETE` | `/v1/crypto/wallets/{wallet_id}` | `portfolio:write` | Remove a wallet |
+| `DELETE` | `/v1/crypto/wallets` | `portfolio:write` | Remove all wallets |
+| `GET` | `/v1/crypto/portfolio` | `portfolio:read` | Get aggregated crypto portfolio |
+
+### Planned External Providers
+
+The aggregation layer is designed to integrate with blockchain indexing services:
+
+| Provider | Use Case | Status |
+|----------|----------|--------|
+| **Moralis** | Multi-chain token balances, NFTs, DeFi positions | Planned |
+| **Zapper** | DeFi position aggregation (Aave, Uniswap, etc.) | Planned |
+| **Alchemy** | EVM chain token balances, NFT metadata | Planned |
+| **Helius** | Solana token balances and DeFi positions | Planned |
+
+Currently, the service uses simulated data for the high-fidelity prototype while the external provider integrations are built out.
+
+---
+
 ## Related Documents
 
 - [OpenAPI Specification](./openapi.yaml) — Platform API contract
-- [Data Model](./data-model.md) — Database schema (includes `BankTransaction` and `CashAccount` models)
+- [Data Model](./data-model.md) — Database schema (includes `BankTransaction`, `CashAccount`, and `CryptoWallet` models)
 - [Provider Routing](./provider-routing.md) — Multi-provider routing strategy
 - [Sync and Freshness](./sync-and-freshness.md) — Data sync cadence

@@ -1,7 +1,7 @@
 # Strata API - Data Model
 
-Version: 1.1.0
-Last Updated: 2026-02-05
+Version: 1.2.0
+Last Updated: 2026-03-03
 
 ## Overview
 
@@ -62,6 +62,7 @@ erDiagram
 
     users ||--o{ consents : "grants"
     users ||--o{ connections : "creates"
+    users ||--o{ crypto_wallets : "tracks"
     users ||--o{ portfolio_snapshots : "tracked for"
     users ||--o{ decision_traces : "generates"
 
@@ -92,6 +93,17 @@ erDiagram
 
     cash_accounts ||--o{ bank_transactions : "contains"
     connections ||--o{ cash_accounts : "links"
+
+    crypto_wallets {
+        uuid id PK
+        uuid user_id FK
+        text address
+        crypto_chain chain
+        text label
+        numeric last_balance_usd
+        timestamptz created_at
+        timestamptz updated_at
+    }
 
     securities ||--o{ holdings : "held as"
     securities ||--o{ transactions : "referenced in"
@@ -605,6 +617,24 @@ Bank transaction history from linked Plaid accounts. Includes Plaid's automatic 
 | `pending` | BOOLEAN | Whether transaction is pending |
 | `iso_currency_code` | TEXT | Currency code (default: "USD") |
 
+#### `crypto_wallets`
+Public blockchain wallet addresses tracked for a user. Supports multi-chain wallet tracking for DeFi and crypto portfolio aggregation. ClearMoney uses read-only public address monitoring — no private keys are ever stored or requested.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `user_id` | UUID | FK to users (CASCADE on delete) |
+| `address` | VARCHAR(255) | Public wallet address |
+| `chain` | crypto_chain | Blockchain network enum |
+| `label` | VARCHAR(255) | Optional user-provided label |
+| `last_balance_usd` | NUMERIC(36,18) | Cached total USD balance from last aggregation |
+| `created_at` | TIMESTAMPTZ | Creation timestamp |
+| `updated_at` | TIMESTAMPTZ | Last update timestamp |
+
+**Constraints:**
+- Unique on `(user_id, address, chain)` — prevents duplicate wallet tracking
+- Indexed on `user_id` and `address` for fast lookups
+
 #### `financial_memories`
 User-specific financial profile and goals, serving as the "long-term memory" for the AI Advisor. Can be updated by the user or derived from connected accounts.
 
@@ -760,6 +790,11 @@ Encrypted storage for provider OAuth tokens. Access restricted to token service.
 'stock' | 'bond' | 'mutual_fund' | 'etf' | 'option' | 'crypto' | 'other'
 ```
 
+### `crypto_chain`
+```sql
+'ethereum' | 'solana' | 'polygon' | 'arbitrum' | 'base' | 'optimism' | 'bitcoin'
+```
+
 ### `sync_status`
 ```sql
 'synced' | 'syncing' | 'stale' | 'error'
@@ -812,6 +847,10 @@ CREATE UNIQUE INDEX idx_snapshots_user_date ON portfolio_snapshots(user_id, snap
 -- Sync job processing
 CREATE INDEX idx_sync_jobs_pending ON sync_jobs(priority, created_at)
     WHERE status IN ('pending', 'retrying');
+
+-- Crypto wallet lookups
+CREATE INDEX idx_crypto_wallets_user_id ON crypto_wallets(user_id);
+CREATE INDEX idx_crypto_wallets_address ON crypto_wallets(address);
 ```
 
 ## Soft Delete Pattern

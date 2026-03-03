@@ -15,6 +15,7 @@ import {
   Link2,
   RefreshCw,
   ShieldCheck,
+  Coins,
 } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { NetWorthCard } from "@/components/dashboard/NetWorthCard";
@@ -51,6 +52,8 @@ import {
   useEquityGrantMutations,
   useConsentStatus,
   useSyncAllConnections,
+  useCryptoPortfolio,
+  useCryptoWalletMutations,
 } from "@/lib/strata/hooks";
 import { EquityCard } from "@/components/dashboard/EquityCard";
 import { type PortfolioHistoryRange, type HoldingDetail } from "@clearmoney/strata-sdk";
@@ -60,6 +63,7 @@ import {
   getPreviewPortfolioHistory,
   getPreviewPortfolioSummary,
 } from "./_shared/preview-data";
+import { AnimatedAmount } from "@/components/shared/AnimatedAmount";
 
 function mapHoldings(details: HoldingDetail[]) {
   return details.map((h) => ({
@@ -92,6 +96,7 @@ export default function DashboardPage() {
 
   const cashMutations = useCashAccountMutations();
   const debtMutations = useDebtAccountMutations();
+  const cryptoMutations = useCryptoWalletMutations();
   const syncAllConnections = useSyncAllConnections();
   const { hasConsent: hasPortfolioConsent } = useConsentStatus([
     "portfolio:read",
@@ -164,6 +169,12 @@ export default function DashboardPage() {
     isLoading: projectionsLoading,
   } = useEquityProjections({ enabled: hasPortfolioConsent });
 
+  const {
+    data: cryptoPortfolio,
+    isLoading: cryptoLoading,
+    refetch: refetchCryptoPortfolio,
+  } = useCryptoPortfolio({ enabled: hasPortfolioConsent });
+
   const equityMutations = useEquityGrantMutations();
 
   const isLoading =
@@ -173,7 +184,8 @@ export default function DashboardPage() {
     allAccountsLoading ||
     connectionsLoading ||
     equityLoading ||
-    projectionsLoading;
+    projectionsLoading ||
+    cryptoLoading;
   const isError = portfolioError || accountsError || holdingsError || allAccountsError || connectionsError;
   const errorDetails =
     portfolioErrorDetails ||
@@ -190,6 +202,7 @@ export default function DashboardPage() {
     refetchAccounts();
     refetchHoldings();
     refetchAllAccounts();
+    refetchCryptoPortfolio();
     if (connections) {
       refetchConnections();
     }
@@ -305,6 +318,14 @@ export default function DashboardPage() {
   ]);
 
   function renderContent() {
+    const totalCryptoValue = Number(cryptoPortfolio?.total_value_usd ?? 0);
+    const adjustedNetWorth = effectivePortfolio.net_worth + totalCryptoValue;
+    const totalAssetsValue = 
+      effectivePortfolio.total_investment_value +
+      effectivePortfolio.total_cash_value +
+      (effectivePortfolio.total_equity_vested_value ?? 0) +
+      totalCryptoValue;
+
     return (
       <>
         {/* Header */}
@@ -372,15 +393,12 @@ export default function DashboardPage() {
           <div className="lg:col-span-2 space-y-10">
             <div id="net-worth-card">
               <NetWorthCard
-                totalAssets={
-                  effectivePortfolio.total_investment_value +
-                  effectivePortfolio.total_cash_value +
-                  (effectivePortfolio.total_equity_vested_value ?? 0)
-                }
+                totalAssets={totalAssetsValue}
                 totalLiabilities={effectivePortfolio.total_debt_value}
-                netWorth={effectivePortfolio.net_worth}
+                netWorth={adjustedNetWorth}
                 taxAdvantagedValue={effectivePortfolio.tax_advantaged_value}
-                taxableValue={effectivePortfolio.taxable_value}
+                // Simplification: all crypto treated as taxable for now
+                taxableValue={effectivePortfolio.taxable_value + totalCryptoValue}
                 vestedEquityValue={effectivePortfolio.total_equity_vested_value}
                 unvestedEquityValue={effectivePortfolio.total_equity_unvested_value}
               />
@@ -431,6 +449,108 @@ export default function DashboardPage() {
               title="By Account Type"
             />
 
+            {cryptoLoading && (
+              <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm animate-pulse">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="space-y-2">
+                    <div className="h-5 w-28 rounded bg-slate-200 dark:bg-slate-800" />
+                    <div className="h-3 w-40 rounded bg-slate-100 dark:bg-slate-800/50" />
+                  </div>
+                  <div className="space-y-2 flex flex-col items-end">
+                    <div className="h-5 w-24 rounded bg-slate-200 dark:bg-slate-800" />
+                    <div className="h-3 w-16 rounded bg-slate-100 dark:bg-slate-800/50" />
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center justify-between p-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800" />
+                        <div className="space-y-1">
+                          <div className="h-3 w-12 rounded bg-slate-200 dark:bg-slate-800" />
+                          <div className="h-2 w-16 rounded bg-slate-100 dark:bg-slate-800/50" />
+                        </div>
+                      </div>
+                      <div className="space-y-1 flex flex-col items-end">
+                        <div className="h-3 w-16 rounded bg-slate-200 dark:bg-slate-800" />
+                        <div className="h-2 w-12 rounded bg-slate-100 dark:bg-slate-800/50" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!cryptoLoading && cryptoPortfolio && cryptoPortfolio.wallets.length > 0 && (
+              <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden relative group">
+                <div className="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.05] pointer-events-none group-hover:rotate-12 transition-transform duration-700">
+                  <Coins className="w-24 h-24" />
+                </div>
+                <div className="flex items-center justify-between mb-6 relative z-10">
+                  <div>
+                    <h3 className="font-serif text-xl text-slate-900 dark:text-slate-100">Crypto Assets</h3>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1">Multi-Chain Web3 Surface</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-black text-slate-900 dark:text-white">
+                      <AnimatedAmount value={Number(cryptoPortfolio.total_value_usd)} />
+                    </p>
+                    <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">{cryptoPortfolio.assets.length} Assets</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 relative z-10">
+                  {cryptoPortfolio.assets.slice(0, 4).map((asset) => (
+                    <div key={asset.symbol} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        {asset.logo_url ? (
+                          <img src={asset.logo_url} alt={asset.name} className="w-6 h-6 rounded-full" />
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold">{asset.symbol[0]}</div>
+                        )}
+                        <div>
+                          <p className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight">{asset.symbol}</p>
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">{asset.chain}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-black text-slate-700 dark:text-slate-200">
+                          <AnimatedAmount value={Number(asset.balance_usd)} />
+                        </p>
+                        <p className="text-[9px] text-slate-400 font-mono">{Number(asset.balance).toFixed(4)}</p>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {cryptoPortfolio.defi_positions.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 ml-1">DeFi Positions</p>
+                      {cryptoPortfolio.defi_positions.map((pos) => (
+                        <div key={pos.protocol_name} className="flex items-center justify-between p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
+                          <div className="flex items-center gap-2">
+                            {pos.protocol_logo && <img src={pos.protocol_logo} alt="" className="w-4 h-4 rounded-sm" />}
+                            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">{pos.protocol_name}</span>
+                          </div>
+                          <p className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                            <AnimatedAmount value={Number(pos.value_usd)} />
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="mt-6">
+                  <button
+                    onClick={() => cryptoMutations.removeAll.mutate()}
+                    className="w-full py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
+                  >
+                    Disconnect Wallets
+                  </button>
+                </div>
+              </div>
+            )}
+
             {equityPortfolio && (
               <EquityCard
                 portfolio={equityPortfolio}
@@ -455,7 +575,7 @@ export default function DashboardPage() {
 
             <TaxDocumentsCard />
 
-            <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-serif text-xl text-slate-800 dark:text-slate-100">
                   Linked Accounts

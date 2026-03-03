@@ -2,7 +2,7 @@
 
 **Version:** 1.0
 **Author:** Product Team
-**Last Updated:** January 2026
+**Last Updated:** March 2026
 **Status:** Draft
 
 ---
@@ -545,6 +545,7 @@ This creates significant engineering overhead and inconsistent user experiences 
 
 1. **Unified Financial Data API**
    - Accounts, balances, transactions, holdings, liabilities
+   - Crypto wallet tracking and DeFi position aggregation (public address, read-only)
    - Normalized schema regardless of underlying provider
    - Freshness metadata and confidence scores
 
@@ -805,7 +806,9 @@ The percentage of users who take action on at least one recommendation within 30
 |------|------------|
 | **App** | A consumer application that integrates with the Strata API (tenant) |
 | **Connection** | A link between an end user and a financial institution via a provider |
-| **Provider** | A financial data aggregator (Plaid, MX, Finicity, FDX) |
+| **Crypto Wallet** | A public blockchain address tracked for portfolio aggregation (read-only, no private keys) |
+| **DeFi Position** | A decentralized finance protocol position (lending, liquidity pool, staking) aggregated from on-chain data |
+| **Provider** | A financial data aggregator (Plaid, MX, Finicity, FDX) or blockchain indexer (Moralis, Zapper, Alchemy) |
 | **Decision Trace** | A record of inputs, rules, and assumptions used to generate a recommendation |
 | **Consent Ledger** | Immutable log of all user consent actions with timestamps and scopes |
 | **Confidence Score** | A 0-1 value indicating reliability of data or recommendation based on freshness and completeness |
@@ -815,11 +818,12 @@ The percentage of users who take action on at least one recommendation within 30
 
 | Document | Location | Description |
 |----------|----------|-------------|
-| Provider Abstraction Interface | `docs/platform/provider-interface.md` | Technical spec for provider integration |
+| Provider Abstraction Interface | `docs/platform/provider-interface.md` | Technical spec for provider integration (includes crypto) |
 | Provider Routing Strategy | `docs/platform/provider-routing.md` | Health-based routing and failover logic |
 | Consent and Token Vault | `docs/platform/consent-and-vault.md` | Consent management and encryption |
 | Decision Trace Model | `docs/platform/strata-events.md` | Event schema and replay semantics |
 | Sync and Freshness | `docs/platform/sync-and-freshness.md` | Data sync cadence and confidence scoring |
+| Crypto & DeFi API Research | `docs/research/cryptocurrency-defi-portfolio-tracking-apis.md` | Provider landscape for blockchain data |
 
 ### Competitive Analysis Summary
 

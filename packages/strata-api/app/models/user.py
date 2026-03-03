@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.models.portfolio_snapshot import PortfolioSnapshot
     from app.models.tax_document import TaxDocument
     from app.models.tax_plan_workspace import TaxPlan
+    from app.models.crypto_wallet import CryptoWallet
 
 
 class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -54,5 +55,8 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     tax_documents: Mapped[list["TaxDocument"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    crypto_wallets: Mapped[list["CryptoWallet"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
