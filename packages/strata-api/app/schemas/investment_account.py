@@ -21,6 +21,7 @@ class InvestmentAccountCreate(BaseModel):
     currency: str = "USD"
     is_tax_advantaged: bool = False
     is_business: bool = False
+    entity_id: uuid.UUID | None = None
 
 
 class InvestmentAccountUpdate(BaseModel):
@@ -33,6 +34,7 @@ class InvestmentAccountUpdate(BaseModel):
     currency: str | None = None
     is_tax_advantaged: bool | None = None
     is_business: bool | None = None
+    entity_id: uuid.UUID | None = None
 
 
 class InvestmentAccountResponse(BaseModel):
@@ -47,6 +49,7 @@ class InvestmentAccountResponse(BaseModel):
     currency: str
     is_tax_advantaged: bool
     is_business: bool
+    entity_id: uuid.UUID | None = None
     capabilities: list[ActionCapability] = Field(default_factory=lambda: [ActionCapability.READ_ONLY])
     created_at: datetime
     updated_at: datetime

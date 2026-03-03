@@ -26,7 +26,7 @@ def upgrade():
         sa.Column('source_tool', sa.String(length=100), nullable=True),
         sa.Column('referral_code', sa.String(length=20), nullable=False),
         sa.Column('referred_by', sa.String(length=20), nullable=True),
-        sa.Column('metadata_json', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column('metadata_json', sa.JSON(), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False)
     )

@@ -10,6 +10,7 @@ from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from app.models.user import User
+    from app.models.entity import LegalEntity
 
 
 class DebtType(str, enum.Enum):
@@ -28,6 +29,9 @@ class DebtAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
+    entity_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("entities.id", ondelete="SET NULL"), index=True, nullable=True
+    )
     name: Mapped[str] = mapped_column(String(255))
     debt_type: Mapped[DebtType] = mapped_column(
         Enum(DebtType, values_callable=lambda e: [x.value for x in e]),
@@ -43,3 +47,4 @@ class DebtAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     is_business: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
 
     user: Mapped["User"] = relationship(back_populates="debt_accounts")
+    entity: Mapped["LegalEntity | None"] = relationship(back_populates="debt_accounts")

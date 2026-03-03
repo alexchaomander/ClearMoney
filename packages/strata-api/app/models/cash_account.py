@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.models.bank_transaction import BankTransaction
     from app.models.connection import Connection
     from app.models.user import User
+    from app.models.entity import LegalEntity
 
 
 class CashAccountType(str, enum.Enum):
@@ -42,6 +43,9 @@ class CashAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     connection_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("connections.id", ondelete="SET NULL"), index=True, nullable=True
     )
+    entity_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("entities.id", ondelete="SET NULL"), index=True, nullable=True
+    )
     provider_account_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     available_balance: Mapped[Decimal | None] = mapped_column(
         Numeric(precision=14, scale=2), nullable=True
@@ -52,6 +56,7 @@ class CashAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     capabilities: Mapped[list[str]] = mapped_column(JSON, default=lambda: ["read_only"])
 
     user: Mapped["User"] = relationship(back_populates="cash_accounts")
+    entity: Mapped["LegalEntity | None"] = relationship(back_populates="cash_accounts")
     connection: Mapped["Connection | None"] = relationship(back_populates="cash_accounts")
     transactions: Mapped[list["BankTransaction"]] = relationship(
         back_populates="cash_account", cascade="all, delete-orphan"

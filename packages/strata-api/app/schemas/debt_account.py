@@ -15,6 +15,7 @@ class DebtAccountCreate(BaseModel):
     minimum_payment: Decimal = Decimal("0.00")
     institution_name: str | None = None
     is_business: bool = False
+    entity_id: uuid.UUID | None = None
 
 
 class DebtAccountUpdate(BaseModel):
@@ -25,6 +26,7 @@ class DebtAccountUpdate(BaseModel):
     minimum_payment: Decimal | None = None
     institution_name: str | None = None
     is_business: bool | None = None
+    entity_id: uuid.UUID | None = None
 
 
 class DebtAccountResponse(BaseModel):
@@ -37,6 +39,7 @@ class DebtAccountResponse(BaseModel):
     minimum_payment: Decimal
     institution_name: str | None
     is_business: bool
+    entity_id: uuid.UUID | None = None
     created_at: datetime
     updated_at: datetime
 
