@@ -113,7 +113,6 @@ class ObservationService:
     async def _check_commingling(self, user_id: uuid.UUID):
         """Scan for commingled transactions and alert if high risk detected."""
         engine = ComminglingDetectionEngine(self._session)
-        await engine.scan_and_flag(user_id)
         report = await engine.get_vulnerability_report(user_id)
 
         if report["status"] == "critical" or (report["commingled_count"] > 5):
