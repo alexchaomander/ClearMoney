@@ -124,6 +124,8 @@ import {
   DEMO_TRANSPARENCY_PAYLOAD,
 } from "./demo-data";
 
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -872,8 +874,8 @@ export class DemoStrataClient implements StrataClientInterface {
         cash_account_id: "demo-cash-biz-001",
         provider_transaction_id: "ptx-1",
         amount: 18000,
-        transaction_date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-        posted_date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        transaction_date: new Date(Date.now() - 6 * ONE_DAY_MS).toISOString().slice(0, 10),
+        posted_date: new Date(Date.now() - 6 * ONE_DAY_MS).toISOString().slice(0, 10),
         name: "STRIPE PAYOUT",
         primary_category: "INCOME",
         detailed_category: "INCOME_OTHER_INCOME",
@@ -891,8 +893,8 @@ export class DemoStrataClient implements StrataClientInterface {
         cash_account_id: "demo-cash-biz-001",
         provider_transaction_id: "ptx-2",
         amount: -1250.00,
-        transaction_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-        posted_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        transaction_date: new Date(Date.now() - 5 * ONE_DAY_MS).toISOString().slice(0, 10),
+        posted_date: new Date(Date.now() - 5 * ONE_DAY_MS).toISOString().slice(0, 10),
         name: "AWS",
         primary_category: "GENERAL_SERVICES",
         detailed_category: "GENERAL_SERVICES_CLOUD_SERVICES",
@@ -910,8 +912,8 @@ export class DemoStrataClient implements StrataClientInterface {
         cash_account_id: "demo-cash-001",
         provider_transaction_id: "ptx-3",
         amount: -45.67,
-        transaction_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-        posted_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        transaction_date: new Date(Date.now() - 1 * ONE_DAY_MS).toISOString().slice(0, 10),
+        posted_date: new Date(Date.now() - 1 * ONE_DAY_MS).toISOString().slice(0, 10),
         name: "UBER EATS",
         primary_category: "FOOD_AND_DRINK",
         detailed_category: "FOOD_AND_DRINK_RESTAURANTS",
@@ -929,8 +931,8 @@ export class DemoStrataClient implements StrataClientInterface {
         cash_account_id: "demo-cash-biz-001",
         provider_transaction_id: "ptx-4",
         amount: -2000.00,
-        transaction_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-        posted_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        transaction_date: new Date(Date.now() - 2 * ONE_DAY_MS).toISOString().slice(0, 10),
+        posted_date: new Date(Date.now() - 2 * ONE_DAY_MS).toISOString().slice(0, 10),
         name: "OPENAI",
         primary_category: "GENERAL_SERVICES",
         detailed_category: "GENERAL_SERVICES_SOFTWARE",
@@ -966,7 +968,7 @@ export class DemoStrataClient implements StrataClientInterface {
         { category: "SHOPPING", total: 2500, percentage: 8.0, transaction_count: 15 },
         { category: "RENT_AND_UTILITIES", total: 3000, percentage: 9.6, transaction_count: 3 },
       ],
-      start_date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      start_date: new Date(Date.now() - 90 * ONE_DAY_MS).toISOString().slice(0, 10),
       end_date: new Date().toISOString().slice(0, 10),
       months_analyzed: 3,
     };

@@ -7,6 +7,14 @@ import { staggerContainer, staggerItemHorizontal } from "@/lib/shared/animations
 import type { CashAccount, DebtAccount } from "@clearmoney/strata-sdk";
 import { AnimatedAmount } from "@/components/shared/AnimatedAmount";
 
+function BusinessBadge() {
+  return (
+    <span className="shrink-0 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">
+      Biz
+    </span>
+  );
+}
+
 interface CashDebtSectionProps {
   cashAccounts: CashAccount[];
   debtAccounts: DebtAccount[];
@@ -44,11 +52,7 @@ export function CashDebtSection({ cashAccounts, debtAccounts, onDeleteCashAccoun
                   <p className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                     {account.name}
                   </p>
-                  {account.is_business && (
-                    <span className="shrink-0 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">
-                      Biz
-                    </span>
-                  )}
+                  {account.is_business && <BusinessBadge />}
                 </div>
                 <p className="font-black text-sm text-emerald-600 dark:text-emerald-400 shrink-0">
                   <AnimatedAmount value={account.balance} />
@@ -92,11 +96,7 @@ export function CashDebtSection({ cashAccounts, debtAccounts, onDeleteCashAccoun
                   <p className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
                     {account.name}
                   </p>
-                  {account.is_business && (
-                    <span className="shrink-0 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">
-                      Biz
-                    </span>
-                  )}
+                  {account.is_business && <BusinessBadge />}
                 </div>
                 <p className="font-black text-sm text-rose-600 dark:text-rose-400 shrink-0">
                   <AnimatedAmount value={account.balance} prefix="-$" />
