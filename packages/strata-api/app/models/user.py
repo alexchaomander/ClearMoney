@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from app.models.tax_document import TaxDocument
     from app.models.tax_plan_workspace import TaxPlan
     from app.models.crypto_wallet import CryptoWallet
+    from app.models.entity import LegalEntity
 
 
 class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -27,6 +28,9 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     email: Mapped[str] = mapped_column(String(320))
 
+    entities: Mapped[list["LegalEntity"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
     connections: Mapped[list["Connection"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )

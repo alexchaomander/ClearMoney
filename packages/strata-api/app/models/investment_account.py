@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from app.models.institution import Institution
     from app.models.transaction import Transaction
     from app.models.user import User
+    from app.models.entity import LegalEntity
 
 
 class InvestmentAccountType(str, enum.Enum):
@@ -36,6 +37,9 @@ class InvestmentAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
+    entity_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("entities.id", ondelete="SET NULL"), index=True, nullable=True
+    )
     connection_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("connections.id", ondelete="SET NULL"), index=True
     )
@@ -56,6 +60,7 @@ class InvestmentAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     capabilities: Mapped[list[str]] = mapped_column(JSON, default=lambda: ["read_only"])
 
     user: Mapped["User"] = relationship(back_populates="investment_accounts")
+    entity: Mapped["LegalEntity | None"] = relationship(back_populates="investment_accounts")
     connection: Mapped["Connection | None"] = relationship(
         back_populates="investment_accounts"
     )

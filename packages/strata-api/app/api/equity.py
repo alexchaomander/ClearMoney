@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.session import get_session
+from app.db.session import get_async_session
 from app.models.equity_grant import EquityGrant
 from app.schemas.equity import (
     EquityGrant as EquityGrantSchema,
@@ -22,7 +22,7 @@ router = APIRouter(prefix="/v1/equity", tags=["Equity"])
 @router.get("/portfolio", response_model=EquityPortfolioSummary)
 async def get_equity_portfolio(
     user_id: uuid.UUID,
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     """Get the user's equity portfolio summary including valuations."""
     result = await session.execute(
@@ -35,7 +35,7 @@ async def get_equity_portfolio(
 @router.get("/projections", response_model=list[EquityProjection])
 async def get_equity_projections(
     user_id: uuid.UUID,
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     """Get monthly equity wealth projections for the next 24 months."""
     result = await session.execute(
@@ -49,7 +49,7 @@ async def get_equity_projections(
 async def create_equity_grant(
     user_id: uuid.UUID,
     grant_in: EquityGrantCreate,
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     """Add a new equity grant for the user."""
     # Convert vesting schedule to JSON-compatible format
@@ -82,7 +82,7 @@ async def update_equity_grant(
     grant_id: uuid.UUID,
     user_id: uuid.UUID,
     grant_in: EquityGrantUpdate,
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     """Update an existing equity grant."""
     result = await session.execute(
@@ -114,7 +114,7 @@ async def update_equity_grant(
 async def delete_equity_grant(
     grant_id: uuid.UUID,
     user_id: uuid.UUID,
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     """Delete an equity grant."""
     result = await session.execute(

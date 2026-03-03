@@ -3,10 +3,14 @@ from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from app.models.bank_transaction import BankTransaction
 from app.models.cash_account import CashAccount
+from app.models.entity import EntityType
 from app.models.financial_memory import FinancialMemory
+from app.models.action_intent import ActionIntent, ActionIntentType, ActionIntentStatus
+from app.models.decision_trace import DecisionTrace, DecisionTraceType
 
 
 class TaxShieldService:
@@ -19,13 +23,21 @@ class TaxShieldService:
         result = await self._session.execute(
             select(BankTransaction)
             .join(CashAccount)
+            .outerjoin(CashAccount.entity)
+            .options(joinedload(BankTransaction.cash_account).joinedload(CashAccount.entity))
             .where(
                 CashAccount.user_id == user_id,
-                CashAccount.is_business == True,
                 BankTransaction.amount > 0  # Credits
             )
         )
-        biz_credits = result.scalars().all()
+        all_credits = result.scalars().all()
+        
+        biz_credits = []
+        for tx in all_credits:
+            acct = tx.cash_account
+            is_biz = (acct.entity.entity_type != EntityType.personal) if acct.entity else acct.is_business
+            if is_biz:
+                biz_credits.append(tx)
 
         ytd_income = sum((tx.amount for tx in biz_credits), Decimal("0.00"))
 
@@ -51,3 +63,45 @@ class TaxShieldService:
             "next_quarterly_payment": float(quarterly_estimate),
             "safe_harbor_met": False, # Placeholder for safe harbor logic
         }
+
+    async def generate_tax_withholding_intent(self, user_id: uuid.UUID) -> ActionIntent | None:
+        """Generate an ActionIntent to move estimated tax to a withholding account."""
+        metrics = await self.get_tax_shield_metrics(user_id)
+        amount = metrics["next_quarterly_payment"]
+
+        if amount <= 0:
+            return None
+
+        # 1. Create a Decision Trace for the reasoning
+        trace = DecisionTrace(
+            user_id=user_id,
+            trace_type=DecisionTraceType.rebalance, # We can reuse rebalance or similar
+            title="Quarterly Tax Withholding",
+            reasoning=f"Based on YTD business income of ${metrics['ytd_business_income']:,.2f} and an estimated combined tax rate of {metrics['estimated_combined_tax_rate']*100:.1f}%, you should set aside ${amount:,.2f} for Q3 estimated taxes.",
+            data_snapshot=metrics
+        )
+        self._session.add(trace)
+        await self._session.flush()
+
+        # 2. Create the Action Intent
+        intent = ActionIntent(
+            user_id=user_id,
+            decision_trace_id=trace.id,
+            intent_type=ActionIntentType.ACH_TRANSFER,
+            title="Fund Tax Withholding Account",
+            description=f"Transfer ${amount:,.2f} to your dedicated tax holding account.",
+            payload={
+                "amount": float(amount),
+                "memo": "Estimated Tax Withholding"
+            },
+            impact_summary={
+                "liability_covered": float(amount),
+                "safe_harbor_impact": "Will meet Q3 requirement"
+            },
+            status=ActionIntentStatus.DRAFT
+        )
+        self._session.add(intent)
+        await self._session.commit()
+        await self._session.refresh(intent)
+
+        return intent

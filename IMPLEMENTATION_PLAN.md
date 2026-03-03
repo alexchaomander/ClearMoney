@@ -104,8 +104,9 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
 
 ---
 
-## Immediate Next Steps (Next 48 Hours)
+## Immediate Next Steps (March 2026)
 
-1.  **Initialize `.env.example`**: Document all required keys (OpenRouter, Plaid, SnapTrade, AlphaVantage).
-2.  **Equity Model**: Implement the RSU/Options model in the backend and connect it to a stock price API.
-3.  **Dashboard "Beyond Mint"**: Update the web dashboard to show a "Coming Soon: Equity Tracking" section powered by the new model.
+1.  **Founder Operating Room (Multi-Entity):** Implement `LegalEntity` schema to support isolation between personal and business finances. Refactor runway, commingling, and tax-shield services to utilize this structure. Connect to ActionIntents for automated tax withholding. (✅ Completed)
+2.  **Equity Model**: Implement the RSU/Options model in the backend and connect it to a stock price API. (✅ Completed)
+3.  **Dashboard "Beyond Mint"**: Update the web dashboard to show a "Coming Soon: Equity Tracking" section powered by the new model. (✅ Completed)
+4.  **Action Intents**: Fully implement the ActionIntent execution layer (the "War Room") to allow users to review and approve drafted actions. (In Progress)
