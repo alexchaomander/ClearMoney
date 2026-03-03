@@ -42,6 +42,7 @@ async def create_cash_account(
         apy=data.apy,
         institution_name=data.institution_name,
         is_business=data.is_business,
+        entity_id=data.entity_id,
     )
     session.add(account)
     await session.commit()
@@ -123,6 +124,7 @@ async def create_debt_account(
         minimum_payment=data.minimum_payment,
         institution_name=data.institution_name,
         is_business=data.is_business,
+        entity_id=data.entity_id,
     )
     session.add(account)
     await session.commit()

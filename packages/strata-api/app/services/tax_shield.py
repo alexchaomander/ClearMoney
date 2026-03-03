@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 from decimal import Decimal
 
 from sqlalchemy import select
@@ -19,7 +20,11 @@ class TaxShieldService:
 
     async def get_tax_shield_metrics(self, user_id: uuid.UUID) -> dict:
         """Estimate quarterly tax obligations based on business/1099 income."""
-        # 1. Identify business income streams
+        today = date.today()
+        year_start = date(today.year, 1, 1)
+        current_quarter = (today.month - 1) // 3 + 1
+
+        # 1. Identify business income streams (current tax year only)
         result = await self._session.execute(
             select(BankTransaction)
             .join(CashAccount)
@@ -27,11 +32,12 @@ class TaxShieldService:
             .options(joinedload(BankTransaction.cash_account).joinedload(CashAccount.entity))
             .where(
                 CashAccount.user_id == user_id,
-                BankTransaction.amount > 0  # Credits
+                BankTransaction.amount > 0,  # Credits
+                BankTransaction.transaction_date >= year_start,
             )
         )
         all_credits = result.scalars().all()
-        
+
         biz_credits = []
         for tx in all_credits:
             acct = tx.cash_account
@@ -53,14 +59,15 @@ class TaxShieldService:
 
         estimated_tax_ytd = ytd_income * combined_rate
 
-        # 3. Simple quarterly breakdown
-        quarterly_estimate = estimated_tax_ytd / Decimal("4.0")
+        # 3. Per-quarter estimate based on current quarter
+        quarterly_estimate = estimated_tax_ytd / Decimal(str(current_quarter))
 
         return {
             "ytd_business_income": float(ytd_income),
             "estimated_combined_tax_rate": float(combined_rate),
             "total_tax_liability_ytd": float(estimated_tax_ytd),
             "next_quarterly_payment": float(quarterly_estimate),
+            "current_quarter": current_quarter,
             "safe_harbor_met": False, # Placeholder for safe harbor logic
         }
 
@@ -72,12 +79,14 @@ class TaxShieldService:
         if amount <= 0:
             return None
 
+        quarter = metrics["current_quarter"]
+
         # 1. Create a Decision Trace for the reasoning
         trace = DecisionTrace(
             user_id=user_id,
             trace_type=DecisionTraceType.rebalance, # We can reuse rebalance or similar
             title="Quarterly Tax Withholding",
-            reasoning=f"Based on YTD business income of ${metrics['ytd_business_income']:,.2f} and an estimated combined tax rate of {metrics['estimated_combined_tax_rate']*100:.1f}%, you should set aside ${amount:,.2f} for Q3 estimated taxes.",
+            reasoning=f"Based on YTD business income of ${metrics['ytd_business_income']:,.2f} and an estimated combined tax rate of {metrics['estimated_combined_tax_rate']*100:.1f}%, you should set aside ${amount:,.2f} for Q{quarter} estimated taxes.",
             data_snapshot=metrics
         )
         self._session.add(trace)
@@ -96,7 +105,7 @@ class TaxShieldService:
             },
             impact_summary={
                 "liability_covered": float(amount),
-                "safe_harbor_impact": "Will meet Q3 requirement"
+                "safe_harbor_impact": f"Will meet Q{quarter} requirement"
             },
             status=ActionIntentStatus.DRAFT
         )
