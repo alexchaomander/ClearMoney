@@ -12,6 +12,7 @@ from app.models.cash_account import CashAccount, CashAccountType
 from app.models.connection import Connection, ConnectionStatus
 from app.models.consent import ConsentGrant, ConsentStatus
 from app.models.credit_cards import CardBenefit, CardCredit, CreditCard
+from app.models.crypto_wallet import CryptoChain, CryptoWallet
 from app.models.debt_account import DebtAccount, DebtType
 from app.models.decision_trace import DecisionTrace, DecisionTraceType
 from app.models.financial_memory import FilingStatus, FinancialMemory, RiskTolerance
@@ -53,6 +54,8 @@ __all__ = [
     "Connection",
     "ConnectionStatus",
     "CreditCard",
+    "CryptoChain",
+    "CryptoWallet",
     "DebtAccount",
     "DebtType",
     "DecisionTrace",

@@ -94,6 +94,9 @@ import type {
   TaxDocumentListResponse,
   PrefillTaxPlanRequest,
   PrefillTaxPlanResponse,
+  CryptoWallet,
+  CryptoWalletCreate,
+  CryptoPortfolioResponse,
 } from './types';
 
 export interface StrataClientInterface {
@@ -239,6 +242,12 @@ export interface StrataClientInterface {
   createEquityGrant(data: EquityGrantCreate): Promise<EquityGrant>;
   updateEquityGrant(id: string, data: EquityGrantUpdate): Promise<EquityGrant>;
   deleteEquityGrant(id: string): Promise<void>;
+  // Crypto
+  listCryptoWallets(): Promise<CryptoWallet[]>;
+  addCryptoWallet(data: CryptoWalletCreate): Promise<CryptoWallet>;
+  deleteCryptoWallet(walletId: string): Promise<void>;
+  deleteAllCryptoWallets(): Promise<void>;
+  getCryptoPortfolio(): Promise<CryptoPortfolioResponse>;
   // Verification (SVP)
   generateProofOfFunds(threshold: number): Promise<SVPAttestation>;
   validateAttestation(attestation: SVPAttestation): Promise<{ 
@@ -1167,6 +1176,37 @@ export class StrataClient implements StrataClientInterface {
       method: 'DELETE',
     });
   }
+
+  // === Crypto ===
+
+  async listCryptoWallets(): Promise<CryptoWallet[]> {
+    return this.request<CryptoWallet[]>('/api/v1/crypto/wallets');
+  }
+
+  async addCryptoWallet(data: CryptoWalletCreate): Promise<CryptoWallet> {
+    return this.request<CryptoWallet>('/api/v1/crypto/wallets', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCryptoWallet(walletId: string): Promise<void> {
+    await this.request<void>(`/api/v1/crypto/wallets/${walletId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async deleteAllCryptoWallets(): Promise<void> {
+    await this.request<void>('/api/v1/crypto/wallets', {
+      method: 'DELETE',
+    });
+  }
+
+  async getCryptoPortfolio(): Promise<CryptoPortfolioResponse> {
+    return this.request<CryptoPortfolioResponse>('/api/v1/crypto/portfolio');
+  }
+
+  // === Verification (SVP) ===
 
   async generateProofOfFunds(threshold: number): Promise<SVPAttestation> {
     return this.request<SVPAttestation>('/api/v1/portability/verify/proof-of-funds', {
