@@ -20,6 +20,7 @@ from app.api.consent import router as consent_router
 from app.api.credit_cards import router as credit_cards_router
 from app.api.crypto import router as crypto_router
 from app.api.data import router as data_router
+from app.api.entities import router as entities_router
 from app.api.equity import router as equity_router
 from app.api.health import router as health_router
 from app.api.institutions import router as institutions_router
@@ -91,6 +92,7 @@ app.add_middleware(
 # Include routers
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(connections_router, prefix="/api/v1")
+app.include_router(entities_router, prefix="/api/v1")
 app.include_router(credit_cards_router, prefix="/api/v1/credit-cards", tags=["Credit Cards"])
 app.include_router(accounts_router, prefix="/api/v1")
 app.include_router(cash_debt_router, prefix="/api/v1")

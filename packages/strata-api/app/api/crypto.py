@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_scopes
-from app.db.session import get_session
+from app.db.session import get_async_session
 from app.models import User
 from app.schemas.crypto import (
     CryptoPortfolioResponse,
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/v1/crypto", tags=["Crypto"])
 @router.get("/wallets", response_model=list[CryptoWalletSchema])
 async def list_wallets(
     user: Annotated[User, Depends(require_scopes(["portfolio:read"]))],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     """List all tracked crypto wallets for the user."""
     service = CryptoService(session)
@@ -31,7 +31,7 @@ async def list_wallets(
 async def add_wallet(
     user: Annotated[User, Depends(require_scopes(["portfolio:write"]))],
     wallet_in: CryptoWalletCreate,
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     """Add a new crypto wallet address to track."""
     service = CryptoService(session)
@@ -45,7 +45,7 @@ async def add_wallet(
 async def delete_wallet(
     wallet_id: uuid.UUID,
     user: Annotated[User, Depends(require_scopes(["portfolio:write"]))],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     """Remove a tracked crypto wallet."""
     service = CryptoService(session)
@@ -57,7 +57,7 @@ async def delete_wallet(
 @router.delete("/wallets", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_all_wallets(
     user: Annotated[User, Depends(require_scopes(["portfolio:write"]))],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     """Remove all tracked crypto wallets for the user."""
     service = CryptoService(session)
@@ -67,7 +67,7 @@ async def delete_all_wallets(
 @router.get("/portfolio", response_model=CryptoPortfolioResponse)
 async def get_crypto_portfolio(
     user: Annotated[User, Depends(require_scopes(["portfolio:read"]))],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     """Get the user's aggregated crypto portfolio, assets, and DeFi positions."""
     service = CryptoService(session)

@@ -15,6 +15,7 @@ from app.models.credit_cards import CardBenefit, CardCredit, CreditCard
 from app.models.crypto_wallet import CryptoChain, CryptoWallet
 from app.models.debt_account import DebtAccount, DebtType
 from app.models.decision_trace import DecisionTrace, DecisionTraceType
+from app.models.entity import EntityType, LegalEntity
 from app.models.financial_memory import FilingStatus, FinancialMemory, RiskTolerance
 from app.models.holding import Holding
 from app.models.income_source import IncomeFrequency, IncomeSource, IncomeSourceType
@@ -34,6 +35,7 @@ from app.models.tax_plan_workspace import (
 )
 from app.models.transaction import Transaction, TransactionType
 from app.models.user import User
+from app.models.waitlist import WaitlistUser
 
 __all__ = [
     "AgentSession",
@@ -60,6 +62,8 @@ __all__ = [
     "DebtType",
     "DecisionTrace",
     "DecisionTraceType",
+    "EntityType",
+    "LegalEntity",
     "FilingStatus",
     "FinancialMemory",
     "Holding",
@@ -88,4 +92,5 @@ __all__ = [
     "Transaction",
     "TransactionType",
     "User",
+    "WaitlistUser",
 ]

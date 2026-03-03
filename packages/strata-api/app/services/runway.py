@@ -3,9 +3,11 @@ from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from app.models.bank_transaction import BankTransaction
 from app.models.cash_account import CashAccount
+from app.models.entity import EntityType
 from app.models.financial_memory import FinancialMemory
 
 
@@ -15,14 +17,21 @@ class RunwayService:
 
     async def get_runway_metrics(self, user_id: uuid.UUID) -> dict:
         """Calculate personal and entity runway metrics."""
-        # 1. Fetch cash accounts
+        # 1. Fetch cash accounts with their associated entity
         result = await self._session.execute(
-            select(CashAccount).where(CashAccount.user_id == user_id)
+            select(CashAccount)
+            .options(joinedload(CashAccount.entity))
+            .where(CashAccount.user_id == user_id)
         )
         accounts = result.scalars().all()
 
-        personal_cash = sum((a.balance for a in accounts if not a.is_business), Decimal("0.00"))
-        business_cash = sum((a.balance for a in accounts if a.is_business), Decimal("0.00"))
+        def is_business_account(a: CashAccount) -> bool:
+            if a.entity:
+                return a.entity.entity_type != EntityType.personal
+            return a.is_business
+
+        personal_cash = sum((a.balance for a in accounts if not is_business_account(a)), Decimal("0.00"))
+        business_cash = sum((a.balance for a in accounts if is_business_account(a)), Decimal("0.00"))
 
         # 2. Fetch memory for average monthly expenses (fallback if transaction data is light)
         result = await self._session.execute(
@@ -32,8 +41,6 @@ class RunwayService:
         personal_burn_target = memory.average_monthly_expenses if memory else None
 
         # 3. Calculate observed burn from transactions (last 90 days)
-        # For simplicity, we'll take the average of monthly debits
-        # This is a rough approximation for the MVP
         biz_burn = await self._calculate_observed_burn(user_id, is_business=True)
         pers_burn = await self._calculate_observed_burn(user_id, is_business=False)
 
@@ -56,19 +63,31 @@ class RunwayService:
 
     async def _calculate_observed_burn(self, user_id: uuid.UUID, is_business: bool) -> Decimal:
         """Calculate average monthly burn based on debits in the last 90 days."""
-        # Join with CashAccount to filter by is_business
+        # We handle entity vs is_business gracefully here:
+        # If an account has an entity, we check the entity_type.
+        # If not, we fall back to the old is_business flag.
         result = await self._session.execute(
             select(BankTransaction)
             .join(CashAccount)
+            .outerjoin(CashAccount.entity)
+            .options(joinedload(BankTransaction.cash_account).joinedload(CashAccount.entity))
             .where(
                 CashAccount.user_id == user_id,
-                CashAccount.is_business == is_business,
                 BankTransaction.amount < 0  # Debits
             )
         )
         transactions = result.scalars().all()
-        if not transactions:
+        
+        # Filter transactions in Python to handle the complex OR logic easily
+        filtered_txs = []
+        for tx in transactions:
+            acct = tx.cash_account
+            acct_is_biz = (acct.entity.entity_type != EntityType.personal) if acct.entity else acct.is_business
+            if acct_is_biz == is_business:
+                filtered_txs.append(tx)
+
+        if not filtered_txs:
             return Decimal("0.00")
 
-        total_burn = sum((abs(tx.amount) for tx in transactions), Decimal("0.00"))
+        total_burn = sum((abs(tx.amount) for tx in filtered_txs), Decimal("0.00"))
         return total_burn / Decimal("3.0") # Average over 3 months
