@@ -38,6 +38,7 @@ class PortfolioSummary(BaseModel):
     total_investment_value: Decimal
     total_cash_value: Decimal
     total_debt_value: Decimal
+    total_physical_asset_value: Decimal
     total_equity_vested_value: Decimal
     total_equity_unvested_value: Decimal
     net_worth: Decimal

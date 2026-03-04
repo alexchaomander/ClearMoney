@@ -4,6 +4,7 @@ import {
   getDemoHoldings,
   getDemoPortfolioHistory,
   getDemoPortfolioSummary,
+  getDemoPhysicalAssetsSummary,
 } from "@/lib/strata/demo-data";
 import type {
   AllAccountsResponse,
@@ -16,12 +17,17 @@ import type {
   PortfolioHistoryPoint,
   PortfolioHistoryRange,
   PortfolioSummary,
+  PhysicalAssetsSummary,
   HoldingDetail,
   SpendingSummary,
 } from "@clearmoney/strata-sdk";
 
 export function getPreviewPortfolioSummary(): PortfolioSummary {
   return getDemoPortfolioSummary();
+}
+
+export function getPreviewPhysicalAssets(): PhysicalAssetsSummary {
+  return getDemoPhysicalAssetsSummary();
 }
 
 export function getPreviewPortfolioHistory(range: PortfolioHistoryRange): PortfolioHistoryPoint[] {

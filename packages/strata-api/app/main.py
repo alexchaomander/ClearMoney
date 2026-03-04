@@ -26,6 +26,7 @@ from app.api.health import router as health_router
 from app.api.institutions import router as institutions_router
 from app.api.memory import router as memory_router
 from app.api.notifications import router as notifications_router
+from app.api.physical_assets import router as physical_assets_router
 from app.api.portability import router as portability_router
 from app.api.portfolio import router as portfolio_router
 from app.api.share_reports import router as share_reports_router
@@ -37,6 +38,9 @@ from app.api.waitlist import router as waitlist_router
 from app.core.config import settings
 from app.db.session import close_db
 from app.services.jobs.background import start_background_tasks
+from app.services.providers.metal_price import metal_price_service
+from app.services.providers.vehicle_valuation import vehicle_valuation_service
+from app.services.providers.zillow import zillow_service
 from app.services.session_store import create_session_store
 
 # Initialise Sentry at module level so import-time and startup errors are
@@ -70,6 +74,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         with contextlib.suppress(asyncio.CancelledError):
             await task
     await app.state.session_store.close()
+    await zillow_service.close()
+    await vehicle_valuation_service.close()
+    await metal_price_service.close()
     await close_db()
 
 
@@ -103,6 +110,7 @@ app.include_router(portability_router, prefix="/api/v1")
 app.include_router(transactions_router, prefix="/api/v1")
 app.include_router(memory_router, prefix="/api/v1")
 app.include_router(notifications_router, prefix="/api/v1")
+app.include_router(physical_assets_router, prefix="/api/v1/physical-assets", tags=["Physical Assets"])
 app.include_router(skills_router, prefix="/api/v1")
 app.include_router(advisor_router, prefix="/api/v1")
 app.include_router(share_reports_router, prefix="/api/v1")

@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     # Financial Data Providers (DIY)
     alpha_vantage_api_key: str = ""
     alchemy_api_key: str = ""
+    
+    # Physical Asset Valuation
+    zillow_api_key: str = ""
+    kbb_api_key: str = ""
+    chrono24_api_key: str = ""  # For luxury watches
+    gold_price_api_key: str = ""  # For precious metals
 
     # Advisor configuration
     advisor_provider: str = "anthropic"  # anthropic | openrouter

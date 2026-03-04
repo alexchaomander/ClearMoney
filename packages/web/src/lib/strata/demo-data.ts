@@ -11,6 +11,7 @@ import type {
   PortfolioHistoryPoint,
   PortfolioHistoryRange,
   PortfolioSummary,
+  PhysicalAssetsSummary,
   PointsProgram,
   CreditCardData,
   SavingsProduct,
@@ -1599,14 +1600,16 @@ function computePortfolioSummary(allHoldings: HoldingDetail[]): PortfolioSummary
 
   const totalEquityVested = 125000;
   const totalEquityUnvested = 450000;
+  const totalPhysical = 850000; // House + Car
 
   return {
     total_investment_value: totalInvestment,
     total_cash_value: totalCash,
     total_debt_value: totalDebt,
+    total_physical_asset_value: totalPhysical,
     total_equity_vested_value: totalEquityVested,
     total_equity_unvested_value: totalEquityUnvested,
-    net_worth: totalInvestment + totalCash + totalEquityVested - totalDebt,
+    net_worth: totalInvestment + totalCash + totalEquityVested + totalPhysical - totalDebt,
     tax_advantaged_value: taxAdvantaged,
     taxable_value: taxable,
     allocation_by_asset_type: allocationByAssetType,
@@ -1646,6 +1649,82 @@ export function getDemoHoldings(): HoldingDetail[] {
 
 export function getDemoPortfolioSummary(): PortfolioSummary {
   return DEMO_PORTFOLIO_SUMMARY;
+}
+
+export function getDemoPhysicalAssetsSummary(): PhysicalAssetsSummary {
+  return {
+    real_estate: [
+      {
+        id: "re-001",
+        user_id: "demo-user",
+        name: "Primary Residence",
+        address: "123 Founder Way, Palo Alto, CA 94301",
+        city: "Palo Alto",
+        state: "CA",
+        zip_code: "94301",
+        property_type: "primary_residence",
+        valuation_type: "auto",
+        market_value: 2450000,
+        purchase_price: 1800000,
+        purchase_date: "2021-06-15T00:00:00Z",
+        zillow_zpid: "12345678",
+        last_valuation_at: new Date().toISOString(),
+        created_at: "2021-06-15T00:00:00Z",
+        updated_at: new Date().toISOString(),
+      }
+    ],
+    vehicles: [
+      {
+        id: "v-001",
+        user_id: "demo-user",
+        name: "Daily Driver",
+        make: "Tesla",
+        model: "Model S Plaid",
+        year: 2023,
+        vin: "5YJSA1E2...",
+        mileage: 12500,
+        vehicle_type: "car",
+        valuation_type: "auto",
+        market_value: 82000,
+        purchase_price: 110000,
+        purchase_date: "2023-01-10T00:00:00Z",
+        last_valuation_at: new Date().toISOString(),
+        created_at: "2023-01-10T00:00:00Z",
+        updated_at: new Date().toISOString(),
+      }
+    ],
+    collectibles: [
+      {
+        id: "c-001",
+        user_id: "demo-user",
+        name: "Rolex GMT-Master II",
+        item_type: "watch",
+        valuation_type: "manual",
+        market_value: 18500,
+        purchase_price: 10500,
+        purchase_date: "2019-03-20T00:00:00Z",
+        metadata_json: { reference: "126710BLRO", nickname: "Pepsi" },
+        last_valuation_at: new Date().toISOString(),
+        created_at: "2019-03-20T00:00:00Z",
+        updated_at: new Date().toISOString(),
+      }
+    ],
+    precious_metals: [
+      {
+        id: "m-001",
+        user_id: "demo-user",
+        name: "Gold Bullion",
+        metal_type: "gold",
+        weight_oz: 10,
+        valuation_type: "auto",
+        market_value: 21500,
+        last_valuation_at: new Date().toISOString(),
+        created_at: "2022-11-05T00:00:00Z",
+        updated_at: new Date().toISOString(),
+      }
+    ],
+    total_value: 2572000,
+  };
 }
 
 // === Portfolio History ===

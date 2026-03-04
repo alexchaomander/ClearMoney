@@ -289,6 +289,74 @@ for (const cat of summary.categories) {
 }
 ```
 
+### Physical Asset Methods
+
+#### Get Physical Assets Summary
+Get all physical assets grouped by type with total value.
+
+```typescript
+const summary = await client.getPhysicalAssetsSummary();
+
+console.log(`Total Physical Assets: $${summary.total_value}`);
+console.log(`Real Estate: ${summary.real_estate.length}`);
+console.log(`Vehicles: ${summary.vehicles.length}`);
+console.log(`Collectibles: ${summary.collectibles.length}`);
+console.log(`Precious Metals: ${summary.precious_metals.length}`);
+```
+
+#### Create Physical Assets
+Create assets of each type. Assets with `valuation_type: 'auto'` will attempt live valuation on creation.
+
+```typescript
+// Real estate
+const property = await client.createRealEstateAsset({
+  name: 'Primary Residence',
+  address: '123 Main St',
+  city: 'San Francisco',
+  state: 'CA',
+  property_type: 'primary_residence',
+  valuation_type: 'auto',
+  zillow_zpid: '12345678',
+});
+
+// Vehicle
+const car = await client.createVehicleAsset({
+  name: '2023 Tesla Model 3',
+  make: 'Tesla',
+  model: 'Model 3',
+  year: 2023,
+  valuation_type: 'auto',
+});
+
+// Precious metal
+const gold = await client.createPreciousMetalAsset({
+  name: 'Gold Bullion',
+  metal_type: 'gold',
+  weight_oz: 10,
+});
+```
+
+#### Refresh Valuations
+Trigger a live valuation refresh. Returns structured result with cooldown enforcement (5 min for most assets, 15 min for metals).
+
+```typescript
+const result = await client.refreshRealEstateValuation('asset-id');
+
+switch (result.status) {
+  case 'updated':
+    console.log(`Updated: $${result.previous_value} → $${result.new_value}`);
+    break;
+  case 'unchanged':
+    console.log('Value unchanged');
+    break;
+  case 'failed':
+    console.log(`Failed: ${result.message}`);
+    break;
+}
+
+// 429 error thrown if called within cooldown window
+```
+
 ## Types
 
 The SDK exports all TypeScript types for use in your application:
@@ -341,6 +409,27 @@ import type {
   PaginatedBankTransactions,
   SpendingSummary,
   SpendingCategory,
+
+  // Physical Assets
+  RealEstateAsset,
+  RealEstateAssetCreate,
+  RealEstateAssetUpdate,
+  VehicleAsset,
+  VehicleAssetCreate,
+  VehicleAssetUpdate,
+  CollectibleAsset,
+  CollectibleAssetCreate,
+  CollectibleAssetUpdate,
+  PreciousMetalAsset,
+  PreciousMetalAssetCreate,
+  PreciousMetalAssetUpdate,
+  PhysicalAssetsSummary,
+  ValuationRefreshResponse,
+  ValuationType,
+  RealEstateType,
+  VehicleType,
+  CollectibleType,
+  MetalType,
 } from '@clearmoney/strata-sdk';
 ```
 

@@ -63,6 +63,10 @@ erDiagram
     users ||--o{ consents : "grants"
     users ||--o{ connections : "creates"
     users ||--o{ crypto_wallets : "tracks"
+    users ||--o{ real_estate_assets : "owns"
+    users ||--o{ vehicle_assets : "owns"
+    users ||--o{ collectible_assets : "owns"
+    users ||--o{ precious_metal_assets : "owns"
     users ||--o{ portfolio_snapshots : "tracked for"
     users ||--o{ decision_traces : "generates"
 
@@ -101,6 +105,72 @@ erDiagram
         crypto_chain chain
         text label
         numeric last_balance_usd
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    real_estate_assets {
+        uuid id PK
+        uuid user_id FK
+        text name
+        text address
+        text city
+        text state
+        text zip_code
+        real_estate_type property_type
+        valuation_type valuation_type
+        numeric market_value
+        numeric purchase_price
+        date purchase_date
+        text zillow_zpid
+        timestamptz last_valuation_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    vehicle_assets {
+        uuid id PK
+        uuid user_id FK
+        text name
+        text make
+        text model
+        integer year
+        text vin
+        integer mileage
+        vehicle_type vehicle_type
+        valuation_type valuation_type
+        numeric market_value
+        numeric purchase_price
+        date purchase_date
+        timestamptz last_valuation_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    collectible_assets {
+        uuid id PK
+        uuid user_id FK
+        text name
+        collectible_type item_type
+        valuation_type valuation_type
+        numeric market_value
+        numeric purchase_price
+        date purchase_date
+        jsonb metadata_json
+        timestamptz last_valuation_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    precious_metal_assets {
+        uuid id PK
+        uuid user_id FK
+        text name
+        metal_type metal_type
+        numeric weight_oz
+        valuation_type valuation_type
+        numeric market_value
+        timestamptz last_valuation_at
         timestamptz created_at
         timestamptz updated_at
     }
@@ -635,6 +705,76 @@ Public blockchain wallet addresses tracked for a user. Supports multi-chain wall
 - Unique on `(user_id, address, chain)` — prevents duplicate wallet tracking
 - Indexed on `user_id` and `address` for fast lookups
 
+#### `real_estate_assets`
+Real estate properties tracked for a user. Supports auto-valuation via Zillow/Bridge Interactive when a `zillow_zpid` is provided.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `user_id` | UUID | FK to users (CASCADE on delete) |
+| `name` | VARCHAR(255) | Display name (e.g., "Primary Residence") |
+| `address` | VARCHAR(512) | Property address |
+| `city` | VARCHAR(255) | City |
+| `state` | VARCHAR(2) | State code |
+| `zip_code` | VARCHAR(10) | ZIP code |
+| `property_type` | real_estate_type | Property type enum |
+| `valuation_type` | valuation_type | `manual` or `auto` |
+| `market_value` | NUMERIC(14,2) | Current estimated market value |
+| `purchase_price` | NUMERIC(14,2) | Original purchase price |
+| `purchase_date` | DATE | Date of purchase |
+| `zillow_zpid` | TEXT | Zillow Property ID for auto-valuation |
+| `last_valuation_at` | TIMESTAMPTZ | Last successful valuation refresh |
+
+#### `vehicle_assets`
+Vehicle assets tracked for a user. Supports auto-valuation via Marketcheck API.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `user_id` | UUID | FK to users (CASCADE on delete) |
+| `name` | VARCHAR(255) | Display name (e.g., "2023 Tesla Model 3") |
+| `make` | VARCHAR(100) | Vehicle manufacturer |
+| `model` | VARCHAR(100) | Vehicle model |
+| `year` | INTEGER | Model year |
+| `vin` | VARCHAR(17) | VIN (optional) |
+| `mileage` | INTEGER | Current mileage (optional) |
+| `vehicle_type` | vehicle_type | Vehicle type enum |
+| `valuation_type` | valuation_type | `manual` or `auto` |
+| `market_value` | NUMERIC(14,2) | Current estimated market value |
+| `purchase_price` | NUMERIC(14,2) | Original purchase price |
+| `purchase_date` | DATE | Date of purchase |
+| `last_valuation_at` | TIMESTAMPTZ | Last successful valuation refresh |
+
+#### `collectible_assets`
+Collectible items (art, watches, wine, etc.) tracked for a user.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `user_id` | UUID | FK to users (CASCADE on delete) |
+| `name` | VARCHAR(255) | Display name |
+| `item_type` | collectible_type | Collectible category enum |
+| `valuation_type` | valuation_type | `manual` or `auto` |
+| `market_value` | NUMERIC(14,2) | Current estimated market value |
+| `purchase_price` | NUMERIC(14,2) | Original purchase price |
+| `purchase_date` | DATE | Date of purchase |
+| `metadata_json` | JSONB | Additional item-specific metadata |
+| `last_valuation_at` | TIMESTAMPTZ | Last successful valuation refresh |
+
+#### `precious_metal_assets`
+Precious metal holdings tracked by weight. Auto-valued by default using Alpha Vantage spot prices.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `user_id` | UUID | FK to users (CASCADE on delete) |
+| `name` | VARCHAR(255) | Display name (e.g., "Gold Bullion") |
+| `metal_type` | metal_type | Metal type enum |
+| `weight_oz` | NUMERIC(10,4) | Weight in troy ounces |
+| `valuation_type` | valuation_type | `manual` or `auto` (default: auto) |
+| `market_value` | NUMERIC(14,2) | Current market value (spot price x weight) |
+| `last_valuation_at` | TIMESTAMPTZ | Last successful valuation refresh |
+
 #### `financial_memories`
 User-specific financial profile and goals, serving as the "long-term memory" for the AI Advisor. Can be updated by the user or derived from connected accounts.
 
@@ -793,6 +933,31 @@ Encrypted storage for provider OAuth tokens. Access restricted to token service.
 ### `crypto_chain`
 ```sql
 'ethereum' | 'solana' | 'polygon' | 'arbitrum' | 'base' | 'optimism' | 'bitcoin'
+```
+
+### `valuation_type`
+```sql
+'manual' | 'auto'
+```
+
+### `real_estate_type`
+```sql
+'primary_residence' | 'investment_property' | 'vacation_home' | 'commercial' | 'land'
+```
+
+### `vehicle_type`
+```sql
+'car' | 'motorcycle' | 'boat' | 'aircraft' | 'other'
+```
+
+### `collectible_type`
+```sql
+'art' | 'watch' | 'handbag' | 'jewelry' | 'wine' | 'card' | 'other'
+```
+
+### `metal_type`
+```sql
+'gold' | 'silver' | 'platinum' | 'palladium'
 ```
 
 ### `sync_status`

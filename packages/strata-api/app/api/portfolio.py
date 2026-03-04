@@ -27,6 +27,7 @@ from app.services.equity_valuation import equity_valuation_service
 from app.services.portfolio_metrics import (
     get_cash_and_debt_totals,
     get_investment_total,
+    get_physical_asset_total,
 )
 from app.services.runway import RunwayService
 from app.services.tax_shield import TaxShieldService
@@ -110,14 +111,17 @@ async def get_portfolio_summary(
             ))
 
     # Calculate net worth
-    net_worth = total_cash + total_investment + total_equity_vested - total_debt
+    total_physical = await get_physical_asset_total(session, user.id)
+    net_worth = total_cash + total_investment + total_equity_vested + total_physical - total_debt
 
     # Calculate allocation percentages
-    total_assets = total_cash + total_investment + total_equity_vested
+    total_assets = total_cash + total_investment + total_equity_vested + total_physical
     if total_assets > 0:
         # Add cash and equity to asset allocation
         allocation_by_asset_type["cash"] += total_cash
         allocation_by_asset_type["equity"] += total_equity_vested
+        if total_physical > 0:
+            allocation_by_asset_type["physical_assets"] += total_physical
 
         asset_type_allocations = [
             AssetAllocation(
@@ -177,6 +181,7 @@ async def get_portfolio_summary(
         total_investment_value=total_investment,
         total_cash_value=total_cash,
         total_debt_value=total_debt,
+        total_physical_asset_value=total_physical,
         total_equity_vested_value=total_equity_vested,
         total_equity_unvested_value=total_equity_unvested,
         net_worth=net_worth,
