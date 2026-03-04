@@ -39,6 +39,19 @@ import type {
   PlaidLinkRequest,
   PlaidLinkResponse,
   PortfolioHistoryPoint,
+  PhysicalAssetsSummary,
+  RealEstateAsset,
+  RealEstateAssetCreate,
+  RealEstateAssetUpdate,
+  VehicleAsset,
+  VehicleAssetCreate,
+  VehicleAssetUpdate,
+  CollectibleAsset,
+  CollectibleAssetCreate,
+  CollectibleAssetUpdate,
+  PreciousMetalAsset,
+  PreciousMetalAssetCreate,
+  PreciousMetalAssetUpdate,
   RunwayMetrics,
   Security,
   SkillDetail,
@@ -248,6 +261,28 @@ export interface StrataClientInterface {
   deleteCryptoWallet(walletId: string): Promise<void>;
   deleteAllCryptoWallets(): Promise<void>;
   getCryptoPortfolio(): Promise<CryptoPortfolioResponse>;
+  // Physical Assets
+  getPhysicalAssetsSummary(): Promise<PhysicalAssetsSummary>;
+  getRealEstateAssets(): Promise<RealEstateAsset[]>;
+  createRealEstateAsset(data: RealEstateAssetCreate): Promise<RealEstateAsset>;
+  updateRealEstateAsset(id: string, data: RealEstateAssetUpdate): Promise<RealEstateAsset>;
+  deleteRealEstateAsset(id: string): Promise<void>;
+  refreshRealEstateValuation(id: string): Promise<{ status: string }>;
+  getVehicleAssets(): Promise<VehicleAsset[]>;
+  createVehicleAsset(data: VehicleAssetCreate): Promise<VehicleAsset>;
+  updateVehicleAsset(id: string, data: VehicleAssetUpdate): Promise<VehicleAsset>;
+  deleteVehicleAsset(id: string): Promise<void>;
+  refreshVehicleValuation(id: string): Promise<{ status: string }>;
+  getCollectibleAssets(): Promise<CollectibleAsset[]>;
+  createCollectibleAsset(data: CollectibleAssetCreate): Promise<CollectibleAsset>;
+  updateCollectibleAsset(id: string, data: CollectibleAssetUpdate): Promise<CollectibleAsset>;
+  deleteCollectibleAsset(id: string): Promise<void>;
+  refreshCollectibleValuation(id: string): Promise<{ status: string }>;
+  getPreciousMetalAssets(): Promise<PreciousMetalAsset[]>;
+  createPreciousMetalAsset(data: PreciousMetalAssetCreate): Promise<PreciousMetalAsset>;
+  updatePreciousMetalAsset(id: string, data: PreciousMetalAssetUpdate): Promise<PreciousMetalAsset>;
+  deletePreciousMetalAsset(id: string): Promise<void>;
+  refreshPreciousMetalValuation(id: string): Promise<{ status: string }>;
   // Verification (SVP)
   generateProofOfFunds(threshold: number): Promise<SVPAttestation>;
   validateAttestation(attestation: SVPAttestation): Promise<{ 
@@ -1204,6 +1239,132 @@ export class StrataClient implements StrataClientInterface {
 
   async getCryptoPortfolio(): Promise<CryptoPortfolioResponse> {
     return this.request<CryptoPortfolioResponse>('/api/v1/crypto/portfolio');
+  }
+
+  // === Physical Assets ===
+
+  async getPhysicalAssetsSummary(): Promise<PhysicalAssetsSummary> {
+    return this.request<PhysicalAssetsSummary>('/api/v1/physical-assets/summary');
+  }
+
+  async getRealEstateAssets(): Promise<RealEstateAsset[]> {
+    return this.request<RealEstateAsset[]>('/api/v1/physical-assets/real-estate');
+  }
+
+  async createRealEstateAsset(data: RealEstateAssetCreate): Promise<RealEstateAsset> {
+    return this.request<RealEstateAsset>('/api/v1/physical-assets/real-estate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateRealEstateAsset(id: string, data: RealEstateAssetUpdate): Promise<RealEstateAsset> {
+    return this.request<RealEstateAsset>(`/api/v1/physical-assets/real-estate/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteRealEstateAsset(id: string): Promise<void> {
+    await this.request<void>(`/api/v1/physical-assets/real-estate/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async refreshRealEstateValuation(id: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>(`/api/v1/physical-assets/real-estate/${id}/refresh`, {
+      method: 'POST',
+    });
+  }
+
+  async getVehicleAssets(): Promise<VehicleAsset[]> {
+    return this.request<VehicleAsset[]>('/api/v1/physical-assets/vehicles');
+  }
+
+  async createVehicleAsset(data: VehicleAssetCreate): Promise<VehicleAsset> {
+    return this.request<VehicleAsset>('/api/v1/physical-assets/vehicles', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateVehicleAsset(id: string, data: VehicleAssetUpdate): Promise<VehicleAsset> {
+    return this.request<VehicleAsset>(`/api/v1/physical-assets/vehicles/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteVehicleAsset(id: string): Promise<void> {
+    await this.request<void>(`/api/v1/physical-assets/vehicles/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async refreshVehicleValuation(id: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>(`/api/v1/physical-assets/vehicles/${id}/refresh`, {
+      method: 'POST',
+    });
+  }
+
+  async getCollectibleAssets(): Promise<CollectibleAsset[]> {
+    return this.request<CollectibleAsset[]>('/api/v1/physical-assets/collectibles');
+  }
+
+  async createCollectibleAsset(data: CollectibleAssetCreate): Promise<CollectibleAsset> {
+    return this.request<CollectibleAsset>('/api/v1/physical-assets/collectibles', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCollectibleAsset(id: string, data: CollectibleAssetUpdate): Promise<CollectibleAsset> {
+    return this.request<CollectibleAsset>(`/api/v1/physical-assets/collectibles/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCollectibleAsset(id: string): Promise<void> {
+    await this.request<void>(`/api/v1/physical-assets/collectibles/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async refreshCollectibleValuation(id: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>(`/api/v1/physical-assets/collectibles/${id}/refresh`, {
+      method: 'POST',
+    });
+  }
+
+  async getPreciousMetalAssets(): Promise<PreciousMetalAsset[]> {
+    return this.request<PreciousMetalAsset[]>('/api/v1/physical-assets/precious-metals');
+  }
+
+  async createPreciousMetalAsset(data: PreciousMetalAssetCreate): Promise<PreciousMetalAsset> {
+    return this.request<PreciousMetalAsset>('/api/v1/physical-assets/precious-metals', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updatePreciousMetalAsset(id: string, data: PreciousMetalAssetUpdate): Promise<PreciousMetalAsset> {
+    return this.request<PreciousMetalAsset>(`/api/v1/physical-assets/precious-metals/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deletePreciousMetalAsset(id: string): Promise<void> {
+    await this.request<void>(`/api/v1/physical-assets/precious-metals/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async refreshPreciousMetalValuation(id: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>(`/api/v1/physical-assets/precious-metals/${id}/refresh`, {
+      method: 'POST',
+    });
   }
 
   // === Verification (SVP) ===

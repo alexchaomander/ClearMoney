@@ -91,6 +91,7 @@ import type {
   RunwayMetrics,
   SVPAttestation,
   StrataClientInterface,
+  Subscription,
   SubscriptionSummary,
   TaxShieldMetrics,
   Transaction,
@@ -580,6 +581,10 @@ export class DemoStrataClient implements StrataClientInterface {
         debt: [
           { name: "Student Loan", type: "student_loan", balance: 18000, interest_rate: 0.045, minimum_payment: 350 },
         ],
+        real_estate: [],
+        vehicles: [],
+        collectibles: [],
+        precious_metals: [],
       },
       holdings: [
         { ticker: "VTI", name: "Vanguard Total Stock Market", security_type: "etf", quantity: 120, market_value: 32400, cost_basis: 28000, account: "Robinhood Brokerage" },
@@ -1194,6 +1199,35 @@ export class DemoStrataClient implements StrataClientInterface {
   async deleteEquityGrant(_id: string): Promise<void> {
     await delay(250);
   }
+
+  // === Physical Assets ===
+  async getPhysicalAssetsSummary(): Promise<any> {
+    await delay(300);
+    return { real_estate: [], vehicles: [], collectibles: [], precious_metals: [], total_value: 0 };
+  }
+  async getRealEstateAssets(): Promise<any[]> { return []; }
+  async createRealEstateAsset(data: any): Promise<any> { return {} as any; }
+  async updateRealEstateAsset(id: string, data: any): Promise<any> { return {} as any; }
+  async deleteRealEstateAsset(id: string): Promise<void> {}
+  async refreshRealEstateValuation(id: string): Promise<{ status: string }> { return { status: "success" }; }
+
+  async getVehicleAssets(): Promise<any[]> { return []; }
+  async createVehicleAsset(data: any): Promise<any> { return {} as any; }
+  async updateVehicleAsset(id: string, data: any): Promise<any> { return {} as any; }
+  async deleteVehicleAsset(id: string): Promise<void> {}
+  async refreshVehicleValuation(id: string): Promise<{ status: string }> { return { status: "success" }; }
+
+  async getCollectibleAssets(): Promise<any[]> { return []; }
+  async createCollectibleAsset(data: any): Promise<any> { return {} as any; }
+  async updateCollectibleAsset(id: string, data: any): Promise<any> { return {} as any; }
+  async deleteCollectibleAsset(id: string): Promise<void> {}
+  async refreshCollectibleValuation(id: string): Promise<{ status: string }> { return { status: "success" }; }
+
+  async getPreciousMetalAssets(): Promise<any[]> { return []; }
+  async createPreciousMetalAsset(data: any): Promise<any> { return {} as any; }
+  async updatePreciousMetalAsset(id: string, data: any): Promise<any> { return {} as any; }
+  async deletePreciousMetalAsset(id: string): Promise<void> {}
+  async refreshPreciousMetalValuation(id: string): Promise<{ status: string }> { return { status: "success" }; }
 
   // === Crypto ===
 

@@ -26,6 +26,7 @@ from app.api.health import router as health_router
 from app.api.institutions import router as institutions_router
 from app.api.memory import router as memory_router
 from app.api.notifications import router as notifications_router
+from app.api.physical_assets import router as physical_assets_router
 from app.api.portability import router as portability_router
 from app.api.portfolio import router as portfolio_router
 from app.api.share_reports import router as share_reports_router
@@ -103,6 +104,7 @@ app.include_router(portability_router, prefix="/api/v1")
 app.include_router(transactions_router, prefix="/api/v1")
 app.include_router(memory_router, prefix="/api/v1")
 app.include_router(notifications_router, prefix="/api/v1")
+app.include_router(physical_assets_router, prefix="/api/v1/physical-assets", tags=["Physical Assets"])
 app.include_router(skills_router, prefix="/api/v1")
 app.include_router(advisor_router, prefix="/api/v1")
 app.include_router(share_reports_router, prefix="/api/v1")

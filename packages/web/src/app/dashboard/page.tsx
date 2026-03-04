@@ -54,14 +54,22 @@ import {
   useSyncAllConnections,
   useCryptoPortfolio,
   useCryptoWalletMutations,
+  usePhysicalAssetsSummary,
+  useRealEstateAssetMutations,
+  useVehicleAssetMutations,
+  useCollectibleAssetMutations,
+  usePreciousMetalAssetMutations,
 } from "@/lib/strata/hooks";
 import { EquityCard } from "@/components/dashboard/EquityCard";
-import { type PortfolioHistoryRange, type HoldingDetail } from "@clearmoney/strata-sdk";
+import { PhysicalAssetsCard } from "@/components/dashboard/PhysicalAssetsCard";
+import { PhysicalAssetsDemoBanner } from "@/components/dashboard/PhysicalAssetsDemoBanner";
+import { type PortfolioHistoryRange, type HoldingDetail, type PhysicalAssetsSummary } from "@clearmoney/strata-sdk";
 import {
   getPreviewAccounts,
   getPreviewHoldings,
   getPreviewPortfolioHistory,
   getPreviewPortfolioSummary,
+  getPreviewPhysicalAssets,
 } from "./_shared/preview-data";
 import { AnimatedAmount } from "@/components/shared/AnimatedAmount";
 
@@ -83,6 +91,9 @@ export default function DashboardPage() {
   const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const [showPhysicalDemo, setShowPhysicalDemo] = useState(false);
+  const [demoPhysicalAssets, setDemoPhysicalAssets] = useState<PhysicalAssetsSummary | null>(null);
 
   const previewPortfolioSummary = useMemo(() => getPreviewPortfolioSummary(), []);
   const previewAccounts = useMemo(() => getPreviewAccounts(), []);
@@ -175,7 +186,27 @@ export default function DashboardPage() {
     refetch: refetchCryptoPortfolio,
   } = useCryptoPortfolio({ enabled: hasPortfolioConsent });
 
+  const {
+    data: physicalAssets,
+    isLoading: physicalAssetsLoading,
+    refetch: refetchPhysicalAssets,
+  } = usePhysicalAssetsSummary({ enabled: hasPortfolioConsent });
+
+  const effectivePhysicalAssets = demoPhysicalAssets ?? physicalAssets;
+
   const equityMutations = useEquityGrantMutations();
+  const realEstateMutations = useRealEstateAssetMutations();
+  const vehicleMutations = useVehicleAssetMutations();
+  const collectibleMutations = useCollectibleAssetMutations();
+  const metalMutations = usePreciousMetalAssetMutations();
+
+  const startPhysicalDemo = () => {
+    setShowPhysicalDemo(true);
+    // Simulate adding assets sequence
+    setTimeout(() => {
+      setDemoPhysicalAssets(getPreviewPhysicalAssets());
+    }, 1000);
+  };
 
   const isLoading =
     portfolioLoading ||
@@ -185,7 +216,8 @@ export default function DashboardPage() {
     connectionsLoading ||
     equityLoading ||
     projectionsLoading ||
-    cryptoLoading;
+    cryptoLoading ||
+    physicalAssetsLoading;
   const isError = portfolioError || accountsError || holdingsError || allAccountsError || connectionsError;
   const errorDetails =
     portfolioErrorDetails ||
@@ -203,6 +235,7 @@ export default function DashboardPage() {
     refetchHoldings();
     refetchAllAccounts();
     refetchCryptoPortfolio();
+    refetchPhysicalAssets();
     if (connections) {
       refetchConnections();
     }
@@ -319,15 +352,21 @@ export default function DashboardPage() {
 
   function renderContent() {
     const totalCryptoValue = Number(cryptoPortfolio?.total_value_usd ?? 0);
-    const adjustedNetWorth = effectivePortfolio.net_worth + totalCryptoValue;
+    // totalPhysicalValue is now included in effectivePortfolio's net_worth directly by the backend
+    const totalPhysicalValue = Number(effectivePhysicalAssets?.total_value ?? 0);
+    const adjustedNetWorth = effectivePortfolio.net_worth + totalCryptoValue + (demoPhysicalAssets ? totalPhysicalValue : 0);
     const totalAssetsValue = 
       effectivePortfolio.total_investment_value +
       effectivePortfolio.total_cash_value +
       (effectivePortfolio.total_equity_vested_value ?? 0) +
-      totalCryptoValue;
+      (effectivePortfolio.total_physical_asset_value ?? 0) +
+      totalCryptoValue +
+      (demoPhysicalAssets ? totalPhysicalValue : 0);
 
     return (
       <>
+        <PhysicalAssetsDemoBanner onStartDemo={startPhysicalDemo} />
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -549,6 +588,21 @@ export default function DashboardPage() {
                   </button>
                 </div>
               </div>
+            )}
+
+            {effectivePhysicalAssets && (
+              <PhysicalAssetsCard
+                summary={effectivePhysicalAssets}
+                onRefreshRealEstate={(id) => realEstateMutations.refresh.mutate(id)}
+                onRefreshVehicle={(id) => vehicleMutations.refresh.mutate(id)}
+                onRefreshCollectible={(id) => collectibleMutations.refresh.mutate(id)}
+                onRefreshMetal={(id) => metalMutations.refresh.mutate(id)}
+                onDeleteRealEstate={(id) => realEstateMutations.remove.mutate(id)}
+                onDeleteVehicle={(id) => vehicleMutations.remove.mutate(id)}
+                onDeleteCollectible={(id) => collectibleMutations.remove.mutate(id)}
+                onDeleteMetal={(id) => metalMutations.remove.mutate(id)}
+                onAddAsset={() => setShowAddModal(true)}
+              />
             )}
 
             {equityPortfolio && (

@@ -21,6 +21,14 @@ import type {
   ActionIntentUpdate,
   SVPAttestation,
   CryptoWalletCreate,
+  RealEstateAssetCreate,
+  RealEstateAssetUpdate,
+  VehicleAssetCreate,
+  VehicleAssetUpdate,
+  CollectibleAssetCreate,
+  CollectibleAssetUpdate,
+  PreciousMetalAssetCreate,
+  PreciousMetalAssetUpdate,
 } from "@clearmoney/strata-sdk";
 
 export const queryKeys = {
@@ -78,6 +86,11 @@ export const queryKeys = {
   equityPortfolio: ["equity", "portfolio"] as const,
   equityProjections: ["equity", "projections"] as const,
   equityGrants: ["equity", "grants"] as const,
+  physicalAssetsSummary: ["physicalAssets", "summary"] as const,
+  realEstateAssets: ["physicalAssets", "realEstate"] as const,
+  vehicleAssets: ["physicalAssets", "vehicles"] as const,
+  collectibleAssets: ["physicalAssets", "collectibles"] as const,
+  preciousMetalAssets: ["physicalAssets", "preciousMetals"] as const,
   actionIntents: (status?: ActionIntentStatus) => ["actionIntents", status ?? "all"] as const,
   actionIntent: (id: string) => ["actionIntents", id] as const,
   // Crypto
@@ -217,6 +230,229 @@ export function useCryptoWalletMutations() {
   });
 
   return { add, remove, removeAll };
+}
+
+// === Physical Asset Hooks ===
+
+export function usePhysicalAssetsSummary(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.physicalAssetsSummary,
+    queryFn: () => client.getPhysicalAssetsSummary(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useRealEstateAssets(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.realEstateAssets,
+    queryFn: () => client.getRealEstateAssets(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useRealEstateAssetMutations() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  const add = useMutation({
+    mutationFn: (data: RealEstateAssetCreate) => client.createRealEstateAsset(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.realEstateAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const update = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: RealEstateAssetUpdate }) =>
+      client.updateRealEstateAsset(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.realEstateAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => client.deleteRealEstateAsset(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.realEstateAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const refresh = useMutation({
+    mutationFn: (id: string) => client.refreshRealEstateValuation(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.realEstateAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  return { add, update, remove, refresh };
+}
+
+export function useVehicleAssets(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.vehicleAssets,
+    queryFn: () => client.getVehicleAssets(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useVehicleAssetMutations() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  const add = useMutation({
+    mutationFn: (data: VehicleAssetCreate) => client.createVehicleAsset(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.vehicleAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const update = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: VehicleAssetUpdate }) =>
+      client.updateVehicleAsset(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.vehicleAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => client.deleteVehicleAsset(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.vehicleAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const refresh = useMutation({
+    mutationFn: (id: string) => client.refreshVehicleValuation(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.vehicleAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  return { add, update, remove, refresh };
+}
+
+export function useCollectibleAssets(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.collectibleAssets,
+    queryFn: () => client.getCollectibleAssets(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useCollectibleAssetMutations() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  const add = useMutation({
+    mutationFn: (data: CollectibleAssetCreate) => client.createCollectibleAsset(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.collectibleAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const update = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: CollectibleAssetUpdate }) =>
+      client.updateCollectibleAsset(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.collectibleAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => client.deleteCollectibleAsset(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.collectibleAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const refresh = useMutation({
+    mutationFn: (id: string) => client.refreshCollectibleValuation(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.collectibleAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  return { add, update, remove, refresh };
+}
+
+export function usePreciousMetalAssets(options?: { enabled?: boolean }) {
+  const client = useStrataClient();
+  return useQuery({
+    queryKey: queryKeys.preciousMetalAssets,
+    queryFn: () => client.getPreciousMetalAssets(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function usePreciousMetalAssetMutations() {
+  const client = useStrataClient();
+  const queryClient = useQueryClient();
+
+  const add = useMutation({
+    mutationFn: (data: PreciousMetalAssetCreate) => client.createPreciousMetalAsset(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.preciousMetalAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const update = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: PreciousMetalAssetUpdate }) =>
+      client.updatePreciousMetalAsset(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.preciousMetalAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => client.deletePreciousMetalAsset(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.preciousMetalAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const refresh = useMutation({
+    mutationFn: (id: string) => client.refreshPreciousMetalValuation(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.preciousMetalAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  return { add, update, remove, refresh };
 }
 
 export function useRunwayMetrics(options?: { enabled?: boolean }) {
