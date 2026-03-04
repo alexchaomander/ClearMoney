@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from decimal import Decimal
 
@@ -42,33 +43,17 @@ async def get_physical_asset_total(
     user_id: uuid.UUID,
 ) -> Decimal:
     """Return total market value of all physical assets (real estate + vehicles + collectibles + metals)."""
-    re_result = await session.execute(
-        select(RealEstateAsset).where(RealEstateAsset.user_id == user_id)
-    )
-    total_re = sum(
-        (a.market_value for a in re_result.scalars().all()), Decimal("0.00")
-    )
-
-    v_result = await session.execute(
-        select(VehicleAsset).where(VehicleAsset.user_id == user_id)
-    )
-    total_v = sum(
-        (a.market_value for a in v_result.scalars().all()), Decimal("0.00")
+    re_result, v_result, c_result, m_result = await asyncio.gather(
+        session.execute(select(RealEstateAsset).where(RealEstateAsset.user_id == user_id)),
+        session.execute(select(VehicleAsset).where(VehicleAsset.user_id == user_id)),
+        session.execute(select(CollectibleAsset).where(CollectibleAsset.user_id == user_id)),
+        session.execute(select(PreciousMetalAsset).where(PreciousMetalAsset.user_id == user_id)),
     )
 
-    c_result = await session.execute(
-        select(CollectibleAsset).where(CollectibleAsset.user_id == user_id)
-    )
-    total_c = sum(
-        (a.market_value for a in c_result.scalars().all()), Decimal("0.00")
-    )
-
-    m_result = await session.execute(
-        select(PreciousMetalAsset).where(PreciousMetalAsset.user_id == user_id)
-    )
-    total_m = sum(
-        (a.market_value for a in m_result.scalars().all()), Decimal("0.00")
-    )
+    total_re = sum((a.market_value for a in re_result.scalars().all()), Decimal("0.00"))
+    total_v = sum((a.market_value for a in v_result.scalars().all()), Decimal("0.00"))
+    total_c = sum((a.market_value for a in c_result.scalars().all()), Decimal("0.00"))
+    total_m = sum((a.market_value for a in m_result.scalars().all()), Decimal("0.00"))
 
     return total_re + total_v + total_c + total_m
 

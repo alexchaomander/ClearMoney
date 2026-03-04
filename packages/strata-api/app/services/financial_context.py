@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -67,24 +68,15 @@ async def build_financial_context(
     equity_grants = equity_result.scalars().all()
     equity_summary = await equity_valuation_service.calculate_portfolio_summary(list(equity_grants))
 
-    re_result = await session.execute(
-        select(RealEstateAsset).where(RealEstateAsset.user_id == user_id)
+    re_result, v_result, c_result, m_result = await asyncio.gather(
+        session.execute(select(RealEstateAsset).where(RealEstateAsset.user_id == user_id)),
+        session.execute(select(VehicleAsset).where(VehicleAsset.user_id == user_id)),
+        session.execute(select(CollectibleAsset).where(CollectibleAsset.user_id == user_id)),
+        session.execute(select(PreciousMetalAsset).where(PreciousMetalAsset.user_id == user_id)),
     )
     real_estate_assets = re_result.scalars().all()
-
-    v_result = await session.execute(
-        select(VehicleAsset).where(VehicleAsset.user_id == user_id)
-    )
     vehicle_assets = v_result.scalars().all()
-
-    c_result = await session.execute(
-        select(CollectibleAsset).where(CollectibleAsset.user_id == user_id)
-    )
     collectible_assets = c_result.scalars().all()
-
-    m_result = await session.execute(
-        select(PreciousMetalAsset).where(PreciousMetalAsset.user_id == user_id)
-    )
     precious_metal_assets = m_result.scalars().all()
 
     conn_result = await session.execute(

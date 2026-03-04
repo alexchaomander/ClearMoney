@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 import logging
 from decimal import Decimal
@@ -334,10 +335,12 @@ class PhysicalAssetService:
     # --- Summary ---
 
     async def get_physical_assets_summary(self, user_id: uuid.UUID) -> PhysicalAssetsSummary:
-        re_assets = await self.get_real_estate_assets(user_id)
-        v_assets = await self.get_vehicle_assets(user_id)
-        c_assets = await self.get_collectible_assets(user_id)
-        m_assets = await self.get_precious_metal_assets(user_id)
+        re_assets, v_assets, c_assets, m_assets = await asyncio.gather(
+            self.get_real_estate_assets(user_id),
+            self.get_vehicle_assets(user_id),
+            self.get_collectible_assets(user_id),
+            self.get_precious_metal_assets(user_id),
+        )
 
         total_value = sum((a.market_value for a in re_assets), Decimal(0)) + \
                       sum((a.market_value for a in v_assets), Decimal(0)) + \

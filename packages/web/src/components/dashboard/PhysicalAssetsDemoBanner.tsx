@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sparkles, 
@@ -18,8 +18,20 @@ interface PhysicalAssetsDemoBannerProps {
   onStartDemo: () => void;
 }
 
+const DISMISS_KEY = "clearmoney:physical-assets-banner-dismissed";
+
 export function PhysicalAssetsDemoBanner({ onStartDemo }: PhysicalAssetsDemoBannerProps) {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem(DISMISS_KEY);
+    if (!dismissed) setIsVisible(true);
+  }, []);
+
+  const handleDismiss = () => {
+    setIsVisible(false);
+    localStorage.setItem(DISMISS_KEY, "true");
+  };
 
   if (!isVisible) return null;
 
@@ -41,7 +53,7 @@ export function PhysicalAssetsDemoBanner({ onStartDemo }: PhysicalAssetsDemoBann
           transition={{ duration: 10, repeat: Infinity }}
           className="absolute -top-24 -right-24 w-96 h-96 bg-emerald-500/20 blur-[100px] rounded-full" 
         />
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay" />
+        <div className="absolute top-0 left-0 w-full h-full bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.02)_10px,rgba(255,255,255,0.02)_20px)] opacity-50 mix-blend-overlay" />
       </div>
 
       <div className="relative z-10 flex flex-col md:flex-row items-center justify-between p-8 md:p-12 gap-8">
@@ -69,7 +81,7 @@ export function PhysicalAssetsDemoBanner({ onStartDemo }: PhysicalAssetsDemoBann
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setIsVisible(false)}
+              onClick={handleDismiss}
               className="px-8 py-4 rounded-2xl bg-slate-800 text-white font-bold text-sm hover:bg-slate-700 transition-all border border-slate-700"
             >
               Dismiss

@@ -5,6 +5,14 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from app.models.physical_asset import (
+    CollectibleType,
+    MetalType,
+    RealEstateType,
+    ValuationType,
+    VehicleType,
+)
+
 
 class RealEstateAssetBase(BaseModel):
     name: str
@@ -12,8 +20,8 @@ class RealEstateAssetBase(BaseModel):
     city: Optional[str] = None
     state: Optional[str] = None
     zip_code: Optional[str] = None
-    property_type: str = "primary_residence"
-    valuation_type: str = "manual"
+    property_type: RealEstateType = RealEstateType.primary_residence
+    valuation_type: ValuationType = ValuationType.manual
     market_value: Decimal = Field(default=Decimal(0))
     purchase_price: Optional[Decimal] = None
     purchase_date: Optional[datetime] = None
@@ -30,8 +38,8 @@ class RealEstateAssetUpdate(BaseModel):
     city: Optional[str] = None
     state: Optional[str] = None
     zip_code: Optional[str] = None
-    property_type: Optional[str] = None
-    valuation_type: Optional[str] = None
+    property_type: Optional[RealEstateType] = None
+    valuation_type: Optional[ValuationType] = None
     market_value: Optional[Decimal] = None
     purchase_price: Optional[Decimal] = None
     purchase_date: Optional[datetime] = None
@@ -56,8 +64,8 @@ class VehicleAssetBase(BaseModel):
     year: int
     vin: Optional[str] = None
     mileage: Optional[int] = None
-    vehicle_type: str = "car"
-    valuation_type: str = "manual"
+    vehicle_type: VehicleType = VehicleType.car
+    valuation_type: ValuationType = ValuationType.manual
     market_value: Decimal = Field(default=Decimal(0))
     purchase_price: Optional[Decimal] = None
     purchase_date: Optional[datetime] = None
@@ -74,8 +82,8 @@ class VehicleAssetUpdate(BaseModel):
     year: Optional[int] = None
     vin: Optional[str] = None
     mileage: Optional[int] = None
-    vehicle_type: Optional[str] = None
-    valuation_type: Optional[str] = None
+    vehicle_type: Optional[VehicleType] = None
+    valuation_type: Optional[ValuationType] = None
     market_value: Optional[Decimal] = None
     purchase_price: Optional[Decimal] = None
     purchase_date: Optional[datetime] = None
@@ -96,8 +104,8 @@ class VehicleAsset(VehicleAssetBase):
 
 class CollectibleAssetBase(BaseModel):
     name: str
-    item_type: str = "other"
-    valuation_type: str = "manual"
+    item_type: CollectibleType = CollectibleType.other
+    valuation_type: ValuationType = ValuationType.manual
     market_value: Decimal = Field(default=Decimal(0))
     purchase_price: Optional[Decimal] = None
     purchase_date: Optional[datetime] = None
@@ -110,8 +118,8 @@ class CollectibleAssetCreate(CollectibleAssetBase):
 
 class CollectibleAssetUpdate(BaseModel):
     name: Optional[str] = None
-    item_type: Optional[str] = None
-    valuation_type: Optional[str] = None
+    item_type: Optional[CollectibleType] = None
+    valuation_type: Optional[ValuationType] = None
     market_value: Optional[Decimal] = None
     purchase_price: Optional[Decimal] = None
     purchase_date: Optional[datetime] = None
@@ -133,9 +141,9 @@ class CollectibleAsset(CollectibleAssetBase):
 
 class PreciousMetalAssetBase(BaseModel):
     name: str
-    metal_type: str
+    metal_type: MetalType
     weight_oz: Decimal
-    valuation_type: str = "auto"
+    valuation_type: ValuationType = ValuationType.auto
     market_value: Decimal = Field(default=Decimal(0))
 
 
@@ -145,9 +153,9 @@ class PreciousMetalAssetCreate(PreciousMetalAssetBase):
 
 class PreciousMetalAssetUpdate(BaseModel):
     name: Optional[str] = None
-    metal_type: Optional[str] = None
+    metal_type: Optional[MetalType] = None
     weight_oz: Optional[Decimal] = None
-    valuation_type: Optional[str] = None
+    valuation_type: Optional[ValuationType] = None
     market_value: Optional[Decimal] = None
 
 
