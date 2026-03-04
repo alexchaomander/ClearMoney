@@ -531,6 +531,13 @@ export interface PhysicalAssetsSummary {
   total_value: number;
 }
 
+export interface ValuationRefreshResponse {
+  status: 'updated' | 'unchanged' | 'failed' | 'cooldown' | 'not_found';
+  new_value?: number | null;
+  previous_value?: number | null;
+  message?: string | null;
+}
+
 // Cash/Debt CRUD
 export interface CashAccountCreate {
   name: string;

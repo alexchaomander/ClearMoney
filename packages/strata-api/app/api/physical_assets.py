@@ -20,6 +20,7 @@ from app.schemas.physical_asset import (
     PreciousMetalAssetCreate,
     PreciousMetalAssetUpdate,
     PhysicalAssetsSummary,
+    ValuationRefreshResponse,
 )
 from app.services.physical_asset import PhysicalAssetService
 
@@ -84,17 +85,19 @@ async def delete_real_estate_asset(
     return {"status": "success"}
 
 
-@router.post("/real-estate/{asset_id}/refresh")
+@router.post("/real-estate/{asset_id}/refresh", response_model=ValuationRefreshResponse)
 async def refresh_real_estate_valuation(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
 ):
     service = PhysicalAssetService(db)
-    success = await service.refresh_real_estate_valuation(asset_id, current_user.id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Real estate asset not found")
-    return {"status": "success", "message": "Valuation refresh triggered"}
+    result = await service.refresh_real_estate_valuation(asset_id, current_user.id)
+    if result["status"] == "not_found":
+        raise HTTPException(status_code=404, detail=result.get("message", "Real estate asset not found"))
+    if result["status"] == "cooldown":
+        raise HTTPException(status_code=429, detail=result.get("message", "Too many refresh requests"))
+    return result
 
 
 # --- Vehicles ---
@@ -145,17 +148,19 @@ async def delete_vehicle_asset(
     return {"status": "success"}
 
 
-@router.post("/vehicles/{asset_id}/refresh")
+@router.post("/vehicles/{asset_id}/refresh", response_model=ValuationRefreshResponse)
 async def refresh_vehicle_valuation(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
 ):
     service = PhysicalAssetService(db)
-    success = await service.refresh_vehicle_valuation(asset_id, current_user.id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Vehicle asset not found")
-    return {"status": "success", "message": "Valuation refresh triggered"}
+    result = await service.refresh_vehicle_valuation(asset_id, current_user.id)
+    if result["status"] == "not_found":
+        raise HTTPException(status_code=404, detail=result.get("message", "Vehicle asset not found"))
+    if result["status"] == "cooldown":
+        raise HTTPException(status_code=429, detail=result.get("message", "Too many refresh requests"))
+    return result
 
 
 # --- Collectibles ---
@@ -206,17 +211,19 @@ async def delete_collectible_asset(
     return {"status": "success"}
 
 
-@router.post("/collectibles/{asset_id}/refresh")
+@router.post("/collectibles/{asset_id}/refresh", response_model=ValuationRefreshResponse)
 async def refresh_collectible_valuation(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
 ):
     service = PhysicalAssetService(db)
-    success = await service.refresh_collectible_valuation(asset_id, current_user.id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Collectible asset not found")
-    return {"status": "success", "message": "Valuation refresh triggered"}
+    result = await service.refresh_collectible_valuation(asset_id, current_user.id)
+    if result["status"] == "not_found":
+        raise HTTPException(status_code=404, detail=result.get("message", "Collectible asset not found"))
+    if result["status"] == "cooldown":
+        raise HTTPException(status_code=429, detail=result.get("message", "Too many refresh requests"))
+    return result
 
 
 # --- Precious Metals ---
@@ -267,14 +274,16 @@ async def delete_precious_metal_asset(
     return {"status": "success"}
 
 
-@router.post("/precious-metals/{asset_id}/refresh")
+@router.post("/precious-metals/{asset_id}/refresh", response_model=ValuationRefreshResponse)
 async def refresh_precious_metal_valuation(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
 ):
     service = PhysicalAssetService(db)
-    success = await service.refresh_metal_valuation(asset_id, current_user.id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Precious metal asset not found")
-    return {"status": "success", "message": "Valuation refresh triggered"}
+    result = await service.refresh_metal_valuation(asset_id, current_user.id)
+    if result["status"] == "not_found":
+        raise HTTPException(status_code=404, detail=result.get("message", "Precious metal asset not found"))
+    if result["status"] == "cooldown":
+        raise HTTPException(status_code=429, detail=result.get("message", "Too many refresh requests"))
+    return result

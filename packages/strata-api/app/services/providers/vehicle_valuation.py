@@ -14,6 +14,10 @@ class VehicleValuationService:
     def __init__(self):
         self._api_key = settings.kbb_api_key  # Reusing the KBB key slot for now
         self._base_url = "https://marketcheck-prod.apigee.net/v2/stats/car"
+        self._client = httpx.AsyncClient(timeout=10.0)
+
+    async def close(self):
+        await self._client.aclose()
 
     async def get_market_value(
         self, make: str, model: str, year: int, mileage: Optional[int] = None
@@ -31,10 +35,9 @@ class VehicleValuationService:
         }
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(self._base_url, params=params)
-                response.raise_for_status()
-                data = response.json()
+            response = await self._client.get(self._base_url, params=params)
+            response.raise_for_status()
+            data = response.json()
 
             # Marketcheck stats structure
             if "stats" in data and "price_stats" in data["stats"]:

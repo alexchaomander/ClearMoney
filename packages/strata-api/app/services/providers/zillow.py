@@ -15,6 +15,10 @@ class ZillowService:
         self._api_key = settings.zillow_api_key
         # Note: In a real production app, we might use Bridge Interactive (Zillow-owned)
         self._base_url = "https://api.bridgeinteractive.com/api/v1/zestimate"
+        self._client = httpx.AsyncClient(timeout=10.0)
+
+    async def close(self):
+        await self._client.aclose()
 
     async def get_zestimate(self, zpid: str) -> Optional[Decimal]:
         """Fetch the Zestimate for a specific Zillow Property ID."""
@@ -28,10 +32,9 @@ class ZillowService:
         }
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(self._base_url, params=params)
-                response.raise_for_status()
-                data = response.json()
+            response = await self._client.get(self._base_url, params=params)
+            response.raise_for_status()
+            data = response.json()
 
             # Bridge API structure
             if data.get("success") and "bundle" in data:

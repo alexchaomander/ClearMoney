@@ -3,14 +3,14 @@ import uuid
 import logging
 from decimal import Decimal
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.physical_asset import (
-    RealEstateAsset, 
-    VehicleAsset, 
+    RealEstateAsset,
+    VehicleAsset,
     CollectibleAsset,
     PreciousMetalAsset,
     ValuationType
@@ -31,6 +31,10 @@ from app.services.providers.zillow import zillow_service
 from app.services.providers.vehicle_valuation import vehicle_valuation_service
 
 logger = logging.getLogger(__name__)
+
+# Cooldown windows in seconds
+COOLDOWN_STANDARD = 300   # 5 minutes for real estate, vehicles, collectibles
+COOLDOWN_METALS = 900     # 15 minutes for precious metals
 
 class PhysicalAssetService:
     def __init__(self, session: AsyncSession):
@@ -54,11 +58,13 @@ class PhysicalAssetService:
         self.session.add(asset)
         await self.session.commit()
         await self.session.refresh(asset)
-        
-        # Trigger initial auto-valuation if requested
+
         if asset.valuation_type == ValuationType.auto:
-            await self.refresh_real_estate_valuation(asset.id)
-            
+            result = await self.refresh_real_estate_valuation(asset.id)
+            if result["status"] == "failed":
+                logger.warning("Initial auto-valuation failed for real estate asset %s: %s", asset.id, result.get("message"))
+            await self.session.refresh(asset)
+
         return asset
 
     async def update_real_estate_asset(
@@ -109,11 +115,13 @@ class PhysicalAssetService:
         self.session.add(asset)
         await self.session.commit()
         await self.session.refresh(asset)
-        
-        # Trigger initial auto-valuation if requested
+
         if asset.valuation_type == ValuationType.auto:
-            await self.refresh_vehicle_valuation(asset.id)
-            
+            result = await self.refresh_vehicle_valuation(asset.id)
+            if result["status"] == "failed":
+                logger.warning("Initial auto-valuation failed for vehicle asset %s: %s", asset.id, result.get("message"))
+            await self.session.refresh(asset)
+
         return asset
 
     async def update_vehicle_asset(
@@ -164,10 +172,13 @@ class PhysicalAssetService:
         self.session.add(asset)
         await self.session.commit()
         await self.session.refresh(asset)
-        
+
         if asset.valuation_type == ValuationType.auto:
-            await self.refresh_collectible_valuation(asset.id)
-            
+            result = await self.refresh_collectible_valuation(asset.id)
+            if result["status"] == "failed":
+                logger.warning("Initial auto-valuation failed for collectible asset %s: %s", asset.id, result.get("message"))
+            await self.session.refresh(asset)
+
         return asset
 
     async def update_collectible_asset(
@@ -218,11 +229,13 @@ class PhysicalAssetService:
         self.session.add(asset)
         await self.session.commit()
         await self.session.refresh(asset)
-        
-        # Metals are almost always auto-valued
+
         if asset.valuation_type == ValuationType.auto:
-            await self.refresh_metal_valuation(asset.id)
-            
+            result = await self.refresh_metal_valuation(asset.id)
+            if result["status"] == "failed":
+                logger.warning("Initial auto-valuation failed for metal asset %s: %s", asset.id, result.get("message"))
+            await self.session.refresh(asset)
+
         return asset
 
     async def update_precious_metal_asset(
@@ -255,9 +268,23 @@ class PhysicalAssetService:
         await self.session.commit()
         return result.rowcount > 0
 
-    # --- Valuation Logic (Stubs) ---
+    # --- Cooldown ---
 
-    async def refresh_real_estate_valuation(self, asset_id: uuid.UUID, user_id: uuid.UUID | None = None) -> bool:
+    @staticmethod
+    def _check_cooldown(last_valuation_at: Optional[datetime], cooldown_seconds: int) -> Optional[int]:
+        """Return remaining cooldown seconds, or None if no cooldown applies."""
+        if last_valuation_at is None:
+            return None
+        now = datetime.now(timezone.utc)
+        last = last_valuation_at if last_valuation_at.tzinfo else last_valuation_at.replace(tzinfo=timezone.utc)
+        elapsed = (now - last).total_seconds()
+        if elapsed < cooldown_seconds:
+            return int(cooldown_seconds - elapsed)
+        return None
+
+    # --- Valuation Logic ---
+
+    async def refresh_real_estate_valuation(self, asset_id: uuid.UUID, user_id: uuid.UUID | None = None) -> Dict:
         """Fetch current property value from Zillow/Redfin APIs."""
         query = select(RealEstateAsset).where(RealEstateAsset.id == asset_id)
         if user_id is not None:
@@ -265,24 +292,34 @@ class PhysicalAssetService:
         asset_result = await self.session.execute(query)
         asset = asset_result.scalar_one_or_none()
         if not asset:
-            return False
+            return {"status": "not_found", "message": "Real estate asset not found"}
 
-        # Try ZPID first
+        remaining = self._check_cooldown(asset.last_valuation_at, COOLDOWN_STANDARD)
+        if remaining is not None:
+            return {"status": "cooldown", "message": f"Please wait {remaining}s before refreshing again"}
+
+        previous_value = asset.market_value
         new_value = None
         if asset.zillow_zpid:
-            new_value = await zillow_service.get_zestimate(asset.zillow_zpid)
-        
-        # If no ZPID or it failed, we could try address search here
-        
-        if new_value:
-            asset.market_value = new_value
+            try:
+                new_value = await zillow_service.get_zestimate(asset.zillow_zpid)
+            except Exception as e:
+                return {"status": "failed", "previous_value": previous_value, "message": str(e)}
+
+        if new_value is None:
+            return {"status": "failed", "previous_value": previous_value, "message": "Provider returned no value"}
+
+        if new_value == previous_value:
             asset.last_valuation_at = datetime.now(timezone.utc)
             await self.session.commit()
-            return True
-            
-        return False
+            return {"status": "unchanged", "new_value": new_value, "previous_value": previous_value}
 
-    async def refresh_vehicle_valuation(self, asset_id: uuid.UUID, user_id: uuid.UUID | None = None) -> bool:
+        asset.market_value = new_value
+        asset.last_valuation_at = datetime.now(timezone.utc)
+        await self.session.commit()
+        return {"status": "updated", "new_value": new_value, "previous_value": previous_value}
+
+    async def refresh_vehicle_valuation(self, asset_id: uuid.UUID, user_id: uuid.UUID | None = None) -> Dict:
         """Fetch current vehicle value from Marketcheck APIs."""
         query = select(VehicleAsset).where(VehicleAsset.id == asset_id)
         if user_id is not None:
@@ -290,30 +327,54 @@ class PhysicalAssetService:
         asset_result = await self.session.execute(query)
         asset = asset_result.scalar_one_or_none()
         if not asset:
-            return False
+            return {"status": "not_found", "message": "Vehicle asset not found"}
 
-        new_value = await vehicle_valuation_service.get_market_value(
-            make=asset.make,
-            model=asset.model,
-            year=asset.year,
-            mileage=asset.mileage
-        )
-        
-        if new_value:
-            asset.market_value = new_value
+        remaining = self._check_cooldown(asset.last_valuation_at, COOLDOWN_STANDARD)
+        if remaining is not None:
+            return {"status": "cooldown", "message": f"Please wait {remaining}s before refreshing again"}
+
+        previous_value = asset.market_value
+        try:
+            new_value = await vehicle_valuation_service.get_market_value(
+                make=asset.make,
+                model=asset.model,
+                year=asset.year,
+                mileage=asset.mileage
+            )
+        except Exception as e:
+            return {"status": "failed", "previous_value": previous_value, "message": str(e)}
+
+        if new_value is None:
+            return {"status": "failed", "previous_value": previous_value, "message": "Provider returned no value"}
+
+        if new_value == previous_value:
             asset.last_valuation_at = datetime.now(timezone.utc)
             await self.session.commit()
-            return True
-            
-        return False
+            return {"status": "unchanged", "new_value": new_value, "previous_value": previous_value}
 
-    async def refresh_collectible_valuation(self, asset_id: uuid.UUID, user_id: uuid.UUID | None = None) -> bool:
+        asset.market_value = new_value
+        asset.last_valuation_at = datetime.now(timezone.utc)
+        await self.session.commit()
+        return {"status": "updated", "new_value": new_value, "previous_value": previous_value}
+
+    async def refresh_collectible_valuation(self, asset_id: uuid.UUID, user_id: uuid.UUID | None = None) -> Dict:
         """Fetch current value for collectibles (Chrono24, CardLadder, etc)."""
-        # TODO: Implement 3rd party collectible APIs
-        logger.info(f"Refreshing collectible valuation for asset {asset_id}")
-        return True
+        query = select(CollectibleAsset).where(CollectibleAsset.id == asset_id)
+        if user_id is not None:
+            query = query.where(CollectibleAsset.user_id == user_id)
+        asset_result = await self.session.execute(query)
+        asset = asset_result.scalar_one_or_none()
+        if not asset:
+            return {"status": "not_found", "message": "Collectible asset not found"}
 
-    async def refresh_metal_valuation(self, asset_id: uuid.UUID, user_id: uuid.UUID | None = None) -> bool:
+        remaining = self._check_cooldown(asset.last_valuation_at, COOLDOWN_STANDARD)
+        if remaining is not None:
+            return {"status": "cooldown", "message": f"Please wait {remaining}s before refreshing again"}
+
+        # TODO: Implement 3rd party collectible APIs
+        return {"status": "unchanged", "new_value": asset.market_value, "previous_value": asset.market_value, "message": "No collectible valuation provider configured yet"}
+
+    async def refresh_metal_valuation(self, asset_id: uuid.UUID, user_id: uuid.UUID | None = None) -> Dict:
         """Fetch current spot price for precious metals."""
         query = select(PreciousMetalAsset).where(PreciousMetalAsset.id == asset_id)
         if user_id is not None:
@@ -321,16 +382,28 @@ class PhysicalAssetService:
         asset_result = await self.session.execute(query)
         asset = asset_result.scalar_one_or_none()
         if not asset:
-            return False
+            return {"status": "not_found", "message": "Precious metal asset not found"}
 
-        spot_price = await metal_price_service.get_spot_price(asset.metal_type.value)
-        if spot_price:
-            asset.market_value = spot_price * asset.weight_oz
+        remaining = self._check_cooldown(asset.last_valuation_at, COOLDOWN_METALS)
+        if remaining is not None:
+            return {"status": "cooldown", "message": f"Please wait {remaining}s before refreshing again"}
+
+        previous_value = asset.market_value
+        try:
+            spot_price = await metal_price_service.get_spot_price(asset.metal_type.value)
+        except Exception as e:
+            return {"status": "failed", "previous_value": previous_value, "message": str(e)}
+
+        new_value = spot_price * asset.weight_oz
+        if new_value == previous_value:
             asset.last_valuation_at = datetime.now(timezone.utc)
             await self.session.commit()
-            return True
-            
-        return False
+            return {"status": "unchanged", "new_value": new_value, "previous_value": previous_value}
+
+        asset.market_value = new_value
+        asset.last_valuation_at = datetime.now(timezone.utc)
+        await self.session.commit()
+        return {"status": "updated", "new_value": new_value, "previous_value": previous_value}
 
     # --- Summary ---
 

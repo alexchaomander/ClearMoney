@@ -176,3 +176,10 @@ class PhysicalAssetsSummary(BaseModel):
     collectibles: list[CollectibleAsset]
     precious_metals: list[PreciousMetalAsset]
     total_value: Decimal
+
+
+class ValuationRefreshResponse(BaseModel):
+    status: str  # updated | unchanged | failed | cooldown | not_found
+    new_value: Optional[Decimal] = None
+    previous_value: Optional[Decimal] = None
+    message: Optional[str] = None

@@ -63,7 +63,8 @@ import {
 import { EquityCard } from "@/components/dashboard/EquityCard";
 import { PhysicalAssetsCard } from "@/components/dashboard/PhysicalAssetsCard";
 import { PhysicalAssetsDemoBanner } from "@/components/dashboard/PhysicalAssetsDemoBanner";
-import { type PortfolioHistoryRange, type HoldingDetail, type PhysicalAssetsSummary } from "@clearmoney/strata-sdk";
+import { type PortfolioHistoryRange, type HoldingDetail, type PhysicalAssetsSummary, type ValuationRefreshResponse } from "@clearmoney/strata-sdk";
+import { useToast } from "@/components/shared/toast";
 import {
   getPreviewAccounts,
   getPreviewHoldings,
@@ -92,8 +93,8 @@ export default function DashboardPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const [showPhysicalDemo, setShowPhysicalDemo] = useState(false);
   const [demoPhysicalAssets, setDemoPhysicalAssets] = useState<PhysicalAssetsSummary | null>(null);
+  const { pushToast } = useToast();
 
   const previewPortfolioSummary = useMemo(() => getPreviewPortfolioSummary(), []);
   const previewAccounts = useMemo(() => getPreviewAccounts(), []);
@@ -201,11 +202,45 @@ export default function DashboardPage() {
   const metalMutations = usePreciousMetalAssetMutations();
 
   const startPhysicalDemo = () => {
-    setShowPhysicalDemo(true);
-    // Simulate adding assets sequence
-    setTimeout(() => {
-      setDemoPhysicalAssets(getPreviewPhysicalAssets());
-    }, 1000);
+    setDemoPhysicalAssets(getPreviewPhysicalAssets());
+  };
+
+  // Clear demo data when real assets exist
+  useEffect(() => {
+    if (physicalAssets && physicalAssets.total_value > 0 && demoPhysicalAssets) {
+      setDemoPhysicalAssets(null);
+    }
+  }, [physicalAssets, demoPhysicalAssets]);
+
+  const handleRefreshValuation = async (fn: () => Promise<ValuationRefreshResponse>) => {
+    try {
+      const result = await fn();
+      if (result.status === "updated") {
+        pushToast({ title: "Valuation Updated", variant: "success" });
+      } else if (result.status === "unchanged") {
+        pushToast({ title: "No Change", message: "Value is unchanged", variant: "default" });
+      } else if (result.status === "failed") {
+        pushToast({ title: "Valuation Failed", message: result.message ?? undefined, variant: "error" });
+      }
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status;
+      const message = (err as { message?: string })?.message;
+      if (status === 429) {
+        pushToast({ title: "Too Soon", message: message ?? "Please wait before refreshing again", variant: "error" });
+      } else {
+        pushToast({ title: "Refresh Failed", message: message ?? "An error occurred", variant: "error" });
+      }
+    }
+  };
+
+  const handleDeleteAsset = async (fn: () => Promise<void>) => {
+    try {
+      await fn();
+      pushToast({ title: "Asset Removed", variant: "success" });
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message;
+      pushToast({ title: "Delete Failed", message: message ?? "An error occurred", variant: "error" });
+    }
   };
 
   const isLoading =
@@ -593,14 +628,14 @@ export default function DashboardPage() {
             {effectivePhysicalAssets && (
               <PhysicalAssetsCard
                 summary={effectivePhysicalAssets}
-                onRefreshRealEstate={(id) => realEstateMutations.refresh.mutate(id)}
-                onRefreshVehicle={(id) => vehicleMutations.refresh.mutate(id)}
-                onRefreshCollectible={(id) => collectibleMutations.refresh.mutate(id)}
-                onRefreshMetal={(id) => metalMutations.refresh.mutate(id)}
-                onDeleteRealEstate={(id) => realEstateMutations.remove.mutate(id)}
-                onDeleteVehicle={(id) => vehicleMutations.remove.mutate(id)}
-                onDeleteCollectible={(id) => collectibleMutations.remove.mutate(id)}
-                onDeleteMetal={(id) => metalMutations.remove.mutate(id)}
+                onRefreshRealEstate={(id) => handleRefreshValuation(() => realEstateMutations.refresh.mutateAsync(id))}
+                onRefreshVehicle={(id) => handleRefreshValuation(() => vehicleMutations.refresh.mutateAsync(id))}
+                onRefreshCollectible={(id) => handleRefreshValuation(() => collectibleMutations.refresh.mutateAsync(id))}
+                onRefreshMetal={(id) => handleRefreshValuation(() => metalMutations.refresh.mutateAsync(id))}
+                onDeleteRealEstate={(id) => handleDeleteAsset(() => realEstateMutations.remove.mutateAsync(id))}
+                onDeleteVehicle={(id) => handleDeleteAsset(() => vehicleMutations.remove.mutateAsync(id))}
+                onDeleteCollectible={(id) => handleDeleteAsset(() => collectibleMutations.remove.mutateAsync(id))}
+                onDeleteMetal={(id) => handleDeleteAsset(() => metalMutations.remove.mutateAsync(id))}
                 onAddAsset={() => setShowAddModal(true)}
               />
             )}

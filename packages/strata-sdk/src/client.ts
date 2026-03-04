@@ -52,6 +52,7 @@ import type {
   PreciousMetalAsset,
   PreciousMetalAssetCreate,
   PreciousMetalAssetUpdate,
+  ValuationRefreshResponse,
   RunwayMetrics,
   Security,
   SkillDetail,
@@ -267,22 +268,22 @@ export interface StrataClientInterface {
   createRealEstateAsset(data: RealEstateAssetCreate): Promise<RealEstateAsset>;
   updateRealEstateAsset(id: string, data: RealEstateAssetUpdate): Promise<RealEstateAsset>;
   deleteRealEstateAsset(id: string): Promise<void>;
-  refreshRealEstateValuation(id: string): Promise<{ status: string }>;
+  refreshRealEstateValuation(id: string): Promise<ValuationRefreshResponse>;
   getVehicleAssets(): Promise<VehicleAsset[]>;
   createVehicleAsset(data: VehicleAssetCreate): Promise<VehicleAsset>;
   updateVehicleAsset(id: string, data: VehicleAssetUpdate): Promise<VehicleAsset>;
   deleteVehicleAsset(id: string): Promise<void>;
-  refreshVehicleValuation(id: string): Promise<{ status: string }>;
+  refreshVehicleValuation(id: string): Promise<ValuationRefreshResponse>;
   getCollectibleAssets(): Promise<CollectibleAsset[]>;
   createCollectibleAsset(data: CollectibleAssetCreate): Promise<CollectibleAsset>;
   updateCollectibleAsset(id: string, data: CollectibleAssetUpdate): Promise<CollectibleAsset>;
   deleteCollectibleAsset(id: string): Promise<void>;
-  refreshCollectibleValuation(id: string): Promise<{ status: string }>;
+  refreshCollectibleValuation(id: string): Promise<ValuationRefreshResponse>;
   getPreciousMetalAssets(): Promise<PreciousMetalAsset[]>;
   createPreciousMetalAsset(data: PreciousMetalAssetCreate): Promise<PreciousMetalAsset>;
   updatePreciousMetalAsset(id: string, data: PreciousMetalAssetUpdate): Promise<PreciousMetalAsset>;
   deletePreciousMetalAsset(id: string): Promise<void>;
-  refreshPreciousMetalValuation(id: string): Promise<{ status: string }>;
+  refreshPreciousMetalValuation(id: string): Promise<ValuationRefreshResponse>;
   // Verification (SVP)
   generateProofOfFunds(threshold: number): Promise<SVPAttestation>;
   validateAttestation(attestation: SVPAttestation): Promise<{ 
@@ -1271,8 +1272,8 @@ export class StrataClient implements StrataClientInterface {
     });
   }
 
-  async refreshRealEstateValuation(id: string): Promise<{ status: string }> {
-    return this.request<{ status: string }>(`/api/v1/physical-assets/real-estate/${id}/refresh`, {
+  async refreshRealEstateValuation(id: string): Promise<ValuationRefreshResponse> {
+    return this.request<ValuationRefreshResponse>(`/api/v1/physical-assets/real-estate/${id}/refresh`, {
       method: 'POST',
     });
   }
@@ -1301,8 +1302,8 @@ export class StrataClient implements StrataClientInterface {
     });
   }
 
-  async refreshVehicleValuation(id: string): Promise<{ status: string }> {
-    return this.request<{ status: string }>(`/api/v1/physical-assets/vehicles/${id}/refresh`, {
+  async refreshVehicleValuation(id: string): Promise<ValuationRefreshResponse> {
+    return this.request<ValuationRefreshResponse>(`/api/v1/physical-assets/vehicles/${id}/refresh`, {
       method: 'POST',
     });
   }
@@ -1331,8 +1332,8 @@ export class StrataClient implements StrataClientInterface {
     });
   }
 
-  async refreshCollectibleValuation(id: string): Promise<{ status: string }> {
-    return this.request<{ status: string }>(`/api/v1/physical-assets/collectibles/${id}/refresh`, {
+  async refreshCollectibleValuation(id: string): Promise<ValuationRefreshResponse> {
+    return this.request<ValuationRefreshResponse>(`/api/v1/physical-assets/collectibles/${id}/refresh`, {
       method: 'POST',
     });
   }
@@ -1361,8 +1362,8 @@ export class StrataClient implements StrataClientInterface {
     });
   }
 
-  async refreshPreciousMetalValuation(id: string): Promise<{ status: string }> {
-    return this.request<{ status: string }>(`/api/v1/physical-assets/precious-metals/${id}/refresh`, {
+  async refreshPreciousMetalValuation(id: string): Promise<ValuationRefreshResponse> {
+    return this.request<ValuationRefreshResponse>(`/api/v1/physical-assets/precious-metals/${id}/refresh`, {
       method: 'POST',
     });
   }

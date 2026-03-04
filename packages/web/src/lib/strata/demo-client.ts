@@ -113,6 +113,7 @@ import type {
   PreciousMetalAsset,
   PreciousMetalAssetCreate,
   PreciousMetalAssetUpdate,
+  ValuationRefreshResponse,
 } from "@clearmoney/strata-sdk";
 
 import {
@@ -1222,25 +1223,25 @@ export class DemoStrataClient implements StrataClientInterface {
   async createRealEstateAsset(_data: RealEstateAssetCreate): Promise<RealEstateAsset> { return {} as RealEstateAsset; }
   async updateRealEstateAsset(_id: string, _data: RealEstateAssetUpdate): Promise<RealEstateAsset> { return {} as RealEstateAsset; }
   async deleteRealEstateAsset(_id: string): Promise<void> {}
-  async refreshRealEstateValuation(_id: string): Promise<{ status: string }> { return { status: "success" }; }
+  async refreshRealEstateValuation(_id: string): Promise<ValuationRefreshResponse> { return { status: "unchanged", message: "Demo mode" }; }
 
   async getVehicleAssets(): Promise<VehicleAsset[]> { return []; }
   async createVehicleAsset(_data: VehicleAssetCreate): Promise<VehicleAsset> { return {} as VehicleAsset; }
   async updateVehicleAsset(_id: string, _data: VehicleAssetUpdate): Promise<VehicleAsset> { return {} as VehicleAsset; }
   async deleteVehicleAsset(_id: string): Promise<void> {}
-  async refreshVehicleValuation(_id: string): Promise<{ status: string }> { return { status: "success" }; }
+  async refreshVehicleValuation(_id: string): Promise<ValuationRefreshResponse> { return { status: "unchanged", message: "Demo mode" }; }
 
   async getCollectibleAssets(): Promise<CollectibleAsset[]> { return []; }
   async createCollectibleAsset(_data: CollectibleAssetCreate): Promise<CollectibleAsset> { return {} as CollectibleAsset; }
   async updateCollectibleAsset(_id: string, _data: CollectibleAssetUpdate): Promise<CollectibleAsset> { return {} as CollectibleAsset; }
   async deleteCollectibleAsset(_id: string): Promise<void> {}
-  async refreshCollectibleValuation(_id: string): Promise<{ status: string }> { return { status: "success" }; }
+  async refreshCollectibleValuation(_id: string): Promise<ValuationRefreshResponse> { return { status: "unchanged", message: "Demo mode" }; }
 
   async getPreciousMetalAssets(): Promise<PreciousMetalAsset[]> { return []; }
   async createPreciousMetalAsset(_data: PreciousMetalAssetCreate): Promise<PreciousMetalAsset> { return {} as PreciousMetalAsset; }
   async updatePreciousMetalAsset(_id: string, _data: PreciousMetalAssetUpdate): Promise<PreciousMetalAsset> { return {} as PreciousMetalAsset; }
   async deletePreciousMetalAsset(_id: string): Promise<void> {}
-  async refreshPreciousMetalValuation(_id: string): Promise<{ status: string }> { return { status: "success" }; }
+  async refreshPreciousMetalValuation(_id: string): Promise<ValuationRefreshResponse> { return { status: "unchanged", message: "Demo mode" }; }
 
   // === Crypto ===
 

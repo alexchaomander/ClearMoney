@@ -15,6 +15,7 @@ class MetalPriceService:
     def __init__(self):
         self._api_key = settings.alpha_vantage_api_key
         self._base_url = "https://www.alphavantage.co/query"
+        self._client = httpx.AsyncClient(timeout=10.0)
         # symbol -> (price, timestamp)
         self._cache: dict[str, tuple[Decimal, float]] = {}
         self._cache_ttl = 3600  # 1 hour
@@ -34,6 +35,9 @@ class MetalPriceService:
             "platinum": Decimal("920.00"),
             "palladium": Decimal("1050.00"),
         }
+
+    async def close(self):
+        await self._client.aclose()
 
     async def get_spot_price(self, metal: str) -> Decimal:
         """Fetch the current spot price per troy ounce in USD."""
@@ -64,10 +68,9 @@ class MetalPriceService:
         }
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(self._base_url, params=params)
-                response.raise_for_status()
-                data = response.json()
+            response = await self._client.get(self._base_url, params=params)
+            response.raise_for_status()
+            data = response.json()
 
             rate_data = data.get("Realtime Currency Exchange Rate")
             if rate_data and "5. Exchange Rate" in rate_data:

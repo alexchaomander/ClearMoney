@@ -38,6 +38,9 @@ from app.api.waitlist import router as waitlist_router
 from app.core.config import settings
 from app.db.session import close_db
 from app.services.jobs.background import start_background_tasks
+from app.services.providers.metal_price import metal_price_service
+from app.services.providers.vehicle_valuation import vehicle_valuation_service
+from app.services.providers.zillow import zillow_service
 from app.services.session_store import create_session_store
 
 # Initialise Sentry at module level so import-time and startup errors are
@@ -71,6 +74,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         with contextlib.suppress(asyncio.CancelledError):
             await task
     await app.state.session_store.close()
+    await zillow_service.close()
+    await vehicle_valuation_service.close()
+    await metal_price_service.close()
     await close_db()
 
 
