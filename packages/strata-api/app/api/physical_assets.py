@@ -90,13 +90,10 @@ async def refresh_real_estate_valuation(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
 ):
-    # Security check: ensure user owns asset
     service = PhysicalAssetService(db)
-    assets = await service.get_real_estate_assets(current_user.id)
-    if not any(a.id == asset_id for a in assets):
+    success = await service.refresh_real_estate_valuation(asset_id, current_user.id)
+    if not success:
         raise HTTPException(status_code=404, detail="Real estate asset not found")
-    
-    await service.refresh_real_estate_valuation(asset_id)
     return {"status": "success", "message": "Valuation refresh triggered"}
 
 
@@ -154,13 +151,10 @@ async def refresh_vehicle_valuation(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
 ):
-    # Security check: ensure user owns asset
     service = PhysicalAssetService(db)
-    assets = await service.get_vehicle_assets(current_user.id)
-    if not any(a.id == asset_id for a in assets):
+    success = await service.refresh_vehicle_valuation(asset_id, current_user.id)
+    if not success:
         raise HTTPException(status_code=404, detail="Vehicle asset not found")
-    
-    await service.refresh_vehicle_valuation(asset_id)
     return {"status": "success", "message": "Valuation refresh triggered"}
 
 
@@ -212,6 +206,19 @@ async def delete_collectible_asset(
     return {"status": "success"}
 
 
+@router.post("/collectibles/{asset_id}/refresh")
+async def refresh_collectible_valuation(
+    asset_id: uuid.UUID,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+):
+    service = PhysicalAssetService(db)
+    success = await service.refresh_collectible_valuation(asset_id, current_user.id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Collectible asset not found")
+    return {"status": "success", "message": "Valuation refresh triggered"}
+
+
 # --- Precious Metals ---
 
 @router.get("/precious-metals", response_model=List[PreciousMetalAsset])
@@ -258,3 +265,16 @@ async def delete_precious_metal_asset(
     if not success:
         raise HTTPException(status_code=404, detail="Precious metal asset not found")
     return {"status": "success"}
+
+
+@router.post("/precious-metals/{asset_id}/refresh")
+async def refresh_precious_metal_valuation(
+    asset_id: uuid.UUID,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+):
+    service = PhysicalAssetService(db)
+    success = await service.refresh_metal_valuation(asset_id, current_user.id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Precious metal asset not found")
+    return {"status": "success", "message": "Valuation refresh triggered"}

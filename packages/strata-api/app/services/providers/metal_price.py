@@ -3,7 +3,6 @@ import time
 from decimal import Decimal
 
 import httpx
-from fastapi import HTTPException
 
 from app.core.config import settings
 

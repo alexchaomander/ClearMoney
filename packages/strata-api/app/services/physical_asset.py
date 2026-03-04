@@ -256,11 +256,12 @@ class PhysicalAssetService:
 
     # --- Valuation Logic (Stubs) ---
 
-    async def refresh_real_estate_valuation(self, asset_id: uuid.UUID) -> bool:
+    async def refresh_real_estate_valuation(self, asset_id: uuid.UUID, user_id: uuid.UUID | None = None) -> bool:
         """Fetch current property value from Zillow/Redfin APIs."""
-        asset_result = await self.session.execute(
-            select(RealEstateAsset).where(RealEstateAsset.id == asset_id)
-        )
+        query = select(RealEstateAsset).where(RealEstateAsset.id == asset_id)
+        if user_id is not None:
+            query = query.where(RealEstateAsset.user_id == user_id)
+        asset_result = await self.session.execute(query)
         asset = asset_result.scalar_one_or_none()
         if not asset:
             return False
@@ -280,11 +281,12 @@ class PhysicalAssetService:
             
         return False
 
-    async def refresh_vehicle_valuation(self, asset_id: uuid.UUID) -> bool:
+    async def refresh_vehicle_valuation(self, asset_id: uuid.UUID, user_id: uuid.UUID | None = None) -> bool:
         """Fetch current vehicle value from Marketcheck APIs."""
-        asset_result = await self.session.execute(
-            select(VehicleAsset).where(VehicleAsset.id == asset_id)
-        )
+        query = select(VehicleAsset).where(VehicleAsset.id == asset_id)
+        if user_id is not None:
+            query = query.where(VehicleAsset.user_id == user_id)
+        asset_result = await self.session.execute(query)
         asset = asset_result.scalar_one_or_none()
         if not asset:
             return False
@@ -304,17 +306,18 @@ class PhysicalAssetService:
             
         return False
 
-    async def refresh_collectible_valuation(self, asset_id: uuid.UUID) -> bool:
+    async def refresh_collectible_valuation(self, asset_id: uuid.UUID, user_id: uuid.UUID | None = None) -> bool:
         """Fetch current value for collectibles (Chrono24, CardLadder, etc)."""
         # TODO: Implement 3rd party collectible APIs
         logger.info(f"Refreshing collectible valuation for asset {asset_id}")
         return True
 
-    async def refresh_metal_valuation(self, asset_id: uuid.UUID) -> bool:
+    async def refresh_metal_valuation(self, asset_id: uuid.UUID, user_id: uuid.UUID | None = None) -> bool:
         """Fetch current spot price for precious metals."""
-        asset_result = await self.session.execute(
-            select(PreciousMetalAsset).where(PreciousMetalAsset.id == asset_id)
-        )
+        query = select(PreciousMetalAsset).where(PreciousMetalAsset.id == asset_id)
+        if user_id is not None:
+            query = query.where(PreciousMetalAsset.user_id == user_id)
+        asset_result = await self.session.execute(query)
         asset = asset_result.scalar_one_or_none()
         if not asset:
             return False

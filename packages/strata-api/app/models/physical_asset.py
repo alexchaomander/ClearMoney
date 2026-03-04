@@ -3,7 +3,7 @@ import uuid
 from decimal import Decimal
 from datetime import datetime
 
-from sqlalchemy import Enum, ForeignKey, Numeric, String, DateTime
+from sqlalchemy import JSON, Enum, ForeignKey, Numeric, String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -47,8 +47,7 @@ class MetalType(str, enum.Enum):
     palladium = "palladium"
 
 
-class RealEstateAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base)
-:
+class RealEstateAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "real_estate_assets"
 
     user_id: Mapped[uuid.UUID] = mapped_column(

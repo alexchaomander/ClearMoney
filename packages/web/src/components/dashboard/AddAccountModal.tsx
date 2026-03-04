@@ -395,7 +395,9 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
     equityMutations.add.isPending ||
     cryptoMutations.add.isPending ||
     realEstateMutations.add.isPending ||
-    vehicleMutations.add.isPending;
+    vehicleMutations.add.isPending ||
+    collectibleMutations.add.isPending ||
+    metalMutations.add.isPending;
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>

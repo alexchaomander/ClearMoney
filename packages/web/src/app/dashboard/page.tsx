@@ -352,16 +352,16 @@ export default function DashboardPage() {
 
   function renderContent() {
     const totalCryptoValue = Number(cryptoPortfolio?.total_value_usd ?? 0);
-    // totalPhysicalValue is now included in effectivePortfolio's net_worth directly by the backend
     const totalPhysicalValue = Number(effectivePhysicalAssets?.total_value ?? 0);
-    const adjustedNetWorth = effectivePortfolio.net_worth + totalCryptoValue + (demoPhysicalAssets ? totalPhysicalValue : 0);
-    const totalAssetsValue = 
+    const backendPhysicalValue = effectivePortfolio.total_physical_asset_value ?? 0;
+    // When demo is active, replace backend physical value with demo value to avoid double-counting
+    const adjustedNetWorth = effectivePortfolio.net_worth + totalCryptoValue + (demoPhysicalAssets ? totalPhysicalValue - backendPhysicalValue : 0);
+    const totalAssetsValue =
       effectivePortfolio.total_investment_value +
       effectivePortfolio.total_cash_value +
       (effectivePortfolio.total_equity_vested_value ?? 0) +
-      (effectivePortfolio.total_physical_asset_value ?? 0) +
       totalCryptoValue +
-      (demoPhysicalAssets ? totalPhysicalValue : 0);
+      (demoPhysicalAssets ? totalPhysicalValue : backendPhysicalValue);
 
     return (
       <>
