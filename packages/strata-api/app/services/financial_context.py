@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -12,6 +13,12 @@ from app.models.equity_grant import EquityGrant
 from app.models.financial_memory import FinancialMemory
 from app.models.holding import Holding
 from app.models.investment_account import InvestmentAccount
+from app.models.physical_asset import (
+    RealEstateAsset, 
+    VehicleAsset,
+    CollectibleAsset,
+    PreciousMetalAsset
+)
 from app.models.security import Security
 from app.models.transaction import Transaction
 from app.services.equity_valuation import equity_valuation_service
@@ -60,6 +67,17 @@ async def build_financial_context(
     )
     equity_grants = equity_result.scalars().all()
     equity_summary = await equity_valuation_service.calculate_portfolio_summary(list(equity_grants))
+
+    re_result, v_result, c_result, m_result = await asyncio.gather(
+        session.execute(select(RealEstateAsset).where(RealEstateAsset.user_id == user_id)),
+        session.execute(select(VehicleAsset).where(VehicleAsset.user_id == user_id)),
+        session.execute(select(CollectibleAsset).where(CollectibleAsset.user_id == user_id)),
+        session.execute(select(PreciousMetalAsset).where(PreciousMetalAsset.user_id == user_id)),
+    )
+    real_estate_assets = re_result.scalars().all()
+    vehicle_assets = v_result.scalars().all()
+    collectible_assets = c_result.scalars().all()
+    precious_metal_assets = m_result.scalars().all()
 
     conn_result = await session.execute(
         select(Connection).where(Connection.user_id == user_id)
@@ -139,6 +157,43 @@ async def build_financial_context(
             }
             for a in debt_accounts
         ],
+        "real_estate": [
+            {
+                "name": a.name,
+                "address": a.address,
+                "type": a.property_type.value,
+                "market_value": _decimal_to_float(a.market_value),
+            }
+            for a in real_estate_assets
+        ],
+        "vehicles": [
+            {
+                "name": a.name,
+                "make": a.make,
+                "model": a.model,
+                "year": a.year,
+                "type": a.vehicle_type.value,
+                "market_value": _decimal_to_float(a.market_value),
+            }
+            for a in vehicle_assets
+        ],
+        "collectibles": [
+            {
+                "name": a.name,
+                "type": a.item_type.value,
+                "market_value": _decimal_to_float(a.market_value),
+            }
+            for a in collectible_assets
+        ],
+        "precious_metals": [
+            {
+                "name": a.name,
+                "type": a.metal_type.value,
+                "weight_oz": _decimal_to_float(a.weight_oz),
+                "market_value": _decimal_to_float(a.market_value),
+            }
+            for a in precious_metal_assets
+        ],
     }
 
     # -- Build holdings section (top 20) --
@@ -168,7 +223,12 @@ async def build_financial_context(
     total_equity_vested = float(equity_summary.total_vested_value)
     total_equity_unvested = float(equity_summary.total_unvested_value)
     
-    net_worth = total_investment + total_cash + total_equity_vested - total_debt
+    total_physical = sum((float(a.market_value) for a in real_estate_assets), 0.0) + \
+                     sum((float(a.market_value) for a in vehicle_assets), 0.0) + \
+                     sum((float(a.market_value) for a in collectible_assets), 0.0) + \
+                     sum((float(a.market_value) for a in precious_metal_assets), 0.0)
+    
+    net_worth = total_investment + total_cash + total_equity_vested + total_physical - total_debt
 
     tax_advantaged = sum(
         (float(a.balance) for a in investment_accounts if a.is_tax_advantaged and a.balance),
@@ -207,6 +267,7 @@ async def build_financial_context(
         "total_investment_value": round(total_investment, 2),
         "total_cash_value": round(total_cash, 2),
         "total_debt_value": round(total_debt, 2),
+        "total_physical_asset_value": round(total_physical, 2),
         "total_equity_vested_value": round(total_equity_vested, 2),
         "total_equity_unvested_value": round(total_equity_unvested, 2),
         "tax_advantaged_value": round(tax_advantaged, 2),

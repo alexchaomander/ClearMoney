@@ -9,17 +9,25 @@ import type {
   CryptoChain,
   DebtType,
   InvestmentAccountType,
+  RealEstateType,
+  VehicleType,
+  CollectibleType,
+  MetalType,
 } from "@clearmoney/strata-sdk";
 import { 
   useCashAccountMutations, 
   useDebtAccountMutations, 
   useCreateInvestmentAccount,
   useEquityGrantMutations,
-  useCryptoWalletMutations
+  useCryptoWalletMutations,
+  useRealEstateAssetMutations,
+  useVehicleAssetMutations,
+  useCollectibleAssetMutations,
+  usePreciousMetalAssetMutations,
 } from "@/lib/strata/hooks";
 import { cn } from "@/lib/utils";
 
-type TabKey = "cash" | "debt" | "investment" | "equity" | "crypto";
+type TabKey = "cash" | "debt" | "investment" | "equity" | "crypto" | "real_estate" | "vehicle" | "collectible" | "metal";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "cash", label: "Cash" },
@@ -27,6 +35,10 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "investment", label: "Investment" },
   { key: "equity", label: "Equity" },
   { key: "crypto", label: "Crypto" },
+  { key: "real_estate", label: "Property" },
+  { key: "vehicle", label: "Vehicle" },
+  { key: "collectible", label: "Luxury" },
+  { key: "metal", label: "Metal" },
 ];
 
 const CASH_TYPES: { value: CashAccountType; label: string }[] = [
@@ -72,6 +84,39 @@ const CRYPTO_CHAINS = [
   { value: "base", label: "Base" },
 ];
 
+const REAL_ESTATE_TYPES: { value: RealEstateType; label: string }[] = [
+  { value: "primary_residence", label: "Primary Residence" },
+  { value: "investment_property", label: "Investment Property" },
+  { value: "vacation_home", label: "Vacation Home" },
+  { value: "commercial", label: "Commercial" },
+  { value: "land", label: "Land" },
+];
+
+const VEHICLE_TYPES: { value: VehicleType; label: string }[] = [
+  { value: "car", label: "Car" },
+  { value: "motorcycle", label: "Motorcycle" },
+  { value: "boat", label: "Boat" },
+  { value: "aircraft", label: "Aircraft" },
+  { value: "other", label: "Other" },
+];
+
+const COLLECTIBLE_TYPES: { value: CollectibleType; label: string }[] = [
+  { value: "art", label: "Art" },
+  { value: "watch", label: "Watch" },
+  { value: "handbag", label: "Handbag" },
+  { value: "jewelry", label: "Jewelry" },
+  { value: "wine", label: "Wine" },
+  { value: "card", label: "Trading Cards" },
+  { value: "other", label: "Other" },
+];
+
+const METAL_TYPES: { value: MetalType; label: string }[] = [
+  { value: "gold", label: "Gold" },
+  { value: "silver", label: "Silver" },
+  { value: "platinum", label: "Platinum" },
+  { value: "palladium", label: "Palladium" },
+];
+
 const inputClass =
   "w-full rounded-xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-all";
 const selectClass =
@@ -90,6 +135,10 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
   const createInvestment = useCreateInvestmentAccount();
   const equityMutations = useEquityGrantMutations();
   const cryptoMutations = useCryptoWalletMutations();
+  const realEstateMutations = useRealEstateAssetMutations();
+  const vehicleMutations = useVehicleAssetMutations();
+  const collectibleMutations = useCollectibleAssetMutations();
+  const metalMutations = usePreciousMetalAssetMutations();
 
   // Cash form
   const [cashName, setCashName] = useState("");
@@ -125,6 +174,38 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
   const [cryptoChain, setCryptoChain] = useState<CryptoChain>("ethereum");
   const [cryptoLabel, setCryptoLabel] = useState("");
   const [addressError, setAddressError] = useState<string | null>(null);
+
+  // Real Estate form
+  const [reName, setReName] = useState("");
+  const [reAddress, setReAddress] = useState("");
+  const [reType, setReType] = useState<RealEstateType>("primary_residence");
+  const [reValue, setReValue] = useState("");
+  const [reZpid, setReZpid] = useState("");
+  const [reValuationType, setReValuationType] = useState<"manual" | "auto">("auto");
+
+  // Vehicle form
+  const [vName, setVName] = useState("");
+  const [vMake, setVMake] = useState("");
+  const [vModel, setVModel] = useState("");
+  const [vYear, setVYear] = useState(new Date().getFullYear());
+  const [vType, setVType] = useState<VehicleType>("car");
+  const [vValue, setVValue] = useState("");
+  const [vVin, setVVin] = useState("");
+  const [vMileage, setVMileage] = useState("");
+  const [vValuationType, setVValuationType] = useState<"manual" | "auto">("auto");
+
+  // Collectible form
+  const [cName, setCName] = useState("");
+  const [cType, setCType] = useState<CollectibleType>("watch");
+  const [cValue, setCValue] = useState("");
+  const [cValuationType, setCValuationType] = useState<"manual" | "auto">("manual");
+
+  // Metal form
+  const [mName, setMName] = useState("");
+  const [mType, setMType] = useState<MetalType>("gold");
+  const [mWeight, setMWeight] = useState("");
+  const [mValue, setMValue] = useState("");
+  const [mValuationType, setMValuationType] = useState<"manual" | "auto">("auto");
 
   // Common
   const [isBusiness, setIsBusiness] = useState(false);
@@ -187,6 +268,34 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
     setCryptoChain("ethereum");
     setCryptoLabel("");
     setAddressError(null);
+
+    setReName("");
+    setReAddress("");
+    setReType("primary_residence");
+    setReValue("");
+    setReZpid("");
+    setReValuationType("auto");
+
+    setVName("");
+    setVMake("");
+    setVModel("");
+    setVYear(new Date().getFullYear());
+    setVType("car");
+    setVValue("");
+    setVVin("");
+    setVMileage("");
+    setVValuationType("auto");
+
+    setCName("");
+    setCType("watch");
+    setCValue("");
+    setCValuationType("manual");
+
+    setMName("");
+    setMType("gold");
+    setMWeight("");
+    setMValue("");
+    setMValuationType("auto");
   }
 
   function handleClose() {
@@ -239,6 +348,42 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
         chain: cryptoChain,
         label: cryptoLabel || null,
       });
+    } else if (tab === "real_estate") {
+      await realEstateMutations.add.mutateAsync({
+        name: reName,
+        address: reAddress,
+        property_type: reType,
+        market_value: reValue ? parseFloat(reValue) : 0,
+        valuation_type: reValuationType,
+        zillow_zpid: reZpid || undefined,
+      });
+    } else if (tab === "vehicle") {
+      await vehicleMutations.add.mutateAsync({
+        name: vName,
+        make: vMake,
+        model: vModel,
+        year: vYear,
+        vehicle_type: vType,
+        market_value: vValue ? parseFloat(vValue) : 0,
+        vin: vVin || undefined,
+        mileage: vMileage ? parseInt(vMileage) : undefined,
+        valuation_type: vValuationType,
+      });
+    } else if (tab === "collectible") {
+      await collectibleMutations.add.mutateAsync({
+        name: cName,
+        item_type: cType,
+        market_value: cValue ? parseFloat(cValue) : 0,
+        valuation_type: cValuationType,
+      });
+    } else if (tab === "metal") {
+      await metalMutations.add.mutateAsync({
+        name: mName,
+        metal_type: mType,
+        weight_oz: mWeight ? parseFloat(mWeight) : 0,
+        market_value: mValue ? parseFloat(mValue) : 0,
+        valuation_type: mValuationType,
+      });
     }
     handleClose();
   }
@@ -248,7 +393,11 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
     debtMutations.create.isPending || 
     createInvestment.isPending ||
     equityMutations.add.isPending ||
-    cryptoMutations.add.isPending;
+    cryptoMutations.add.isPending ||
+    realEstateMutations.add.isPending ||
+    vehicleMutations.add.isPending ||
+    collectibleMutations.add.isPending ||
+    metalMutations.add.isPending;
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -481,6 +630,184 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                             <span className="font-black uppercase mr-1">Read-Only:</span>
                             We only need your public address. ClearMoney will never ask for your private keys or seed phrase.
                           </p>
+                        </div>
+                      </>
+                    )}
+
+                    {tab === "real_estate" && (
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="col-span-2">
+                            <label className={labelClass}>Property Name</label>
+                            <input className={inputClass} value={reName} onChange={(e) => setReName(e.target.value)} placeholder="e.g. Primary Residence" required />
+                          </div>
+                          <div className="col-span-2">
+                            <label className={labelClass}>Address</label>
+                            <input className={inputClass} value={reAddress} onChange={(e) => setReAddress(e.target.value)} placeholder="Full street address, city, state, zip" required />
+                          </div>
+                          <div>
+                            <label className={labelClass}>Property Type</label>
+                            <select className={selectClass} value={reType} onChange={(e) => setReType(e.target.value as RealEstateType)}>
+                              {REAL_ESTATE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className={labelClass}>Market Value</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                              <input className={cn(inputClass, "pl-7")} type="number" step="1" value={reValue} onChange={(e) => setReValue(e.target.value)} placeholder="0" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 space-y-4">
+                          <label className="flex items-center gap-3 cursor-pointer group">
+                            <div className="relative flex items-center justify-center">
+                              <input type="checkbox" checked={reValuationType === 'auto'} onChange={(e) => setReValuationType(e.target.checked ? 'auto' : 'manual')} className="peer appearance-none w-5 h-5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-brand-500 checked:border-brand-500 transition-all cursor-pointer" />
+                              <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                            <span className="text-sm text-slate-600 dark:text-slate-300 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Auto-sync valuation (Zillow)</span>
+                          </label>
+
+                          <div className="p-4 rounded-xl bg-brand-500/5 border border-brand-500/10">
+                            <p className="text-[10px] text-brand-600 dark:text-brand-400 leading-relaxed">
+                              <span className="font-black uppercase mr-1">Zillow Integration:</span>
+                              We'll use your address to fetch live Zestimates. If the match isn't perfect, you can provide a Zillow Property ID (ZPID).
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {tab === "vehicle" && (
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="col-span-2">
+                            <label className={labelClass}>Vehicle Name</label>
+                            <input className={inputClass} value={vName} onChange={(e) => setVName(e.target.value)} placeholder="e.g. Daily Driver" required />
+                          </div>
+                          <div>
+                            <label className={labelClass}>Make</label>
+                            <input className={inputClass} value={vMake} onChange={(e) => setVMake(e.target.value)} placeholder="e.g. Tesla" required />
+                          </div>
+                          <div>
+                            <label className={labelClass}>Model</label>
+                            <input className={inputClass} value={vModel} onChange={(e) => setVModel(e.target.value)} placeholder="e.g. Model 3" required />
+                          </div>
+                          <div>
+                            <label className={labelClass}>Year</label>
+                            <input className={inputClass} type="number" value={vYear} onChange={(e) => setVYear(parseInt(e.target.value))} required />
+                          </div>
+                          <div>
+                            <label className={labelClass}>Vehicle Type</label>
+                            <select className={selectClass} value={vType} onChange={(e) => setVType(e.target.value as VehicleType)}>
+                              {VEHICLE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className={labelClass}>Market Value</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                              <input className={cn(inputClass, "pl-7")} type="number" step="1" value={vValue} onChange={(e) => setVValue(e.target.value)} placeholder="0" />
+                            </div>
+                          </div>
+                          <div>
+                            <label className={labelClass}>Mileage</label>
+                            <input className={inputClass} type="number" value={vMileage} onChange={(e) => setVMileage(e.target.value)} placeholder="Optional" />
+                          </div>
+                        </div>
+
+                        <div className="pt-2 space-y-4">
+                          <label className="flex items-center gap-3 cursor-pointer group">
+                            <div className="relative flex items-center justify-center">
+                              <input type="checkbox" checked={vValuationType === 'auto'} onChange={(e) => setVValuationType(e.target.checked ? 'auto' : 'manual')} className="peer appearance-none w-5 h-5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-blue-500 checked:border-blue-500 transition-all cursor-pointer" />
+                              <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                            <span className="text-sm text-slate-600 dark:text-slate-300 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Auto-sync valuation (KBB)</span>
+                          </label>
+
+                          <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                            <p className="text-[10px] text-blue-600 dark:text-blue-400 leading-relaxed">
+                              <span className="font-black uppercase mr-1">KBB Integration:</span>
+                              Values are estimated based on make, model, year, and mileage. For precision, enter your VIN in the settings after adding.
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {tab === "collectible" && (
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="col-span-2">
+                            <label className={labelClass}>Item Name</label>
+                            <input className={inputClass} value={cName} onChange={(e) => setCName(e.target.value)} placeholder="e.g. Rolex Submariner" required />
+                          </div>
+                          <div>
+                            <label className={labelClass}>Item Type</label>
+                            <select className={selectClass} value={cType} onChange={(e) => setCType(e.target.value as CollectibleType)}>
+                              {COLLECTIBLE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className={labelClass}>Estimated Value</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                              <input className={cn(inputClass, "pl-7")} type="number" step="1" value={cValue} onChange={(e) => setCValue(e.target.value)} placeholder="0" required />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                          <p className="text-[10px] text-slate-500 leading-relaxed italic">
+                            ClearMoney focuses on high-integrity manual valuation for unique luxury assets. Auto-valuation for watches via Chrono24 is currently in pilot.
+                          </p>
+                        </div>
+                      </>
+                    )}
+
+                    {tab === "metal" && (
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="col-span-2">
+                            <label className={labelClass}>Asset Name</label>
+                            <input className={inputClass} value={mName} onChange={(e) => setMName(e.target.value)} placeholder="e.g. Gold Bullion" required />
+                          </div>
+                          <div>
+                            <label className={labelClass}>Metal Type</label>
+                            <select className={selectClass} value={mType} onChange={(e) => setMType(e.target.value as MetalType)}>
+                              {METAL_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className={labelClass}>Weight (Troy Oz)</label>
+                            <input className={inputClass} type="number" step="0.001" value={mWeight} onChange={(e) => setMWeight(e.target.value)} placeholder="0.000" required />
+                          </div>
+                        </div>
+                        
+                        <div className="pt-2 space-y-4">
+                          <label className="flex items-center gap-3 cursor-pointer group">
+                            <div className="relative flex items-center justify-center">
+                              <input type="checkbox" checked={mValuationType === 'auto'} onChange={(e) => setMValuationType(e.target.checked ? 'auto' : 'manual')} className="peer appearance-none w-5 h-5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-emerald-500 checked:border-emerald-500 transition-all cursor-pointer" />
+                              <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                            <span className="text-sm text-slate-600 dark:text-slate-300 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Auto-sync spot price</span>
+                          </label>
+
+                          <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 leading-relaxed">
+                              <span className="font-black uppercase mr-1">Spot Price Integration:</span>
+                              We fetch real-time market data for gold, silver, platinum, and palladium to keep your metal holdings current.
+                            </p>
+                          </div>
                         </div>
                       </>
                     )}

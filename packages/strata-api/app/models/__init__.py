@@ -22,6 +22,17 @@ from app.models.income_source import IncomeFrequency, IncomeSource, IncomeSource
 from app.models.institution import Institution
 from app.models.investment_account import InvestmentAccount, InvestmentAccountType
 from app.models.memory_event import MemoryEvent, MemoryEventSource
+from app.models.physical_asset import (
+    CollectibleAsset,
+    CollectibleType,
+    MetalType,
+    PreciousMetalAsset,
+    RealEstateAsset,
+    RealEstateType,
+    ValuationType,
+    VehicleAsset,
+    VehicleType,
+)
 from app.models.portfolio_snapshot import PortfolioSnapshot
 from app.models.security import Security, SecurityType
 from app.models.share_report import ShareReport
@@ -75,6 +86,15 @@ __all__ = [
     "InvestmentAccountType",
     "MemoryEvent",
     "MemoryEventSource",
+    "CollectibleAsset",
+    "CollectibleType",
+    "MetalType",
+    "PreciousMetalAsset",
+    "RealEstateAsset",
+    "RealEstateType",
+    "ValuationType",
+    "VehicleAsset",
+    "VehicleType",
     "PortfolioSnapshot",
     "Recommendation",
     "RecommendationStatus",

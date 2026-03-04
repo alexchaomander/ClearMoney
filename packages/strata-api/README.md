@@ -71,6 +71,9 @@ docker run -p 8000:8000 --env-file .env strata-api
 | `STRATA_PLAID_SECRET` | Plaid API secret |
 | `STRATA_PLAID_ENVIRONMENT` | `sandbox`, `development`, or `production` (default: `sandbox`) |
 | `STRATA_ANTHROPIC_API_KEY` | Anthropic API key for the AI advisor |
+| `STRATA_ZILLOW_API_KEY` | Zillow/Bridge Interactive API key (real estate valuations) |
+| `STRATA_KBB_API_KEY` | Marketcheck API key (vehicle valuations) |
+| `STRATA_ALPHA_VANTAGE_API_KEY` | Alpha Vantage API key (precious metal spot prices) |
 
 ### Infrastructure (Optional)
 
@@ -194,6 +197,34 @@ All endpoints are prefixed with `/api/v1`. Full OpenAPI docs are available at `/
 | `POST` | `/portability/proof-of-funds` | Generate proof of funds attestation |
 | `POST` | `/share-reports` | Create shareable report |
 | `GET` | `/share-reports/{id}` | Get shared report (public) |
+
+### Physical Assets
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/physical-assets/summary` | Get summary of all physical assets |
+| `GET` | `/physical-assets/real-estate` | List real estate assets |
+| `POST` | `/physical-assets/real-estate` | Create real estate asset |
+| `PATCH` | `/physical-assets/real-estate/{id}` | Update real estate asset |
+| `DELETE` | `/physical-assets/real-estate/{id}` | Delete real estate asset |
+| `POST` | `/physical-assets/real-estate/{id}/refresh` | Refresh real estate valuation |
+| `GET` | `/physical-assets/vehicles` | List vehicle assets |
+| `POST` | `/physical-assets/vehicles` | Create vehicle asset |
+| `PATCH` | `/physical-assets/vehicles/{id}` | Update vehicle asset |
+| `DELETE` | `/physical-assets/vehicles/{id}` | Delete vehicle asset |
+| `POST` | `/physical-assets/vehicles/{id}/refresh` | Refresh vehicle valuation |
+| `GET` | `/physical-assets/collectibles` | List collectible assets |
+| `POST` | `/physical-assets/collectibles` | Create collectible asset |
+| `PATCH` | `/physical-assets/collectibles/{id}` | Update collectible asset |
+| `DELETE` | `/physical-assets/collectibles/{id}` | Delete collectible asset |
+| `POST` | `/physical-assets/collectibles/{id}/refresh` | Refresh collectible valuation |
+| `GET` | `/physical-assets/precious-metals` | List precious metal assets |
+| `POST` | `/physical-assets/precious-metals` | Create precious metal asset |
+| `PATCH` | `/physical-assets/precious-metals/{id}` | Update precious metal asset |
+| `DELETE` | `/physical-assets/precious-metals/{id}` | Delete precious metal asset |
+| `POST` | `/physical-assets/precious-metals/{id}/refresh` | Refresh metal valuation |
+
+**Refresh endpoints** return a `ValuationRefreshResponse` with `status` (`updated`, `unchanged`, `failed`), `new_value`, `previous_value`, and `message`. Returns `429` if called within the cooldown window (5 min for real estate/vehicles/collectibles, 15 min for metals).
 
 ### Consent Management
 

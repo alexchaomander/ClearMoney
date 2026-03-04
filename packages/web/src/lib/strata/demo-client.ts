@@ -91,6 +91,7 @@ import type {
   RunwayMetrics,
   SVPAttestation,
   StrataClientInterface,
+  Subscription,
   SubscriptionSummary,
   TaxShieldMetrics,
   Transaction,
@@ -99,6 +100,20 @@ import type {
   CryptoWallet,
   CryptoWalletCreate,
   CryptoPortfolioResponse,
+  PhysicalAssetsSummary,
+  RealEstateAsset,
+  RealEstateAssetCreate,
+  RealEstateAssetUpdate,
+  VehicleAsset,
+  VehicleAssetCreate,
+  VehicleAssetUpdate,
+  CollectibleAsset,
+  CollectibleAssetCreate,
+  CollectibleAssetUpdate,
+  PreciousMetalAsset,
+  PreciousMetalAssetCreate,
+  PreciousMetalAssetUpdate,
+  ValuationRefreshResponse,
 } from "@clearmoney/strata-sdk";
 
 import {
@@ -580,6 +595,10 @@ export class DemoStrataClient implements StrataClientInterface {
         debt: [
           { name: "Student Loan", type: "student_loan", balance: 18000, interest_rate: 0.045, minimum_payment: 350 },
         ],
+        real_estate: [],
+        vehicles: [],
+        collectibles: [],
+        precious_metals: [],
       },
       holdings: [
         { ticker: "VTI", name: "Vanguard Total Stock Market", security_type: "etf", quantity: 120, market_value: 32400, cost_basis: 28000, account: "Robinhood Brokerage" },
@@ -1194,6 +1213,35 @@ export class DemoStrataClient implements StrataClientInterface {
   async deleteEquityGrant(_id: string): Promise<void> {
     await delay(250);
   }
+
+  // === Physical Assets ===
+  async getPhysicalAssetsSummary(): Promise<PhysicalAssetsSummary> {
+    await delay(300);
+    return { real_estate: [], vehicles: [], collectibles: [], precious_metals: [], total_value: 0 };
+  }
+  async getRealEstateAssets(): Promise<RealEstateAsset[]> { return []; }
+  async createRealEstateAsset(_data: RealEstateAssetCreate): Promise<RealEstateAsset> { return {} as RealEstateAsset; }
+  async updateRealEstateAsset(_id: string, _data: RealEstateAssetUpdate): Promise<RealEstateAsset> { return {} as RealEstateAsset; }
+  async deleteRealEstateAsset(_id: string): Promise<void> {}
+  async refreshRealEstateValuation(_id: string): Promise<ValuationRefreshResponse> { return { status: "unchanged", message: "Demo mode" }; }
+
+  async getVehicleAssets(): Promise<VehicleAsset[]> { return []; }
+  async createVehicleAsset(_data: VehicleAssetCreate): Promise<VehicleAsset> { return {} as VehicleAsset; }
+  async updateVehicleAsset(_id: string, _data: VehicleAssetUpdate): Promise<VehicleAsset> { return {} as VehicleAsset; }
+  async deleteVehicleAsset(_id: string): Promise<void> {}
+  async refreshVehicleValuation(_id: string): Promise<ValuationRefreshResponse> { return { status: "unchanged", message: "Demo mode" }; }
+
+  async getCollectibleAssets(): Promise<CollectibleAsset[]> { return []; }
+  async createCollectibleAsset(_data: CollectibleAssetCreate): Promise<CollectibleAsset> { return {} as CollectibleAsset; }
+  async updateCollectibleAsset(_id: string, _data: CollectibleAssetUpdate): Promise<CollectibleAsset> { return {} as CollectibleAsset; }
+  async deleteCollectibleAsset(_id: string): Promise<void> {}
+  async refreshCollectibleValuation(_id: string): Promise<ValuationRefreshResponse> { return { status: "unchanged", message: "Demo mode" }; }
+
+  async getPreciousMetalAssets(): Promise<PreciousMetalAsset[]> { return []; }
+  async createPreciousMetalAsset(_data: PreciousMetalAssetCreate): Promise<PreciousMetalAsset> { return {} as PreciousMetalAsset; }
+  async updatePreciousMetalAsset(_id: string, _data: PreciousMetalAssetUpdate): Promise<PreciousMetalAsset> { return {} as PreciousMetalAsset; }
+  async deletePreciousMetalAsset(_id: string): Promise<void> {}
+  async refreshPreciousMetalValuation(_id: string): Promise<ValuationRefreshResponse> { return { status: "unchanged", message: "Demo mode" }; }
 
   // === Crypto ===
 

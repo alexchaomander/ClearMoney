@@ -346,6 +346,7 @@ export interface PortfolioSummary {
   total_investment_value: number;
   total_cash_value: number;
   total_debt_value: number;
+  total_physical_asset_value: number;
   total_equity_vested_value: number;
   total_equity_unvested_value: number;
   net_worth: number;
@@ -355,6 +356,186 @@ export interface PortfolioSummary {
   allocation_by_account_type: AssetAllocation[];
   top_holdings: TopHolding[];
   concentration_alerts: ConcentrationAlert[];
+}
+
+// Physical Asset types
+export type ValuationType = 'manual' | 'auto';
+export type RealEstateType = 'primary_residence' | 'investment_property' | 'vacation_home' | 'commercial' | 'land';
+export type VehicleType = 'car' | 'motorcycle' | 'boat' | 'aircraft' | 'other';
+export type CollectibleType = 'art' | 'watch' | 'handbag' | 'jewelry' | 'wine' | 'card' | 'other';
+export type MetalType = 'gold' | 'silver' | 'platinum' | 'palladium';
+
+export interface RealEstateAsset {
+  id: string;
+  user_id: string;
+  name: string;
+  address: string;
+  city: string | null;
+  state: string | null;
+  zip_code: string | null;
+  property_type: RealEstateType;
+  valuation_type: ValuationType;
+  market_value: number;
+  purchase_price: number | null;
+  purchase_date: string | null;
+  zillow_zpid: string | null;
+  last_valuation_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RealEstateAssetCreate {
+  name: string;
+  address: string;
+  city?: string | null;
+  state?: string | null;
+  zip_code?: string | null;
+  property_type?: RealEstateType;
+  valuation_type?: ValuationType;
+  market_value?: number;
+  purchase_price?: number | null;
+  purchase_date?: string | null;
+  zillow_zpid?: string | null;
+}
+
+export interface RealEstateAssetUpdate {
+  name?: string;
+  address?: string;
+  city?: string | null;
+  state?: string | null;
+  zip_code?: string | null;
+  property_type?: RealEstateType;
+  valuation_type?: ValuationType;
+  market_value?: number;
+  purchase_price?: number | null;
+  purchase_date?: string | null;
+  zillow_zpid?: string | null;
+}
+
+export interface VehicleAsset {
+  id: string;
+  user_id: string;
+  name: string;
+  make: string;
+  model: string;
+  year: number;
+  vin: string | null;
+  mileage: number | null;
+  vehicle_type: VehicleType;
+  valuation_type: ValuationType;
+  market_value: number;
+  purchase_price: number | null;
+  purchase_date: string | null;
+  last_valuation_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VehicleAssetCreate {
+  name: string;
+  make: string;
+  model: string;
+  year: number;
+  vin?: string | null;
+  mileage?: number | null;
+  vehicle_type?: VehicleType;
+  valuation_type?: ValuationType;
+  market_value?: number;
+  purchase_price?: number | null;
+  purchase_date?: string | null;
+}
+
+export interface VehicleAssetUpdate {
+  name?: string;
+  make?: string;
+  model?: string;
+  year?: number;
+  vin?: string | null;
+  mileage?: number | null;
+  vehicle_type?: VehicleType;
+  valuation_type?: ValuationType;
+  market_value?: number;
+  purchase_price?: number | null;
+  purchase_date?: string | null;
+}
+
+export interface CollectibleAsset {
+  id: string;
+  user_id: string;
+  name: string;
+  item_type: CollectibleType;
+  valuation_type: ValuationType;
+  market_value: number;
+  purchase_price: number | null;
+  purchase_date: string | null;
+  metadata_json: Record<string, unknown> | null;
+  last_valuation_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CollectibleAssetCreate {
+  name: string;
+  item_type?: CollectibleType;
+  valuation_type?: ValuationType;
+  market_value?: number;
+  purchase_price?: number | null;
+  purchase_date?: string | null;
+  metadata_json?: Record<string, unknown> | null;
+}
+
+export interface CollectibleAssetUpdate {
+  name?: string;
+  item_type?: CollectibleType;
+  valuation_type?: ValuationType;
+  market_value?: number;
+  purchase_price?: number | null;
+  purchase_date?: string | null;
+  metadata_json?: Record<string, unknown> | null;
+}
+
+export interface PreciousMetalAsset {
+  id: string;
+  user_id: string;
+  name: string;
+  metal_type: MetalType;
+  weight_oz: number;
+  valuation_type: ValuationType;
+  market_value: number;
+  last_valuation_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PreciousMetalAssetCreate {
+  name: string;
+  metal_type: MetalType;
+  weight_oz: number;
+  valuation_type?: ValuationType;
+  market_value?: number;
+}
+
+export interface PreciousMetalAssetUpdate {
+  name?: string;
+  metal_type?: MetalType;
+  weight_oz?: number;
+  valuation_type?: ValuationType;
+  market_value?: number;
+}
+
+export interface PhysicalAssetsSummary {
+  real_estate: RealEstateAsset[];
+  vehicles: VehicleAsset[];
+  collectibles: CollectibleAsset[];
+  precious_metals: PreciousMetalAsset[];
+  total_value: number;
+}
+
+export interface ValuationRefreshResponse {
+  status: 'updated' | 'unchanged' | 'failed' | 'cooldown' | 'not_found';
+  new_value?: number | null;
+  previous_value?: number | null;
+  message?: string | null;
 }
 
 // Cash/Debt CRUD
@@ -718,6 +899,31 @@ export interface FinancialContext {
     investment: FinancialContextAccount[];
     cash: FinancialContextAccount[];
     debt: FinancialContextAccount[];
+    real_estate: {
+      name: string;
+      address: string;
+      type: string;
+      market_value: number | null;
+    }[];
+    vehicles: {
+      name: string;
+      make: string;
+      model: string;
+      year: number;
+      type: string;
+      market_value: number | null;
+    }[];
+    collectibles: {
+      name: string;
+      type: string;
+      market_value: number | null;
+    }[];
+    precious_metals: {
+      name: string;
+      type: string;
+      weight_oz: number | null;
+      market_value: number | null;
+    }[];
   };
   holdings: FinancialContextHolding[];
   recent_transactions: {
