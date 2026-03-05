@@ -24,7 +24,9 @@ from app.schemas.physical_asset import (
     CollectibleAssetUpdate,
     PreciousMetalAssetCreate,
     PreciousMetalAssetUpdate,
-    PhysicalAssetsSummary
+    PhysicalAssetsSummary,
+    PropertySearchResult,
+    VehicleSearchResult,
 )
 from app.services.providers.metal_price import metal_price_service
 from app.services.providers.zillow import zillow_service
@@ -153,6 +155,30 @@ class PhysicalAssetService:
         )
         await self.session.commit()
         return result.rowcount > 0
+
+    # --- Search Services ---
+
+    async def search_properties(self, address: str, user_id: Optional[uuid.UUID] = None) -> List[PropertySearchResult]:
+        """Search for candidate properties by address."""
+        return await zillow_service.search_by_address(address)
+
+    async def search_vehicles(self, vin: Optional[str] = None, make: Optional[str] = None, model: Optional[str] = None, year: Optional[int] = None) -> List[VehicleSearchResult]:
+        """Search for a vehicle by VIN or Specs."""
+        if vin:
+            result = await vehicle_valuation_service.search_by_vin(vin)
+            return [result] if result else []
+
+        if make and model and year:
+            val = await vehicle_valuation_service.get_market_value(make, model, year)
+            if val is not None:
+                return [VehicleSearchResult(
+                    make=make,
+                    model=model,
+                    year=year,
+                    market_value=val
+                )]
+
+        return []
 
     # --- Collectibles ---
 
