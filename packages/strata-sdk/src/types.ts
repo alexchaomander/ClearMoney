@@ -573,8 +573,8 @@ export interface VehicleSearchRequest {
  * Excludes I, O, and Q which are never used in VINs.
  */
 export function isValidVIN(vin: string): boolean {
-  const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/i;
-  return vinRegex.test(vin);
+  const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/;
+  return vinRegex.test(vin.toUpperCase());
 }
 
 // Cash/Debt CRUD

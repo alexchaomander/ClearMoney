@@ -25,8 +25,11 @@ class VehicleValuationService:
     ) -> Optional[Decimal]:
         """Fetch median market price for a vehicle."""
         if not self._api_key:
-            logger.warning("Vehicle valuation API key not set, returning mock valuation")
-            return Decimal("35000.00")
+            if settings.debug:
+                logger.warning("Vehicle valuation API key not set, returning mock valuation")
+                return Decimal("35000.00")
+            logger.error("Vehicle valuation API key not configured")
+            return None
 
         params = {
             "api_key": self._api_key,
@@ -56,14 +59,17 @@ class VehicleValuationService:
     async def search_by_vin(self, vin: str) -> Optional[VehicleSearchResult]:
         """Fetch vehicle specs and market value from VIN."""
         if not self._api_key:
-            logger.warning("Vehicle valuation API key not set, returning mock VIN search")
-            return VehicleSearchResult(
-                vin=vin,
-                make="Tesla",
-                model="Model 3",
-                year=2022,
-                market_value=Decimal("38500.00")
-            )
+            if settings.debug:
+                logger.warning("Vehicle valuation API key not set, returning mock VIN search")
+                return VehicleSearchResult(
+                    vin=vin,
+                    make="Tesla",
+                    model="Model 3",
+                    year=2022,
+                    market_value=Decimal("38500.00")
+                )
+            logger.error("Vehicle valuation API key not configured")
+            return None
 
         try:
             # Marketcheck VIN specs endpoint
