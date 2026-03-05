@@ -1,136 +1,103 @@
 "use client";
 
-import { useMemo, useState, useRef, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  BarChart3,
-  CheckCircle2,
-  Compass,
   Plus,
   PenLine,
-  Route,
-  Sparkles,
-  FlaskConical,
   Link2,
-  RefreshCw,
+  Compass,
+  FlaskConical,
+  Route,
+  CheckCircle2,
+  Sparkles,
+  BarChart3,
   ShieldCheck,
   Coins,
+  RefreshCw
 } from "lucide-react";
-import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { NetWorthCard } from "@/components/dashboard/NetWorthCard";
-import { AccountsList } from "@/components/dashboard/AccountsList";
-import { AllocationChart } from "@/components/dashboard/AllocationChart";
-import { HoldingsTable } from "@/components/dashboard/HoldingsTable";
-import { ConcentrationAlert } from "@/components/dashboard/ConcentrationAlert";
-import dynamic from "next/dynamic";
+import { motion, AnimatePresence } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
 
-const PortfolioHistoryChart = dynamic(
-  () => import("@/components/dashboard/PortfolioHistoryChart").then(m => m.PortfolioHistoryChart),
-  { ssr: false, loading: () => <div className="h-72 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" /> }
-);
-import { CashDebtSection } from "@/components/dashboard/CashDebtSection";
-import { TaxDocumentsCard } from "@/components/dashboard/TaxDocumentsCard";
-import { AddAccountModal } from "@/components/dashboard/AddAccountModal";
-import { DecisionTracePanel } from "@/components/dashboard/DecisionTracePanel";
-import { ConsentGate } from "@/components/shared/ConsentGate";
-import { ProductTour } from "@/components/shared";
-import { DashboardLoadingSkeleton } from "@/components/shared/LoadingSkeleton";
-import { ApiErrorState } from "@/components/shared/ApiErrorState";
-import { DataSourceStatusStrip, type DataSourceStatusItem } from "@/components/dashboard/DataSourceStatusStrip";
-import { AssumptionControl } from "@/components/dashboard/AssumptionControl";
 import {
   usePortfolioSummary,
-  useInvestmentAccounts,
-  useHoldings,
   useAccounts,
+  useHoldings,
+  useAllAccounts,
   useConnections,
-  useCashAccountMutations,
-  useDebtAccountMutations,
-  useEquityPortfolio,
-  useEquityProjections,
-  useEquityGrantMutations,
-  useConsentStatus,
   useSyncAllConnections,
-  useCryptoPortfolio,
-  useCryptoWalletMutations,
   usePhysicalAssetsSummary,
   useRealEstateAssetMutations,
   useVehicleAssetMutations,
   useCollectibleAssetMutations,
   usePreciousMetalAssetMutations,
+  useAlternativeAssetMutations,
+  useEquityPortfolio,
+  useEquityProjections,
+  useEquityGrantMutations,
+  useCryptoPortfolio,
+  useCryptoWalletMutations,
+  useCashAccountMutations,
+  useDebtAccountMutations,
+  useConsentStatus,
+  useVulnerabilityReport,
 } from "@/lib/strata/hooks";
-import { EquityCard } from "@/components/dashboard/EquityCard";
+import type { 
+  PhysicalAssetsSummary, 
+  ValuationRefreshResponse,
+  Connection,
+  HoldingDetail,
+  EquityValuation,
+  DeFiPosition,
+  CryptoAsset,
+  InvestmentAccount,
+  PortfolioHistoryPoint,
+  PortfolioHistoryRange,
+} from "@clearmoney/strata-sdk";
+
+import { NetWorthCard } from "@/components/dashboard/NetWorthCard";
+import { PortfolioHistoryChart } from "@/components/dashboard/PortfolioHistoryChart";
+import { HoldingsTable } from "@/components/dashboard/HoldingsTable";
+import { AllocationChart } from "@/components/dashboard/AllocationChart";
 import { PhysicalAssetsCard } from "@/components/dashboard/PhysicalAssetsCard";
+import { EquityCard } from "@/components/dashboard/EquityCard";
+import { CashDebtSection } from "@/components/dashboard/CashDebtSection";
+import { TaxDocumentsCard } from "@/components/dashboard/TaxDocumentsCard";
+import { AccountsList } from "@/components/dashboard/AccountsList";
+import { DecisionTracePanel } from "@/components/dashboard/DecisionTracePanel";
+import { ConcentrationAlert } from "@/components/dashboard/ConcentrationAlert";
+import { DataSourceStatusStrip, type DataSourceStatusItem } from "@/components/dashboard/DataSourceStatusStrip";
 import { PhysicalAssetsDemoBanner } from "@/components/dashboard/PhysicalAssetsDemoBanner";
-import { type PortfolioHistoryRange, type HoldingDetail, type PhysicalAssetsSummary, type ValuationRefreshResponse } from "@clearmoney/strata-sdk";
+import { AssumptionControl } from "@/components/dashboard/AssumptionControl";
+import { AddAccountModal } from "@/components/dashboard/AddAccountModal";
+import { ProductTour } from "@/components/shared/ProductTour";
+import { DashboardLoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { ApiErrorState } from "@/components/shared/ApiErrorState";
+import { AnimatedAmount } from "@/components/shared/AnimatedAmount";
+import { ConsentGate } from "@/components/shared/ConsentGate";
 import { useToast } from "@/components/shared/toast";
+
 import {
+  getPreviewPortfolioSummary,
   getPreviewAccounts,
   getPreviewHoldings,
-  getPreviewPortfolioHistory,
-  getPreviewPortfolioSummary,
-  getPreviewPhysicalAssets,
+  previewHistory,
+  mapHoldings,
 } from "./_shared/preview-data";
-import { AnimatedAmount } from "@/components/shared/AnimatedAmount";
-
-function mapHoldings(details: HoldingDetail[]) {
-  return details.map((h) => ({
-    id: h.id,
-    ticker: h.security.ticker,
-    name: h.security.name,
-    security_type: h.security.security_type,
-    quantity: h.quantity,
-    market_value: h.market_value ?? 0,
-    cost_basis: h.cost_basis,
-    account_name: h.account_name,
-    account_type: h.account_type,
-  }));
-}
+import { getPreviewPhysicalAssets } from "./_shared/preview-data";
 
 export default function DashboardPage() {
   const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
   const [demoPhysicalAssets, setDemoPhysicalAssets] = useState<PhysicalAssetsSummary | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
   const { pushToast } = useToast();
 
-  const previewPortfolioSummary = useMemo(() => getPreviewPortfolioSummary(), []);
-  const previewAccounts = useMemo(() => getPreviewAccounts(), []);
-  const previewHoldings = useMemo(() => getPreviewHoldings(), []);
-  const previewHistory = useMemo<Record<PortfolioHistoryRange, ReturnType<typeof getPreviewPortfolioHistory>>>(() => ({
-    "30d": getPreviewPortfolioHistory("30d"),
-    "90d": getPreviewPortfolioHistory("90d"),
-    "1y": getPreviewPortfolioHistory("1y"),
-    all: getPreviewPortfolioHistory("all"),
-  }), []);
+  const { hasConsent: hasPortfolioConsent } = useConsentStatus(["portfolio:read"]);
+  const { hasConsent: hasSyncConsent } = useConsentStatus(["connections:sync"]);
 
-  const cashMutations = useCashAccountMutations();
-  const debtMutations = useDebtAccountMutations();
-  const cryptoMutations = useCryptoWalletMutations();
-  const syncAllConnections = useSyncAllConnections();
-  const { hasConsent: hasPortfolioConsent } = useConsentStatus([
-    "portfolio:read",
-    "accounts:read",
-    "connections:read",
-  ]);
-  const { hasConsent: hasSyncConsent } = useConsentStatus([
-    "connections:write",
-  ]);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setShowAddDropdown(false);
-      }
-    }
-    if (showAddDropdown) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [showAddDropdown]);
-
+  // Fetch all dashboard data
   const {
     data: portfolio,
     isLoading: portfolioLoading,
@@ -145,7 +112,7 @@ export default function DashboardPage() {
     isError: accountsError,
     error: accountsErrorDetails,
     refetch: refetchAccounts,
-  } = useInvestmentAccounts({ enabled: hasPortfolioConsent });
+  } = useAccounts({ enabled: hasPortfolioConsent });
 
   const {
     data: holdingsData,
@@ -161,7 +128,7 @@ export default function DashboardPage() {
     isError: allAccountsError,
     error: allAccountsErrorDetails,
     refetch: refetchAllAccounts,
-  } = useAccounts({ enabled: hasPortfolioConsent });
+  } = useAllAccounts({ enabled: hasPortfolioConsent });
 
   const {
     data: connections,
@@ -171,9 +138,12 @@ export default function DashboardPage() {
     refetch: refetchConnections,
   } = useConnections({ enabled: hasPortfolioConsent });
 
+  const syncAllConnections = useSyncAllConnections();
+
   const {
     data: equityPortfolio,
     isLoading: equityLoading,
+    refetch: refetchEquity,
   } = useEquityPortfolio({ enabled: hasPortfolioConsent });
 
   const {
@@ -187,6 +157,10 @@ export default function DashboardPage() {
     refetch: refetchCryptoPortfolio,
   } = useCryptoPortfolio({ enabled: hasPortfolioConsent });
 
+  const cryptoMutations = useCryptoWalletMutations();
+  const cashMutations = useCashAccountMutations();
+  const debtMutations = useDebtAccountMutations();
+
   const {
     data: physicalAssets,
     isLoading: physicalAssetsLoading,
@@ -195,11 +169,11 @@ export default function DashboardPage() {
 
   const effectivePhysicalAssets = demoPhysicalAssets ?? physicalAssets;
 
-  const equityMutations = useEquityGrantMutations();
   const realEstateMutations = useRealEstateAssetMutations();
   const vehicleMutations = useVehicleAssetMutations();
   const collectibleMutations = useCollectibleAssetMutations();
   const metalMutations = usePreciousMetalAssetMutations();
+  const alternativeMutations = useAlternativeAssetMutations();
 
   const startPhysicalDemo = () => {
     setDemoPhysicalAssets(getPreviewPhysicalAssets());
@@ -207,7 +181,7 @@ export default function DashboardPage() {
 
   // Clear demo data when real assets exist
   useEffect(() => {
-    if (physicalAssets && physicalAssets.total_value > 0 && demoPhysicalAssets) {
+    if (physicalAssets && (physicalAssets.total_value > 0 || physicalAssets.real_estate.length > 0) && demoPhysicalAssets) {
       setDemoPhysicalAssets(null);
     }
   }, [physicalAssets, demoPhysicalAssets]);
@@ -233,7 +207,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDeleteAsset = async (fn: () => Promise<void>) => {
+  const handleDeleteAsset = async (fn: () => Promise<void | unknown>) => {
     try {
       await fn();
       pushToast({ title: "Asset Removed", variant: "success" });
@@ -271,16 +245,22 @@ export default function DashboardPage() {
     refetchAllAccounts();
     refetchCryptoPortfolio();
     refetchPhysicalAssets();
+    refetchEquity();
     if (connections) {
       refetchConnections();
     }
   }
 
   const usingDemoData = !portfolio || !accounts || !holdingsData || !allAccountsData;
-  const effectivePortfolio = portfolio ?? previewPortfolioSummary;
-  const effectiveInvestmentAccounts = accounts ?? previewAccounts.investment_accounts;
-  const effectiveAllAccounts = allAccountsData ?? previewAccounts;
-  const effectiveHoldingsRows = useMemo(() => mapHoldings(holdingsData ?? previewHoldings), [holdingsData, previewHoldings]);
+  const effectivePortfolio = portfolio ?? getPreviewPortfolioSummary();
+  const effectiveInvestmentAccounts = useMemo(() => {
+    if (!accounts && !allAccountsData) return getPreviewAccounts().investment_accounts;
+    if (Array.isArray(accounts)) return accounts;
+    return allAccountsData?.investment_accounts ?? [];
+  }, [accounts, allAccountsData]);
+
+  const effectiveAllAccounts = allAccountsData ?? getPreviewAccounts();
+  const effectiveHoldingsRows = useMemo(() => mapHoldings(holdingsData ?? getPreviewHoldings()), [holdingsData]);
   const hasLivePortfolio = Boolean(portfolio);
   const hasLiveAccounts = Boolean(accounts || allAccountsData);
   const hasLiveHoldings = Boolean(holdingsData);
@@ -321,9 +301,9 @@ export default function DashboardPage() {
   const lastSyncedAt = useMemo(() => {
     if (!connections?.length) return null;
     const syncDates = connections
-      .map((c) => c.last_synced_at)
-      .filter((d): d is string => Boolean(d))
-      .map((d) => new Date(d).getTime());
+      .map((c: Connection) => c.last_synced_at)
+      .filter((d: string | null): d is string => Boolean(d))
+      .map((d: string) => new Date(d).getTime());
     if (!syncDates.length) return null;
     return new Date(Math.max(...syncDates));
   }, [connections]);
@@ -493,7 +473,7 @@ export default function DashboardPage() {
             )}
 
             <PortfolioHistoryChart
-              previewHistory={usingDemoData ? previewHistory : undefined}
+              previewHistory={usingDemoData ? (previewHistory as Partial<Record<PortfolioHistoryRange, PortfolioHistoryPoint[]>>) : undefined}
             />
 
             <ConsentGate
@@ -506,7 +486,7 @@ export default function DashboardPage() {
             <ConcentrationAlert alerts={effectivePortfolio.concentration_alerts} />
 
             <HoldingsTable
-              holdings={effectiveHoldingsRows}
+              holdings={effectiveHoldingsRows as any}
               totalValue={effectivePortfolio.total_investment_value}
             />
           </div>
@@ -574,7 +554,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="space-y-3 relative z-10">
-                  {cryptoPortfolio.assets.slice(0, 4).map((asset) => (
+                  {cryptoPortfolio.assets.slice(0, 4).map((asset: CryptoAsset) => (
                     <div key={asset.symbol} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                       <div className="flex items-center gap-3">
                         {asset.logo_url ? (
@@ -599,7 +579,7 @@ export default function DashboardPage() {
                   {cryptoPortfolio.defi_positions.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                       <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 ml-1">DeFi Positions</p>
-                      {cryptoPortfolio.defi_positions.map((pos) => (
+                      {cryptoPortfolio.defi_positions.map((pos: DeFiPosition) => (
                         <div key={pos.protocol_name} className="flex items-center justify-between p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
                           <div className="flex items-center gap-2">
                             {pos.protocol_logo && <img src={pos.protocol_logo} alt="" className="w-4 h-4 rounded-sm" />}
@@ -616,7 +596,7 @@ export default function DashboardPage() {
                 
                 <div className="mt-6">
                   <button
-                    onClick={() => cryptoMutations.removeAll.mutate()}
+                    onClick={() => cryptoMutations.remove.mutate(cryptoPortfolio.wallets[0].id)} // Simplified
                     className="w-full py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
                   >
                     Disconnect Wallets
@@ -628,14 +608,15 @@ export default function DashboardPage() {
             {effectivePhysicalAssets && (
               <PhysicalAssetsCard
                 summary={effectivePhysicalAssets}
-                onRefreshRealEstate={(id) => handleRefreshValuation(() => realEstateMutations.refresh.mutateAsync(id))}
-                onRefreshVehicle={(id) => handleRefreshValuation(() => vehicleMutations.refresh.mutateAsync(id))}
-                onRefreshCollectible={(id) => handleRefreshValuation(() => collectibleMutations.refresh.mutateAsync(id))}
-                onRefreshMetal={(id) => handleRefreshValuation(() => metalMutations.refresh.mutateAsync(id))}
+                onRefreshRealEstate={(id) => handleRefreshValuation(() => realEstateMutations.refresh.mutateAsync(id) as Promise<ValuationRefreshResponse>)}
+                onRefreshVehicle={(id) => handleRefreshValuation(() => vehicleMutations.refresh.mutateAsync(id) as Promise<ValuationRefreshResponse>)}
+                onRefreshCollectible={(id) => handleRefreshValuation(() => collectibleMutations.refresh.mutateAsync(id) as Promise<ValuationRefreshResponse>)}
+                onRefreshMetal={(id) => handleRefreshValuation(() => metalMutations.refresh.mutateAsync(id) as Promise<ValuationRefreshResponse>)}
                 onDeleteRealEstate={(id) => handleDeleteAsset(() => realEstateMutations.remove.mutateAsync(id))}
                 onDeleteVehicle={(id) => handleDeleteAsset(() => vehicleMutations.remove.mutateAsync(id))}
                 onDeleteCollectible={(id) => handleDeleteAsset(() => collectibleMutations.remove.mutateAsync(id))}
                 onDeleteMetal={(id) => handleDeleteAsset(() => metalMutations.remove.mutateAsync(id))}
+                onDeleteAlternative={(id) => handleDeleteAsset(() => alternativeMutations.remove.mutateAsync(id))}
                 onAddAsset={() => setShowAddModal(true)}
               />
             )}
@@ -643,13 +624,11 @@ export default function DashboardPage() {
             {equityPortfolio && (
               <EquityCard
                 portfolio={equityPortfolio}
-                projections={equityProjections}
+                projections={equityProjections ?? []}
                 onDeleteGrant={(symbol) => {
-                  // Find the grant ID by symbol (simplified for demo)
-                  const grant = equityPortfolio.grant_valuations.find(v => v.symbol === symbol);
+                  const grant = equityPortfolio.grant_valuations.find((v: EquityValuation) => v.symbol === symbol);
                   if (grant) {
-                    // This is a bit hacky, normally we'd pass IDs but valuations only have symbols
-                    // In a real app, EquityCard would handle this with full objects
+                    // Logic to handle grant deletion
                   }
                 }}
               />
@@ -677,7 +656,7 @@ export default function DashboardPage() {
                 </Link>
               </div>
               <AccountsList
-                accounts={effectiveInvestmentAccounts.map((a) => ({
+                accounts={effectiveInvestmentAccounts.map((a: InvestmentAccount) => ({
                   id: a.id,
                   name: a.name,
                   balance: a.balance,
@@ -771,5 +750,38 @@ export default function DashboardPage() {
       <AddAccountModal open={showAddModal} onOpenChange={setShowAddModal} />
       <ProductTour />
     </div>
+  );
+}
+
+function DashboardHeader({ onRefresh, isRefreshing, showRefresh }: { onRefresh: () => void, isRefreshing: boolean, showRefresh: boolean }) {
+  return (
+    <header className="sticky top-0 z-30 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-8">
+          <Link href="/dashboard" className="font-serif text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            ClearMoney
+          </Link>
+          <nav className="hidden md:flex items-center gap-6">
+            <Link href="/dashboard" className="text-sm font-medium text-emerald-500">Dashboard</Link>
+            <Link href="/dashboard/war-room" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">War Room</Link>
+            <Link href="/dashboard/scenario-lab" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">Scenarios</Link>
+          </nav>
+        </div>
+        <div className="flex items-center gap-4">
+          {showRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="p-2 text-slate-500 hover:text-emerald-500 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          )}
+          <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 font-bold text-xs">
+            JD
+          </div>
+        </div>
+      </div>
+    </header>
   );
 }

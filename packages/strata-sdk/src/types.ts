@@ -364,6 +364,20 @@ export type RealEstateType = 'primary_residence' | 'investment_property' | 'vaca
 export type VehicleType = 'car' | 'motorcycle' | 'boat' | 'aircraft' | 'other';
 export type CollectibleType = 'art' | 'watch' | 'handbag' | 'jewelry' | 'wine' | 'card' | 'other';
 export type MetalType = 'gold' | 'silver' | 'platinum' | 'palladium';
+export type AlternativeAssetType = 'private_equity' | 'angel_investment' | 'venture_capital' | 'hedge_fund' | 'limited_partnership' | 'other';
+export type AssetType = 'real_estate' | 'vehicle' | 'collectible' | 'precious_metal' | 'alternative';
+
+export interface AssetValuation {
+  id: string;
+  user_id: string;
+  asset_id: string;
+  asset_type: AssetType;
+  value: number;
+  valuation_date: string;
+  source: string | null;
+  notes: string | null;
+  created_at: string;
+}
 
 export interface RealEstateAsset {
   id: string;
@@ -378,6 +392,7 @@ export interface RealEstateAsset {
   market_value: number;
   purchase_price: number | null;
   purchase_date: string | null;
+  estimated_annual_growth_rate: number | null;
   zillow_zpid: string | null;
   last_valuation_at: string | null;
   created_at: string;
@@ -395,6 +410,7 @@ export interface RealEstateAssetCreate {
   market_value?: number;
   purchase_price?: number | null;
   purchase_date?: string | null;
+  estimated_annual_growth_rate?: number | null;
   zillow_zpid?: string | null;
 }
 
@@ -409,6 +425,7 @@ export interface RealEstateAssetUpdate {
   market_value?: number;
   purchase_price?: number | null;
   purchase_date?: string | null;
+  estimated_annual_growth_rate?: number | null;
   zillow_zpid?: string | null;
 }
 
@@ -426,6 +443,7 @@ export interface VehicleAsset {
   market_value: number;
   purchase_price: number | null;
   purchase_date: string | null;
+  estimated_annual_growth_rate: number | null;
   last_valuation_at: string | null;
   created_at: string;
   updated_at: string;
@@ -443,6 +461,7 @@ export interface VehicleAssetCreate {
   market_value?: number;
   purchase_price?: number | null;
   purchase_date?: string | null;
+  estimated_annual_growth_rate?: number | null;
 }
 
 export interface VehicleAssetUpdate {
@@ -457,6 +476,7 @@ export interface VehicleAssetUpdate {
   market_value?: number;
   purchase_price?: number | null;
   purchase_date?: string | null;
+  estimated_annual_growth_rate?: number | null;
 }
 
 export interface CollectibleAsset {
@@ -468,6 +488,7 @@ export interface CollectibleAsset {
   market_value: number;
   purchase_price: number | null;
   purchase_date: string | null;
+  estimated_annual_growth_rate: number | null;
   metadata_json: Record<string, unknown> | null;
   last_valuation_at: string | null;
   created_at: string;
@@ -481,6 +502,7 @@ export interface CollectibleAssetCreate {
   market_value?: number;
   purchase_price?: number | null;
   purchase_date?: string | null;
+  estimated_annual_growth_rate?: number | null;
   metadata_json?: Record<string, unknown> | null;
 }
 
@@ -491,6 +513,7 @@ export interface CollectibleAssetUpdate {
   market_value?: number;
   purchase_price?: number | null;
   purchase_date?: string | null;
+  estimated_annual_growth_rate?: number | null;
   metadata_json?: Record<string, unknown> | null;
 }
 
@@ -523,11 +546,50 @@ export interface PreciousMetalAssetUpdate {
   market_value?: number;
 }
 
+export interface AlternativeAsset {
+  id: string;
+  user_id: string;
+  name: string;
+  asset_type: AlternativeAssetType;
+  description: string | null;
+  market_value: number;
+  cost_basis: number | null;
+  purchase_date: string | null;
+  estimated_annual_growth_rate: number | null;
+  last_valuation_at: string | null;
+  metadata_json: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AlternativeAssetCreate {
+  name: string;
+  asset_type?: AlternativeAssetType;
+  description?: string | null;
+  market_value?: number;
+  cost_basis?: number | null;
+  purchase_date?: string | null;
+  estimated_annual_growth_rate?: number | null;
+  metadata_json?: Record<string, unknown> | null;
+}
+
+export interface AlternativeAssetUpdate {
+  name?: string;
+  asset_type?: AlternativeAssetType;
+  description?: string | null;
+  market_value?: number;
+  cost_basis?: number | null;
+  purchase_date?: string | null;
+  estimated_annual_growth_rate?: number | null;
+  metadata_json?: Record<string, unknown> | null;
+}
+
 export interface PhysicalAssetsSummary {
   real_estate: RealEstateAsset[];
   vehicles: VehicleAsset[];
   collectibles: CollectibleAsset[];
   precious_metals: PreciousMetalAsset[];
+  alternative_assets: AlternativeAsset[];
   total_value: number;
 }
 
@@ -961,6 +1023,11 @@ export interface FinancialContext {
       name: string;
       type: string;
       weight_oz: number | null;
+      market_value: number | null;
+    }[];
+    alternative_assets: {
+      name: string;
+      type: string;
       market_value: number | null;
     }[];
   };
