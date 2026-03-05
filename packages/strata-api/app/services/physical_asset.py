@@ -17,6 +17,7 @@ from app.models.physical_asset import (
     PreciousMetalAsset,
     RealEstateAsset,
     ValuationType,
+    VehicleAsset,
 )
 from app.schemas.physical_asset import (
     AlternativeAssetCreate,
@@ -163,8 +164,19 @@ class PhysicalAssetService:
         if not asset:
             return None
 
+        previous_value = asset.market_value
         for key, value in data.model_dump(exclude_unset=True).items():
             setattr(asset, key, value)
+
+        if data.market_value is not None and data.market_value != previous_value:
+            await self._record_valuation(
+                user_id=user_id,
+                asset_id=asset.id,
+                asset_type=AssetType.real_estate,
+                value=data.market_value,
+                source="Manual Update",
+            )
+            asset.last_valuation_at = datetime.now(timezone.utc)
 
         await self.session.commit()
         await self.session.refresh(asset)
@@ -183,9 +195,7 @@ class PhysicalAssetService:
 
     # --- Vehicles ---
 
-    async def get_vehicle_assets(self, user_id: uuid.UUID) -> List[Any]:
-        from app.models.physical_asset import VehicleAsset
-
+    async def get_vehicle_assets(self, user_id: uuid.UUID) -> List[VehicleAsset]:
         result = await self.session.execute(
             select(VehicleAsset).where(VehicleAsset.user_id == user_id)
         )
@@ -193,9 +203,7 @@ class PhysicalAssetService:
 
     async def create_vehicle_asset(
         self, user_id: uuid.UUID, data: VehicleAssetCreate
-    ) -> Any:
-        from app.models.physical_asset import VehicleAsset
-
+    ) -> VehicleAsset:
         return await self._create_asset(
             user_id=user_id,
             asset_model=VehicleAsset,
@@ -206,9 +214,7 @@ class PhysicalAssetService:
 
     async def update_vehicle_asset(
         self, asset_id: uuid.UUID, user_id: uuid.UUID, data: VehicleAssetUpdate
-    ) -> Optional[Any]:
-        from app.models.physical_asset import VehicleAsset
-
+    ) -> Optional[VehicleAsset]:
         asset_result = await self.session.execute(
             select(VehicleAsset).where(
                 VehicleAsset.id == asset_id, VehicleAsset.user_id == user_id
@@ -218,16 +224,25 @@ class PhysicalAssetService:
         if not asset:
             return None
 
+        previous_value = asset.market_value
         for key, value in data.model_dump(exclude_unset=True).items():
             setattr(asset, key, value)
+
+        if data.market_value is not None and data.market_value != previous_value:
+            await self._record_valuation(
+                user_id=user_id,
+                asset_id=asset.id,
+                asset_type=AssetType.vehicle,
+                value=data.market_value,
+                source="Manual Update",
+            )
+            asset.last_valuation_at = datetime.now(timezone.utc)
 
         await self.session.commit()
         await self.session.refresh(asset)
         return asset
 
     async def delete_vehicle_asset(self, asset_id: uuid.UUID, user_id: uuid.UUID) -> bool:
-        from app.models.physical_asset import VehicleAsset
-
         result = await self.session.execute(
             delete(VehicleAsset).where(
                 VehicleAsset.id == asset_id, VehicleAsset.user_id == user_id
@@ -267,8 +282,19 @@ class PhysicalAssetService:
         if not asset:
             return None
 
+        previous_value = asset.market_value
         for key, value in data.model_dump(exclude_unset=True).items():
             setattr(asset, key, value)
+
+        if data.market_value is not None and data.market_value != previous_value:
+            await self._record_valuation(
+                user_id=user_id,
+                asset_id=asset.id,
+                asset_type=AssetType.collectible,
+                value=data.market_value,
+                source="Manual Update",
+            )
+            asset.last_valuation_at = datetime.now(timezone.utc)
 
         await self.session.commit()
         await self.session.refresh(asset)
@@ -406,7 +432,12 @@ class PhysicalAssetService:
         # For MVP, return a mock result
         return [
             PropertySearchResult(
-                address=address, zillow_zpid="12345", market_value=Decimal("750000.00")
+                address=address,
+                zillow_zpid="12345",
+                city="",
+                state="",
+                zip_code="",
+                market_value=Decimal("750000.00"),
             )
         ]
 
