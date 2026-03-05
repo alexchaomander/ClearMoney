@@ -111,6 +111,10 @@ import type {
   CryptoWallet,
   CryptoWalletCreate,
   CryptoPortfolioResponse,
+  PropertySearchRequest,
+  PropertySearchResult,
+  VehicleSearchRequest,
+  VehicleSearchResult,
 } from './types';
 
 export interface StrataClientInterface {
@@ -264,6 +268,8 @@ export interface StrataClientInterface {
   getCryptoPortfolio(): Promise<CryptoPortfolioResponse>;
   // Physical Assets
   getPhysicalAssetsSummary(): Promise<PhysicalAssetsSummary>;
+  searchProperties(request: PropertySearchRequest): Promise<PropertySearchResult[]>;
+  searchVehicles(request: VehicleSearchRequest): Promise<VehicleSearchResult[]>;
   getRealEstateAssets(): Promise<RealEstateAsset[]>;
   createRealEstateAsset(data: RealEstateAssetCreate): Promise<RealEstateAsset>;
   updateRealEstateAsset(id: string, data: RealEstateAssetUpdate): Promise<RealEstateAsset>;
@@ -1246,6 +1252,20 @@ export class StrataClient implements StrataClientInterface {
 
   async getPhysicalAssetsSummary(): Promise<PhysicalAssetsSummary> {
     return this.request<PhysicalAssetsSummary>('/api/v1/physical-assets/summary');
+  }
+
+  async searchProperties(request: PropertySearchRequest): Promise<PropertySearchResult[]> {
+    return this.request<PropertySearchResult[]>('/api/v1/physical-assets/search-properties', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async searchVehicles(request: VehicleSearchRequest): Promise<VehicleSearchResult[]> {
+    return this.request<VehicleSearchResult[]>('/api/v1/physical-assets/search-vehicles', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
   }
 
   async getRealEstateAssets(): Promise<RealEstateAsset[]> {

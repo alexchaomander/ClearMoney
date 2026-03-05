@@ -21,6 +21,10 @@ from app.schemas.physical_asset import (
     PreciousMetalAssetUpdate,
     PhysicalAssetsSummary,
     ValuationRefreshResponse,
+    PropertySearchRequest,
+    PropertySearchResult,
+    VehicleSearchRequest,
+    VehicleSearchResult,
 )
 from app.services.physical_asset import PhysicalAssetService
 
@@ -35,6 +39,33 @@ async def get_physical_assets_summary(
     """Get a summary of all physical assets for the current user."""
     service = PhysicalAssetService(db)
     return await service.get_physical_assets_summary(current_user.id)
+
+
+@router.post("/search-properties", response_model=List[PropertySearchResult])
+async def search_properties(
+    request: PropertySearchRequest,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+):
+    """Search for properties by address."""
+    service = PhysicalAssetService(db)
+    return await service.search_properties(request.address, user_id=current_user.id)
+
+
+@router.post("/search-vehicles", response_model=List[VehicleSearchResult])
+async def search_vehicles(
+    request: VehicleSearchRequest,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+):
+    """Search for vehicles by VIN or specs."""
+    service = PhysicalAssetService(db)
+    return await service.search_vehicles(
+        vin=request.vin,
+        make=request.make,
+        model=request.model,
+        year=request.year
+    )
 
 
 # --- Real Estate ---

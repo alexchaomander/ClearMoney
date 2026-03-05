@@ -3,7 +3,9 @@ from decimal import Decimal
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+import re
+
+from pydantic import BaseModel, Field, model_validator, field_validator
 
 from app.models.physical_asset import (
     CollectibleType,
@@ -183,3 +185,46 @@ class ValuationRefreshResponse(BaseModel):
     new_value: Optional[Decimal] = None
     previous_value: Optional[Decimal] = None
     message: Optional[str] = None
+
+
+class PropertySearchResult(BaseModel):
+    zillow_zpid: str
+    address: str
+    city: str
+    state: str
+    zip_code: str
+    market_value: Optional[Decimal] = None
+    last_valuation_at: Optional[datetime] = None
+
+
+class PropertySearchRequest(BaseModel):
+    address: str
+
+
+class VehicleSearchResult(BaseModel):
+    vin: Optional[str] = None
+    make: str
+    model: str
+    year: int
+    market_value: Optional[Decimal] = None
+    last_valuation_at: Optional[datetime] = None
+
+
+class VehicleSearchRequest(BaseModel):
+    vin: Optional[str] = None
+    make: Optional[str] = None
+    model: Optional[str] = None
+    year: Optional[int] = None
+
+    @field_validator("vin")
+    @classmethod
+    def validate_vin(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not re.match(r'^[A-HJ-NPR-Z0-9]{17}$', v, re.IGNORECASE):
+            raise ValueError("Invalid VIN format: must be 17 alphanumeric characters (excluding I, O, Q)")
+        return v
+
+    @model_validator(mode="after")
+    def require_vin_or_specs(self) -> "VehicleSearchRequest":
+        if not self.vin and not (self.make and self.model and self.year):
+            raise ValueError("Either 'vin' or all of 'make', 'model', and 'year' must be provided")
+        return self

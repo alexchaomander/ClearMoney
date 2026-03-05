@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, Shield } from "lucide-react";
+import { X, Shield, Search, Home, Car, Loader2, MapPin, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type {
   CashAccountType,
@@ -13,7 +13,10 @@ import type {
   VehicleType,
   CollectibleType,
   MetalType,
+  PropertySearchResult,
+  VehicleSearchResult,
 } from "@clearmoney/strata-sdk";
+import { isValidVIN } from "@clearmoney/strata-sdk";
 import { 
   useCashAccountMutations, 
   useDebtAccountMutations, 
@@ -24,6 +27,8 @@ import {
   useVehicleAssetMutations,
   useCollectibleAssetMutations,
   usePreciousMetalAssetMutations,
+  useSearchProperties,
+  useSearchVehicles,
 } from "@/lib/strata/hooks";
 import { cn } from "@/lib/utils";
 
@@ -139,6 +144,84 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
   const vehicleMutations = useVehicleAssetMutations();
   const collectibleMutations = useCollectibleAssetMutations();
   const metalMutations = usePreciousMetalAssetMutations();
+
+  const searchProperties = useSearchProperties();
+  const searchVehicles = useSearchVehicles();
+
+  // Mode states
+  const [propertyMode, setPropertyMode] = useState<"search" | "manual">("search");
+  const [vehicleMode, setVehicleMode] = useState<"search" | "manual">("search");
+
+  // Search states
+  const [reSearchQuery, setReSearchQuery] = useState("");
+  const [reSearchResults, setReSearchResults] = useState<PropertySearchResult[]>([]);
+  const [selectedProperty, setSelectedProperty] = useState<PropertySearchResult | null>(null);
+
+  const [vSearchVin, setVSearchVin] = useState("");
+  const [vSearchResults, setVSearchResults] = useState<VehicleSearchResult[]>([]);
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleSearchResult | null>(null);
+
+  const [propertySearchError, setPropertySearchError] = useState<string | null>(null);
+  const [vehicleSearchError, setVehicleSearchError] = useState<string | null>(null);
+
+  const handlePropertySearch = async () => {
+    if (!reSearchQuery) return;
+    setPropertySearchError(null);
+    try {
+      const results = await searchProperties.mutateAsync({ address: reSearchQuery });
+      if (results.length === 0) {
+        setPropertySearchError("No properties found for this address");
+      }
+      setReSearchResults(results);
+    } catch (err) {
+      setPropertySearchError("Property search failed. Please try again.");
+      console.error("Search failed", err);
+    }
+  };
+
+  const handleSelectProperty = (prop: PropertySearchResult) => {
+    setSelectedProperty(prop);
+    setReAddress(prop.address);
+    setReName(prop.address.split(",")[0]);
+    setReValue(prop.market_value?.toString() ?? "");
+    setReZpid(prop.zillow_zpid);
+    setReValuationType("auto");
+    setPropertyMode("manual");
+    setPropertySearchError(null);
+  };
+
+  const handleVehicleSearch = async () => {
+    if (!vSearchVin) return;
+    setVehicleSearchError(null);
+
+    if (!isValidVIN(vSearchVin)) {
+      setVehicleSearchError("Invalid 17-character VIN. I, O, and Q are not allowed.");
+      return;
+    }
+
+    try {
+      const results = await searchVehicles.mutateAsync({ vin: vSearchVin });
+      if (results.length === 0) {
+        setVehicleSearchError("Vehicle not found. Check the VIN and try again.");
+      }
+      setVSearchResults(results);
+    } catch (err) {
+      setVehicleSearchError("Vehicle search failed. Please try again.");
+      console.error("Vehicle search failed", err);
+    }
+  };
+
+  const handleSelectVehicle = (v: VehicleSearchResult) => {
+    setSelectedVehicle(v);
+    setVMake(v.make);
+    setVModel(v.model);
+    setVYear(v.year);
+    setVName(`${v.year} ${v.make} ${v.model}`);
+    setVVin(v.vin ?? "");
+    setVValue(v.market_value?.toString() ?? "");
+    setVValuationType("auto");
+    setVehicleMode("manual");
+  };
 
   // Cash form
   const [cashName, setCashName] = useState("");
@@ -635,112 +718,319 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                     )}
 
                     {tab === "real_estate" && (
-                      <>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="col-span-2">
-                            <label className={labelClass}>Property Name</label>
-                            <input className={inputClass} value={reName} onChange={(e) => setReName(e.target.value)} placeholder="e.g. Primary Residence" required />
-                          </div>
-                          <div className="col-span-2">
-                            <label className={labelClass}>Address</label>
-                            <input className={inputClass} value={reAddress} onChange={(e) => setReAddress(e.target.value)} placeholder="Full street address, city, state, zip" required />
-                          </div>
-                          <div>
-                            <label className={labelClass}>Property Type</label>
-                            <select className={selectClass} value={reType} onChange={(e) => setReType(e.target.value as RealEstateType)}>
-                              {REAL_ESTATE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <label className={labelClass}>Market Value</label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
-                              <input className={cn(inputClass, "pl-7")} type="number" step="1" value={reValue} onChange={(e) => setReValue(e.target.value)} placeholder="0" />
-                            </div>
-                          </div>
+                      <div className="space-y-5">
+                        <div className="flex p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                          <button
+                            type="button"
+                            onClick={() => setPropertyMode("search")}
+                            className={cn(
+                              "flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
+                              propertyMode === "search" ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-sm" : "text-slate-500"
+                            )}
+                          >
+                            <Zap className="w-3 h-3" />
+                            Auto-Link
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPropertyMode("manual")}
+                            className={cn(
+                              "flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
+                              propertyMode === "manual" ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-sm" : "text-slate-500"
+                            )}
+                          >
+                            <MapPin className="w-3 h-3" />
+                            Manual
+                          </button>
                         </div>
 
-                        <div className="pt-2 space-y-4">
-                          <label className="flex items-center gap-3 cursor-pointer group">
-                            <div className="relative flex items-center justify-center">
-                              <input type="checkbox" checked={reValuationType === 'auto'} onChange={(e) => setReValuationType(e.target.checked ? 'auto' : 'manual')} className="peer appearance-none w-5 h-5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-brand-500 checked:border-brand-500 transition-all cursor-pointer" />
-                              <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </svg>
+                        {propertyMode === "search" ? (
+                          <div className="space-y-4">
+                            <div>
+                              <label className={labelClass}>Search Property Address</label>
+                              <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                  <input 
+                                    className={cn(inputClass, "pl-10")} 
+                                    value={reSearchQuery} 
+                                    onChange={(e) => {
+                                      setReSearchQuery(e.target.value);
+                                      if (reSearchResults.length > 0) setReSearchResults([]);
+                                      if (propertySearchError) setPropertySearchError(null);
+                                    }}
+                                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handlePropertySearch())}
+                                    placeholder="Enter full address..." 
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={handlePropertySearch}
+                                  disabled={searchProperties.isPending}
+                                  className="px-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs hover:bg-emerald-600 dark:hover:bg-emerald-400 transition-colors disabled:opacity-50"
+                                >
+                                  {searchProperties.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Search"}
+                                </button>
+                              </div>
                             </div>
-                            <span className="text-sm text-slate-600 dark:text-slate-300 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Auto-sync valuation (Zillow)</span>
-                          </label>
 
-                          <div className="p-4 rounded-xl bg-brand-500/5 border border-brand-500/10">
-                            <p className="text-[10px] text-brand-600 dark:text-brand-400 leading-relaxed">
-                              <span className="font-black uppercase mr-1">Zillow Integration:</span>
-                              We'll use your address to fetch live Zestimates. If the match isn't perfect, you can provide a Zillow Property ID (ZPID).
-                            </p>
+                            {propertySearchError && (
+                              <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center gap-2">
+                                <Shield className="w-3 h-3 text-rose-500" />
+                                <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-tight">{propertySearchError}</p>
+                              </div>
+                            )}
+
+                            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+                              {reSearchResults.map((res) => (
+                                <button
+                                  key={res.zillow_zpid}
+                                  type="button"
+                                  onClick={() => handleSelectProperty(res)}
+                                  className="w-full flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 hover:bg-emerald-500/[0.02] transition-all text-left group"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 group-hover:text-emerald-500">
+                                      <Home className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                      <p className="text-xs font-bold text-slate-900 dark:text-white">{res.address}</p>
+                                      <p className="text-[10px] text-slate-500">{res.city}, {res.state}</p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-xs font-black text-slate-900 dark:text-white">
+                                      {res.market_value != null ? `$${(Number(res.market_value) / 1000).toFixed(0)}k` : "N/A"}
+                                    </p>
+                                    <p className="text-[8px] font-black uppercase tracking-widest text-emerald-500">Zestimate</p>
+                                  </div>
+                                </button>
+                              ))}
+                              {reSearchQuery && reSearchResults.length === 0 && !searchProperties.isPending && (
+                                <p className="text-[10px] text-center py-4 text-slate-400 font-bold uppercase tracking-widest">Enter an address to auto-link</p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </>
+                        ) : (
+                          <>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="col-span-2">
+                                <label className={labelClass}>Property Name</label>
+                                <input className={inputClass} value={reName} onChange={(e) => setReName(e.target.value)} placeholder="e.g. Primary Residence" required />
+                              </div>
+                              <div className="col-span-2">
+                                <label className={labelClass}>Address</label>
+                                <input className={inputClass} value={reAddress} onChange={(e) => setReAddress(e.target.value)} placeholder="Full street address, city, state, zip" required />
+                              </div>
+                              <div>
+                                <label className={labelClass}>Property Type</label>
+                                <select className={selectClass} value={reType} onChange={(e) => setReType(e.target.value as RealEstateType)}>
+                                  {REAL_ESTATE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                </select>
+                              </div>
+                              <div>
+                                <label className={labelClass}>Market Value</label>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                                  <input className={cn(inputClass, "pl-7")} type="number" step="1" value={reValue} onChange={(e) => setReValue(e.target.value)} placeholder="0" />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="pt-2 space-y-4">
+                              <label className="flex items-center gap-3 cursor-pointer group">
+                                <div className="relative flex items-center justify-center">
+                                  <input type="checkbox" checked={reValuationType === 'auto'} onChange={(e) => setReValuationType(e.target.checked ? 'auto' : 'manual')} className="peer appearance-none w-5 h-5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-emerald-500 checked:border-emerald-500 transition-all cursor-pointer" />
+                                  <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                                <span className="text-sm text-slate-600 dark:text-slate-300 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Auto-sync valuation (Zillow)</span>
+                              </label>
+
+                              <div className="flex items-center gap-4">
+                                <div className="flex-1">
+                                  <label className={labelClass}>Zillow Property ID (ZPID)</label>
+                                  <input className={inputClass} value={reZpid} onChange={(e) => setReZpid(e.target.value)} placeholder="Optional ZPID" />
+                                </div>
+                              </div>
+
+                              <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 leading-relaxed">
+                                  <span className="font-black uppercase mr-1">Zillow Integration:</span>
+                                  We'll use your address to fetch live Zestimates. If the match isn't perfect, you can provide a Zillow Property ID (ZPID).
+                                </p>
+                              </div>
+                            </div>
+                            <button type="button" onClick={() => setPropertyMode("search")} className="w-full py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-emerald-500 transition-colors">← Back to Address Search</button>
+                          </>
+                        )}
+                      </div>
                     )}
 
                     {tab === "vehicle" && (
-                      <>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="col-span-2">
-                            <label className={labelClass}>Vehicle Name</label>
-                            <input className={inputClass} value={vName} onChange={(e) => setVName(e.target.value)} placeholder="e.g. Daily Driver" required />
-                          </div>
-                          <div>
-                            <label className={labelClass}>Make</label>
-                            <input className={inputClass} value={vMake} onChange={(e) => setVMake(e.target.value)} placeholder="e.g. Tesla" required />
-                          </div>
-                          <div>
-                            <label className={labelClass}>Model</label>
-                            <input className={inputClass} value={vModel} onChange={(e) => setVModel(e.target.value)} placeholder="e.g. Model 3" required />
-                          </div>
-                          <div>
-                            <label className={labelClass}>Year</label>
-                            <input className={inputClass} type="number" value={vYear} onChange={(e) => setVYear(parseInt(e.target.value))} required />
-                          </div>
-                          <div>
-                            <label className={labelClass}>Vehicle Type</label>
-                            <select className={selectClass} value={vType} onChange={(e) => setVType(e.target.value as VehicleType)}>
-                              {VEHICLE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-                            </select>
-                          </div>
+                      <div className="space-y-5">
+                        <div className="flex p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                          <button
+                            type="button"
+                            onClick={() => setVehicleMode("search")}
+                            className={cn(
+                              "flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
+                              vehicleMode === "search" ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-sm" : "text-slate-500"
+                            )}
+                          >
+                            <Zap className="w-3 h-3" />
+                            Auto-Link
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setVehicleMode("manual")}
+                            className={cn(
+                              "flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
+                              vehicleMode === "manual" ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-sm" : "text-slate-500"
+                            )}
+                          >
+                            <MapPin className="w-3 h-3" />
+                            Manual
+                          </button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className={labelClass}>Market Value</label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
-                              <input className={cn(inputClass, "pl-7")} type="number" step="1" value={vValue} onChange={(e) => setVValue(e.target.value)} placeholder="0" />
+                        {vehicleMode === "search" ? (
+                          <div className="space-y-4">
+                            <div>
+                              <label className={labelClass}>Vehicle VIN</label>
+                              <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                  <input 
+                                    className={cn(inputClass, "pl-10 font-mono")} 
+                                    value={vSearchVin} 
+                                    onChange={(e) => {
+                                      setVSearchVin(e.target.value.toUpperCase());
+                                      if (vSearchResults.length > 0) setVSearchResults([]);
+                                      if (vehicleSearchError) setVehicleSearchError(null);
+                                    }}
+                                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleVehicleSearch())}
+                                    placeholder="Enter 17-digit VIN..." 
+                                    maxLength={17}
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={handleVehicleSearch}
+                                  disabled={searchVehicles.isPending}
+                                  className="px-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs hover:bg-emerald-600 dark:hover:bg-emerald-400 transition-colors disabled:opacity-50"
+                                >
+                                  {searchVehicles.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Identify"}
+                                </button>
+                              </div>
+                            </div>
+
+                            {vehicleSearchError && (
+                              <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center gap-2">
+                                <Shield className="w-3 h-3 text-rose-500" />
+                                <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-tight">{vehicleSearchError}</p>
+                              </div>
+                            )}
+
+                            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+                              {vSearchResults.map((res, i) => (
+                                <button
+                                  key={res.vin || i}
+                                  type="button"
+                                  onClick={() => handleSelectVehicle(res)}
+                                  className="w-full flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 hover:bg-emerald-500/[0.02] transition-all text-left group"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 group-hover:text-emerald-500">
+                                      <Car className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                      <p className="text-xs font-bold text-slate-900 dark:text-white">{res.year} {res.make} {res.model}</p>
+                                      <p className="text-[10px] text-slate-500 uppercase tracking-widest">{res.vin}</p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-xs font-black text-slate-900 dark:text-white">
+                                      {res.market_value != null ? `$${(Number(res.market_value) / 1000).toFixed(1)}k` : "N/A"}
+                                    </p>
+                                    <p className="text-[8px] font-black uppercase tracking-widest text-emerald-500">KBB Value</p>
+                                  </div>
+                                </button>
+                              ))}
+                              {vSearchVin && vSearchResults.length === 0 && !searchVehicles.isPending && (
+                                <p className="text-[10px] text-center py-4 text-slate-400 font-bold uppercase tracking-widest">Enter VIN to identify specs & value</p>
+                              )}
                             </div>
                           </div>
-                          <div>
-                            <label className={labelClass}>Mileage</label>
-                            <input className={inputClass} type="number" value={vMileage} onChange={(e) => setVMileage(e.target.value)} placeholder="Optional" />
-                          </div>
-                        </div>
-
-                        <div className="pt-2 space-y-4">
-                          <label className="flex items-center gap-3 cursor-pointer group">
-                            <div className="relative flex items-center justify-center">
-                              <input type="checkbox" checked={vValuationType === 'auto'} onChange={(e) => setVValuationType(e.target.checked ? 'auto' : 'manual')} className="peer appearance-none w-5 h-5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-blue-500 checked:border-blue-500 transition-all cursor-pointer" />
-                              <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </svg>
+                        ) : (
+                          <>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="col-span-2">
+                                <label className={labelClass}>Vehicle Name</label>
+                                <input className={inputClass} value={vName} onChange={(e) => setVName(e.target.value)} placeholder="e.g. Daily Driver" required />
+                              </div>
+                              <div>
+                                <label className={labelClass}>Make</label>
+                                <input className={inputClass} value={vMake} onChange={(e) => setVMake(e.target.value)} placeholder="e.g. Tesla" required />
+                              </div>
+                              <div>
+                                <label className={labelClass}>Model</label>
+                                <input className={inputClass} value={vModel} onChange={(e) => setVModel(e.target.value)} placeholder="e.g. Model 3" required />
+                              </div>
+                              <div>
+                                <label className={labelClass}>Year</label>
+                                <input className={inputClass} type="number" value={vYear} onChange={(e) => setVYear(parseInt(e.target.value))} required />
+                              </div>
+                              <div>
+                                <label className={labelClass}>Vehicle Type</label>
+                                <select className={selectClass} value={vType} onChange={(e) => setVType(e.target.value as VehicleType)}>
+                                  {VEHICLE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                </select>
+                              </div>
                             </div>
-                            <span className="text-sm text-slate-600 dark:text-slate-300 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Auto-sync valuation (KBB)</span>
-                          </label>
 
-                          <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
-                            <p className="text-[10px] text-blue-600 dark:text-blue-400 leading-relaxed">
-                              <span className="font-black uppercase mr-1">KBB Integration:</span>
-                              Values are estimated based on make, model, year, and mileage. For precision, enter your VIN in the settings after adding.
-                            </p>
-                          </div>
-                        </div>
-                      </>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className={labelClass}>{vValuationType === "auto" ? "Estimated Value" : "Manual Value"}</label>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                                  <input className={cn(inputClass, "pl-7")} type="number" step="1" value={vValue} onChange={(e) => setVValue(e.target.value)} placeholder="0" />
+                                </div>
+                              </div>
+                              <div>
+                                <label className={labelClass}>Mileage</label>
+                                <input className={inputClass} type="number" value={vMileage} onChange={(e) => setVMileage(e.target.value)} placeholder="Optional" />
+                              </div>
+                            </div>
+
+                            <div className="pt-2 space-y-4">
+                              <label className="flex items-center gap-3 cursor-pointer group">
+                                <div className="relative flex items-center justify-center">
+                                  <input type="checkbox" checked={vValuationType === 'auto'} onChange={(e) => setVValuationType(e.target.checked ? 'auto' : 'manual')} className="peer appearance-none w-5 h-5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-emerald-500 checked:border-emerald-500 transition-all cursor-pointer" />
+                                  <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                                <span className="text-sm text-slate-600 dark:text-slate-300 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Auto-sync valuation (KBB)</span>
+                              </label>
+
+                              <div>
+                                <label className={labelClass}>VIN</label>
+                                <input className={cn(inputClass, "font-mono")} value={vVin} onChange={(e) => setVVin(e.target.value.toUpperCase())} placeholder="17-digit VIN" />
+                              </div>
+
+                              <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 leading-relaxed">
+                                  <span className="font-black uppercase mr-1">KBB Integration:</span>
+                                  We use your VIN to fetch specific build specs and live market values. If you don't have a VIN, you can enter specs manually.
+                                </p>
+                              </div>
+                            </div>
+                            <button type="button" onClick={() => setVehicleMode("search")} className="w-full py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-emerald-500 transition-colors">← Back to VIN Search</button>
+                          </>
+                        )}
+                      </div>
                     )}
 
                     {tab === "collectible" && (
