@@ -29,6 +29,10 @@ import type {
   CollectibleAssetUpdate,
   PreciousMetalAssetCreate,
   PreciousMetalAssetUpdate,
+  PropertySearchRequest,
+  PropertySearchResult,
+  VehicleSearchRequest,
+  VehicleSearchResult,
 } from "@clearmoney/strata-sdk";
 
 export const queryKeys = {
@@ -233,6 +237,20 @@ export function useCryptoWalletMutations() {
 }
 
 // === Physical Asset Hooks ===
+
+export function useSearchProperties() {
+  const client = useStrataClient();
+  return useMutation({
+    mutationFn: (request: PropertySearchRequest) => client.searchProperties(request),
+  });
+}
+
+export function useSearchVehicles() {
+  const client = useStrataClient();
+  return useMutation({
+    mutationFn: (request: VehicleSearchRequest) => client.searchVehicles(request),
+  });
+}
 
 export function usePhysicalAssetsSummary(options?: { enabled?: boolean }) {
   const client = useStrataClient();

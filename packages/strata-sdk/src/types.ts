@@ -538,6 +538,45 @@ export interface ValuationRefreshResponse {
   message?: string | null;
 }
 
+export interface PropertySearchResult {
+  zillow_zpid: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  market_value: number | null;
+  last_valuation_at: string | null;
+}
+
+export interface PropertySearchRequest {
+  address: string;
+}
+
+export interface VehicleSearchResult {
+  vin: string | null;
+  make: string;
+  model: string;
+  year: number;
+  market_value: number | null;
+  last_valuation_at: string | null;
+}
+
+export interface VehicleSearchRequest {
+  vin?: string | null;
+  make?: string | null;
+  model?: string | null;
+  year?: number | null;
+}
+
+/**
+ * Validates a 17-character Vehicle Identification Number (VIN).
+ * Excludes I, O, and Q which are never used in VINs.
+ */
+export function isValidVIN(vin: string): boolean {
+  const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/i;
+  return vinRegex.test(vin);
+}
+
 // Cash/Debt CRUD
 export interface CashAccountCreate {
   name: string;
