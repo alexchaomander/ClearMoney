@@ -17,7 +17,8 @@ import {
   Navigation,
   Watch,
   Gem,
-  Coins
+  Coins,
+  Briefcase
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { 
@@ -25,7 +26,8 @@ import type {
   RealEstateAsset, 
   VehicleAsset,
   CollectibleAsset,
-  PreciousMetalAsset
+  PreciousMetalAsset,
+  AlternativeAsset
 } from "@clearmoney/strata-sdk";
 
 interface PhysicalAssetsCardProps {
@@ -38,6 +40,7 @@ interface PhysicalAssetsCardProps {
   onDeleteVehicle: (id: string) => void;
   onDeleteCollectible: (id: string) => void;
   onDeleteMetal: (id: string) => void;
+  onDeleteAlternative: (id: string) => void;
   onAddAsset: () => void;
 }
 
@@ -51,6 +54,7 @@ export function PhysicalAssetsCard({
   onDeleteVehicle,
   onDeleteCollectible,
   onDeleteMetal,
+  onDeleteAlternative,
   onAddAsset
 }: PhysicalAssetsCardProps) {
   const formatCurrency = (val: number) =>
@@ -64,13 +68,15 @@ export function PhysicalAssetsCard({
     summary.real_estate.length > 0 || 
     summary.vehicles.length > 0 || 
     summary.collectibles.length > 0 || 
-    summary.precious_metals.length > 0;
+    summary.precious_metals.length > 0 ||
+    (summary.alternative_assets?.length ?? 0) > 0;
 
   const totalAssetCount = 
     summary.real_estate.length + 
     summary.vehicles.length + 
     summary.collectibles.length + 
-    summary.precious_metals.length;
+    summary.precious_metals.length +
+    (summary.alternative_assets?.length ?? 0);
 
   return (
     <div className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group/card">
@@ -143,6 +149,31 @@ export function PhysicalAssetsCard({
                     valuationType={re.valuation_type}
                     onRefresh={() => onRefreshRealEstate(re.id)}
                     onDelete={() => onDeleteRealEstate(re.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Alternative Assets Section */}
+          {summary.alternative_assets && summary.alternative_assets.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <Briefcase className="w-4 h-4 text-emerald-500" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Alternative Investments</span>
+              </div>
+              <div className="grid gap-4">
+                {summary.alternative_assets.map((a) => (
+                  <AssetItem 
+                    key={a.id}
+                    icon={<Briefcase className="w-5 h-5" />}
+                    name={a.name}
+                    subtitle={a.asset_type.replace('_', ' ')}
+                    value={a.market_value}
+                    type="Alternative"
+                    valuationType="manual"
+                    onRefresh={() => {}}
+                    onDelete={() => onDeleteAlternative(a.id)}
                   />
                 ))}
               </div>

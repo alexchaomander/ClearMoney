@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useStrataClient } from "./client";
+import { useStrataClient as useStrataClientContext } from "./client";
 import type {
   BankTransactionQuery,
   CashAccountCreate,
@@ -29,6 +29,8 @@ import type {
   CollectibleAssetUpdate,
   PreciousMetalAssetCreate,
   PreciousMetalAssetUpdate,
+  AlternativeAssetCreate,
+  AlternativeAssetUpdate,
   PropertySearchRequest,
   PropertySearchResult,
   VehicleSearchRequest,
@@ -95,6 +97,8 @@ export const queryKeys = {
   vehicleAssets: ["physicalAssets", "vehicles"] as const,
   collectibleAssets: ["physicalAssets", "collectibles"] as const,
   preciousMetalAssets: ["physicalAssets", "preciousMetals"] as const,
+  alternativeAssets: ["physicalAssets", "alternative"] as const,
+  assetValuationHistory: (type: string, id: string) => ["physicalAssets", "history", type, id] as const,
   actionIntents: (status?: ActionIntentStatus) => ["actionIntents", status ?? "all"] as const,
   actionIntent: (id: string) => ["actionIntents", id] as const,
   // Crypto
@@ -102,8 +106,13 @@ export const queryKeys = {
   cryptoPortfolio: ["crypto", "portfolio"] as const,
 };
 
+function useClient() {
+  const client = useStrataClientContext();
+  return client!;
+}
+
 export function usePortfolioSummary(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.portfolioSummary,
     queryFn: () => client.getPortfolioSummary(),
@@ -111,149 +120,22 @@ export function usePortfolioSummary(options?: { enabled?: boolean }) {
   });
 }
 
-export function useInvestmentAccounts(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
-  return useQuery({
-    queryKey: queryKeys.investmentAccounts,
-    queryFn: () => client.getInvestmentAccounts(),
-    enabled: options?.enabled ?? true,
-  });
-}
-
-export function useVulnerabilityReport(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
-  return useQuery({
-    queryKey: queryKeys.vulnerabilityReport,
-    queryFn: () => client.getVulnerabilityReport(),
-    enabled: options?.enabled ?? true,
-  });
-}
-
-export function useEquityPortfolio(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
-  return useQuery({
-    queryKey: queryKeys.equityPortfolio,
-    queryFn: () => client.getEquityPortfolio(),
-    enabled: options?.enabled ?? true,
-  });
-}
-
-export function useEquityProjections(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
-  return useQuery({
-    queryKey: queryKeys.equityProjections,
-    queryFn: () => client.getEquityProjections(),
-    enabled: options?.enabled ?? true,
-  });
-}
-
-export function useEquityGrantMutations() {
-  const client = useStrataClient();
-  const queryClient = useQueryClient();
-
-  const add = useMutation({
-    mutationFn: (data: any) => client.createEquityGrant(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.equityPortfolio });
-      queryClient.invalidateQueries({ queryKey: queryKeys.equityProjections });
-      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
-    },
-  });
-
-  const update = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      client.updateEquityGrant(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.equityPortfolio });
-      queryClient.invalidateQueries({ queryKey: queryKeys.equityProjections });
-      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
-    },
-  });
-
-  const remove = useMutation({
-    mutationFn: (id: string) => client.deleteEquityGrant(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.equityPortfolio });
-      queryClient.invalidateQueries({ queryKey: queryKeys.equityProjections });
-      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
-    },
-  });
-
-  return { add, update, remove };
-}
-
-// === Crypto Hooks ===
-
-export function useCryptoWallets(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
-  return useQuery({
-    queryKey: queryKeys.cryptoWallets,
-    queryFn: () => client.listCryptoWallets(),
-    enabled: options?.enabled ?? true,
-  });
-}
-
-export function useCryptoPortfolio(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
-  return useQuery({
-    queryKey: queryKeys.cryptoPortfolio,
-    queryFn: () => client.getCryptoPortfolio(),
-    enabled: options?.enabled ?? true,
-  });
-}
-
-export function useCryptoWalletMutations() {
-  const client = useStrataClient();
-  const queryClient = useQueryClient();
-
-  const add = useMutation({
-    mutationFn: (data: CryptoWalletCreate) => client.addCryptoWallet(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoWallets });
-      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoPortfolio });
-      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
-    },
-  });
-
-  const remove = useMutation({
-    mutationFn: (id: string) => client.deleteCryptoWallet(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoWallets });
-      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoPortfolio });
-      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
-    },
-  });
-
-  const removeAll = useMutation({
-    mutationFn: () => client.deleteAllCryptoWallets(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoWallets });
-      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoPortfolio });
-      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
-    },
-  });
-
-  return { add, remove, removeAll };
-}
-
-// === Physical Asset Hooks ===
-
 export function useSearchProperties() {
-  const client = useStrataClient();
+  const client = useClient();
   return useMutation({
     mutationFn: (request: PropertySearchRequest) => client.searchProperties(request),
   });
 }
 
 export function useSearchVehicles() {
-  const client = useStrataClient();
+  const client = useClient();
   return useMutation({
     mutationFn: (request: VehicleSearchRequest) => client.searchVehicles(request),
   });
 }
 
 export function usePhysicalAssetsSummary(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.physicalAssetsSummary,
     queryFn: () => client.getPhysicalAssetsSummary(),
@@ -262,7 +144,7 @@ export function usePhysicalAssetsSummary(options?: { enabled?: boolean }) {
 }
 
 export function useRealEstateAssets(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.realEstateAssets,
     queryFn: () => client.getRealEstateAssets(),
@@ -271,7 +153,7 @@ export function useRealEstateAssets(options?: { enabled?: boolean }) {
 }
 
 export function useRealEstateAssetMutations() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   const add = useMutation({
@@ -315,7 +197,7 @@ export function useRealEstateAssetMutations() {
 }
 
 export function useVehicleAssets(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.vehicleAssets,
     queryFn: () => client.getVehicleAssets(),
@@ -324,7 +206,7 @@ export function useVehicleAssets(options?: { enabled?: boolean }) {
 }
 
 export function useVehicleAssetMutations() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   const add = useMutation({
@@ -368,7 +250,7 @@ export function useVehicleAssetMutations() {
 }
 
 export function useCollectibleAssets(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.collectibleAssets,
     queryFn: () => client.getCollectibleAssets(),
@@ -377,7 +259,7 @@ export function useCollectibleAssets(options?: { enabled?: boolean }) {
 }
 
 export function useCollectibleAssetMutations() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   const add = useMutation({
@@ -421,7 +303,7 @@ export function useCollectibleAssetMutations() {
 }
 
 export function usePreciousMetalAssets(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.preciousMetalAssets,
     queryFn: () => client.getPreciousMetalAssets(),
@@ -430,7 +312,7 @@ export function usePreciousMetalAssets(options?: { enabled?: boolean }) {
 }
 
 export function usePreciousMetalAssetMutations() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   const add = useMutation({
@@ -473,8 +355,61 @@ export function usePreciousMetalAssetMutations() {
   return { add, update, remove, refresh };
 }
 
+export function useAlternativeAssets(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.alternativeAssets,
+    queryFn: () => client.getAlternativeAssets(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useAlternativeAssetMutations() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+
+  const add = useMutation({
+    mutationFn: (data: AlternativeAssetCreate) => client.createAlternativeAsset(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.alternativeAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const update = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: AlternativeAssetUpdate }) =>
+      client.updateAlternativeAsset(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.alternativeAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => client.deleteAlternativeAsset(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.alternativeAssets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.physicalAssetsSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  return { add, update, remove };
+}
+
+export function useAssetValuationHistory(type: string, id: string, options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.assetValuationHistory(type, id),
+    queryFn: () => client.getAssetValuationHistory(type, id),
+    enabled: (options?.enabled ?? true) && !!type && !!id,
+  });
+}
+
 export function useRunwayMetrics(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.runwayMetrics,
     queryFn: () => client.getRunwayMetrics(),
@@ -483,7 +418,7 @@ export function useRunwayMetrics(options?: { enabled?: boolean }) {
 }
 
 export function useTaxShieldMetrics(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.taxShieldMetrics,
     queryFn: () => client.getTaxShieldMetrics(),
@@ -491,11 +426,20 @@ export function useTaxShieldMetrics(options?: { enabled?: boolean }) {
   });
 }
 
+export function useVulnerabilityReport(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.vulnerabilityReport,
+    queryFn: () => client.getVulnerabilityReport(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
 export function useRetirementMonteCarlo(
-  params: Parameters<ReturnType<typeof useStrataClient>["runRetirementMonteCarlo"]>[0],
+  params: Parameters<ReturnType<typeof useClient>["runRetirementMonteCarlo"]>[0],
   options?: { enabled?: boolean }
 ) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.monteCarloRetirement(params),
     queryFn: () => client.runRetirementMonteCarlo(params),
@@ -504,7 +448,7 @@ export function useRetirementMonteCarlo(
 }
 
 export function useInvestmentAccount(id: string, options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.investmentAccount(id),
     queryFn: () => client.getInvestmentAccount(id),
@@ -513,7 +457,7 @@ export function useInvestmentAccount(id: string, options?: { enabled?: boolean }
 }
 
 export function useHoldings(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.holdings,
     queryFn: () => client.getHoldings(),
@@ -525,7 +469,7 @@ export function useTransactions(
   params?: { accountId?: string; startDate?: string; endDate?: string },
   options?: { enabled?: boolean }
 ) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.transactions(params),
     queryFn: () => client.getTransactions(params),
@@ -534,7 +478,7 @@ export function useTransactions(
 }
 
 export function useConnections(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.connections,
     queryFn: () => client.getConnections(),
@@ -543,7 +487,16 @@ export function useConnections(options?: { enabled?: boolean }) {
 }
 
 export function useAccounts(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.accounts,
+    queryFn: () => client.getAccounts(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useAllAccounts(options?: { enabled?: boolean }) {
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.accounts,
     queryFn: () => client.getAccounts(),
@@ -552,7 +505,7 @@ export function useAccounts(options?: { enabled?: boolean }) {
 }
 
 export function useSearchInstitutions(query?: string, options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.searchInstitutions(query),
     queryFn: () => client.searchInstitutions(query),
@@ -561,7 +514,7 @@ export function useSearchInstitutions(query?: string, options?: { enabled?: bool
 }
 
 export function usePopularInstitutions(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.popularInstitutions,
     queryFn: () => client.getPopularInstitutions(),
@@ -572,7 +525,7 @@ export function usePopularInstitutions(options?: { enabled?: boolean }) {
 // === Shared Data ===
 
 export function usePointsPrograms() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.pointsPrograms,
     queryFn: () => client.getPointsPrograms(),
@@ -580,7 +533,7 @@ export function usePointsPrograms() {
 }
 
 export function useCreditCardData() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.creditCardData,
     queryFn: () => client.getCreditCardData(),
@@ -588,7 +541,7 @@ export function useCreditCardData() {
 }
 
 export function useLiquidAssets() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.liquidAssets,
     queryFn: () => client.getLiquidAssets(),
@@ -596,7 +549,7 @@ export function useLiquidAssets() {
 }
 
 export function useInvestmentData() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.investments,
     queryFn: () => client.getInvestments(),
@@ -604,7 +557,7 @@ export function useInvestmentData() {
 }
 
 export function useRealAssetData() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.realAssets,
     queryFn: () => client.getRealAssets(),
@@ -612,7 +565,7 @@ export function useRealAssetData() {
 }
 
 export function useLiabilityData() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.liabilities,
     queryFn: () => client.getLiabilities(),
@@ -620,7 +573,7 @@ export function useLiabilityData() {
 }
 
 export function useIncomeData() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.income,
     queryFn: () => client.getIncome(),
@@ -628,7 +581,7 @@ export function useIncomeData() {
 }
 
 export function useCreditData() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.credit,
     queryFn: () => client.getCredit(),
@@ -636,7 +589,7 @@ export function useCreditData() {
 }
 
 export function useProtectionData() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.protection,
     queryFn: () => client.getProtection(),
@@ -644,7 +597,7 @@ export function useProtectionData() {
 }
 
 export function useDataHealth() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.dataHealth,
     queryFn: () => client.getDataHealth(),
@@ -652,7 +605,7 @@ export function useDataHealth() {
 }
 
 export function useTransparencyPayload() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.transparencyPayload,
     queryFn: () => client.getTransparencyPayload(),
@@ -660,7 +613,7 @@ export function useTransparencyPayload() {
 }
 
 export function useToolPresets() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.toolPresets,
     queryFn: () => client.getToolPresets(),
@@ -690,7 +643,7 @@ function invalidateAllPortfolioData(queryClient: ReturnType<typeof useQueryClien
 }
 
 export function useCreateLinkSession() {
-  const client = useStrataClient();
+  const client = useClient();
   return useMutation({
     mutationFn: (request?: LinkSessionRequest) =>
       client.createLinkSession(request),
@@ -698,7 +651,7 @@ export function useCreateLinkSession() {
 }
 
 export function useHandleConnectionCallback() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -709,7 +662,7 @@ export function useHandleConnectionCallback() {
 }
 
 export function useSyncConnection() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -719,7 +672,7 @@ export function useSyncConnection() {
 }
 
 export function useSyncAllConnections() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -729,7 +682,7 @@ export function useSyncAllConnections() {
 }
 
 export function useDeleteConnection() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -741,7 +694,7 @@ export function useDeleteConnection() {
 // === Portfolio History ===
 
 export function usePortfolioHistory(range: PortfolioHistoryRange, options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.portfolioHistory(range),
     queryFn: () => client.getPortfolioHistory(range),
@@ -752,7 +705,7 @@ export function usePortfolioHistory(range: PortfolioHistoryRange, options?: { en
 // === Cash/Debt Account Mutations ===
 
 export function useCashAccountMutations() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
   const onSuccess = () => invalidateAllPortfolioData(queryClient);
 
@@ -776,7 +729,7 @@ export function useCashAccountMutations() {
 }
 
 export function useDebtAccountMutations() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
   const onSuccess = () => invalidateAllPortfolioData(queryClient);
 
@@ -802,7 +755,7 @@ export function useDebtAccountMutations() {
 // === Consent ===
 
 export function useConsents() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.consents,
     queryFn: () => client.listConsents(),
@@ -821,7 +774,7 @@ export function useConsentStatus(scopes: string[]) {
 }
 
 export function useCreateConsent() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: Parameters<typeof client.createConsent>[0]) =>
@@ -831,7 +784,7 @@ export function useCreateConsent() {
 }
 
 export function useRevokeConsent() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (consentId: string) => client.revokeConsent(consentId),
@@ -845,7 +798,7 @@ export function useDecisionTraces(
   filters?: { sessionId?: string; recommendationId?: string },
   options?: { enabled?: boolean }
 ) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.decisionTraces(filters),
     queryFn: () => client.getDecisionTraces(filters),
@@ -854,7 +807,7 @@ export function useDecisionTraces(
 }
 
 export function useCreateInvestmentAccount() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -865,7 +818,7 @@ export function useCreateInvestmentAccount() {
 }
 
 export function useInvestmentAccountMutations() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
   const onSuccess = () => invalidateAllPortfolioData(queryClient);
 
@@ -891,7 +844,7 @@ export function useInvestmentAccountMutations() {
 // === Financial Memory ===
 
 export function useFinancialMemory(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.financialMemory,
     queryFn: () => client.getFinancialMemory(),
@@ -900,7 +853,7 @@ export function useFinancialMemory(options?: { enabled?: boolean }) {
 }
 
 export function useUpdateMemory() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -914,7 +867,7 @@ export function useUpdateMemory() {
 }
 
 export function useDeriveMemory() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -927,7 +880,7 @@ export function useDeriveMemory() {
 }
 
 export function useMemoryEvents(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.memoryEvents,
     queryFn: () => client.getMemoryEvents(),
@@ -938,7 +891,7 @@ export function useMemoryEvents(options?: { enabled?: boolean }) {
 // === Notifications ===
 
 export function useNotifications(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.notifications,
     queryFn: () => client.listNotifications(),
@@ -948,7 +901,7 @@ export function useNotifications(options?: { enabled?: boolean }) {
 }
 
 export function useUpdateNotification() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -961,7 +914,7 @@ export function useUpdateNotification() {
 }
 
 export function useMarkAllNotificationsRead() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -973,7 +926,7 @@ export function useMarkAllNotificationsRead() {
 }
 
 export function useFinancialContext(format: 'json' | 'markdown' = 'json') {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.financialContext(format),
     queryFn: () => client.getFinancialContext(format),
@@ -983,7 +936,7 @@ export function useFinancialContext(format: 'json' | 'markdown' = 'json') {
 // === Skills ===
 
 export function useSkills() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.skills,
     queryFn: () => client.getSkills(),
@@ -991,7 +944,7 @@ export function useSkills() {
 }
 
 export function useAvailableSkills() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.availableSkills,
     queryFn: () => client.getAvailableSkills(),
@@ -1001,7 +954,7 @@ export function useAvailableSkills() {
 // === Action Policy ===
 
 export function useActionPolicy(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.actionPolicy,
     queryFn: () => client.getActionPolicy(),
@@ -1011,7 +964,7 @@ export function useActionPolicy(options?: { enabled?: boolean }) {
 }
 
 export function useUpsertActionPolicy() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -1026,7 +979,7 @@ export function useUpsertActionPolicy() {
 // === Advisor ===
 
 export function useAdvisorSessions() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.advisorSessions,
     queryFn: () => client.getAdvisorSessions(),
@@ -1034,7 +987,7 @@ export function useAdvisorSessions() {
 }
 
 export function useAdvisorSession(id: string) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.advisorSession(id),
     queryFn: () => client.getAdvisorSession(id),
@@ -1043,7 +996,7 @@ export function useAdvisorSession(id: string) {
 }
 
 export function useCreateAdvisorSession() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -1056,7 +1009,7 @@ export function useCreateAdvisorSession() {
 }
 
 export function useSendAdvisorMessage() {
-  const client = useStrataClient();
+  const client = useClient();
   return useMutation({
     mutationFn: ({ sessionId, content }: { sessionId: string; content: string }) =>
       client.sendAdvisorMessage(sessionId, content),
@@ -1064,7 +1017,7 @@ export function useSendAdvisorMessage() {
 }
 
 export function useRecommendations() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.recommendations,
     queryFn: () => client.getRecommendations(),
@@ -1072,7 +1025,7 @@ export function useRecommendations() {
 }
 
 export function useExecuteRecommendation() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -1093,7 +1046,7 @@ export function useExecuteRecommendation() {
 // === Credit Cards ===
 
 export function useCreditCards() {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.creditCards,
     queryFn: () => client.getCreditCards(),
@@ -1101,7 +1054,7 @@ export function useCreditCards() {
 }
 
 export function useCreditCard(id: string) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.creditCard(id),
     queryFn: () => client.getCreditCard(id),
@@ -1110,7 +1063,7 @@ export function useCreditCard(id: string) {
 }
 
 export function useSeedAmexPlatinum() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => client.seedAmexPlatinum(),
@@ -1137,14 +1090,14 @@ function invalidateBankingQueries(queryClient: ReturnType<typeof useQueryClient>
 }
 
 export function useCreatePlaidLinkToken() {
-  const client = useStrataClient();
+  const client = useClient();
   return useMutation({
     mutationFn: (request?: PlaidLinkRequest) => client.createPlaidLinkToken(request),
   });
 }
 
 export function useHandlePlaidCallback() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -1154,7 +1107,7 @@ export function useHandlePlaidCallback() {
 }
 
 export function useBankAccounts(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.bankAccounts,
     queryFn: () => client.getBankAccounts(),
@@ -1166,7 +1119,7 @@ export function useBankTransactions(
   params?: BankTransactionQuery,
   options?: { enabled?: boolean }
 ) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.bankTransactions(params),
     queryFn: () => client.getBankTransactions(params),
@@ -1175,7 +1128,7 @@ export function useBankTransactions(
 }
 
 export function useSpendingSummary(months?: number, options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.spendingSummary(months),
     queryFn: () => client.getSpendingSummary(months),
@@ -1184,7 +1137,7 @@ export function useSpendingSummary(months?: number, options?: { enabled?: boolea
 }
 
 export function useSubscriptions(options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.subscriptions,
     queryFn: () => client.getSubscriptions(),
@@ -1195,7 +1148,7 @@ export function useSubscriptions(options?: { enabled?: boolean }) {
 // === Action Intents ===
 
 export function useActionIntents(status?: ActionIntentStatus, options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.actionIntents(status),
     queryFn: () => client.getActionIntents(status),
@@ -1204,7 +1157,7 @@ export function useActionIntents(status?: ActionIntentStatus, options?: { enable
 }
 
 export function useActionIntent(id: string, options?: { enabled?: boolean }) {
-  const client = useStrataClient();
+  const client = useClient();
   return useQuery({
     queryKey: queryKeys.actionIntent(id),
     queryFn: () => client.getActionIntent(id),
@@ -1213,7 +1166,7 @@ export function useActionIntent(id: string, options?: { enabled?: boolean }) {
 }
 
 export function useUpdateActionIntent() {
-  const client = useStrataClient();
+  const client = useClient();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -1226,11 +1179,11 @@ export function useUpdateActionIntent() {
 }
 
 export function useDownloadIntentManifest() {
-  const client = useStrataClient();
+  const client = useClient();
   return useMutation({
     mutationFn: (id: string) => client.getIntentManifest(id),
     onSuccess: (blob, id) => {
-      const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob as Blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `strata_intent_${id}.pdf`;
@@ -1242,8 +1195,10 @@ export function useDownloadIntentManifest() {
   });
 }
 
+// === Data Portability ===
+
 export function useExportFinancialPassport() {
-  const client = useStrataClient();
+  const client = useClient();
   return useMutation({
     mutationFn: () => client.exportFinancialPassport(),
     onSuccess: (data) => {
@@ -1260,9 +1215,10 @@ export function useExportFinancialPassport() {
   });
 }
 
+// === Strata Verification Protocol (SVP) ===
+
 export function useGenerateProofOfFunds() {
-  const client = useStrataClient();
-  const queryClient = useQueryClient();
+  const client = useClient();
   return useMutation({
     mutationFn: (threshold: number) => client.generateProofOfFunds(threshold),
     onSuccess: (data: SVPAttestation) => {
@@ -1280,8 +1236,117 @@ export function useGenerateProofOfFunds() {
 }
 
 export function useValidateAttestation() {
-  const client = useStrataClient();
+  const client = useClient();
   return useMutation({
     mutationFn: (attestation: SVPAttestation) => client.validateAttestation(attestation),
   });
+}
+
+// === Equity ===
+
+export function useEquityPortfolio(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.equityPortfolio,
+    queryFn: () => client.getEquityPortfolio(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useEquityProjections(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.equityProjections,
+    queryFn: () => client.getEquityProjections(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useEquityGrants(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.equityGrants,
+    queryFn: () => client.getEquityPortfolio().then(p => p.grant_valuations),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useEquityGrantMutations() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+
+  const add = useMutation({
+    mutationFn: (data: Parameters<typeof client.createEquityGrant>[0]) => client.createEquityGrant(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.equityPortfolio });
+      queryClient.invalidateQueries({ queryKey: queryKeys.equityProjections });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const update = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof client.updateEquityGrant>[1] }) =>
+      client.updateEquityGrant(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.equityPortfolio });
+      queryClient.invalidateQueries({ queryKey: queryKeys.equityProjections });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => client.deleteEquityGrant(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.equityPortfolio });
+      queryClient.invalidateQueries({ queryKey: queryKeys.equityProjections });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  return { add, update, remove };
+}
+
+// === Crypto ===
+
+export function useCryptoWallets(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.cryptoWallets,
+    queryFn: () => client.listCryptoWallets(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useCryptoPortfolio(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.cryptoPortfolio,
+    queryFn: () => client.getCryptoPortfolio(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useCryptoWalletMutations() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+
+  const add = useMutation({
+    mutationFn: (data: CryptoWalletCreate) => client.addCryptoWallet(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoWallets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoPortfolio });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => client.deleteCryptoWallet(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoWallets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cryptoPortfolio });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portfolioSummary });
+    },
+  });
+
+  return { add, remove };
 }

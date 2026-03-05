@@ -1,8 +1,9 @@
 import logging
 from decimal import Decimal
-from typing import Optional, List
+from typing import List, Optional
 
 import httpx
+
 from app.core.config import settings
 from app.schemas.physical_asset import PropertySearchResult
 
@@ -84,7 +85,7 @@ class ZillowService:
             response = await self._client.get(search_url, params=params)
             response.raise_for_status()
             data = response.json()
-            
+
             results = []
             if data.get("success") and "bundle" in data:
                 for item in data["bundle"]:

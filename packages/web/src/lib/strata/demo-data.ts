@@ -1667,6 +1667,7 @@ export function getDemoPhysicalAssetsSummary(): PhysicalAssetsSummary {
         market_value: 2450000,
         purchase_price: 1800000,
         purchase_date: "2021-06-15T00:00:00Z",
+        estimated_annual_growth_rate: 0.04,
         zillow_zpid: "12345678",
         last_valuation_at: new Date().toISOString(),
         created_at: "2021-06-15T00:00:00Z",
@@ -1688,6 +1689,7 @@ export function getDemoPhysicalAssetsSummary(): PhysicalAssetsSummary {
         market_value: 82000,
         purchase_price: 110000,
         purchase_date: "2023-01-10T00:00:00Z",
+        estimated_annual_growth_rate: -0.15,
         last_valuation_at: new Date().toISOString(),
         created_at: "2023-01-10T00:00:00Z",
         updated_at: new Date().toISOString(),
@@ -1703,6 +1705,7 @@ export function getDemoPhysicalAssetsSummary(): PhysicalAssetsSummary {
         market_value: 18500,
         purchase_price: 10500,
         purchase_date: "2019-03-20T00:00:00Z",
+        estimated_annual_growth_rate: 0.08,
         metadata_json: { reference: "126710BLRO", nickname: "Pepsi" },
         last_valuation_at: new Date().toISOString(),
         created_at: "2019-03-20T00:00:00Z",
@@ -1723,7 +1726,24 @@ export function getDemoPhysicalAssetsSummary(): PhysicalAssetsSummary {
         updated_at: new Date().toISOString(),
       }
     ],
-    total_value: 2572000,
+    alternative_assets: [
+      {
+        id: "a-001",
+        user_id: "demo-user",
+        name: "Seed Investment - TechAI",
+        asset_type: "angel_investment",
+        description: "Early stage AI startup",
+        market_value: 150000,
+        cost_basis: 50000,
+        purchase_date: "2023-05-12T00:00:00Z",
+        estimated_annual_growth_rate: 0.25,
+        last_valuation_at: new Date().toISOString(),
+        created_at: "2023-05-12T00:00:00Z",
+        updated_at: new Date().toISOString(),
+        metadata_json: { series: "Seed", dilution_protected: true },
+      }
+    ],
+    total_value: 2722000,
   };
 }
 

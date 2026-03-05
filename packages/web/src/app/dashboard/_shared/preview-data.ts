@@ -34,6 +34,13 @@ export function getPreviewPortfolioHistory(range: PortfolioHistoryRange): Portfo
   return getDemoPortfolioHistory(range);
 }
 
+export const previewHistory = {
+  "30d": getDemoPortfolioHistory("30d"),
+  "90d": getDemoPortfolioHistory("90d"),
+  "1y": getDemoPortfolioHistory("1y"),
+  "all": getDemoPortfolioHistory("all"),
+};
+
 export function getPreviewAccounts(): AllAccountsResponse {
   return getDemoAccountsResponse();
 }
@@ -322,3 +329,17 @@ export const FALLBACK_BANK_TRANSACTIONS: PaginatedBankTransactions = {
   page_size: 50,
   total_pages: 1,
 };
+
+export function mapHoldings(holdings: HoldingDetail[]) {
+  return holdings.map((h) => ({
+    id: h.id,
+    ticker: h.security.ticker,
+    name: h.security.name,
+    security_type: h.security.security_type,
+    quantity: h.quantity,
+    market_value: h.market_value ?? 0,
+    cost_basis: h.cost_basis,
+    account_name: h.account_name,
+    account_type: h.account_type,
+  }));
+}

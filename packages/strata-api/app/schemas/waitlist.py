@@ -1,7 +1,9 @@
-from typing import Optional, Dict
-from pydantic import BaseModel, EmailStr
-from uuid import UUID
 from datetime import datetime
+from typing import Dict, Optional
+from uuid import UUID
+
+from pydantic import BaseModel, EmailStr
+
 
 class WaitlistCreate(BaseModel):
     email: EmailStr

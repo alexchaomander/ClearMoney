@@ -42,19 +42,29 @@ class DocumentExtractionService:
         provider_name = settings.extraction_provider.lower()
 
         if provider_name == "claude":
-            from app.services.providers.claude_extraction import ClaudeExtractionProvider
+            from app.services.providers.claude_extraction import (
+                ClaudeExtractionProvider,
+            )
             return ClaudeExtractionProvider()
         elif provider_name == "gemini":
-            from app.services.providers.gemini_extraction import GeminiExtractionProvider
+            from app.services.providers.gemini_extraction import (
+                GeminiExtractionProvider,
+            )
             return GeminiExtractionProvider()
         elif provider_name == "openai":
-            from app.services.providers.openai_extraction import OpenAIExtractionProvider
+            from app.services.providers.openai_extraction import (
+                OpenAIExtractionProvider,
+            )
             return OpenAIExtractionProvider()
         elif provider_name == "deepseek":
-            from app.services.providers.deepseek_extraction import DeepSeekExtractionProvider
+            from app.services.providers.deepseek_extraction import (
+                DeepSeekExtractionProvider,
+            )
             return DeepSeekExtractionProvider()
         elif provider_name == "tesseract":
-            from app.services.providers.tesseract_extraction import TesseractExtractionProvider
+            from app.services.providers.tesseract_extraction import (
+                TesseractExtractionProvider,
+            )
             return TesseractExtractionProvider()
         else:
             raise ValueError(f"Unknown extraction provider: {provider_name}")

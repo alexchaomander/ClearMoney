@@ -3,7 +3,7 @@ import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Enum, ForeignKey, String, Numeric, UniqueConstraint
+from sqlalchemy import Enum, ForeignKey, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -36,7 +36,7 @@ class CryptoWallet(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Enum(CryptoChain), default=CryptoChain.ethereum
     )
     label: Mapped[str | None] = mapped_column(String(255))
-    
+
     # Metadata for the last known balance state
     last_balance_usd: Mapped[Decimal | None] = mapped_column(
         Numeric(36, 18), default=Decimal("0.0")

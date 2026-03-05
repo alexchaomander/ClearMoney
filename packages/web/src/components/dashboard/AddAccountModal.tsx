@@ -419,7 +419,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
       await equityMutations.add.mutateAsync({
         grant_name: equityName,
         symbol: equitySymbol.toUpperCase(),
-        grant_type: equityType,
+        grant_type: equityType as any,
         quantity: parseFloat(equityQuantity),
         strike_price: equityStrike ? parseFloat(equityStrike) : null,
         grant_date: equityDate || new Date().toISOString().split('T')[0],

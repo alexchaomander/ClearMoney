@@ -10,9 +10,9 @@ from sqlalchemy.orm import selectinload
 
 from app.api.deps import require_scopes
 from app.db.session import get_async_session
+from app.models.equity_grant import EquityGrant
 from app.models.holding import Holding
 from app.models.investment_account import InvestmentAccount
-from app.models.equity_grant import EquityGrant
 from app.models.portfolio_snapshot import PortfolioSnapshot
 from app.models.user import User
 from app.schemas.portfolio import (

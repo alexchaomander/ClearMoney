@@ -30,9 +30,9 @@ from app.api.physical_assets import router as physical_assets_router
 from app.api.portability import router as portability_router
 from app.api.portfolio import router as portfolio_router
 from app.api.share_reports import router as share_reports_router
+from app.api.skills import router as skills_router
 from app.api.tax_documents import router as tax_documents_router
 from app.api.tax_plan_workspace import router as tax_plan_workspace_router
-from app.api.skills import router as skills_router
 from app.api.transactions import router as transactions_router
 from app.api.waitlist import router as waitlist_router
 from app.core.config import settings

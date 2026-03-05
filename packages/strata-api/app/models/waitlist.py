@@ -1,10 +1,11 @@
 import uuid
 from typing import Optional
 
-from sqlalchemy import String, Numeric, Enum, JSON
+from sqlalchemy import JSON, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+
 
 class WaitlistUser(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "waitlist_users"

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import get_db
 from app.models.waitlist import WaitlistUser
@@ -24,7 +24,7 @@ async def join_waitlist(
         referred_by=data.referred_by,
         metadata_json=data.metadata_json
     )
-    
+
     db.add(new_user)
     try:
         await db.commit()

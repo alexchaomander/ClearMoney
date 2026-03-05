@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     # Financial Data Providers (DIY)
     alpha_vantage_api_key: str = ""
     alchemy_api_key: str = ""
-    
+
     # Physical Asset Valuation
     zillow_api_key: str = ""
     kbb_api_key: str = ""

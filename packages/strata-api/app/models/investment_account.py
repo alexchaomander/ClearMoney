@@ -10,11 +10,11 @@ from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from app.models.connection import Connection
+    from app.models.entity import LegalEntity
     from app.models.holding import Holding
     from app.models.institution import Institution
     from app.models.transaction import Transaction
     from app.models.user import User
-    from app.models.entity import LegalEntity
 
 
 class InvestmentAccountType(str, enum.Enum):
