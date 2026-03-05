@@ -1,7 +1,6 @@
 import uuid
 from datetime import date
 from decimal import Decimal
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 

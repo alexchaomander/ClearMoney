@@ -1,6 +1,9 @@
 from datetime import datetime
+
 from fpdf import FPDF
+
 from app.models.action_intent import ActionIntent, ActionIntentType
+
 
 class Colors:
     EMERALD = (16, 185, 129)
@@ -73,19 +76,19 @@ class PDFGenerator:
         pdf.ln(4)
 
         pdf.set_font("helvetica", "", 10)
-        
+
         # Define preferred order for common keys to maintain logical grouping in the PDF
         preferred_order = [
-            "source_institution", 
-            "source_account_number", 
+            "source_institution",
+            "source_account_number",
             "source_routing_number",
-            "target_institution", 
-            "target_account_number", 
+            "target_institution",
+            "target_account_number",
             "target_routing_number",
             "amount"
         ]
         sorted_keys = sorted(
-            intent.payload.keys(), 
+            intent.payload.keys(),
             key=lambda x: (preferred_order.index(x) if x in preferred_order else 999, x)
         )
 
@@ -95,7 +98,7 @@ class PDFGenerator:
             pdf.set_font("helvetica", "B", 9)
             pdf.set_text_color(*Colors.SLATE_500)
             pdf.cell(60, 8, f"  {label}", 0, 0)
-            
+
             pdf.set_text_color(*Colors.NEUTRAL_900)
             pdf.set_font("courier", "B", 11)
             pdf.cell(0, 8, str(value), 0, 1)
@@ -114,7 +117,7 @@ class PDFGenerator:
             pdf.set_font("helvetica", "B", 9)
             pdf.set_text_color(*Colors.SLATE_500)
             pdf.cell(60, 8, f"  {label}", 0, 0)
-            
+
             pdf.set_text_color(*Colors.EMERALD_600)
             pdf.set_font("helvetica", "B", 11)
             pdf.cell(0, 8, f"+ {value}" if isinstance(value, (int, float)) and value > 0 else str(value), 0, 1)
@@ -127,12 +130,12 @@ class PDFGenerator:
             pdf.set_font("helvetica", "B", 12)
             pdf.cell(0, 12, "  Step-by-Step Execution Guide", 0, 1, fill=True)
             pdf.ln(4)
-            
+
             for step in intent.execution_manifest["steps"]:
                 order = step.get("order", "?")
                 label = step.get("label", "Instruction")
                 instr = step.get("instruction", "")
-                
+
                 pdf.set_font("helvetica", "B", 10)
                 pdf.cell(10, 7, f"{order}.", 0, 0)
                 pdf.cell(0, 7, label, 0, 1)
@@ -146,7 +149,7 @@ class PDFGenerator:
         pdf.set_y(-50)
         pdf.line(10, pdf.get_y(), 200, pdf.get_y())
         pdf.ln(5)
-        
+
         # Proof of Integrity
         if intent.decision_trace_id:
             pdf.set_font("courier", "I", 8)

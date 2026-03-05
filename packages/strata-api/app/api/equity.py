@@ -9,6 +9,8 @@ from app.db.session import get_async_session
 from app.models.equity_grant import EquityGrant
 from app.schemas.equity import (
     EquityGrant as EquityGrantSchema,
+)
+from app.schemas.equity import (
     EquityGrantCreate,
     EquityGrantUpdate,
     EquityPortfolioSummary,

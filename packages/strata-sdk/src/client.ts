@@ -52,6 +52,10 @@ import type {
   PreciousMetalAsset,
   PreciousMetalAssetCreate,
   PreciousMetalAssetUpdate,
+  AlternativeAsset,
+  AlternativeAssetCreate,
+  AlternativeAssetUpdate,
+  AssetValuation,
   ValuationRefreshResponse,
   RunwayMetrics,
   Security,
@@ -123,11 +127,11 @@ export interface StrataClientInterface {
   healthCheck(): Promise<HealthResponse>;
   getDataHealth(): Promise<DataHealthResponse>;
   createLinkSession(request?: LinkSessionRequest): Promise<LinkSessionResponse>;
-  handleConnectionCallback(request: ConnectionCallbackRequest): Promise<Connection>;
+  handleConnectionCallback(request: ConnectionCallbackRequest): Promise<{ status: string }>;
   getConnections(): Promise<Connection[]>;
-  deleteConnection(connectionId: string): Promise<void>;
-  syncConnection(connectionId: string): Promise<Connection>;
-  syncAllConnections(): Promise<Connection[]>;
+  deleteConnection(connectionId: string): Promise<{ status: string }>;
+  syncConnection(connectionId: string): Promise<{ status: string }>;
+  syncAllConnections(): Promise<{ status: string }>;
   getAccounts(): Promise<AllAccountsResponse>;
   getInvestmentAccounts(): Promise<InvestmentAccount[]>;
   getInvestmentAccount(accountId: string): Promise<InvestmentAccountWithHoldings>;
@@ -191,7 +195,7 @@ export interface StrataClientInterface {
   // Credit Cards
   getCreditCards(): Promise<CreditCard[]>;
   getCreditCard(id: string): Promise<CreditCard>;
-  seedAmexPlatinum(): Promise<CreditCard>;
+  seedAmexPlatinum(): Promise<{ status: string }>;
   // Shared data
   getPointsPrograms(): Promise<PointsProgram[]>;
   getCreditCardData(): Promise<CreditCardData[]>;
@@ -206,7 +210,7 @@ export interface StrataClientInterface {
   getTransparencyPayload(): Promise<TransparencyPayload>;
   // Banking (Plaid)
   createPlaidLinkToken(request?: PlaidLinkRequest): Promise<PlaidLinkResponse>;
-  handlePlaidCallback(request: PlaidCallbackRequest): Promise<Connection>;
+  handlePlaidCallback(request: PlaidCallbackRequest): Promise<{ status: string }>;
   getBankAccounts(): Promise<BankAccount[]>;
   getBankTransactions(params?: BankTransactionQuery): Promise<PaginatedBankTransactions>;
   getSpendingSummary(months?: number): Promise<SpendingSummary>;
@@ -290,6 +294,11 @@ export interface StrataClientInterface {
   updatePreciousMetalAsset(id: string, data: PreciousMetalAssetUpdate): Promise<PreciousMetalAsset>;
   deletePreciousMetalAsset(id: string): Promise<void>;
   refreshPreciousMetalValuation(id: string): Promise<ValuationRefreshResponse>;
+  getAlternativeAssets(): Promise<AlternativeAsset[]>;
+  createAlternativeAsset(data: AlternativeAssetCreate): Promise<AlternativeAsset>;
+  updateAlternativeAsset(id: string, data: AlternativeAssetUpdate): Promise<AlternativeAsset>;
+  deleteAlternativeAsset(id: string): Promise<void>;
+  getAssetValuationHistory(type: string, id: string): Promise<AssetValuation[]>;
   // Verification (SVP)
   generateProofOfFunds(threshold: number): Promise<SVPAttestation>;
   validateAttestation(attestation: SVPAttestation): Promise<{ 
@@ -409,8 +418,8 @@ export class StrataClient implements StrataClientInterface {
    */
   async handleConnectionCallback(
     request: ConnectionCallbackRequest
-  ): Promise<Connection> {
-    return this.request<Connection>('/api/v1/connections/callback', {
+  ): Promise<{ status: string }> {
+    return this.request<{ status: string }>('/api/v1/connections/callback', {
       method: 'POST',
       body: JSON.stringify(request),
     });
@@ -426,8 +435,8 @@ export class StrataClient implements StrataClientInterface {
   /**
    * Delete a connection and all associated accounts/holdings.
    */
-  async deleteConnection(connectionId: string): Promise<void> {
-    await this.request<{ status: string }>(
+  async deleteConnection(connectionId: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>(
       `/api/v1/connections/${connectionId}`,
       { method: 'DELETE' }
     );
@@ -436,8 +445,8 @@ export class StrataClient implements StrataClientInterface {
   /**
    * Manually trigger a sync for a connection.
    */
-  async syncConnection(connectionId: string): Promise<Connection> {
-    return this.request<Connection>(
+  async syncConnection(connectionId: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>(
       `/api/v1/connections/${connectionId}/sync`,
       { method: 'POST' }
     );
@@ -446,8 +455,8 @@ export class StrataClient implements StrataClientInterface {
   /**
    * Sync all connections for the current user.
    */
-  async syncAllConnections(): Promise<Connection[]> {
-    return this.request<Connection[]>('/api/v1/connections/sync-all', {
+  async syncAllConnections(): Promise<{ status: string }> {
+    return this.request<{ status: string }>('/api/v1/connections/sync-all', {
       method: 'POST',
     });
   }
@@ -581,7 +590,7 @@ export class StrataClient implements StrataClientInterface {
 
   async updateInvestmentAccount(id: string, data: InvestmentAccountUpdate): Promise<InvestmentAccount> {
     return this.request<InvestmentAccount>(`/api/v1/accounts/investment/${id}`, {
-      method: 'PUT',
+      method: 'PUT', // or PATCH depending on API
       body: JSON.stringify(data),
     });
   }
@@ -669,13 +678,10 @@ export class StrataClient implements StrataClientInterface {
 
   async getFinancialContext(format?: 'json' | 'markdown'): Promise<FinancialContext | string> {
     if (format === 'markdown') {
+      const headers = this.authHeaders();
       const response = await fetch(
         `${this.baseUrl}/api/v1/memory/context?format=markdown`,
-        {
-          headers: {
-            ...(this.clerkUserId ? { 'X-Clerk-User-Id': this.clerkUserId } : {}),
-          },
-        }
+        { headers }
       );
       if (!response.ok) throw new Error(`Request failed: ${response.status}`);
       return response.text();
@@ -752,10 +758,8 @@ export class StrataClient implements StrataClientInterface {
   async sendAdvisorMessage(sessionId: string, content: string): Promise<ReadableStream<Uint8Array>> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      ...this.authHeaders(),
     };
-    if (this.clerkUserId) {
-      headers['X-Clerk-User-Id'] = this.clerkUserId;
-    }
 
     const response = await fetch(`${this.baseUrl}/api/v1/advisor/sessions/${sessionId}/messages`, {
       method: 'POST',
@@ -832,8 +836,8 @@ export class StrataClient implements StrataClientInterface {
     return this.request<CreditCard>(`/api/v1/credit-cards/${id}`);
   }
 
-  async seedAmexPlatinum(): Promise<CreditCard> {
-    return this.request<CreditCard>('/api/v1/credit-cards/seed', {
+  async seedAmexPlatinum(): Promise<{ status: string }> {
+    return this.request<{ status: string }>('/api/v1/credit-cards/seed', {
       method: 'POST',
     });
   }
@@ -886,9 +890,6 @@ export class StrataClient implements StrataClientInterface {
 
   // === Banking (Plaid) ===
 
-  /**
-   * Create a Plaid Link token for initializing Plaid Link.
-   */
   async createPlaidLinkToken(request?: PlaidLinkRequest): Promise<PlaidLinkResponse> {
     return this.request<PlaidLinkResponse>('/api/v1/banking/link', {
       method: 'POST',
@@ -896,26 +897,17 @@ export class StrataClient implements StrataClientInterface {
     });
   }
 
-  /**
-   * Handle the Plaid Link callback with the public token.
-   */
-  async handlePlaidCallback(request: PlaidCallbackRequest): Promise<Connection> {
-    return this.request<Connection>('/api/v1/banking/callback', {
+  async handlePlaidCallback(request: PlaidCallbackRequest): Promise<{ status: string }> {
+    return this.request<{ status: string }>('/api/v1/banking/callback', {
       method: 'POST',
       body: JSON.stringify(request),
     });
   }
 
-  /**
-   * Get all bank accounts (both manual and Plaid-linked).
-   */
   async getBankAccounts(): Promise<BankAccount[]> {
     return this.request<BankAccount[]>('/api/v1/banking/accounts');
   }
 
-  /**
-   * Get bank transactions with optional filtering and pagination.
-   */
   async getBankTransactions(params?: BankTransactionQuery): Promise<PaginatedBankTransactions> {
     return this.request<PaginatedBankTransactions>(
       this.buildUrl('/api/v1/banking/transactions', {
@@ -929,9 +921,6 @@ export class StrataClient implements StrataClientInterface {
     );
   }
 
-  /**
-   * Get spending summary by category.
-   */
   async getSpendingSummary(months?: number): Promise<SpendingSummary> {
     return this.request<SpendingSummary>(
       this.buildUrl('/api/v1/banking/spending-summary', { months })
@@ -1386,6 +1375,34 @@ export class StrataClient implements StrataClientInterface {
     return this.request<ValuationRefreshResponse>(`/api/v1/physical-assets/precious-metals/${id}/refresh`, {
       method: 'POST',
     });
+  }
+
+  async getAlternativeAssets(): Promise<AlternativeAsset[]> {
+    return this.request<AlternativeAsset[]>('/api/v1/physical-assets/alternative');
+  }
+
+  async createAlternativeAsset(data: AlternativeAssetCreate): Promise<AlternativeAsset> {
+    return this.request<AlternativeAsset>('/api/v1/physical-assets/alternative', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateAlternativeAsset(id: string, data: AlternativeAssetUpdate): Promise<AlternativeAsset> {
+    return this.request<AlternativeAsset>(`/api/v1/physical-assets/alternative/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteAlternativeAsset(id: string): Promise<void> {
+    await this.request<void>(`/api/v1/physical-assets/alternative/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getAssetValuationHistory(type: string, id: string): Promise<AssetValuation[]> {
+    return this.request<AssetValuation[]>(`/api/v1/physical-assets/${type}/${id}/history`);
   }
 
   // === Verification (SVP) ===

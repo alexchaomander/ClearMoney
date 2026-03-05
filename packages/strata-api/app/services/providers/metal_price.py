@@ -27,7 +27,7 @@ class MetalPriceService:
             "platinum": "XPT",
             "palladium": "XPD",
         }
-        
+
         # Mock prices for fallback
         self._mock_prices = {
             "gold": Decimal("2150.50"),
@@ -43,7 +43,7 @@ class MetalPriceService:
         """Fetch the current spot price per troy ounce in USD."""
         metal = metal.lower()
         av_symbol = self._symbol_map.get(metal)
-        
+
         if not av_symbol:
             raise ValueError(f"Unsupported metal: {metal}")
 
@@ -81,11 +81,11 @@ class MetalPriceService:
             # Error handling
             if "Note" in data:
                 logger.warning("Alpha Vantage rate limit hit: %s", data["Note"])
-            
+
             # Fallback to cache if expired
             if av_symbol in self._cache:
                 return self._cache[av_symbol][0]
-                
+
             return self._mock_prices.get(metal, Decimal("0.00"))
 
         except Exception as e:

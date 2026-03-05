@@ -9,8 +9,10 @@ from app.db.session import get_async_session
 from app.models import User
 from app.schemas.crypto import (
     CryptoPortfolioResponse,
-    CryptoWallet as CryptoWalletSchema,
     CryptoWalletCreate,
+)
+from app.schemas.crypto import (
+    CryptoWallet as CryptoWalletSchema,
 )
 from app.services.crypto import CryptoService
 

@@ -95,13 +95,13 @@ class CryptoService:
 
         # In a real implementation, we would call Moralis, Zapper, or Alchemy here.
         # For this high-fidelity prototype, we'll simulate a rich portfolio if addresses exist.
-        
+
         # Determine chains present
         chains = list(set(w.chain for w in wallets))
-        
+
         assets = []
         defi_positions = []
-        
+
         # Mocking ETH assets
         if CryptoChain.ethereum in chains or CryptoChain.base in chains:
             assets.append(CryptoAsset(
@@ -122,7 +122,7 @@ class CryptoService:
                 chain=CryptoChain.ethereum,
                 logo_url="https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png"
             ))
-            
+
             # Mocking DeFi
             defi_positions.append(DeFiPosition(
                 protocol_name="Aave V3",
@@ -163,7 +163,7 @@ class CryptoService:
             ))
 
         total_value = sum((a.balance_usd for a in assets), Decimal("0.00")) + sum((p.value_usd for p in defi_positions), Decimal("0.00"))
-        
+
         return CryptoPortfolioResponse(
             wallets=wallets,
             total_value_usd=total_value,

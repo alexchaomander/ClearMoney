@@ -11,8 +11,8 @@ from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 if TYPE_CHECKING:
     from app.models.bank_transaction import BankTransaction
     from app.models.connection import Connection
-    from app.models.user import User
     from app.models.entity import LegalEntity
+    from app.models.user import User
 
 
 class CashAccountType(str, enum.Enum):

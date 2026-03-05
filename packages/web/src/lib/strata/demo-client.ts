@@ -113,7 +113,15 @@ import type {
   PreciousMetalAsset,
   PreciousMetalAssetCreate,
   PreciousMetalAssetUpdate,
+  AlternativeAsset,
+  AlternativeAssetCreate,
+  AlternativeAssetUpdate,
+  AssetValuation,
   ValuationRefreshResponse,
+  PropertySearchRequest,
+  PropertySearchResult,
+  VehicleSearchRequest,
+  VehicleSearchResult,
 } from "@clearmoney/strata-sdk";
 
 import {
@@ -125,6 +133,7 @@ import {
   getDemoInvestmentAccountWithHoldings,
   getDemoPortfolioHistory,
   getDemoPortfolioSummary,
+  getDemoPhysicalAssetsSummary,
   DEMO_POINTS_PROGRAMS,
   DEMO_CREDIT_CARD_DATA,
   DEMO_LIQUID_ASSETS,
@@ -139,15 +148,11 @@ import {
   DEMO_TRANSPARENCY_PAYLOAD,
 } from "./demo-data";
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export class DemoStrataClient implements StrataClientInterface {
-  private static readonly BANK_TX_REIMBURSEMENTS_STORAGE_KEY = "clearmoney-demo-bank-tx-reimbursements.v1";
-
   private cryptoWallets: CryptoWallet[] = [
     {
       id: "demo-wallet-001",
@@ -204,10 +209,10 @@ export class DemoStrataClient implements StrataClientInterface {
 
   async handleConnectionCallback(
     _request: ConnectionCallbackRequest
-  ): Promise<Connection> {
+  ): Promise<{ status: string }> {
     void _request;
     await delay(1500);
-    return DEMO_CONNECTIONS[0];
+    return { status: "success" };
   }
 
   async getConnections(): Promise<Connection[]> {
@@ -215,25 +220,21 @@ export class DemoStrataClient implements StrataClientInterface {
     return DEMO_CONNECTIONS;
   }
 
-  async deleteConnection(_connectionId: string): Promise<void> {
+  async deleteConnection(_connectionId: string): Promise<{ status: string }> {
     void _connectionId;
     await delay(300);
-    // no-op in demo mode
+    return { status: "success" };
   }
 
-  async syncConnection(_connectionId: string): Promise<Connection> {
+  async syncConnection(_connectionId: string): Promise<{ status: string }> {
     void _connectionId;
     await delay(300);
-    return DEMO_CONNECTIONS[0];
+    return { status: "success" };
   }
 
-  async syncAllConnections(): Promise<Connection[]> {
+  async syncAllConnections(): Promise<{ status: string }> {
     await delay(300);
-    return DEMO_CONNECTIONS.map((conn) => ({
-      ...conn,
-      last_synced_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }));
+    return { status: "success" };
   }
 
   async getAccounts(): Promise<AllAccountsResponse> {
@@ -498,197 +499,138 @@ export class DemoStrataClient implements StrataClientInterface {
 
   // === Financial Memory ===
 
-  private demoMemory: FinancialMemory = {
-    id: crypto.randomUUID(),
-    user_id: "demo-user-001",
-    age: 32,
-    state: "CA",
-    filing_status: "single",
-    num_dependents: 0,
-    annual_income: 125000,
-    monthly_income: 10417,
-    income_growth_rate: 0.03,
-    federal_tax_rate: 0.24,
-    state_tax_rate: 0.093,
-    capital_gains_rate: 0.15,
-    retirement_age: 65,
-    current_retirement_savings: 85000,
-    monthly_retirement_contribution: 1500,
-    employer_match_pct: 0.04,
-    expected_social_security: 2500,
-    desired_retirement_income: 80000,
-    home_value: null,
-    mortgage_balance: null,
-    mortgage_rate: null,
-    monthly_rent: 2800,
-    risk_tolerance: "moderate",
-    investment_horizon_years: 33,
-    monthly_savings_target: 2000,
-    average_monthly_expenses: 6000,
-    emergency_fund_target_months: 6,
-    spending_categories_monthly: null,
-    debt_profile: null,
-    portfolio_summary: null,
-    equity_compensation: null,
-    notes: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-
-  private demoMemoryEvents: MemoryEvent[] = [];
-
   async getFinancialMemory(): Promise<FinancialMemory> {
     await delay(300);
-    return { ...this.demoMemory };
+    return {
+      id: "demo-memory",
+      user_id: "demo-user",
+      age: 32,
+      state: "CA",
+      filing_status: "single",
+      num_dependents: 0,
+      annual_income: 185000,
+      monthly_income: 15400,
+      income_growth_rate: 0.05,
+      federal_tax_rate: 0.24,
+      state_tax_rate: 0.09,
+      capital_gains_rate: 0.15,
+      retirement_age: 55,
+      current_retirement_savings: 142000,
+      monthly_retirement_contribution: 2500,
+      employer_match_pct: 0.04,
+      expected_social_security: 2800,
+      desired_retirement_income: 120000,
+      home_value: 1250000,
+      mortgage_balance: 840000,
+      mortgage_rate: 0.0325,
+      monthly_rent: null,
+      risk_tolerance: "moderate",
+      investment_horizon_years: 25,
+      monthly_savings_target: 4000,
+      average_monthly_expenses: 6800,
+      emergency_fund_target_months: 6,
+      spending_categories_monthly: {
+        housing: 3200,
+        food: 800,
+        transport: 400,
+        lifestyle: 1200,
+        other: 1200,
+      },
+      debt_profile: null,
+      portfolio_summary: null,
+      equity_compensation: null,
+      notes: {},
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
   }
 
   async updateFinancialMemory(data: FinancialMemoryUpdate): Promise<FinancialMemory> {
-    await delay(300);
-    const { source: _source, source_context: _ctx, ...fields } = data;
-    for (const [key, value] of Object.entries(fields)) {
-      if (value !== undefined) {
-        const mem = this.demoMemory as unknown as Record<string, unknown>;
-        const oldValue = mem[key];
-        mem[key] = value;
-        this.demoMemoryEvents.unshift({
-          id: crypto.randomUUID(),
-          user_id: "demo-user-001",
-          field_name: key,
-          old_value: oldValue != null ? String(oldValue) : null,
-          new_value: value != null ? String(value) : null,
-          source: _source ?? "user_input",
-          context: _ctx ?? null,
-          created_at: new Date().toISOString(),
-        });
-      }
-    }
-    this.demoMemory.updated_at = new Date().toISOString();
-    return { ...this.demoMemory };
+    await delay(500);
+    const current = await this.getFinancialMemory();
+    return { ...current, ...data } as FinancialMemory;
+  }
+
+  async deriveMemory(): Promise<FinancialMemory> {
+    await delay(1500);
+    return this.getFinancialMemory();
   }
 
   async getMemoryEvents(): Promise<MemoryEvent[]> {
     await delay(300);
-    return [...this.demoMemoryEvents];
-  }
-
-  async deriveMemory(): Promise<FinancialMemory> {
-    await delay(800);
-    // Simulate deriving from accounts
-    this.demoMemory.current_retirement_savings = 85000;
-    this.demoMemory.updated_at = new Date().toISOString();
-    return { ...this.demoMemory };
+    return [];
   }
 
   async getFinancialContext(format: 'json' | 'markdown' = 'json'): Promise<FinancialContext | string> {
-    await delay(500);
-    const context: FinancialContext = {
-      profile: { ...this.demoMemory },
+    await delay(1000);
+    if (format === 'markdown') return "Demo Context Markdown";
+    return {
+      profile: { age: 32, income: 185000 },
       accounts: {
         investment: [
-          { name: "Vanguard 401(k)", type: "401k", balance: 85000, is_tax_advantaged: true },
-          { name: "Robinhood Brokerage", type: "brokerage", balance: 42000 },
+          { name: "Main Brokerage", type: "brokerage", balance: 142000, is_tax_advantaged: false },
+          { name: "Roth IRA", type: "roth_ira", balance: 45000, is_tax_advantaged: true }
         ],
         cash: [
-          { name: "Chase Checking", type: "checking", balance: 8500 },
-          { name: "Marcus Savings", type: "savings", balance: 25000 },
+          { name: "High Yield Savings", type: "savings", balance: 52000 }
         ],
         debt: [
-          { name: "Student Loan", type: "student_loan", balance: 18000, interest_rate: 0.045, minimum_payment: 350 },
+          { name: "Primary Mortgage", type: "mortgage", balance: 840000, interest_rate: 0.0325, minimum_payment: 3800 }
         ],
         real_estate: [],
         vehicles: [],
         collectibles: [],
         precious_metals: [],
+        alternative_assets: [],
       },
-      holdings: [
-        { ticker: "VTI", name: "Vanguard Total Stock Market", security_type: "etf", quantity: 120, market_value: 32400, cost_basis: 28000, account: "Robinhood Brokerage" },
-        { ticker: "VXUS", name: "Vanguard International Stock", security_type: "etf", quantity: 80, market_value: 9600, cost_basis: 8200, account: "Robinhood Brokerage" },
-      ],
+      holdings: [],
       recent_transactions: [],
       portfolio_metrics: {
-        net_worth: 142500,
-        total_investment_value: 127000,
-        total_cash_value: 33500,
-        total_debt_value: 18000,
-        tax_advantaged_value: 85000,
-        taxable_value: 42000,
+        net_worth: 642000,
+        total_investment_value: 187000,
+        total_cash_value: 52000,
+        total_debt_value: 840000,
+        tax_advantaged_value: 45000,
+        taxable_value: 142000
       },
       data_freshness: {
         last_sync: new Date().toISOString(),
-        profile_updated: this.demoMemory.updated_at,
-        accounts_count: 5,
-        connections_count: 2,
-      },
+        profile_updated: new Date().toISOString(),
+        accounts_count: 4,
+        connections_count: 2
+      }
     };
-
-    if (format === 'markdown') {
-      return `## Financial Profile\n- Age: 32\n- Income: $125,000\n\n## Portfolio Summary\n- Net Worth: $142,500`;
-    }
-    return context;
   }
+
+  // === Notifications ===
 
   async listNotifications(): Promise<NotificationResponse[]> {
-    await delay(120);
-    return [];
+    await delay(200);
+    return [
+      {
+        id: "notif-1",
+        type: "alert",
+        severity: "warning",
+        title: "Large Transaction Detected",
+        message: "A transaction of $4,500 was detected at 'Apple Store'.",
+        metadata_json: {},
+        is_read: false,
+        action_url: "/dashboard/transactions",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+    ];
   }
 
-  async updateNotification(
-    id: string,
-    data: { is_read: boolean }
-  ): Promise<NotificationResponse> {
-    await delay(120);
-    const now = new Date().toISOString();
-    return {
-      id,
-      type: "info",
-      severity: "info",
-      title: "Demo Notification",
-      message: "Demo notification updated.",
-      metadata_json: null,
-      is_read: data.is_read,
-      action_url: null,
-      created_at: now,
-      updated_at: now,
-    };
+  async updateNotification(id: string, data: { is_read: boolean }): Promise<NotificationResponse> {
+    await delay(100);
+    const all = await this.listNotifications();
+    return { ...all[0], ...data };
   }
 
   async markAllNotificationsRead(): Promise<{ status: string }> {
-    await delay(120);
-    return { status: "ok" };
-  }
-
-  // === Action Policy ===
-
-  async getActionPolicy(): Promise<ActionPolicyResponse> {
-    await delay(100);
-    const now = new Date().toISOString();
-    return {
-      id: "demo-action-policy",
-      allowed_actions: ["savings_transfer"],
-      max_amount: 500,
-      require_confirmation: true,
-      require_mfa: false,
-      status: "active",
-      created_at: now,
-      updated_at: now,
-    };
-  }
-
-  async upsertActionPolicy(
-    data: ActionPolicyRequest
-  ): Promise<ActionPolicyResponse> {
-    await delay(120);
-    const now = new Date().toISOString();
-    return {
-      id: "demo-action-policy",
-      allowed_actions: data.allowed_actions,
-      max_amount: data.max_amount,
-      require_confirmation: data.require_confirmation,
-      require_mfa: data.require_mfa,
-      status: data.status,
-      created_at: now,
-      updated_at: now,
-    };
+    await delay(300);
+    return { status: "success" };
   }
 
   // === Skills ===
@@ -704,544 +646,436 @@ export class DemoStrataClient implements StrataClientInterface {
   }
 
   async getSkill(name: string): Promise<SkillDetail> {
-    throw new Error(`Skill '${name}' not found`);
+    await delay(300);
+    return { name, display_name: name, description: "", required_context: [], output_format: "", optional_context: [], tools: [], content: "" };
+  }
+
+  // === Action Policy ===
+
+  async getActionPolicy(): Promise<ActionPolicyResponse> {
+    await delay(300);
+    return {
+      id: "policy-1",
+      allowed_actions: ["rebalance", "transfer"],
+      max_amount: 10000,
+      require_confirmation: true,
+      require_mfa: false,
+      status: "active",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+  }
+
+  async upsertActionPolicy(data: ActionPolicyRequest): Promise<ActionPolicyResponse> {
+    await delay(500);
+    return {
+      id: "policy-1",
+      ...data,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
   }
 
   // === Advisor ===
 
-  async createAdvisorSession(
-    _skillName?: string,
-    _vanishMode?: boolean
-  ): Promise<AdvisorSession> {
-    await delay(300);
+  async createAdvisorSession(skillName?: string, vanishMode?: boolean): Promise<AdvisorSession> {
+    await delay(500);
     return {
       id: crypto.randomUUID(),
-      user_id: "demo-user-001",
-      skill_name: _skillName ?? null,
+      user_id: "demo-user",
+      skill_name: skillName ?? null,
       status: "active",
-      vanish_mode: _vanishMode ?? false,
+      vanish_mode: vanishMode,
       messages: [],
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
   }
 
   async getAdvisorSessions(): Promise<AdvisorSessionSummary[]> {
+    await delay(300);
     return [];
   }
 
   async getAdvisorSession(sessionId: string): Promise<AdvisorSession> {
-    throw new Error("Session not found");
+    await delay(300);
+    return {
+      id: sessionId,
+      user_id: "demo-user",
+      skill_name: null,
+      status: "active",
+      messages: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
   }
 
-  async sendAdvisorMessage(sessionId: string, content: string): Promise<ReadableStream<Uint8Array>> {
-    throw new Error("Not implemented in simplified demo client");
+  async sendAdvisorMessage(_sessionId: string, _content: string): Promise<ReadableStream<Uint8Array>> {
+    await delay(1000);
+    return new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode("Demo message chunk"));
+        controller.close();
+      }
+    });
   }
 
   async getRecommendations(): Promise<AdvisorRecommendation[]> {
+    await delay(300);
     return [];
   }
 
-  async executeRecommendation(
-    recommendationId: string,
-    request: ExecuteRecommendationRequest
-  ): Promise<ExecuteRecommendationResponse> {
-    throw new Error("Not implemented in demo mode");
+  async executeRecommendation(id: string, _request: ExecuteRecommendationRequest): Promise<ExecuteRecommendationResponse> {
+    await delay(1500);
+    return {
+      recommendation_id: id,
+      action: "rebalance",
+      status: "success",
+      result: {},
+      trace_id: "trace-123",
+      updated_at: new Date().toISOString()
+    };
   }
 
-  async getDecisionTraces(): Promise<DecisionTrace[]> {
+  async getDecisionTraces(params?: { sessionId?: string; recommendationId?: string }): Promise<DecisionTrace[]> {
+    void params;
+    await delay(300);
     return [];
   }
 
   // === Consent ===
 
   async listConsents(): Promise<ConsentResponse[]> {
+    await delay(300);
     return [];
   }
 
   async createConsent(data: ConsentCreateRequest): Promise<ConsentResponse> {
-    return {
-      id: "demo-consent",
-      user_id: "demo-user-001",
-      scopes: data.scopes,
-      purpose: data.purpose,
-      status: "active",
-      source: data.source ?? "demo",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    await delay(300);
+    const now = new Date().toISOString();
+    return { id: "c1", user_id: "u1", scopes: data.scopes, purpose: data.purpose, status: "active", source: data.source ?? "user", created_at: now, updated_at: now };
   }
 
   async revokeConsent(consentId: string): Promise<ConsentResponse> {
-    throw new Error("Not implemented in demo mode");
+    await delay(300);
+    const now = new Date().toISOString();
+    return { id: consentId, user_id: "u1", scopes: [], purpose: "", status: "revoked", source: "", created_at: now, updated_at: now };
   }
 
   // === Credit Cards ===
 
   async getCreditCards(): Promise<CreditCard[]> {
+    await delay(300);
     return [];
   }
 
   async getCreditCard(id: string): Promise<CreditCard> {
-    throw new Error("Card not found");
+    await delay(300);
+    return { id, name: "Card", issuer: "Bank", annual_fee: "0", image_url: null, apply_url: null, credits: [], benefits: [], created_at: "", updated_at: "" };
   }
 
-  async seedAmexPlatinum(): Promise<CreditCard> {
-    throw new Error("Not implemented in demo mode");
+  async seedAmexPlatinum(): Promise<{ status: string }> {
+    await delay(1000);
+    return { status: "success" };
   }
 
   // === Shared Data ===
 
   async getPointsPrograms(): Promise<PointsProgram[]> {
+    await delay(300);
     return DEMO_POINTS_PROGRAMS;
   }
 
   async getCreditCardData(): Promise<CreditCardData[]> {
+    await delay(300);
     return DEMO_CREDIT_CARD_DATA;
   }
 
   async getLiquidAssets(): Promise<SavingsProduct[]> {
+    await delay(300);
     return DEMO_LIQUID_ASSETS;
   }
 
   async getInvestments(): Promise<InvestmentData> {
+    await delay(300);
     return DEMO_INVESTMENT_DATA;
   }
 
   async getRealAssets(): Promise<RealAssetData> {
+    await delay(300);
     return DEMO_REAL_ASSET_DATA;
   }
 
   async getLiabilities(): Promise<LiabilityData> {
+    await delay(300);
     return DEMO_LIABILITY_DATA;
   }
 
   async getIncome(): Promise<IncomeData> {
+    await delay(300);
     return DEMO_INCOME_DATA;
   }
 
   async getCredit(): Promise<CreditData> {
+    await delay(300);
     return DEMO_CREDIT_DATA;
   }
 
   async getProtection(): Promise<ProtectionData> {
+    await delay(300);
     return DEMO_PROTECTION_DATA;
   }
 
-  async getToolPresets(): Promise<ToolPresetBundle> {
-    return DEMO_TOOL_PRESETS;
+  async getTransparencyPayload(): Promise<TransparencyPayload> {
+    await delay(300);
+    return DEMO_TRANSPARENCY_PAYLOAD;
   }
 
-  async getTransparencyPayload(): Promise<TransparencyPayload> {
-    return DEMO_TRANSPARENCY_PAYLOAD;
+  async getToolPresets(): Promise<ToolPresetBundle> {
+    await delay(300);
+    return DEMO_TOOL_PRESETS;
   }
 
   // === Banking (Plaid) ===
 
   async createPlaidLinkToken(_request?: PlaidLinkRequest): Promise<PlaidLinkResponse> {
-    await delay(500);
-    return {
-      link_token: "demo-link-token",
-      expiration: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-    };
+    await delay(800);
+    return { link_token: "demo-link-token", expiration: null };
   }
 
-  async handlePlaidCallback(request: PlaidCallbackRequest): Promise<Connection> {
+  async handlePlaidCallback(_request: PlaidCallbackRequest): Promise<Connection> {
     await delay(1500);
     return DEMO_CONNECTIONS[0];
   }
 
   async getBankAccounts(): Promise<BankAccount[]> {
     await delay(300);
-    return [
-      {
-        id: "demo-cash-001",
-        user_id: "demo-user-001",
-        connection_id: "demo-conn-chase",
-        name: "Chase Checking",
-        account_type: "checking",
-        balance: 12340.0,
-        available_balance: 12100.0,
-        institution_name: "Chase",
-        mask: "1234",
-        is_manual: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: "demo-cash-biz-001",
-        user_id: "demo-user-001",
-        connection_id: "demo-conn-mercury",
-        name: "ClearMoney Operating",
-        account_type: "checking",
-        balance: 410000.0,
-        available_balance: 408500.0,
-        institution_name: "Mercury",
-        mask: "0420",
-        is_manual: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ];
+    return [];
   }
 
-  async getBankTransactions(params?: BankTransactionQuery): Promise<PaginatedBankTransactions> {
-    await delay(500);
-    const transactions = [
-      {
-        id: "demo-tx-1",
-        cash_account_id: "demo-cash-biz-001",
-        provider_transaction_id: "ptx-1",
-        amount: 18000,
-        transaction_date: new Date(Date.now() - 6 * ONE_DAY_MS).toISOString().slice(0, 10),
-        posted_date: new Date(Date.now() - 6 * ONE_DAY_MS).toISOString().slice(0, 10),
-        name: "STRIPE PAYOUT",
-        primary_category: "INCOME",
-        detailed_category: "INCOME_OTHER_INCOME",
-        merchant_name: "Stripe",
-        payment_channel: "online",
-        pending: false,
-        iso_currency_code: "USD",
-        reimbursed_at: null,
-        reimbursement_memo: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: "demo-tx-2",
-        cash_account_id: "demo-cash-biz-001",
-        provider_transaction_id: "ptx-2",
-        amount: -1250.00,
-        transaction_date: new Date(Date.now() - 5 * ONE_DAY_MS).toISOString().slice(0, 10),
-        posted_date: new Date(Date.now() - 5 * ONE_DAY_MS).toISOString().slice(0, 10),
-        name: "AWS",
-        primary_category: "GENERAL_SERVICES",
-        detailed_category: "GENERAL_SERVICES_CLOUD_SERVICES",
-        merchant_name: "Amazon Web Services",
-        payment_channel: "online",
-        pending: false,
-        iso_currency_code: "USD",
-        reimbursed_at: null,
-        reimbursement_memo: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: "demo-tx-3",
-        cash_account_id: "demo-cash-001",
-        provider_transaction_id: "ptx-3",
-        amount: -45.67,
-        transaction_date: new Date(Date.now() - 1 * ONE_DAY_MS).toISOString().slice(0, 10),
-        posted_date: new Date(Date.now() - 1 * ONE_DAY_MS).toISOString().slice(0, 10),
-        name: "UBER EATS",
-        primary_category: "FOOD_AND_DRINK",
-        detailed_category: "FOOD_AND_DRINK_RESTAURANTS",
-        merchant_name: "Uber Eats",
-        payment_channel: "online",
-        pending: false,
-        iso_currency_code: "USD",
-        reimbursed_at: null,
-        reimbursement_memo: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: "demo-tx-4",
-        cash_account_id: "demo-cash-biz-001",
-        provider_transaction_id: "ptx-4",
-        amount: -2000.00,
-        transaction_date: new Date(Date.now() - 2 * ONE_DAY_MS).toISOString().slice(0, 10),
-        posted_date: new Date(Date.now() - 2 * ONE_DAY_MS).toISOString().slice(0, 10),
-        name: "OPENAI",
-        primary_category: "GENERAL_SERVICES",
-        detailed_category: "GENERAL_SERVICES_SOFTWARE",
-        merchant_name: "OpenAI",
-        payment_channel: "online",
-        pending: false,
-        iso_currency_code: "USD",
-        reimbursed_at: null,
-        reimbursement_memo: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ];
-    return { transactions, total: transactions.length, page: 1, page_size: 50, total_pages: 1 };
+  async getBankTransactions(_query: BankTransactionQuery): Promise<PaginatedBankTransactions> {
+    await delay(300);
+    return { transactions: [], total: 0, page: 1, page_size: 20, total_pages: 0 };
   }
 
-  async updateBankTransactionReimbursement(
-    transactionId: string,
-    data: BankTransactionReimbursementUpdate
-  ): Promise<BankTransaction> {
-    throw new Error("Not implemented in demo mode");
-  }
-
-  async getSpendingSummary(_months: number = 3): Promise<SpendingSummary> {
+  async getSpendingSummary(_months?: number): Promise<SpendingSummary> {
     await delay(300);
     return {
-      total_spending: 31200,
-      monthly_average: 10400,
-      categories: [
-        { category: "GENERAL_SERVICES", total: 18000, percentage: 57.7, transaction_count: 24 },
-        { category: "FOOD_AND_DRINK", total: 4200, percentage: 13.5, transaction_count: 58 },
-        { category: "TRANSPORTATION", total: 3500, percentage: 11.2, transaction_count: 42 },
-        { category: "SHOPPING", total: 2500, percentage: 8.0, transaction_count: 15 },
-        { category: "RENT_AND_UTILITIES", total: 3000, percentage: 9.6, transaction_count: 3 },
-      ],
-      start_date: new Date(Date.now() - 90 * ONE_DAY_MS).toISOString().slice(0, 10),
-      end_date: new Date().toISOString().slice(0, 10),
-      months_analyzed: 3,
+      total_spending: 0,
+      monthly_average: 0,
+      categories: [],
+      start_date: "",
+      end_date: "",
+      months_analyzed: 0
     };
   }
 
   async getSubscriptions(): Promise<SubscriptionSummary> {
-    await delay(200);
-    const subscriptions: Subscription[] = [
-      { merchant: "AWS", amount: 1250.00, monthly_impact: 1250.00, frequency: "monthly", last_date: "2026-01-01", category: "Cloud" },
-      { merchant: "Google Workspace", amount: 144.00, monthly_impact: 144.00, frequency: "monthly", last_date: "2026-01-12", category: "Productivity" },
-      { merchant: "Slack", amount: 88.00, monthly_impact: 88.00, frequency: "monthly", last_date: "2026-01-15", category: "Communication" },
-      { merchant: "OpenAI", amount: 2000.00, monthly_impact: 2000.00, frequency: "monthly", last_date: "2026-01-20", category: "AI" },
-      { merchant: "GitHub", amount: 42.00, monthly_impact: 42.00, frequency: "monthly", last_date: "2026-01-22", category: "Development" },
-    ];
-    const total = subscriptions.reduce((sum, s) => sum + s.monthly_impact, 0);
-    return { 
-      subscriptions, 
-      total_monthly_subscription_burn: total, 
-      subscription_count: subscriptions.length 
-    };
+    await delay(300);
+    return { subscriptions: [], total_monthly_subscription_burn: 0, subscription_count: 0 };
+  }
+
+  async updateBankTransactionReimbursement(_id: string, _data: BankTransactionReimbursementUpdate): Promise<BankTransaction> {
+    await delay(300);
+    return {} as BankTransaction;
   }
 
   // === Share Reports ===
 
-  async createShareReport(data: ShareReportCreateRequest): Promise<ShareReportCreateResponse> {
-    throw new Error("Not implemented in demo mode");
+  async createShareReport(_request: ShareReportCreateRequest): Promise<ShareReportCreateResponse> {
+    await delay(500);
+    return {
+      id: "report-123",
+      token: "demo-token",
+      tool_id: _request.tool_id,
+      mode: _request.mode,
+      created_at: new Date().toISOString(),
+      expires_at: null,
+      max_views: null
+    };
   }
 
-  async getShareReport(reportId: string, token: string): Promise<ShareReportPublicResponse> {
-    throw new Error("Not implemented in demo mode");
+  async getShareReport(reportId: string, _token: string): Promise<ShareReportPublicResponse> {
+    void reportId;
+    await delay(500);
+    return {} as ShareReportPublicResponse;
   }
 
   async listShareReports(params?: { toolId?: string; limit?: number; includePayload?: boolean }): Promise<ShareReportListItem[]> {
+    void params;
+    await delay(300);
     return [];
   }
 
   async rotateShareReport(reportId: string, params?: { expiresInDays?: number | null }): Promise<ShareReportCreateResponse> {
-    throw new Error("Not implemented in demo mode");
+    void reportId; void params;
+    await delay(300);
+    return { id: reportId, token: "new-token", tool_id: "tool", mode: "full", created_at: "", expires_at: null, max_views: null };
   }
 
-  async revokeShareReport(reportId: string): Promise<{ status: string }> {
-    throw new Error("Not implemented in demo mode");
+  async revokeShareReport(_id: string): Promise<{ status: string }> {
+    await delay(300);
+    return { status: "success" };
   }
 
   // === Tax Plan Workspace ===
 
-  async createTaxPlan(data: TaxPlanCreateRequest): Promise<TaxPlan> {
-    throw new Error("Not implemented in demo mode");
+  async createTaxPlan(_data: TaxPlanCreateRequest): Promise<TaxPlan> {
+    await delay(300);
+    return { id: "p1", user_id: "u1", name: _data.name, household_name: _data.household_name ?? null, status: "draft", approved_version_id: null, created_at: "", updated_at: "" };
   }
 
   async listTaxPlans(params?: { limit?: number }): Promise<TaxPlan[]> {
+    void params;
+    await delay(300);
     return [];
   }
 
-  async getTaxPlan(planId: string): Promise<TaxPlan> {
-    throw new Error("Not found");
+  async getTaxPlan(_id: string): Promise<TaxPlan> {
+    await delay(300);
+    return { id: _id, user_id: "u1", name: "Plan", household_name: null, status: "draft", approved_version_id: null, created_at: "", updated_at: "" };
   }
 
-  async updateTaxPlan(planId: string, data: TaxPlanUpdateRequest): Promise<TaxPlan> {
-    throw new Error("Not found");
+  async updateTaxPlan(_id: string, _data: TaxPlanUpdateRequest): Promise<TaxPlan> {
+    await delay(300);
+    return { id: _id, user_id: "u1", name: _data.name ?? "Plan", household_name: _data.household_name ?? null, status: _data.status ?? "draft", approved_version_id: null, created_at: "", updated_at: "" };
   }
 
   async createTaxPlanVersion(planId: string, data: TaxPlanVersionCreateRequest): Promise<TaxPlanVersion> {
-    throw new Error("Not found");
+    await delay(300);
+    return { id: "v1", plan_id: planId, created_by_user_id: "u1", label: data.label, inputs: data.inputs, results: data.results ?? null, source: data.source ?? "manual", is_approved: false, approved_at: null, approved_by_user_id: null, created_at: "", updated_at: "" };
   }
 
   async listTaxPlanVersions(planId: string, params?: { limit?: number }): Promise<TaxPlanVersion[]> {
+    void params;
+    await delay(300);
     return [];
   }
 
   async approveTaxPlanVersion(planId: string, versionId: string): Promise<TaxPlanVersion> {
-    throw new Error("Not found");
+    await delay(300);
+    return { id: versionId, plan_id: planId, created_by_user_id: "u1", label: "Approved", inputs: {}, results: null, source: "manual", is_approved: true, approved_at: "", approved_by_user_id: "u1", created_at: "", updated_at: "" };
   }
 
   async createTaxPlanComment(planId: string, data: TaxPlanCommentCreateRequest): Promise<TaxPlanComment> {
-    throw new Error("Not found");
+    await delay(300);
+    return { id: "c1", plan_id: planId, version_id: data.version_id ?? null, author_user_id: "u1", author_role: "owner", body: data.body, created_at: "", updated_at: "" };
   }
 
   async listTaxPlanComments(planId: string, params?: { limit?: number }): Promise<TaxPlanComment[]> {
+    void params;
+    await delay(300);
     return [];
   }
 
   async addTaxPlanCollaborator(planId: string, data: TaxPlanCollaboratorCreateRequest): Promise<TaxPlanCollaborator> {
-    throw new Error("Not found");
+    await delay(300);
+    return { id: "col1", plan_id: planId, email: data.email, role: data.role, invited_by_user_id: "u1", accepted_at: null, revoked_at: null, created_at: "", updated_at: "" };
   }
 
   async listTaxPlanCollaborators(planId: string): Promise<TaxPlanCollaborator[]> {
+    await delay(300);
     return [];
   }
 
   async revokeTaxPlanCollaborator(planId: string, collaboratorId: string): Promise<{ status: string }> {
-    throw new Error("Not found");
+    void planId; void collaboratorId;
+    await delay(300);
+    return { status: "success" };
   }
 
   async createTaxPlanEvent(planId: string, data: TaxPlanEventCreateRequest): Promise<TaxPlanEvent> {
-    throw new Error("Not found");
+    await delay(300);
+    return { id: "e1", plan_id: planId, version_id: data.version_id ?? null, actor_user_id: "u1", event_type: data.event_type, event_metadata: data.event_metadata ?? {}, created_at: "", updated_at: "" };
   }
 
   async listTaxPlanEvents(planId: string, params?: { limit?: number }): Promise<TaxPlanEvent[]> {
+    void params;
+    await delay(300);
     return [];
   }
 
   // === Tax Documents ===
 
-  async uploadTaxDocument(file: File | Blob, filename: string, documentTypeHint?: string): Promise<TaxDocumentResponse> {
-    throw new Error("Not implemented in demo mode");
+  async uploadTaxDocument(_file: File | Blob, _filename: string, _typeHint?: string): Promise<TaxDocumentResponse> {
+    await delay(1500);
+    return { id: "d1", user_id: "u1", original_filename: _filename, mime_type: "", file_size_bytes: 0, document_type: _typeHint ?? null, tax_year: null, status: "processing", provider_used: null, extracted_data: null, confidence_score: null, validation_errors: null, error_message: null, created_at: "", updated_at: "" };
   }
 
   async listTaxDocuments(limit?: number): Promise<TaxDocumentListResponse[]> {
+    void limit;
+    await delay(300);
     return [];
   }
 
-  async getTaxDocument(documentId: string): Promise<TaxDocumentResponse> {
-    throw new Error("Not found");
+  async getTaxDocument(_id: string): Promise<TaxDocumentResponse> {
+    await delay(300);
+    return { id: _id, user_id: "u1", original_filename: "", mime_type: "", file_size_bytes: 0, document_type: null, tax_year: null, status: "completed", provider_used: null, extracted_data: null, confidence_score: null, validation_errors: null, error_message: null, created_at: "", updated_at: "" };
   }
 
-  async deleteTaxDocument(documentId: string): Promise<void> {
-    throw new Error("Not found");
+  async deleteTaxDocument(_id: string): Promise<void> {
+    await delay(300);
   }
 
-  async prefillTaxPlan(data: PrefillTaxPlanRequest): Promise<PrefillTaxPlanResponse> {
-    throw new Error("Not found");
+  async prefillTaxPlan(_data: PrefillTaxPlanRequest): Promise<PrefillTaxPlanResponse> {
+    await delay(1500);
+    return { version_id: "v1", plan_id: _data.plan_id, fields_populated: [], warnings: [] };
   }
 
   // === Action Intents ===
 
-  async getActionIntents(status?: ActionIntentStatus): Promise<ActionIntent[]> {
+  async getActionIntents(_status?: ActionIntentStatus): Promise<ActionIntent[]> {
+    await delay(300);
     return [];
   }
 
-  async getActionIntent(intentId: string): Promise<ActionIntent> {
-    throw new Error("Not found");
+  async getActionIntent(_id: string): Promise<ActionIntent> {
+    await delay(300);
+    return { id: _id, user_id: "u1", decision_trace_id: null, intent_type: "ach_transfer", status: "draft", title: "Intent", description: null, payload: {}, impact_summary: {}, created_at: "", updated_at: "" };
   }
 
-  async updateActionIntent(intentId: string, data: ActionIntentUpdate): Promise<ActionIntent> {
-    throw new Error("Not found");
+  async updateActionIntent(_id: string, _data: ActionIntentUpdate): Promise<ActionIntent> {
+    await delay(300);
+    return { id: _id, user_id: "u1", decision_trace_id: null, intent_type: "ach_transfer", status: _data.status ?? "draft", title: "Intent", description: null, payload: _data.payload ?? {}, impact_summary: _data.impact_summary ?? {}, created_at: "", updated_at: "" };
   }
 
-  async getIntentManifest(intentId: string): Promise<Blob> {
-    throw new Error("Not found");
+  async getIntentManifest(_id: string): Promise<Blob> {
+    await delay(1000);
+    return new Blob([]);
   }
 
   // === Portability ===
 
   async exportFinancialPassport(): Promise<FinancialPassport> {
-    throw new Error("Not implemented in demo mode");
+    await delay(1000);
+    return { "@context": "", id: "p1", issuer: "", issued_at: "", claims: {}, signature: null };
   }
 
   // === Equity ===
 
   async getEquityPortfolio(): Promise<EquityPortfolioSummary> {
-    await delay(150);
-    return {
-      total_vested_value: 125000,
-      total_unvested_value: 450000,
-      total_value: 575000,
-      grant_valuations: [
-        {
-          symbol: "AAPL",
-          current_price: 185.42,
-          vested_quantity: 674,
-          unvested_quantity: 2426,
-          vested_value: 125000,
-          unvested_value: 450000,
-          total_value: 575000,
-          next_vest_date: "2026-04-15",
-          next_vest_quantity: 150,
-        },
-      ],
-    };
+    await delay(300);
+    return { total_vested_value: 0, total_unvested_value: 0, total_value: 0, grant_valuations: [] };
   }
 
   async getEquityProjections(): Promise<EquityProjection[]> {
-    await delay(200);
-    const today = new Date();
-    return Array.from({ length: 25 }, (_, i) => {
-      const date = new Date(today);
-      date.setMonth(today.getMonth() + i);
-      return {
-        date: date.toISOString(),
-        total_value: String(575000 + (i * 2000)), // Slight appreciation
-        liquid_value: String(125000 + (Math.floor(i / 3) * 35000)), // Quarterly vests
-      };
-    });
+    await delay(300);
+    return [];
   }
 
-  async createEquityGrant(data: EquityGrantCreate): Promise<EquityGrant> {
+  async createEquityGrant(_data: EquityGrantCreate): Promise<EquityGrant> {
     await delay(300);
-    return {
-      id: crypto.randomUUID(),
-      user_id: "demo-user-001",
-      symbol: data.symbol,
-      grant_name: data.grant_name,
-      grant_type: data.grant_type,
-      quantity: data.quantity,
-      strike_price: data.strike_price ?? null,
-      grant_date: data.grant_date,
-      vesting_schedule: data.vesting_schedule ?? null,
-      notes: data.notes ?? null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    return { id: "g1", user_id: "u1", symbol: _data.symbol, grant_name: _data.grant_name, grant_type: _data.grant_type, quantity: _data.quantity, strike_price: _data.strike_price ?? null, grant_date: _data.grant_date, vesting_schedule: _data.vesting_schedule ?? null, notes: _data.notes ?? null, created_at: "", updated_at: "" };
   }
 
-  async updateEquityGrant(id: string, data: EquityGrantUpdate): Promise<EquityGrant> {
+  async updateEquityGrant(_id: string, _data: EquityGrantUpdate): Promise<EquityGrant> {
     await delay(300);
-    return {
-      id,
-      user_id: "demo-user-001",
-      symbol: data.symbol ?? "AAPL",
-      grant_name: data.grant_name ?? "Common Stock",
-      grant_type: data.grant_type ?? "rsu",
-      quantity: data.quantity ?? 1000,
-      strike_price: data.strike_price ?? null,
-      grant_date: data.grant_date ?? "2024-01-01",
-      vesting_schedule: data.vesting_schedule ?? null,
-      notes: data.notes ?? null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    return { id: _id, user_id: "u1", symbol: _data.symbol ?? "", grant_name: _data.grant_name ?? "", grant_type: _data.grant_type ?? "rsu", quantity: _data.quantity ?? 0, strike_price: _data.strike_price ?? null, grant_date: _data.grant_date ?? "", vesting_schedule: _data.vesting_schedule ?? null, notes: _data.notes ?? null, created_at: "", updated_at: "" };
   }
 
   async deleteEquityGrant(_id: string): Promise<void> {
-    await delay(250);
-  }
-
-  // === Physical Assets ===
-  async getPhysicalAssetsSummary(): Promise<PhysicalAssetsSummary> {
     await delay(300);
-    return { real_estate: [], vehicles: [], collectibles: [], precious_metals: [], total_value: 0 };
   }
-  async getRealEstateAssets(): Promise<RealEstateAsset[]> { return []; }
-  async createRealEstateAsset(_data: RealEstateAssetCreate): Promise<RealEstateAsset> { return {} as RealEstateAsset; }
-  async updateRealEstateAsset(_id: string, _data: RealEstateAssetUpdate): Promise<RealEstateAsset> { return {} as RealEstateAsset; }
-  async deleteRealEstateAsset(_id: string): Promise<void> {}
-  async refreshRealEstateValuation(_id: string): Promise<ValuationRefreshResponse> { return { status: "unchanged", message: "Demo mode" }; }
-
-  async getVehicleAssets(): Promise<VehicleAsset[]> { return []; }
-  async createVehicleAsset(_data: VehicleAssetCreate): Promise<VehicleAsset> { return {} as VehicleAsset; }
-  async updateVehicleAsset(_id: string, _data: VehicleAssetUpdate): Promise<VehicleAsset> { return {} as VehicleAsset; }
-  async deleteVehicleAsset(_id: string): Promise<void> {}
-  async refreshVehicleValuation(_id: string): Promise<ValuationRefreshResponse> { return { status: "unchanged", message: "Demo mode" }; }
-
-  async getCollectibleAssets(): Promise<CollectibleAsset[]> { return []; }
-  async createCollectibleAsset(_data: CollectibleAssetCreate): Promise<CollectibleAsset> { return {} as CollectibleAsset; }
-  async updateCollectibleAsset(_id: string, _data: CollectibleAssetUpdate): Promise<CollectibleAsset> { return {} as CollectibleAsset; }
-  async deleteCollectibleAsset(_id: string): Promise<void> {}
-  async refreshCollectibleValuation(_id: string): Promise<ValuationRefreshResponse> { return { status: "unchanged", message: "Demo mode" }; }
-
-  async getPreciousMetalAssets(): Promise<PreciousMetalAsset[]> { return []; }
-  async createPreciousMetalAsset(_data: PreciousMetalAssetCreate): Promise<PreciousMetalAsset> { return {} as PreciousMetalAsset; }
-  async updatePreciousMetalAsset(_id: string, _data: PreciousMetalAssetUpdate): Promise<PreciousMetalAsset> { return {} as PreciousMetalAsset; }
-  async deletePreciousMetalAsset(_id: string): Promise<void> {}
-  async refreshPreciousMetalValuation(_id: string): Promise<ValuationRefreshResponse> { return { status: "unchanged", message: "Demo mode" }; }
 
   // === Crypto ===
 
@@ -1278,112 +1112,161 @@ export class DemoStrataClient implements StrataClientInterface {
 
   async getCryptoPortfolio(): Promise<CryptoPortfolioResponse> {
     await delay(600);
-    if (this.cryptoWallets.length === 0) {
-      return {
-        wallets: [],
-        total_value_usd: 0,
-        assets: [],
-        defi_positions: []
-      };
-    }
+    return { wallets: this.cryptoWallets, total_value_usd: 0, assets: [], defi_positions: [] };
+  }
 
-    const assets = [
-      {
-        symbol: "ETH",
-        name: "Ethereum",
-        balance: 4.25,
-        balance_usd: 9850.50,
-        current_price: 2317.76,
-        chain: "ethereum" as const,
-        contract_address: null,
-        logo_url: "https://assets.coingecko.com/coins/images/279/small/ethereum.png"
-      },
-      {
-        symbol: "USDC",
-        name: "USD Coin",
-        balance: 12500.00,
-        balance_usd: 12500.00,
-        current_price: 1.00,
-        chain: "ethereum" as const,
-        contract_address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        logo_url: "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png"
-      },
-      {
-        symbol: "SOL",
-        name: "Solana",
-        balance: 42.5,
-        balance_usd: 5418.75,
-        current_price: 127.50,
-        chain: "solana" as const,
-        contract_address: null,
-        logo_url: "https://assets.coingecko.com/coins/images/4128/small/solana.png"
-      },
-      {
-        symbol: "JUP",
-        name: "Jupiter",
-        balance: 1200,
-        balance_usd: 1320.00,
-        current_price: 1.10,
-        chain: "solana" as const,
-        contract_address: "JUPyiKBSn7W9zFicNsSQQWYC8U61TNjJ6H27vj9F9D6",
-        logo_url: "https://assets.coingecko.com/coins/images/34188/small/jup.png"
-      }
-    ];
-    const defi_positions = [
-      {
-        protocol_name: "Aave V3",
-        protocol_logo: "https://assets.coingecko.com/markets/images/698/small/aave.png",
-        position_type: "Lending",
-        value_usd: 22850.00,
-        assets: [
-          {
-            symbol: "WETH",
-            name: "Wrapped Ether",
-            balance: 10.0,
-            balance_usd: 23177.60,
-            current_price: 2317.76,
-            chain: "ethereum" as const,
-            contract_address: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-            logo_url: null
-          }
-        ]
-      },
-      {
-        protocol_name: "Uniswap V3",
-        protocol_logo: "https://assets.coingecko.com/markets/images/665/small/uniswap-v3.png",
-        position_type: "LP",
-        value_usd: 5640.25,
-        assets: [
-          {
-            symbol: "USDC/ETH",
-            name: "USDC/ETH LP",
-            balance: 1.0,
-            balance_usd: 5640.25,
-            current_price: 5640.25,
-            chain: "ethereum" as const,
-            contract_address: null,
-            logo_url: null
-          }
-        ]
-      }
-    ];
+  // === Physical Assets ===
 
-    const total_value_usd =
-      assets.reduce((sum, a) => sum + a.balance_usd, 0) +
-      defi_positions.reduce((sum, p) => sum + p.value_usd, 0);
+  async getPhysicalAssetsSummary(): Promise<PhysicalAssetsSummary> {
+    await delay(300);
+    return getDemoPhysicalAssetsSummary();
+  }
 
-    return {
-      wallets: this.cryptoWallets,
-      total_value_usd,
-      assets,
-      defi_positions,
-    };
+  async searchProperties(_request: PropertySearchRequest): Promise<PropertySearchResult[]> {
+    await delay(1000);
+    return [];
+  }
+
+  async searchVehicles(_request: VehicleSearchRequest): Promise<VehicleSearchResult[]> {
+    await delay(1000);
+    return [];
+  }
+
+  async getRealEstateAssets(): Promise<RealEstateAsset[]> {
+    await delay(300);
+    return getDemoPhysicalAssetsSummary().real_estate;
+  }
+
+  async createRealEstateAsset(_data: RealEstateAssetCreate): Promise<RealEstateAsset> {
+    await delay(500);
+    const now = new Date().toISOString();
+    return { id: "re1", user_id: "u1", name: _data.name, address: _data.address, city: _data.city ?? null, state: _data.state ?? null, zip_code: _data.zip_code ?? null, property_type: _data.property_type ?? "primary_residence", valuation_type: _data.valuation_type ?? "manual", market_value: _data.market_value ?? 0, purchase_price: _data.purchase_price ?? null, purchase_date: _data.purchase_date ?? null, estimated_annual_growth_rate: _data.estimated_annual_growth_rate ?? null, zillow_zpid: _data.zillow_zpid ?? null, last_valuation_at: null, created_at: now, updated_at: now };
+  }
+
+  async updateRealEstateAsset(_id: string, _data: RealEstateAssetUpdate): Promise<RealEstateAsset> {
+    await delay(500);
+    const now = new Date().toISOString();
+    return { id: _id, user_id: "u1", name: _data.name ?? "RE", address: _data.address ?? "", city: _data.city ?? null, state: _data.state ?? null, zip_code: _data.zip_code ?? null, property_type: _data.property_type ?? "primary_residence", valuation_type: _data.valuation_type ?? "manual", market_value: _data.market_value ?? 0, purchase_price: _data.purchase_price ?? null, purchase_date: _data.purchase_date ?? null, estimated_annual_growth_rate: _data.estimated_annual_growth_rate ?? null, zillow_zpid: _data.zillow_zpid ?? null, last_valuation_at: null, created_at: now, updated_at: now };
+  }
+
+  async deleteRealEstateAsset(_id: string): Promise<void> {
+    await delay(300);
+  }
+
+  async refreshRealEstateValuation(_id: string): Promise<ValuationRefreshResponse> {
+    await delay(1500);
+    return { status: "unchanged", message: "Demo mode" };
+  }
+
+  async getVehicleAssets(): Promise<VehicleAsset[]> {
+    await delay(300);
+    return getDemoPhysicalAssetsSummary().vehicles;
+  }
+
+  async createVehicleAsset(_data: VehicleAssetCreate): Promise<VehicleAsset> {
+    await delay(500);
+    const now = new Date().toISOString();
+    return { id: "v1", user_id: "u1", name: _data.name, make: _data.make, model: _data.model, year: _data.year, vin: _data.vin ?? null, mileage: _data.mileage ?? null, vehicle_type: _data.vehicle_type ?? "car", valuation_type: _data.valuation_type ?? "manual", market_value: _data.market_value ?? 0, purchase_price: _data.purchase_price ?? null, purchase_date: _data.purchase_date ?? null, estimated_annual_growth_rate: _data.estimated_annual_growth_rate ?? null, last_valuation_at: null, created_at: now, updated_at: now };
+  }
+
+  async updateVehicleAsset(_id: string, _data: VehicleAssetUpdate): Promise<VehicleAsset> {
+    await delay(500);
+    const now = new Date().toISOString();
+    return { id: _id, user_id: "u1", name: _data.name ?? "V", make: _data.make ?? "", model: _data.model ?? "", year: _data.year ?? 2020, vin: _data.vin ?? null, mileage: _data.mileage ?? null, vehicle_type: _data.vehicle_type ?? "car", valuation_type: _data.valuation_type ?? "manual", market_value: _data.market_value ?? 0, purchase_price: _data.purchase_price ?? null, purchase_date: _data.purchase_date ?? null, estimated_annual_growth_rate: _data.estimated_annual_growth_rate ?? null, last_valuation_at: null, created_at: now, updated_at: now };
+  }
+
+  async deleteVehicleAsset(_id: string): Promise<void> {
+    await delay(300);
+  }
+
+  async refreshVehicleValuation(_id: string): Promise<ValuationRefreshResponse> {
+    await delay(1500);
+    return { status: "unchanged", message: "Demo mode" };
+  }
+
+  async getCollectibleAssets(): Promise<CollectibleAsset[]> {
+    await delay(300);
+    return getDemoPhysicalAssetsSummary().collectibles;
+  }
+
+  async createCollectibleAsset(_data: CollectibleAssetCreate): Promise<CollectibleAsset> {
+    await delay(500);
+    const now = new Date().toISOString();
+    return { id: "c1", user_id: "u1", name: _data.name, item_type: _data.item_type ?? "other", valuation_type: _data.valuation_type ?? "manual", market_value: _data.market_value ?? 0, purchase_price: _data.purchase_price ?? null, purchase_date: _data.purchase_date ?? null, estimated_annual_growth_rate: _data.estimated_annual_growth_rate ?? null, metadata_json: _data.metadata_json ?? null, last_valuation_at: null, created_at: now, updated_at: now };
+  }
+
+  async updateCollectibleAsset(_id: string, _data: CollectibleAssetUpdate): Promise<CollectibleAsset> {
+    await delay(500);
+    const now = new Date().toISOString();
+    return { id: _id, user_id: "u1", name: _data.name ?? "C", item_type: _data.item_type ?? "other", valuation_type: _data.valuation_type ?? "manual", market_value: _data.market_value ?? 0, purchase_price: _data.purchase_price ?? null, purchase_date: _data.purchase_date ?? null, estimated_annual_growth_rate: _data.estimated_annual_growth_rate ?? null, metadata_json: _data.metadata_json ?? null, last_valuation_at: null, created_at: now, updated_at: now };
+  }
+
+  async deleteCollectibleAsset(_id: string): Promise<void> {
+    await delay(300);
+  }
+
+  async refreshCollectibleValuation(_id: string): Promise<ValuationRefreshResponse> {
+    await delay(1500);
+    return { status: "unchanged", message: "Demo mode" };
+  }
+
+  async getPreciousMetalAssets(): Promise<PreciousMetalAsset[]> {
+    await delay(300);
+    return getDemoPhysicalAssetsSummary().precious_metals;
+  }
+
+  async createPreciousMetalAsset(_data: PreciousMetalAssetCreate): Promise<PreciousMetalAsset> {
+    await delay(500);
+    const now = new Date().toISOString();
+    return { id: "m1", user_id: "u1", name: _data.name, metal_type: _data.metal_type, weight_oz: _data.weight_oz, valuation_type: _data.valuation_type ?? "auto", market_value: _data.market_value ?? 0, last_valuation_at: null, created_at: now, updated_at: now };
+  }
+
+  async updatePreciousMetalAsset(_id: string, _data: PreciousMetalAssetUpdate): Promise<PreciousMetalAsset> {
+    await delay(500);
+    const now = new Date().toISOString();
+    return { id: _id, user_id: "u1", name: _data.name ?? "M", metal_type: _data.metal_type ?? "gold", weight_oz: _data.weight_oz ?? 0, valuation_type: _data.valuation_type ?? "auto", market_value: _data.market_value ?? 0, last_valuation_at: null, created_at: now, updated_at: now };
+  }
+
+  async deletePreciousMetalAsset(_id: string): Promise<void> {
+    await delay(300);
+  }
+
+  async refreshPreciousMetalValuation(_id: string): Promise<ValuationRefreshResponse> {
+    await delay(1500);
+    return { status: "unchanged", message: "Demo mode" };
+  }
+
+  async getAlternativeAssets(): Promise<AlternativeAsset[]> {
+    await delay(300);
+    return getDemoPhysicalAssetsSummary().alternative_assets;
+  }
+
+  async createAlternativeAsset(_data: AlternativeAssetCreate): Promise<AlternativeAsset> {
+    await delay(500);
+    const now = new Date().toISOString();
+    return { id: "a1", user_id: "u1", name: _data.name, asset_type: _data.asset_type ?? "other", description: _data.description ?? null, market_value: _data.market_value ?? 0, cost_basis: _data.cost_basis ?? null, purchase_date: _data.purchase_date ?? null, estimated_annual_growth_rate: _data.estimated_annual_growth_rate ?? null, last_valuation_at: null, metadata_json: _data.metadata_json ?? null, created_at: now, updated_at: now };
+  }
+
+  async updateAlternativeAsset(_id: string, _data: AlternativeAssetUpdate): Promise<AlternativeAsset> {
+    await delay(500);
+    const now = new Date().toISOString();
+    return { id: _id, user_id: "u1", name: _data.name ?? "A", asset_type: _data.asset_type ?? "other", description: _data.description ?? null, market_value: _data.market_value ?? 0, cost_basis: _data.cost_basis ?? null, purchase_date: _data.purchase_date ?? null, estimated_annual_growth_rate: _data.estimated_annual_growth_rate ?? null, last_valuation_at: null, metadata_json: _data.metadata_json ?? null, created_at: now, updated_at: now };
+  }
+
+  async deleteAlternativeAsset(_id: string): Promise<void> {
+    await delay(300);
+  }
+
+  async getAssetValuationHistory(_type: string, _id: string): Promise<AssetValuation[]> {
+    await delay(500);
+    return [];
   }
 
   // === Verification (SVP) ===
 
   async generateProofOfFunds(threshold: number): Promise<SVPAttestation> {
-    throw new Error("Not implemented in demo mode");
+    void threshold;
+    return { "@context": "", type: "", id: "proof-1", issuer: "", issued_at: "", expires_at: "", credential: { claim_type: "", statement: "", verification_status: "", as_of: "", data_freshness_hours: 0 }, signature: null };
   }
 
   async validateAttestation(attestation: SVPAttestation): Promise<{ 
@@ -1392,26 +1275,7 @@ export class DemoStrataClient implements StrataClientInterface {
     issued_at: string;
     expires_at: string;
   }> {
-    throw new Error("Not implemented in demo mode");
-  }
-
-  private loadBankTxReimbursements(): Record<string, { reimbursed_at: string; reimbursement_memo: string | null }> {
-    if (typeof window === "undefined") return {};
-    try {
-      const raw = window.localStorage.getItem(DemoStrataClient.BANK_TX_REIMBURSEMENTS_STORAGE_KEY);
-      if (!raw) return {};
-      return JSON.parse(raw);
-    } catch {
-      return {};
-    }
-  }
-
-  private persistBankTxReimbursements(data: Record<string, { reimbursed_at: string; reimbursement_memo: string | null }>): void {
-    if (typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(DemoStrataClient.BANK_TX_REIMBURSEMENTS_STORAGE_KEY, JSON.stringify(data));
-    } catch {
-      // ignore
-    }
+    void attestation;
+    return { valid: true, statement: "Valid", issued_at: "", expires_at: "" };
   }
 }

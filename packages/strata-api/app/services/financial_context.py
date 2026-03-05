@@ -14,10 +14,11 @@ from app.models.financial_memory import FinancialMemory
 from app.models.holding import Holding
 from app.models.investment_account import InvestmentAccount
 from app.models.physical_asset import (
-    RealEstateAsset, 
-    VehicleAsset,
+    AlternativeAsset,
     CollectibleAsset,
-    PreciousMetalAsset
+    PreciousMetalAsset,
+    RealEstateAsset,
+    VehicleAsset,
 )
 from app.models.security import Security
 from app.models.transaction import Transaction
@@ -68,16 +69,18 @@ async def build_financial_context(
     equity_grants = equity_result.scalars().all()
     equity_summary = await equity_valuation_service.calculate_portfolio_summary(list(equity_grants))
 
-    re_result, v_result, c_result, m_result = await asyncio.gather(
+    re_result, v_result, c_result, m_result, a_result = await asyncio.gather(
         session.execute(select(RealEstateAsset).where(RealEstateAsset.user_id == user_id)),
         session.execute(select(VehicleAsset).where(VehicleAsset.user_id == user_id)),
         session.execute(select(CollectibleAsset).where(CollectibleAsset.user_id == user_id)),
         session.execute(select(PreciousMetalAsset).where(PreciousMetalAsset.user_id == user_id)),
+        session.execute(select(AlternativeAsset).where(AlternativeAsset.user_id == user_id)),
     )
     real_estate_assets = re_result.scalars().all()
     vehicle_assets = v_result.scalars().all()
     collectible_assets = c_result.scalars().all()
     precious_metal_assets = m_result.scalars().all()
+    alternative_assets = a_result.scalars().all()
 
     conn_result = await session.execute(
         select(Connection).where(Connection.user_id == user_id)
@@ -194,6 +197,14 @@ async def build_financial_context(
             }
             for a in precious_metal_assets
         ],
+        "alternative_assets": [
+            {
+                "name": a.name,
+                "type": a.asset_type.value,
+                "market_value": _decimal_to_float(a.market_value),
+            }
+            for a in alternative_assets
+        ],
     }
 
     # -- Build holdings section (top 20) --
@@ -222,12 +233,13 @@ async def build_financial_context(
     )
     total_equity_vested = float(equity_summary.total_vested_value)
     total_equity_unvested = float(equity_summary.total_unvested_value)
-    
+
     total_physical = sum((float(a.market_value) for a in real_estate_assets), 0.0) + \
                      sum((float(a.market_value) for a in vehicle_assets), 0.0) + \
                      sum((float(a.market_value) for a in collectible_assets), 0.0) + \
-                     sum((float(a.market_value) for a in precious_metal_assets), 0.0)
-    
+                     sum((float(a.market_value) for a in precious_metal_assets), 0.0) + \
+                     sum((float(a.market_value) for a in alternative_assets), 0.0)
+
     net_worth = total_investment + total_cash + total_equity_vested + total_physical - total_debt
 
     tax_advantaged = sum(
