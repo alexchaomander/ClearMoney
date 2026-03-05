@@ -32,6 +32,7 @@ from app.schemas.tax_plan_workspace import (
     TaxPlanVersionCreateRequest,
     TaxPlanVersionResponse,
 )
+from app.services.tax_optimizer import TaxOptimizerService
 
 router = APIRouter(prefix="/tax-plan-workspace", tags=["tax-plan-workspace"])
 
@@ -516,3 +517,21 @@ async def list_tax_plan_events(
     )
     rows = result.scalars().all()
     return [TaxPlanEventResponse.model_validate(row) for row in rows]
+
+
+@router.post("/plans/{plan_id}/versions/{version_id}/optimization-report")
+async def generate_optimization_report(
+    plan_id: uuid.UUID,
+    version_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Generate an AI tax optimization report for a specific plan version."""
+    await _get_plan_accessible(session, user, plan_id)
+    service = TaxOptimizerService(session)
+    try:
+        report = await service.generate_optimization_report(version_id)
+        return report
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+

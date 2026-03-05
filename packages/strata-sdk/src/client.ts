@@ -245,6 +245,7 @@ export interface StrataClientInterface {
   revokeTaxPlanCollaborator(planId: string, collaboratorId: string): Promise<{ status: string }>;
   createTaxPlanEvent(planId: string, data: TaxPlanEventCreateRequest): Promise<TaxPlanEvent>;
   listTaxPlanEvents(planId: string, params?: { limit?: number }): Promise<TaxPlanEvent[]>;
+  generateTaxOptimizationReport(planId: string, versionId: string): Promise<any>;
   // Tax Documents
   uploadTaxDocument(file: File | Blob, filename: string, documentTypeHint?: string): Promise<TaxDocumentResponse>;
   listTaxDocuments(limit?: number): Promise<TaxDocumentListResponse[]>;
@@ -1086,6 +1087,13 @@ export class StrataClient implements StrataClientInterface {
   async listTaxPlanEvents(planId: string, params?: { limit?: number }): Promise<TaxPlanEvent[]> {
     return this.request<TaxPlanEvent[]>(
       this.buildUrl(`/api/v1/tax-plan-workspace/plans/${planId}/events`, { limit: params?.limit })
+    );
+  }
+
+  async generateTaxOptimizationReport(planId: string, versionId: string): Promise<any> {
+    return this.request<any>(
+      `/api/v1/tax-plan-workspace/plans/${planId}/versions/${versionId}/optimization-report`,
+      { method: 'POST' }
     );
   }
 

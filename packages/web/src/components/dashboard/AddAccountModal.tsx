@@ -78,6 +78,9 @@ const EQUITY_TYPES = [
   { value: "rsu", label: "RSU" },
   { value: "iso", label: "Stock Options (ISO)" },
   { value: "nso", label: "Stock Options (NSO)" },
+  { value: "founder_stock", label: "Founder Stock" },
+  { value: "safe", label: "SAFE" },
+  { value: "convertible_note", label: "Convertible Note" },
 ];
 
 const CRYPTO_CHAINS = [
@@ -247,10 +250,14 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
   // Equity form
   const [equityName, setEquityName] = useState("");
   const [equitySymbol, setEquitySymbol] = useState("");
+  const [equityCompanyName, setEquityCompanyName] = useState("");
   const [equityType, setEquityType] = useState("rsu");
   const [equityQuantity, setEquityQuantity] = useState("");
   const [equityStrike, setEquityStrike] = useState("");
   const [equityDate, setEquityDate] = useState("");
+  const [equityValuationCap, setEquityValuationCap] = useState("");
+  const [equityDiscountRate, setEquityDiscountRate] = useState("");
+  const [equityAmountInvested, setEquityAmountInvested] = useState("");
 
   // Crypto form
   const [cryptoAddress, setCryptoAddress] = useState("");
@@ -342,10 +349,14 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
 
     setEquityName("");
     setEquitySymbol("");
+    setEquityCompanyName("");
     setEquityType("rsu");
     setEquityQuantity("");
     setEquityStrike("");
     setEquityDate("");
+    setEquityValuationCap("");
+    setEquityDiscountRate("");
+    setEquityAmountInvested("");
 
     setCryptoAddress("");
     setCryptoChain("ethereum");
@@ -418,11 +429,15 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
     } else if (tab === "equity") {
       await equityMutations.add.mutateAsync({
         grant_name: equityName,
-        symbol: equitySymbol.toUpperCase(),
+        symbol: equitySymbol ? equitySymbol.toUpperCase() : null,
+        company_name: equityCompanyName || null,
         grant_type: equityType as any,
-        quantity: parseFloat(equityQuantity),
+        quantity: equityQuantity ? parseFloat(equityQuantity) : 0,
         strike_price: equityStrike ? parseFloat(equityStrike) : null,
         grant_date: equityDate || new Date().toISOString().split('T')[0],
+        valuation_cap: equityValuationCap ? parseFloat(equityValuationCap) : null,
+        discount_rate: equityDiscountRate ? parseFloat(equityDiscountRate) / 100 : null,
+        amount_invested: equityAmountInvested ? parseFloat(equityAmountInvested) : null,
       });
     } else if (tab === "crypto") {
       if (!validateAddress(cryptoAddress, cryptoChain)) return;
@@ -642,38 +657,73 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                     {tab === "equity" && (
                       <>
                         <div className="grid grid-cols-2 gap-4">
+                          {["rsu", "iso", "nso", "founder_stock"].includes(equityType) ? (
+                            <div>
+                              <label className={labelClass}>Ticker Symbol</label>
+                              <input className={cn(inputClass, "font-mono uppercase")} value={equitySymbol} onChange={(e) => setEquitySymbol(e.target.value)} placeholder="AAPL" />
+                            </div>
+                          ) : (
+                            <div>
+                              <label className={labelClass}>Company Name</label>
+                              <input className={inputClass} value={equityCompanyName} onChange={(e) => setEquityCompanyName(e.target.value)} placeholder="e.g. Stripe" />
+                            </div>
+                          )}
                           <div>
-                            <label className={labelClass}>Ticker Symbol</label>
-                            <input className={cn(inputClass, "font-mono uppercase")} value={equitySymbol} onChange={(e) => setEquitySymbol(e.target.value)} placeholder="AAPL" required />
-                          </div>
-                          <div>
-                            <label className={labelClass}>Grant Type</label>
+                            <label className={labelClass}>Grant / Asset Type</label>
                             <select className={selectClass} value={equityType} onChange={(e) => setEquityType(e.target.value)}>
                               {EQUITY_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                             </select>
                           </div>
                         </div>
                         <div>
-                          <label className={labelClass}>Grant Description</label>
+                          <label className={labelClass}>Description</label>
                           <input className={inputClass} value={equityName} onChange={(e) => setEquityName(e.target.value)} placeholder="e.g. Initial Hire Grant" required />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className={labelClass}>Total Shares</label>
-                            <input className={inputClass} type="number" step="1" value={equityQuantity} onChange={(e) => setEquityQuantity(e.target.value)} placeholder="0" required />
-                          </div>
-                          <div>
-                            <label className={labelClass}>Strike Price</label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
-                              <input className={cn(inputClass, "pl-7")} type="number" step="0.01" value={equityStrike} onChange={(e) => setEquityStrike(e.target.value)} placeholder="0.00" disabled={equityType === "rsu"} />
+                        
+                        {["safe", "convertible_note"].includes(equityType) ? (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className={labelClass}>Amount Invested</label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                                <input className={cn(inputClass, "pl-7")} type="number" step="0.01" value={equityAmountInvested} onChange={(e) => setEquityAmountInvested(e.target.value)} placeholder="0.00" required />
+                              </div>
+                            </div>
+                            <div>
+                              <label className={labelClass}>Valuation Cap</label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                                <input className={cn(inputClass, "pl-7")} type="number" step="1" value={equityValuationCap} onChange={(e) => setEquityValuationCap(e.target.value)} placeholder="e.g. 10000000" />
+                              </div>
+                            </div>
+                            <div>
+                              <label className={labelClass}>Discount Rate (%)</label>
+                              <input className={inputClass} type="number" step="0.01" value={equityDiscountRate} onChange={(e) => setEquityDiscountRate(e.target.value)} placeholder="e.g. 20" />
+                            </div>
+                            <div>
+                              <label className={labelClass}>Date</label>
+                              <input className={inputClass} type="date" value={equityDate} onChange={(e) => setEquityDate(e.target.value)} required />
                             </div>
                           </div>
-                        </div>
-                        <div>
-                          <label className={labelClass}>Grant Date</label>
-                          <input className={inputClass} type="date" value={equityDate} onChange={(e) => setEquityDate(e.target.value)} required />
-                        </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className={labelClass}>Total Shares</label>
+                              <input className={inputClass} type="number" step="1" value={equityQuantity} onChange={(e) => setEquityQuantity(e.target.value)} placeholder="0" required />
+                            </div>
+                            <div>
+                              <label className={labelClass}>Strike Price / 409A</label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                                <input className={cn(inputClass, "pl-7")} type="number" step="0.01" value={equityStrike} onChange={(e) => setEquityStrike(e.target.value)} placeholder="0.00" disabled={equityType === "rsu"} />
+                              </div>
+                            </div>
+                            <div className="col-span-2">
+                              <label className={labelClass}>Grant Date</label>
+                              <input className={inputClass} type="date" value={equityDate} onChange={(e) => setEquityDate(e.target.value)} required />
+                            </div>
+                          </div>
+                        )}
                       </>
                     )}
 

@@ -17,7 +17,31 @@ class EquityValuationService:
 
     async def calculate_grant_valuation(self, grant: EquityGrant) -> EquityValuation:
         """Calculate the current valuation of a single grant."""
-        current_price = await stock_price_service.get_price(grant.symbol)
+        # For SAFEs and Convertible notes, use amount invested as a baseline value if symbol is empty
+        # Real valuation for SAFEs can be complex (based on next round), but amount_invested is a safe floor.
+        if grant.grant_type in {EquityGrantType.safe, EquityGrantType.convertible_note}:
+            # Represent the instrument as 1 unit valued at amount_invested.
+            # This keeps quantity semantically correct (share count) vs. value.
+            amount_invested = grant.amount_invested or Decimal("0.00")
+            return EquityValuation(
+                symbol=grant.symbol or grant.company_name or "Private",
+                current_price=amount_invested,
+                vested_quantity=Decimal("1"),
+                unvested_quantity=Decimal("0"),
+                vested_value=amount_invested,
+                unvested_value=Decimal("0.00"),
+                total_value=amount_invested,
+                next_vest_date=None,
+                next_vest_quantity=None,
+            )
+
+        # For founder stock, or regular RSUs/Options
+        current_price = Decimal("0.00")
+        if grant.symbol:
+            current_price = await stock_price_service.get_price(grant.symbol)
+        elif grant.strike_price and grant.grant_type == EquityGrantType.founder_stock:
+            # Founder stock without symbol might use strike_price as the current 409a estimate
+            current_price = grant.strike_price
 
         today = date.today()
         vested_quantity = Decimal("0.00")
@@ -43,7 +67,11 @@ class EquityValuationService:
                         next_vest_quantity = event_qty
         else:
             # If no schedule, assume fully unvested for now (safety fallback)
-            unvested_quantity = grant.quantity
+            # Except for founder stock which is often fully vested or vests over time, we assume fully vested if no schedule
+            if grant.grant_type == EquityGrantType.founder_stock:
+                vested_quantity = grant.quantity
+            else:
+                unvested_quantity = grant.quantity
 
         vested_value = vested_quantity * current_price
         unvested_value = unvested_quantity * current_price
@@ -56,7 +84,7 @@ class EquityValuationService:
             unvested_value = unvested_quantity * intrinsic_value_per_share
 
         return EquityValuation(
-            symbol=grant.symbol,
+            symbol=grant.symbol or grant.company_name or "Private",
             current_price=current_price,
             vested_quantity=vested_quantity,
             unvested_quantity=unvested_quantity,
@@ -92,8 +120,9 @@ class EquityValuationService:
         """Calculate monthly wealth projection from equity for the next 24 months."""
         today = date.today()
 
-        # Get current prices for all symbols involved concurrently
-        symbols = list(set(g.symbol for g in grants))
+        # Get current prices for public grants (those with a ticker symbol) concurrently.
+        # Grants without a symbol (private SAFEs, convertible notes, founder stock) are valued separately.
+        symbols = list(set(g.symbol for g in grants if g.symbol))
         price_tasks = [stock_price_service.get_price(s) for s in symbols]
         price_results = await asyncio.gather(*price_tasks)
         prices = dict(zip(symbols, price_results))
@@ -102,7 +131,16 @@ class EquityValuationService:
         total_potential_value = Decimal("0.00")
         grant_data = []
         for grant in grants:
-            current_price = prices.get(grant.symbol, Decimal("0.00"))
+            if grant.grant_type in {EquityGrantType.safe, EquityGrantType.convertible_note}:
+                # Private instruments: project a flat value equal to amount_invested
+                total_potential_value += grant.amount_invested or Decimal("0.00")
+                grant_data.append({"grant": grant, "value_per_share": Decimal("0.00"), "flat_value": grant.amount_invested or Decimal("0.00")})
+                continue
+
+            if grant.grant_type == EquityGrantType.founder_stock and not grant.symbol:
+                current_price = grant.strike_price or Decimal("0.00")
+            else:
+                current_price = prices.get(grant.symbol, Decimal("0.00"))
 
             # Calculate intrinsic value per share
             value_per_share = current_price
@@ -123,6 +161,13 @@ class EquityValuationService:
 
             for item in grant_data:
                 grant = item["grant"]
+
+                # Private instruments (SAFEs, convertible notes) have no vesting schedule;
+                # their full invested value is considered immediately liquid.
+                if "flat_value" in item:
+                    liquid_value += item["flat_value"]
+                    continue
+
                 value_per_share = item["value_per_share"]
                 vested_qty = Decimal("0.00")
 

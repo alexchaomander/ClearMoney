@@ -65,11 +65,15 @@ async def create_equity_grant(
     grant = EquityGrant(
         user_id=user_id,
         symbol=grant_in.symbol,
+        company_name=grant_in.company_name,
         grant_name=grant_in.grant_name,
         grant_type=grant_in.grant_type,
         quantity=grant_in.quantity,
         strike_price=grant_in.strike_price,
         grant_date=grant_in.grant_date,
+        valuation_cap=grant_in.valuation_cap,
+        discount_rate=grant_in.discount_rate,
+        amount_invested=grant_in.amount_invested,
         vesting_schedule=vesting_schedule_json,
         notes=grant_in.notes,
     )

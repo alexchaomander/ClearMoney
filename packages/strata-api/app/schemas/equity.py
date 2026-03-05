@@ -13,12 +13,16 @@ class VestingEvent(BaseModel):
 
 
 class EquityGrantBase(BaseModel):
-    symbol: str
+    symbol: str | None = None
+    company_name: str | None = None
     grant_name: str
     grant_type: EquityGrantType
     quantity: Decimal = Field(default=Decimal("0.00"))
     strike_price: Decimal | None = None
     grant_date: date
+    valuation_cap: Decimal | None = None
+    discount_rate: Decimal | None = None
+    amount_invested: Decimal | None = None
     vesting_schedule: list[VestingEvent] | None = None
     notes: str | None = None
 
@@ -29,11 +33,15 @@ class EquityGrantCreate(EquityGrantBase):
 
 class EquityGrantUpdate(BaseModel):
     symbol: str | None = None
+    company_name: str | None = None
     grant_name: str | None = None
     grant_type: EquityGrantType | None = None
     quantity: Decimal | None = None
     strike_price: Decimal | None = None
     grant_date: date | None = None
+    valuation_cap: Decimal | None = None
+    discount_rate: Decimal | None = None
+    amount_invested: Decimal | None = None
     vesting_schedule: list[VestingEvent] | None = None
     notes: str | None = None
 
