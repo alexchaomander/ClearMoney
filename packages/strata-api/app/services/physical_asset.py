@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional
 
 from pydantic import BaseModel
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.physical_asset import (

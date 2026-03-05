@@ -19,6 +19,9 @@ class EquityGrantType(str, enum.Enum):
     nso = "nso"
     restricted_stock = "restricted_stock"
     phantom_stock = "phantom_stock"
+    safe = "safe"
+    convertible_note = "convertible_note"
+    founder_stock = "founder_stock"
 
 
 class EquityGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -27,7 +30,8 @@ class EquityGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
-    symbol: Mapped[str] = mapped_column(String(20), index=True)
+    symbol: Mapped[str | None] = mapped_column(String(20), index=True, nullable=True)
+    company_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     grant_name: Mapped[str] = mapped_column(String(255))
     grant_type: Mapped[EquityGrantType] = mapped_column(
         Enum(EquityGrantType, values_callable=lambda e: [x.value for x in e]),
@@ -39,6 +43,11 @@ class EquityGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Numeric(precision=14, scale=4), default=None
     )
     grant_date: Mapped[date] = mapped_column(Date)
+
+    # Cap Table Specific Fields
+    valuation_cap: Mapped[Decimal | None] = mapped_column(Numeric(18, 2), default=None)
+    discount_rate: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), default=None)
+    amount_invested: Mapped[Decimal | None] = mapped_column(Numeric(18, 2), default=None)
 
     # JSON-based vesting schedule
     # Format: [{"date": "2024-01-01", "quantity": 100}, ...]

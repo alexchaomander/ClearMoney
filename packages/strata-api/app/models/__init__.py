@@ -16,6 +16,7 @@ from app.models.crypto_wallet import CryptoChain, CryptoWallet
 from app.models.debt_account import DebtAccount, DebtType
 from app.models.decision_trace import DecisionTrace, DecisionTraceType
 from app.models.entity import EntityType, LegalEntity
+from app.models.equity_grant import EquityGrant, EquityGrantType
 from app.models.financial_memory import FilingStatus, FinancialMemory, RiskTolerance
 from app.models.holding import Holding
 from app.models.income_source import IncomeFrequency, IncomeSource, IncomeSourceType
@@ -75,6 +76,8 @@ __all__ = [
     "DecisionTraceType",
     "EntityType",
     "LegalEntity",
+    "EquityGrant",
+    "EquityGrantType",
     "FilingStatus",
     "FinancialMemory",
     "Holding",

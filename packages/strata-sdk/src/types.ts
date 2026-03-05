@@ -1662,7 +1662,7 @@ export interface FinancialPassport {
 
 // === Equity ===
 
-export type EquityGrantType = 'rsu' | 'iso' | 'nso' | 'restricted_stock' | 'phantom_stock';
+export type EquityGrantType = 'rsu' | 'iso' | 'nso' | 'restricted_stock' | 'phantom_stock' | 'safe' | 'convertible_note' | 'founder_stock';
 
 export interface VestingEvent {
   date: string;
@@ -1672,12 +1672,16 @@ export interface VestingEvent {
 export interface EquityGrant {
   id: string;
   user_id: string;
-  symbol: string;
+  symbol?: string | null;
+  company_name?: string | null;
   grant_name: string;
   grant_type: EquityGrantType;
   quantity: number;
   strike_price: number | null;
   grant_date: string;
+  valuation_cap?: number | null;
+  discount_rate?: number | null;
+  amount_invested?: number | null;
   vesting_schedule: VestingEvent[] | null;
   notes: string | null;
   created_at: string;
@@ -1685,23 +1689,31 @@ export interface EquityGrant {
 }
 
 export interface EquityGrantCreate {
-  symbol: string;
+  symbol?: string | null;
+  company_name?: string | null;
   grant_name: string;
   grant_type: EquityGrantType;
   quantity: number;
   strike_price?: number | null;
   grant_date: string;
+  valuation_cap?: number | null;
+  discount_rate?: number | null;
+  amount_invested?: number | null;
   vesting_schedule?: VestingEvent[] | null;
   notes?: string | null;
 }
 
 export interface EquityGrantUpdate {
-  symbol?: string;
+  symbol?: string | null;
+  company_name?: string | null;
   grant_name?: string;
   grant_type?: EquityGrantType;
   quantity?: number;
   strike_price?: number | null;
   grant_date?: string;
+  valuation_cap?: number | null;
+  discount_rate?: number | null;
+  amount_invested?: number | null;
   vesting_schedule?: VestingEvent[] | null;
   notes?: string | null;
 }
