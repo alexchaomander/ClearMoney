@@ -436,7 +436,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
         strike_price: equityStrike ? parseFloat(equityStrike) : null,
         grant_date: equityDate || new Date().toISOString().split('T')[0],
         valuation_cap: equityValuationCap ? parseFloat(equityValuationCap) : null,
-        discount_rate: equityDiscountRate ? parseFloat(equityDiscountRate) : null,
+        discount_rate: equityDiscountRate ? parseFloat(equityDiscountRate) / 100 : null,
         amount_invested: equityAmountInvested ? parseFloat(equityAmountInvested) : null,
       });
     } else if (tab === "crypto") {

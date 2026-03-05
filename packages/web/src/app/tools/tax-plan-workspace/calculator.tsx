@@ -54,6 +54,7 @@ import {
 import { useMemoryPreFill } from "@/hooks/useMemoryPreFill";
 import { LoadMyDataBanner } from "@/components/tools/LoadMyDataBanner";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/shared/toast";
 
 const DEFAULT_INPUTS: WorkspaceInputs = {
   mode: "individual",
@@ -474,6 +475,7 @@ export function Calculator() {
   const client = useStrataClient();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
+  const { pushToast } = useToast();
   const csvFileInputRef = useRef<HTMLInputElement | null>(null);
   const comparedPairRef = useRef<string>("");
 
@@ -732,10 +734,16 @@ export function Calculator() {
     mutationFn: (payload: { planId: string; versionId: string }) =>
       client.generateTaxOptimizationReport(payload.planId, payload.versionId),
     onSuccess: (data: any) => {
-      alert(`Tax Optimization Report:\n\n${data.summary}\n\n${data.current_strategy}\n\nPotential Savings: $${data.dollar_amounts_saved}\n\n${data.recommendations.map((r: any) => `- ${r.title}: ${r.description} (Save $${r.potential_savings})`).join('\n')}`);
+      const savings = data.dollar_amounts_saved?.toLocaleString("en-US", { style: "currency", currency: "USD" }) ?? "$0";
+      const lines = (data.recommendations ?? []).map((r: any) => r.title).join(", ");
+      pushToast({
+        title: "Optimization Report Ready",
+        message: `Potential savings: ${savings}${lines ? ` · ${lines}` : ""}`,
+        variant: "success",
+      });
     },
     onError: () => {
-      alert("Failed to generate optimization report.");
+      pushToast({ title: "Optimization Failed", message: "Could not generate the report. Please try again.", variant: "error" });
     }
   });
 
@@ -1714,9 +1722,14 @@ export function Calculator() {
                                           option.key.replace("server-version:", "")
                                         )
                                       }
-                                      className="inline-flex items-center gap-1 rounded-lg border border-purple-400/40 bg-purple-500/10 px-2.5 py-1.5 text-xs text-purple-200 hover:bg-purple-500/20"
+                                      disabled={generateOptimizationReportMutation.isPending}
+                                      className="inline-flex items-center gap-1 rounded-lg border border-purple-400/40 bg-purple-500/10 px-2.5 py-1.5 text-xs text-purple-200 hover:bg-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                      <Zap className="h-3.5 w-3.5" />
+                                      {generateOptimizationReportMutation.isPending ? (
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      ) : (
+                                        <Zap className="h-3.5 w-3.5" />
+                                      )}
                                       Optimize
                                     </button>
                                   </div>
