@@ -13,7 +13,27 @@ from app.models.physical_asset import (
     RealEstateType,
     ValuationType,
     VehicleType,
+    AlternativeAssetType,
+    AssetType,
 )
+
+
+class AssetValuationBase(BaseModel):
+    asset_id: uuid.UUID
+    asset_type: AssetType
+    value: Decimal
+    valuation_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    source: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class AssetValuation(AssetValuationBase):
+    id: uuid.UUID
+    user_id: uuid.UUID
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class RealEstateAssetBase(BaseModel):
@@ -27,6 +47,7 @@ class RealEstateAssetBase(BaseModel):
     market_value: Decimal = Field(default=Decimal(0))
     purchase_price: Optional[Decimal] = None
     purchase_date: Optional[datetime] = None
+    estimated_annual_growth_rate: Optional[Decimal] = None
     zillow_zpid: Optional[str] = None
 
 
@@ -45,6 +66,7 @@ class RealEstateAssetUpdate(BaseModel):
     market_value: Optional[Decimal] = None
     purchase_price: Optional[Decimal] = None
     purchase_date: Optional[datetime] = None
+    estimated_annual_growth_rate: Optional[Decimal] = None
     zillow_zpid: Optional[str] = None
 
 
@@ -71,6 +93,7 @@ class VehicleAssetBase(BaseModel):
     market_value: Decimal = Field(default=Decimal(0))
     purchase_price: Optional[Decimal] = None
     purchase_date: Optional[datetime] = None
+    estimated_annual_growth_rate: Optional[Decimal] = None
 
 
 class VehicleAssetCreate(VehicleAssetBase):
@@ -89,6 +112,7 @@ class VehicleAssetUpdate(BaseModel):
     market_value: Optional[Decimal] = None
     purchase_price: Optional[Decimal] = None
     purchase_date: Optional[datetime] = None
+    estimated_annual_growth_rate: Optional[Decimal] = None
 
 
 class VehicleAsset(VehicleAssetBase):
@@ -111,6 +135,7 @@ class CollectibleAssetBase(BaseModel):
     market_value: Decimal = Field(default=Decimal(0))
     purchase_price: Optional[Decimal] = None
     purchase_date: Optional[datetime] = None
+    estimated_annual_growth_rate: Optional[Decimal] = None
     metadata_json: Optional[dict] = None
 
 
@@ -125,6 +150,7 @@ class CollectibleAssetUpdate(BaseModel):
     market_value: Optional[Decimal] = None
     purchase_price: Optional[Decimal] = None
     purchase_date: Optional[datetime] = None
+    estimated_annual_growth_rate: Optional[Decimal] = None
     metadata_json: Optional[dict] = None
 
 
@@ -172,12 +198,53 @@ class PreciousMetalAsset(PreciousMetalAssetBase):
         from_attributes = True
 
 
+# Alternative Assets
+
+class AlternativeAssetBase(BaseModel):
+    name: str
+    asset_type: AlternativeAssetType = AlternativeAssetType.other
+    description: Optional[str] = None
+    market_value: Decimal = Field(default=Decimal(0))
+    cost_basis: Optional[Decimal] = None
+    purchase_date: Optional[datetime] = None
+    estimated_annual_growth_rate: Optional[Decimal] = None
+    metadata_json: Optional[dict] = None
+
+
+class AlternativeAssetCreate(AlternativeAssetBase):
+    pass
+
+
+class AlternativeAssetUpdate(BaseModel):
+    name: Optional[str] = None
+    asset_type: Optional[AlternativeAssetType] = None
+    description: Optional[str] = None
+    market_value: Optional[Decimal] = None
+    cost_basis: Optional[Decimal] = None
+    purchase_date: Optional[datetime] = None
+    estimated_annual_growth_rate: Optional[Decimal] = None
+    metadata_json: Optional[dict] = None
+
+
+class AlternativeAsset(AlternativeAssetBase):
+    id: uuid.UUID
+    user_id: uuid.UUID
+    last_valuation_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class PhysicalAssetsSummary(BaseModel):
     real_estate: list[RealEstateAsset]
     vehicles: list[VehicleAsset]
     collectibles: list[CollectibleAsset]
     precious_metals: list[PreciousMetalAsset]
+    alternative_assets: list[AlternativeAsset]
     total_value: Decimal
+
 
 
 class ValuationRefreshResponse(BaseModel):

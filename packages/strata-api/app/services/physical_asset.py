@@ -13,7 +13,10 @@ from app.models.physical_asset import (
     VehicleAsset,
     CollectibleAsset,
     PreciousMetalAsset,
-    ValuationType
+    AlternativeAsset,
+    AssetValuation,
+    ValuationType,
+    AssetType
 )
 from app.schemas.physical_asset import (
     RealEstateAssetCreate,
@@ -24,6 +27,8 @@ from app.schemas.physical_asset import (
     CollectibleAssetUpdate,
     PreciousMetalAssetCreate,
     PreciousMetalAssetUpdate,
+    AlternativeAssetCreate,
+    AlternativeAssetUpdate,
     PhysicalAssetsSummary,
     PropertySearchResult,
     VehicleSearchResult,
@@ -42,6 +47,44 @@ class PhysicalAssetService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    async def _record_valuation(
+        self,
+        user_id: uuid.UUID,
+        asset_id: uuid.UUID,
+        asset_type: AssetType,
+        value: Decimal,
+        source: Optional[str] = None,
+        notes: Optional[str] = None
+    ):
+        """Record a historical valuation entry."""
+        valuation = AssetValuation(
+            user_id=user_id,
+            asset_id=asset_id,
+            asset_type=asset_type,
+            value=value,
+            source=source,
+            notes=notes,
+            valuation_date=datetime.now(timezone.utc)
+        )
+        self.session.add(valuation)
+        # We don't commit here, assuming the caller will commit
+
+    async def get_valuation_history(
+        self,
+        user_id: uuid.UUID,
+        asset_id: uuid.UUID,
+        asset_type: AssetType
+    ) -> List[AssetValuation]:
+        """Get the valuation history for a specific asset."""
+        result = await self.session.execute(
+            select(AssetValuation).where(
+                AssetValuation.user_id == user_id,
+                AssetValuation.asset_id == asset_id,
+                AssetValuation.asset_type == asset_type
+            ).order_by(AssetValuation.valuation_date.desc())
+        )
+        return list(result.scalars().all())
+
     # --- Real Estate ---
 
     async def get_real_estate_assets(self, user_id: uuid.UUID) -> List[RealEstateAsset]:
@@ -58,6 +101,18 @@ class PhysicalAssetService:
             **data.model_dump()
         )
         self.session.add(asset)
+        await self.session.flush()
+
+        # Record initial valuation if provided
+        if asset.market_value > 0:
+            await self._record_valuation(
+                user_id=user_id,
+                asset_id=asset.id,
+                asset_type=AssetType.real_estate,
+                value=asset.market_value,
+                source="Manual (Initial)" if asset.valuation_type == ValuationType.manual else "Auto (Initial)"
+            )
+
         await self.session.commit()
         await self.session.refresh(asset)
 
@@ -115,6 +170,18 @@ class PhysicalAssetService:
             **data.model_dump()
         )
         self.session.add(asset)
+        await self.session.flush()
+
+        # Record initial valuation if provided
+        if asset.market_value > 0:
+            await self._record_valuation(
+                user_id=user_id,
+                asset_id=asset.id,
+                asset_type=AssetType.vehicle,
+                value=asset.market_value,
+                source="Manual (Initial)" if asset.valuation_type == ValuationType.manual else "Auto (Initial)"
+            )
+
         await self.session.commit()
         await self.session.refresh(asset)
 
@@ -196,6 +263,18 @@ class PhysicalAssetService:
             **data.model_dump()
         )
         self.session.add(asset)
+        await self.session.flush()
+
+        # Record initial valuation if provided
+        if asset.market_value > 0:
+            await self._record_valuation(
+                user_id=user_id,
+                asset_id=asset.id,
+                asset_type=AssetType.collectible,
+                value=asset.market_value,
+                source="Manual (Initial)" if asset.valuation_type == ValuationType.manual else "Auto (Initial)"
+            )
+
         await self.session.commit()
         await self.session.refresh(asset)
 
@@ -253,6 +332,18 @@ class PhysicalAssetService:
             **data.model_dump()
         )
         self.session.add(asset)
+        await self.session.flush()
+
+        # Record initial valuation if provided
+        if asset.market_value > 0:
+            await self._record_valuation(
+                user_id=user_id,
+                asset_id=asset.id,
+                asset_type=AssetType.precious_metal,
+                value=asset.market_value,
+                source="Manual (Initial)" if asset.valuation_type == ValuationType.manual else "Auto (Initial)"
+            )
+
         await self.session.commit()
         await self.session.refresh(asset)
 
@@ -289,6 +380,80 @@ class PhysicalAssetService:
             delete(PreciousMetalAsset).where(
                 PreciousMetalAsset.id == asset_id, 
                 PreciousMetalAsset.user_id == user_id
+            )
+        )
+        await self.session.commit()
+        return result.rowcount > 0
+
+    # --- Alternative Assets ---
+
+    async def get_alternative_assets(self, user_id: uuid.UUID) -> List[AlternativeAsset]:
+        result = await self.session.execute(
+            select(AlternativeAsset).where(AlternativeAsset.user_id == user_id)
+        )
+        return list(result.scalars().all())
+
+    async def create_alternative_asset(
+        self, user_id: uuid.UUID, data: AlternativeAssetCreate
+    ) -> AlternativeAsset:
+        asset = AlternativeAsset(
+            user_id=user_id,
+            **data.model_dump()
+        )
+        self.session.add(asset)
+        await self.session.flush()
+
+        # Record initial valuation if provided
+        if asset.market_value > 0:
+            await self._record_valuation(
+                user_id=user_id,
+                asset_id=asset.id,
+                asset_type=AssetType.alternative,
+                value=asset.market_value,
+                source="Manual (Initial)"
+            )
+
+        await self.session.commit()
+        await self.session.refresh(asset)
+        return asset
+
+    async def update_alternative_asset(
+        self, asset_id: uuid.UUID, user_id: uuid.UUID, data: AlternativeAssetUpdate
+    ) -> Optional[AlternativeAsset]:
+        asset_result = await self.session.execute(
+            select(AlternativeAsset).where(
+                AlternativeAsset.id == asset_id, 
+                AlternativeAsset.user_id == user_id
+            )
+        )
+        asset = asset_result.scalar_one_or_none()
+        if not asset:
+            return None
+
+        previous_value = asset.market_value
+        for key, value in data.model_dump(exclude_unset=True).items():
+            setattr(asset, key, value)
+
+        # If market value was updated manually, record it
+        if data.market_value is not None and data.market_value != previous_value:
+            await self._record_valuation(
+                user_id=user_id,
+                asset_id=asset.id,
+                asset_type=AssetType.alternative,
+                value=data.market_value,
+                source="Manual Update"
+            )
+            asset.last_valuation_at = datetime.now(timezone.utc)
+
+        await self.session.commit()
+        await self.session.refresh(asset)
+        return asset
+
+    async def delete_alternative_asset(self, asset_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+        result = await self.session.execute(
+            delete(AlternativeAsset).where(
+                AlternativeAsset.id == asset_id, 
+                AlternativeAsset.user_id == user_id
             )
         )
         await self.session.commit()
@@ -342,6 +507,16 @@ class PhysicalAssetService:
 
         asset.market_value = new_value
         asset.last_valuation_at = datetime.now(timezone.utc)
+        
+        # Record historical valuation
+        await self._record_valuation(
+            user_id=asset.user_id,
+            asset_id=asset.id,
+            asset_type=AssetType.real_estate,
+            value=new_value,
+            source="Zillow"
+        )
+        
         await self.session.commit()
         return {"status": "updated", "new_value": new_value, "previous_value": previous_value}
 
@@ -380,6 +555,16 @@ class PhysicalAssetService:
 
         asset.market_value = new_value
         asset.last_valuation_at = datetime.now(timezone.utc)
+        
+        # Record historical valuation
+        await self._record_valuation(
+            user_id=asset.user_id,
+            asset_id=asset.id,
+            asset_type=AssetType.vehicle,
+            value=new_value,
+            source="VehicleValuation"
+        )
+        
         await self.session.commit()
         return {"status": "updated", "new_value": new_value, "previous_value": previous_value}
 
@@ -428,29 +613,42 @@ class PhysicalAssetService:
 
         asset.market_value = new_value
         asset.last_valuation_at = datetime.now(timezone.utc)
+        
+        # Record historical valuation
+        await self._record_valuation(
+            user_id=asset.user_id,
+            asset_id=asset.id,
+            asset_type=AssetType.precious_metal,
+            value=new_value,
+            source=f"Spot Price ({asset.metal_type.value})"
+        )
+        
         await self.session.commit()
         return {"status": "updated", "new_value": new_value, "previous_value": previous_value}
 
     # --- Summary ---
 
     async def get_physical_assets_summary(self, user_id: uuid.UUID) -> PhysicalAssetsSummary:
-        re_assets, v_assets, c_assets, m_assets = await asyncio.gather(
+        re_assets, v_assets, c_assets, m_assets, a_assets = await asyncio.gather(
             self.get_real_estate_assets(user_id),
             self.get_vehicle_assets(user_id),
             self.get_collectible_assets(user_id),
             self.get_precious_metal_assets(user_id),
+            self.get_alternative_assets(user_id),
         )
 
         total_value = sum((a.market_value for a in re_assets), Decimal(0)) + \
                       sum((a.market_value for a in v_assets), Decimal(0)) + \
                       sum((a.market_value for a in c_assets), Decimal(0)) + \
-                      sum((a.market_value for a in m_assets), Decimal(0))
+                      sum((a.market_value for a in m_assets), Decimal(0)) + \
+                      sum((a.market_value for a in a_assets), Decimal(0))
 
         return PhysicalAssetsSummary(
             real_estate=re_assets,
             vehicles=v_assets,
             collectibles=c_assets,
             precious_metals=m_assets,
+            alternative_assets=a_assets,
             total_value=total_value
         )
 

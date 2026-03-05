@@ -47,6 +47,42 @@ class MetalType(str, enum.Enum):
     palladium = "palladium"
 
 
+class AlternativeAssetType(str, enum.Enum):
+    private_equity = "private_equity"
+    angel_investment = "angel_investment"
+    venture_capital = "venture_capital"
+    hedge_fund = "hedge_fund"
+    limited_partnership = "limited_partnership"
+    other = "other"
+
+
+class AssetType(str, enum.Enum):
+    real_estate = "real_estate"
+    vehicle = "vehicle"
+    collectible = "collectible"
+    precious_metal = "precious_metal"
+    alternative = "alternative"
+
+
+class AssetValuation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "asset_valuations"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    asset_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    asset_type: Mapped[AssetType] = mapped_column(
+        Enum(AssetType, values_callable=lambda e: [x.value for x in e]),
+    )
+    
+    value: Mapped[Decimal] = mapped_column(Numeric(14, 2))
+    valuation_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    source: Mapped[str | None] = mapped_column(String(100))
+    notes: Mapped[str | None] = mapped_column(String(500))
+
+
 class RealEstateAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "real_estate_assets"
 
@@ -73,6 +109,9 @@ class RealEstateAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     market_value: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0)
     purchase_price: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
     purchase_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    
+    # Appreciation/Depreciation
+    estimated_annual_growth_rate: Mapped[Decimal | None] = mapped_column(Numeric(6, 4))
     
     # Auto-valuation metadata
     zillow_zpid: Mapped[str | None] = mapped_column(String(100))
@@ -109,6 +148,9 @@ class VehicleAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     purchase_price: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
     purchase_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     
+    # Appreciation/Depreciation
+    estimated_annual_growth_rate: Mapped[Decimal | None] = mapped_column(Numeric(6, 4))
+    
     last_valuation_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
@@ -133,6 +175,9 @@ class CollectibleAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     market_value: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0)
     purchase_price: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
     purchase_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    
+    # Appreciation/Depreciation
+    estimated_annual_growth_rate: Mapped[Decimal | None] = mapped_column(Numeric(6, 4))
     
     # Optional metadata (JSON for flexible tracking: condition, serial, etc)
     metadata_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
@@ -160,3 +205,28 @@ class PreciousMetalAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     
     market_value: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0)
     last_valuation_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class AlternativeAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "alternative_assets"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str] = mapped_column(String(255))
+    asset_type: Mapped[AlternativeAssetType] = mapped_column(
+        Enum(AlternativeAssetType, values_callable=lambda e: [x.value for x in e]),
+        default=AlternativeAssetType.other,
+    )
+    description: Mapped[str | None] = mapped_column(String(1000))
+    
+    market_value: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0)
+    cost_basis: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
+    purchase_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    
+    # Appreciation/Depreciation
+    estimated_annual_growth_rate: Mapped[Decimal | None] = mapped_column(Numeric(6, 4))
+    
+    last_valuation_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    metadata_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+

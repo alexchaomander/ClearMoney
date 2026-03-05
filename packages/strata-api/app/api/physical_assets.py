@@ -19,6 +19,11 @@ from app.schemas.physical_asset import (
     PreciousMetalAsset,
     PreciousMetalAssetCreate,
     PreciousMetalAssetUpdate,
+    AlternativeAsset,
+    AlternativeAssetCreate,
+    AlternativeAssetUpdate,
+    AssetValuation,
+    AssetType,
     PhysicalAssetsSummary,
     ValuationRefreshResponse,
     PropertySearchRequest,
@@ -34,7 +39,7 @@ router = APIRouter()
 @router.get("/summary", response_model=PhysicalAssetsSummary)
 async def get_physical_assets_summary(
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     """Get a summary of all physical assets for the current user."""
     service = PhysicalAssetService(db)
@@ -45,7 +50,7 @@ async def get_physical_assets_summary(
 async def search_properties(
     request: PropertySearchRequest,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     """Search for properties by address."""
     service = PhysicalAssetService(db)
@@ -56,7 +61,7 @@ async def search_properties(
 async def search_vehicles(
     request: VehicleSearchRequest,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     """Search for vehicles by VIN or specs."""
     service = PhysicalAssetService(db)
@@ -73,7 +78,7 @@ async def search_vehicles(
 @router.get("/real-estate", response_model=List[RealEstateAsset])
 async def get_real_estate_assets(
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     return await service.get_real_estate_assets(current_user.id)
@@ -83,7 +88,7 @@ async def get_real_estate_assets(
 async def create_real_estate_asset(
     asset_in: RealEstateAssetCreate,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     return await service.create_real_estate_asset(current_user.id, asset_in)
@@ -94,7 +99,7 @@ async def update_real_estate_asset(
     asset_id: uuid.UUID,
     asset_in: RealEstateAssetUpdate,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     asset = await service.update_real_estate_asset(asset_id, current_user.id, asset_in)
@@ -107,7 +112,7 @@ async def update_real_estate_asset(
 async def delete_real_estate_asset(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     success = await service.delete_real_estate_asset(asset_id, current_user.id)
@@ -120,7 +125,7 @@ async def delete_real_estate_asset(
 async def refresh_real_estate_valuation(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     result = await service.refresh_real_estate_valuation(asset_id, current_user.id)
@@ -136,7 +141,7 @@ async def refresh_real_estate_valuation(
 @router.get("/vehicles", response_model=List[VehicleAsset])
 async def get_vehicle_assets(
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     return await service.get_vehicle_assets(current_user.id)
@@ -146,7 +151,7 @@ async def get_vehicle_assets(
 async def create_vehicle_asset(
     asset_in: VehicleAssetCreate,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     return await service.create_vehicle_asset(current_user.id, asset_in)
@@ -157,7 +162,7 @@ async def update_vehicle_asset(
     asset_id: uuid.UUID,
     asset_in: VehicleAssetUpdate,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     asset = await service.update_vehicle_asset(asset_id, current_user.id, asset_in)
@@ -170,7 +175,7 @@ async def update_vehicle_asset(
 async def delete_vehicle_asset(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     success = await service.delete_vehicle_asset(asset_id, current_user.id)
@@ -183,7 +188,7 @@ async def delete_vehicle_asset(
 async def refresh_vehicle_valuation(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     result = await service.refresh_vehicle_valuation(asset_id, current_user.id)
@@ -199,7 +204,7 @@ async def refresh_vehicle_valuation(
 @router.get("/collectibles", response_model=List[CollectibleAsset])
 async def get_collectible_assets(
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     return await service.get_collectible_assets(current_user.id)
@@ -209,7 +214,7 @@ async def get_collectible_assets(
 async def create_collectible_asset(
     asset_in: CollectibleAssetCreate,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     return await service.create_collectible_asset(current_user.id, asset_in)
@@ -220,7 +225,7 @@ async def update_collectible_asset(
     asset_id: uuid.UUID,
     asset_in: CollectibleAssetUpdate,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     asset = await service.update_collectible_asset(asset_id, current_user.id, asset_in)
@@ -233,7 +238,7 @@ async def update_collectible_asset(
 async def delete_collectible_asset(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     success = await service.delete_collectible_asset(asset_id, current_user.id)
@@ -246,7 +251,7 @@ async def delete_collectible_asset(
 async def refresh_collectible_valuation(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     result = await service.refresh_collectible_valuation(asset_id, current_user.id)
@@ -262,7 +267,7 @@ async def refresh_collectible_valuation(
 @router.get("/precious-metals", response_model=List[PreciousMetalAsset])
 async def get_precious_metal_assets(
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     return await service.get_precious_metal_assets(current_user.id)
@@ -272,7 +277,7 @@ async def get_precious_metal_assets(
 async def create_precious_metal_asset(
     asset_in: PreciousMetalAssetCreate,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     return await service.create_precious_metal_asset(current_user.id, asset_in)
@@ -283,7 +288,7 @@ async def update_precious_metal_asset(
     asset_id: uuid.UUID,
     asset_in: PreciousMetalAssetUpdate,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     asset = await service.update_precious_metal_asset(asset_id, current_user.id, asset_in)
@@ -296,7 +301,7 @@ async def update_precious_metal_asset(
 async def delete_precious_metal_asset(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     success = await service.delete_precious_metal_asset(asset_id, current_user.id)
@@ -309,7 +314,7 @@ async def delete_precious_metal_asset(
 async def refresh_precious_metal_valuation(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_user),
 ):
     service = PhysicalAssetService(db)
     result = await service.refresh_metal_valuation(asset_id, current_user.id)
@@ -318,3 +323,69 @@ async def refresh_precious_metal_valuation(
     if result["status"] == "cooldown":
         raise HTTPException(status_code=429, detail=result.get("message", "Too many refresh requests"))
     return result
+
+
+# --- Alternative Assets ---
+
+@router.get("/alternative", response_model=List[AlternativeAsset])
+async def get_alternative_assets(
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    service = PhysicalAssetService(db)
+    return await service.get_alternative_assets(current_user.id)
+
+
+@router.post("/alternative", response_model=AlternativeAsset)
+async def create_alternative_asset(
+    asset_in: AlternativeAssetCreate,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    service = PhysicalAssetService(db)
+    return await service.create_alternative_asset(current_user.id, asset_in)
+
+
+@router.patch("/alternative/{asset_id}", response_model=AlternativeAsset)
+async def update_alternative_asset(
+    asset_id: uuid.UUID,
+    asset_in: AlternativeAssetUpdate,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    service = PhysicalAssetService(db)
+    asset = await service.update_alternative_asset(asset_id, current_user.id, asset_in)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Alternative asset not found")
+    return asset
+
+
+@router.delete("/alternative/{asset_id}")
+async def delete_alternative_asset(
+    asset_id: uuid.UUID,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    service = PhysicalAssetService(db)
+    success = await service.delete_alternative_asset(asset_id, current_user.id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Alternative asset not found")
+    return {"status": "success"}
+
+
+# --- History ---
+
+@router.get("/{asset_type}/{asset_id}/history", response_model=List[AssetValuation])
+async def get_asset_valuation_history(
+    asset_type: AssetType,
+    asset_id: uuid.UUID,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    """Get historical valuation data for any asset."""
+    service = PhysicalAssetService(db)
+    return await service.get_valuation_history(
+        user_id=current_user.id,
+        asset_id=asset_id,
+        asset_type=asset_type
+    )
