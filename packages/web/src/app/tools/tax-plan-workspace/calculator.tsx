@@ -20,6 +20,7 @@ import {
   UserRound,
   UsersRound,
   X,
+  Zap,
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
@@ -727,6 +728,17 @@ export function Calculator() {
     },
   });
 
+  const generateOptimizationReportMutation = useMutation({
+    mutationFn: (payload: { planId: string; versionId: string }) =>
+      client.generateTaxOptimizationReport(payload.planId, payload.versionId),
+    onSuccess: (data: any) => {
+      alert(`Tax Optimization Report:\n\n${data.summary}\n\n${data.current_strategy}\n\nPotential Savings: $${data.dollar_amounts_saved}\n\n${data.recommendations.map((r: any) => `- ${r.title}: ${r.description} (Save $${r.potential_savings})`).join('\n')}`);
+    },
+    onError: () => {
+      alert("Failed to generate optimization report.");
+    }
+  });
+
   const serverSnapshots = useMemo<VersionOption[]>(() => {
     const rows = serverHistoryQuery.data ?? [];
     const versions: VersionOption[] = [];
@@ -1051,6 +1063,11 @@ export function Calculator() {
         },
       }
     );
+  }
+
+  function handleGenerateOptimizationReport(versionId: string) {
+    if (!activePlanId) return;
+    generateOptimizationReportMutation.mutate({ planId: activePlanId, versionId });
   }
 
   function handleCreateComment() {
@@ -1677,18 +1694,32 @@ export function Calculator() {
                                     Delete
                                   </button>
                                 ) : option.key.startsWith("server-version:") && activePlanId ? (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleApproveVersion(
-                                        option.key.replace("server-version:", "")
-                                      )
-                                    }
-                                    className="inline-flex items-center gap-1 rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-2.5 py-1.5 text-xs text-emerald-200 hover:bg-emerald-500/20"
-                                  >
-                                    <Check className="h-3.5 w-3.5" />
-                                    Approve
-                                  </button>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleApproveVersion(
+                                          option.key.replace("server-version:", "")
+                                        )
+                                      }
+                                      className="inline-flex items-center gap-1 rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-2.5 py-1.5 text-xs text-emerald-200 hover:bg-emerald-500/20"
+                                    >
+                                      <Check className="h-3.5 w-3.5" />
+                                      Approve
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleGenerateOptimizationReport(
+                                          option.key.replace("server-version:", "")
+                                        )
+                                      }
+                                      className="inline-flex items-center gap-1 rounded-lg border border-purple-400/40 bg-purple-500/10 px-2.5 py-1.5 text-xs text-purple-200 hover:bg-purple-500/20"
+                                    >
+                                      <Zap className="h-3.5 w-3.5" />
+                                      Optimize
+                                    </button>
+                                  </div>
                                 ) : option.reportId ? (
                                   <button
                                     type="button"

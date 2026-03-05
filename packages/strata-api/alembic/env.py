@@ -20,6 +20,7 @@ from app.models import (  # noqa: E402, F401
     AgentSession,
     CashAccount,
     DebtAccount,
+    EquityGrant,
     FinancialMemory,
     Holding,
     IncomeSource,
@@ -29,6 +30,7 @@ from app.models import (  # noqa: E402, F401
     Recommendation,
     Security,
     ShareReport,
+    TaxDocument,
     TaxPlan,
     TaxPlanCollaborator,
     TaxPlanComment,
@@ -62,7 +64,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection, 
+        target_metadata=target_metadata,
+        render_as_batch=True
+    )
 
     with context.begin_transaction():
         context.run_migrations()

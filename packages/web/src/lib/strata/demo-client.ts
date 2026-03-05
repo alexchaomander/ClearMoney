@@ -995,6 +995,24 @@ export class DemoStrataClient implements StrataClientInterface {
     return [];
   }
 
+  async generateTaxOptimizationReport(planId: string, versionId: string): Promise<any> {
+    await delay(600);
+    return {
+      summary: "Demo Tax Optimization Report",
+      current_strategy: "You have $150,000 in wages and $10,000 in short term gains.",
+      optimal_strategy: "Consider tax loss harvesting.",
+      dollar_amounts_saved: 3500,
+      yoy_comparison: "This is your first year.",
+      recommendations: [
+        {
+          title: "Tax Loss Harvesting",
+          description: "Offset short term gains.",
+          potential_savings: 3500
+        }
+      ]
+    };
+  }
+
   // === Tax Documents ===
 
   async uploadTaxDocument(_file: File | Blob, _filename: string, _typeHint?: string): Promise<TaxDocumentResponse> {
