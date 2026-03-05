@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, Shield, Search, Home, Car, Loader2, Check, MapPin, Zap } from "lucide-react";
+import { X, Shield, Search, Home, Car, Loader2, MapPin, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type {
   CashAccountType,
@@ -15,8 +15,8 @@ import type {
   MetalType,
   PropertySearchResult,
   VehicleSearchResult,
-  isValidVIN,
 } from "@clearmoney/strata-sdk";
+import { isValidVIN } from "@clearmoney/strata-sdk";
 import { 
   useCashAccountMutations, 
   useDebtAccountMutations, 
@@ -161,19 +161,20 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
   const [vSearchResults, setVSearchResults] = useState<VehicleSearchResult[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleSearchResult | null>(null);
 
-  const [searchError, setSearchError] = useState<string | null>(null);
+  const [propertySearchError, setPropertySearchError] = useState<string | null>(null);
+  const [vehicleSearchError, setVehicleSearchError] = useState<string | null>(null);
 
   const handlePropertySearch = async () => {
     if (!reSearchQuery) return;
-    setSearchError(null);
+    setPropertySearchError(null);
     try {
       const results = await searchProperties.mutateAsync({ address: reSearchQuery });
       if (results.length === 0) {
-        setSearchError("No properties found for this address");
+        setPropertySearchError("No properties found for this address");
       }
       setReSearchResults(results);
     } catch (err) {
-      setSearchError("Property search failed. Please try again.");
+      setPropertySearchError("Property search failed. Please try again.");
       console.error("Search failed", err);
     }
   };
@@ -186,26 +187,26 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
     setReZpid(prop.zillow_zpid);
     setReValuationType("auto");
     setPropertyMode("manual");
-    setSearchError(null);
+    setPropertySearchError(null);
   };
 
   const handleVehicleSearch = async () => {
     if (!vSearchVin) return;
-    setSearchError(null);
+    setVehicleSearchError(null);
 
     if (!isValidVIN(vSearchVin)) {
-      setSearchError("Invalid 17-character VIN. I, O, and Q are not allowed.");
+      setVehicleSearchError("Invalid 17-character VIN. I, O, and Q are not allowed.");
       return;
     }
 
     try {
       const results = await searchVehicles.mutateAsync({ vin: vSearchVin });
       if (results.length === 0) {
-        setSearchError("Vehicle not found. Check the VIN and try again.");
+        setVehicleSearchError("Vehicle not found. Check the VIN and try again.");
       }
       setVSearchResults(results);
     } catch (err) {
-      setSearchError("Vehicle search failed. Please try again.");
+      setVehicleSearchError("Vehicle search failed. Please try again.");
       console.error("Vehicle search failed", err);
     }
   };
@@ -756,8 +757,8 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                                     onChange={(e) => {
                                       setReSearchQuery(e.target.value);
                                       if (reSearchResults.length > 0) setReSearchResults([]);
-                                      if (searchError) setSearchError(null);
-                                    }} 
+                                      if (propertySearchError) setPropertySearchError(null);
+                                    }}
                                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handlePropertySearch())}
                                     placeholder="Enter full address..." 
                                   />
@@ -773,10 +774,10 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                               </div>
                             </div>
 
-                            {searchError && (
+                            {propertySearchError && (
                               <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center gap-2">
                                 <Shield className="w-3 h-3 text-rose-500" />
-                                <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-tight">{searchError}</p>
+                                <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-tight">{propertySearchError}</p>
                               </div>
                             )}
 
@@ -799,7 +800,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                                   </div>
                                   <div className="text-right">
                                     <p className="text-xs font-black text-slate-900 dark:text-white">
-                                      ${(Number(res.market_value) / 1000).toFixed(0)}k
+                                      {res.market_value != null ? `$${(Number(res.market_value) / 1000).toFixed(0)}k` : "N/A"}
                                     </p>
                                     <p className="text-[8px] font-black uppercase tracking-widest text-emerald-500">Zestimate</p>
                                   </div>
@@ -907,8 +908,8 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                                     onChange={(e) => {
                                       setVSearchVin(e.target.value.toUpperCase());
                                       if (vSearchResults.length > 0) setVSearchResults([]);
-                                      if (searchError) setSearchError(null);
-                                    }} 
+                                      if (vehicleSearchError) setVehicleSearchError(null);
+                                    }}
                                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleVehicleSearch())}
                                     placeholder="Enter 17-digit VIN..." 
                                     maxLength={17}
@@ -925,10 +926,10 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                               </div>
                             </div>
 
-                            {searchError && (
+                            {vehicleSearchError && (
                               <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center gap-2">
                                 <Shield className="w-3 h-3 text-rose-500" />
-                                <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-tight">{searchError}</p>
+                                <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-tight">{vehicleSearchError}</p>
                               </div>
                             )}
 
@@ -951,7 +952,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                                   </div>
                                   <div className="text-right">
                                     <p className="text-xs font-black text-slate-900 dark:text-white">
-                                      ${(Number(res.market_value) / 1000).toFixed(1)}k
+                                      {res.market_value != null ? `$${(Number(res.market_value) / 1000).toFixed(1)}k` : "N/A"}
                                     </p>
                                     <p className="text-[8px] font-black uppercase tracking-widest text-emerald-500">KBB Value</p>
                                   </div>
