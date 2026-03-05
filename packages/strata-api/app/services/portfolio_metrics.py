@@ -9,11 +9,11 @@ from app.models.cash_account import CashAccount
 from app.models.debt_account import DebtAccount
 from app.models.investment_account import InvestmentAccount
 from app.models.physical_asset import (
-    RealEstateAsset, 
-    VehicleAsset,
+    AlternativeAsset,
     CollectibleAsset,
     PreciousMetalAsset,
-    AlternativeAsset
+    RealEstateAsset,
+    VehicleAsset,
 )
 
 

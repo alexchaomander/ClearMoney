@@ -1,9 +1,10 @@
 import enum
 import uuid
+from datetime import datetime, timezone
 from decimal import Decimal
-from datetime import datetime
+from typing import Any
 
-from sqlalchemy import JSON, Enum, ForeignKey, Numeric, String, DateTime
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -74,7 +75,7 @@ class AssetValuation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     asset_type: Mapped[AssetType] = mapped_column(
         Enum(AssetType, values_callable=lambda e: [x.value for x in e]),
     )
-    
+
     value: Mapped[Decimal] = mapped_column(Numeric(14, 2))
     valuation_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
@@ -94,29 +95,29 @@ class RealEstateAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     city: Mapped[str | None] = mapped_column(String(255))
     state: Mapped[str | None] = mapped_column(String(2))
     zip_code: Mapped[str | None] = mapped_column(String(20))
-    
+
     property_type: Mapped[RealEstateType] = mapped_column(
         Enum(RealEstateType, values_callable=lambda e: [x.value for x in e]),
         default=RealEstateType.primary_residence,
     )
-    
+
     valuation_type: Mapped[ValuationType] = mapped_column(
         Enum(ValuationType, values_callable=lambda e: [x.value for x in e]),
         default=ValuationType.manual,
     )
-    
+
     # Current estimated value
     market_value: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0)
     purchase_price: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
     purchase_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    
+
     # Appreciation/Depreciation
     estimated_annual_growth_rate: Mapped[Decimal | None] = mapped_column(Numeric(6, 4))
-    
+
     # Auto-valuation metadata
     zillow_zpid: Mapped[str | None] = mapped_column(String(100))
     last_valuation_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    
+
     # Optional mortgage link (if we want to automate debt-to-asset mapping)
     # mortgage_account_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("debt_accounts.id"))
 
@@ -133,24 +134,24 @@ class VehicleAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     year: Mapped[int] = mapped_column()
     vin: Mapped[str | None] = mapped_column(String(17))
     mileage: Mapped[int | None] = mapped_column()
-    
+
     vehicle_type: Mapped[VehicleType] = mapped_column(
         Enum(VehicleType, values_callable=lambda e: [x.value for x in e]),
         default=VehicleType.car,
     )
-    
+
     valuation_type: Mapped[ValuationType] = mapped_column(
         Enum(ValuationType, values_callable=lambda e: [x.value for x in e]),
         default=ValuationType.manual,
     )
-    
+
     market_value: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0)
     purchase_price: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
     purchase_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    
+
     # Appreciation/Depreciation
     estimated_annual_growth_rate: Mapped[Decimal | None] = mapped_column(Numeric(6, 4))
-    
+
     last_valuation_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
@@ -165,22 +166,22 @@ class CollectibleAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Enum(CollectibleType, values_callable=lambda e: [x.value for x in e]),
         default=CollectibleType.other,
     )
-    
+
     # Valuation metadata
     valuation_type: Mapped[ValuationType] = mapped_column(
         Enum(ValuationType, values_callable=lambda e: [x.value for x in e]),
         default=ValuationType.manual,
     )
-    
+
     market_value: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0)
     purchase_price: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
     purchase_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    
+
     # Appreciation/Depreciation
     estimated_annual_growth_rate: Mapped[Decimal | None] = mapped_column(Numeric(6, 4))
-    
+
     # Optional metadata (JSON for flexible tracking: condition, serial, etc)
-    metadata_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    metadata_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     last_valuation_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
@@ -194,15 +195,15 @@ class PreciousMetalAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     metal_type: Mapped[MetalType] = mapped_column(
         Enum(MetalType, values_callable=lambda e: [x.value for x in e]),
     )
-    
+
     weight_oz: Mapped[Decimal] = mapped_column(Numeric(14, 4))
-    
+
     # Usually auto for metals based on spot price
     valuation_type: Mapped[ValuationType] = mapped_column(
         Enum(ValuationType, values_callable=lambda e: [x.value for x in e]),
         default=ValuationType.auto,
     )
-    
+
     market_value: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0)
     last_valuation_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
@@ -219,14 +220,13 @@ class AlternativeAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         default=AlternativeAssetType.other,
     )
     description: Mapped[str | None] = mapped_column(String(1000))
-    
+
     market_value: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0)
     cost_basis: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
     purchase_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    
+
     # Appreciation/Depreciation
     estimated_annual_growth_rate: Mapped[Decimal | None] = mapped_column(Numeric(6, 4))
-    
-    last_valuation_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    metadata_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
+    last_valuation_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    metadata_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)

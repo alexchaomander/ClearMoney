@@ -89,7 +89,7 @@ class AgentRuntime:
         tools: list[dict[str, Any]],
     ) -> dict:
         client = self._get_llm_client()
-        
+
         if settings.advisor_provider == "openrouter":
             # Map Anthropic tools to OpenAI format if needed
             # (OpenRouter also supports Anthropic format, but OpenAI is the standard)
@@ -119,7 +119,7 @@ class AgentRuntime:
         content = []
         if choice.message.content:
             content.append({"type": "text", "text": choice.message.content})
-        
+
         if choice.message.tool_calls:
             for tc in choice.message.tool_calls:
                 content.append({
@@ -128,7 +128,7 @@ class AgentRuntime:
                     "name": tc.function.name,
                     "input": json.loads(tc.function.arguments),
                 })
-        
+
         return {
             "content": content,
             "stop_reason": "end_turn" if choice.finish_reason == "stop" else choice.finish_reason,

@@ -77,7 +77,7 @@ class RunwayService:
             )
         )
         transactions = result.scalars().all()
-        
+
         # Filter transactions in Python to handle the complex OR logic easily
         filtered_txs = []
         for tx in transactions:

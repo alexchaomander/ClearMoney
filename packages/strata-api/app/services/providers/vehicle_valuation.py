@@ -3,6 +3,7 @@ from decimal import Decimal
 from typing import Optional
 
 import httpx
+
 from app.core.config import settings
 from app.schemas.physical_asset import VehicleSearchResult
 

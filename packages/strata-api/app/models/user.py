@@ -9,15 +9,15 @@ if TYPE_CHECKING:
     from app.models.action_intent import ActionIntent
     from app.models.cash_account import CashAccount
     from app.models.connection import Connection
+    from app.models.crypto_wallet import CryptoWallet
     from app.models.debt_account import DebtAccount
+    from app.models.entity import LegalEntity
+    from app.models.equity_grant import EquityGrant
     from app.models.income_source import IncomeSource
     from app.models.investment_account import InvestmentAccount
-    from app.models.equity_grant import EquityGrant
     from app.models.portfolio_snapshot import PortfolioSnapshot
     from app.models.tax_document import TaxDocument
     from app.models.tax_plan_workspace import TaxPlan
-    from app.models.crypto_wallet import CryptoWallet
-    from app.models.entity import LegalEntity
 
 
 class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):

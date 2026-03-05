@@ -6,12 +6,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from app.models.action_intent import ActionIntent, ActionIntentStatus, ActionIntentType
 from app.models.bank_transaction import BankTransaction
 from app.models.cash_account import CashAccount
+from app.models.decision_trace import DecisionTrace, DecisionTraceType
 from app.models.entity import EntityType
 from app.models.financial_memory import FinancialMemory
-from app.models.action_intent import ActionIntent, ActionIntentType, ActionIntentStatus
-from app.models.decision_trace import DecisionTrace, DecisionTraceType
 
 
 class TaxShieldService:

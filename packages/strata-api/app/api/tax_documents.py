@@ -18,7 +18,7 @@ from app.schemas.tax_document import (
     TaxDocumentListResponse,
     TaxDocumentResponse,
 )
-from app.services.document_extraction import DocumentExtractionService, MAX_FILE_SIZE
+from app.services.document_extraction import MAX_FILE_SIZE, DocumentExtractionService
 
 router = APIRouter(prefix="/tax-documents", tags=["tax-documents"])
 

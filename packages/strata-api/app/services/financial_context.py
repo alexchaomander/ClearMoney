@@ -14,11 +14,11 @@ from app.models.financial_memory import FinancialMemory
 from app.models.holding import Holding
 from app.models.investment_account import InvestmentAccount
 from app.models.physical_asset import (
-    RealEstateAsset, 
-    VehicleAsset,
+    AlternativeAsset,
     CollectibleAsset,
     PreciousMetalAsset,
-    AlternativeAsset
+    RealEstateAsset,
+    VehicleAsset,
 )
 from app.models.security import Security
 from app.models.transaction import Transaction
@@ -233,13 +233,13 @@ async def build_financial_context(
     )
     total_equity_vested = float(equity_summary.total_vested_value)
     total_equity_unvested = float(equity_summary.total_unvested_value)
-    
+
     total_physical = sum((float(a.market_value) for a in real_estate_assets), 0.0) + \
                      sum((float(a.market_value) for a in vehicle_assets), 0.0) + \
                      sum((float(a.market_value) for a in collectible_assets), 0.0) + \
                      sum((float(a.market_value) for a in precious_metal_assets), 0.0) + \
                      sum((float(a.market_value) for a in alternative_assets), 0.0)
-    
+
     net_worth = total_investment + total_cash + total_equity_vested + total_physical - total_debt
 
     tax_advantaged = sum(

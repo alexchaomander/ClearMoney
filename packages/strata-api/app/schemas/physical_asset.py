@@ -1,20 +1,19 @@
+import re
 import uuid
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 from typing import Optional
 
-import re
-
-from pydantic import BaseModel, Field, model_validator, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.models.physical_asset import (
+    AlternativeAssetType,
+    AssetType,
     CollectibleType,
     MetalType,
     RealEstateType,
     ValuationType,
     VehicleType,
-    AlternativeAssetType,
-    AssetType,
 )
 
 
@@ -32,8 +31,7 @@ class AssetValuation(AssetValuationBase):
     user_id: uuid.UUID
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RealEstateAssetBase(BaseModel):
@@ -77,8 +75,7 @@ class RealEstateAsset(RealEstateAssetBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class VehicleAssetBase(BaseModel):
@@ -122,8 +119,7 @@ class VehicleAsset(VehicleAssetBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Collectibles
@@ -161,8 +157,7 @@ class CollectibleAsset(CollectibleAssetBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Precious Metals
@@ -194,8 +189,7 @@ class PreciousMetalAsset(PreciousMetalAssetBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Alternative Assets
@@ -233,8 +227,7 @@ class AlternativeAsset(AlternativeAssetBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PhysicalAssetsSummary(BaseModel):

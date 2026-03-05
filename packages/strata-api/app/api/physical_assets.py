@@ -1,33 +1,33 @@
 import uuid
-from typing import List
+from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
+from app.models.physical_asset import AssetType
 from app.models.user import User
 from app.schemas.physical_asset import (
-    RealEstateAsset,
-    RealEstateAssetCreate,
-    RealEstateAssetUpdate,
-    VehicleAsset,
-    VehicleAssetCreate,
-    VehicleAssetUpdate,
-    CollectibleAsset,
-    CollectibleAssetCreate,
-    CollectibleAssetUpdate,
-    PreciousMetalAsset,
-    PreciousMetalAssetCreate,
-    PreciousMetalAssetUpdate,
     AlternativeAsset,
     AlternativeAssetCreate,
     AlternativeAssetUpdate,
     AssetValuation,
-    AssetType,
+    CollectibleAsset,
+    CollectibleAssetCreate,
+    CollectibleAssetUpdate,
     PhysicalAssetsSummary,
-    ValuationRefreshResponse,
+    PreciousMetalAsset,
+    PreciousMetalAssetCreate,
+    PreciousMetalAssetUpdate,
     PropertySearchRequest,
     PropertySearchResult,
+    RealEstateAsset,
+    RealEstateAssetCreate,
+    RealEstateAssetUpdate,
+    ValuationRefreshResponse,
+    VehicleAsset,
+    VehicleAssetCreate,
+    VehicleAssetUpdate,
     VehicleSearchRequest,
     VehicleSearchResult,
 )
@@ -40,7 +40,7 @@ router = APIRouter()
 async def get_physical_assets_summary(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> PhysicalAssetsSummary:
     """Get a summary of all physical assets for the current user."""
     service = PhysicalAssetService(db)
     return await service.get_physical_assets_summary(current_user.id)
@@ -51,7 +51,7 @@ async def search_properties(
     request: PropertySearchRequest,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> List[PropertySearchResult]:
     """Search for properties by address."""
     service = PhysicalAssetService(db)
     return await service.search_properties(request.address, user_id=current_user.id)
@@ -62,7 +62,7 @@ async def search_vehicles(
     request: VehicleSearchRequest,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> List[VehicleSearchResult]:
     """Search for vehicles by VIN or specs."""
     service = PhysicalAssetService(db)
     return await service.search_vehicles(
@@ -79,7 +79,7 @@ async def search_vehicles(
 async def get_real_estate_assets(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> List[RealEstateAsset]:
     service = PhysicalAssetService(db)
     return await service.get_real_estate_assets(current_user.id)
 
@@ -89,7 +89,7 @@ async def create_real_estate_asset(
     asset_in: RealEstateAssetCreate,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> RealEstateAsset:
     service = PhysicalAssetService(db)
     return await service.create_real_estate_asset(current_user.id, asset_in)
 
@@ -100,7 +100,7 @@ async def update_real_estate_asset(
     asset_in: RealEstateAssetUpdate,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> RealEstateAsset:
     service = PhysicalAssetService(db)
     asset = await service.update_real_estate_asset(asset_id, current_user.id, asset_in)
     if not asset:
@@ -113,7 +113,7 @@ async def delete_real_estate_asset(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> dict[str, str]:
     service = PhysicalAssetService(db)
     success = await service.delete_real_estate_asset(asset_id, current_user.id)
     if not success:
@@ -126,13 +126,17 @@ async def refresh_real_estate_valuation(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> dict[str, Any]:
     service = PhysicalAssetService(db)
     result = await service.refresh_real_estate_valuation(asset_id, current_user.id)
     if result["status"] == "not_found":
-        raise HTTPException(status_code=404, detail=result.get("message", "Real estate asset not found"))
+        raise HTTPException(
+            status_code=404, detail=result.get("message", "Real estate asset not found")
+        )
     if result["status"] == "cooldown":
-        raise HTTPException(status_code=429, detail=result.get("message", "Too many refresh requests"))
+        raise HTTPException(
+            status_code=429, detail=result.get("message", "Too many refresh requests")
+        )
     return result
 
 
@@ -142,7 +146,7 @@ async def refresh_real_estate_valuation(
 async def get_vehicle_assets(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> List[VehicleAsset]:
     service = PhysicalAssetService(db)
     return await service.get_vehicle_assets(current_user.id)
 
@@ -152,7 +156,7 @@ async def create_vehicle_asset(
     asset_in: VehicleAssetCreate,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> VehicleAsset:
     service = PhysicalAssetService(db)
     return await service.create_vehicle_asset(current_user.id, asset_in)
 
@@ -163,7 +167,7 @@ async def update_vehicle_asset(
     asset_in: VehicleAssetUpdate,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> VehicleAsset:
     service = PhysicalAssetService(db)
     asset = await service.update_vehicle_asset(asset_id, current_user.id, asset_in)
     if not asset:
@@ -176,7 +180,7 @@ async def delete_vehicle_asset(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> dict[str, str]:
     service = PhysicalAssetService(db)
     success = await service.delete_vehicle_asset(asset_id, current_user.id)
     if not success:
@@ -189,13 +193,17 @@ async def refresh_vehicle_valuation(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> dict[str, Any]:
     service = PhysicalAssetService(db)
     result = await service.refresh_vehicle_valuation(asset_id, current_user.id)
     if result["status"] == "not_found":
-        raise HTTPException(status_code=404, detail=result.get("message", "Vehicle asset not found"))
+        raise HTTPException(
+            status_code=404, detail=result.get("message", "Vehicle asset not found")
+        )
     if result["status"] == "cooldown":
-        raise HTTPException(status_code=429, detail=result.get("message", "Too many refresh requests"))
+        raise HTTPException(
+            status_code=429, detail=result.get("message", "Too many refresh requests")
+        )
     return result
 
 
@@ -205,7 +213,7 @@ async def refresh_vehicle_valuation(
 async def get_collectible_assets(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> List[CollectibleAsset]:
     service = PhysicalAssetService(db)
     return await service.get_collectible_assets(current_user.id)
 
@@ -215,7 +223,7 @@ async def create_collectible_asset(
     asset_in: CollectibleAssetCreate,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> CollectibleAsset:
     service = PhysicalAssetService(db)
     return await service.create_collectible_asset(current_user.id, asset_in)
 
@@ -226,7 +234,7 @@ async def update_collectible_asset(
     asset_in: CollectibleAssetUpdate,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> CollectibleAsset:
     service = PhysicalAssetService(db)
     asset = await service.update_collectible_asset(asset_id, current_user.id, asset_in)
     if not asset:
@@ -239,7 +247,7 @@ async def delete_collectible_asset(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> dict[str, str]:
     service = PhysicalAssetService(db)
     success = await service.delete_collectible_asset(asset_id, current_user.id)
     if not success:
@@ -252,13 +260,17 @@ async def refresh_collectible_valuation(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> dict[str, Any]:
     service = PhysicalAssetService(db)
     result = await service.refresh_collectible_valuation(asset_id, current_user.id)
     if result["status"] == "not_found":
-        raise HTTPException(status_code=404, detail=result.get("message", "Collectible asset not found"))
+        raise HTTPException(
+            status_code=404, detail=result.get("message", "Collectible asset not found")
+        )
     if result["status"] == "cooldown":
-        raise HTTPException(status_code=429, detail=result.get("message", "Too many refresh requests"))
+        raise HTTPException(
+            status_code=429, detail=result.get("message", "Too many refresh requests")
+        )
     return result
 
 
@@ -268,7 +280,7 @@ async def refresh_collectible_valuation(
 async def get_precious_metal_assets(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> List[PreciousMetalAsset]:
     service = PhysicalAssetService(db)
     return await service.get_precious_metal_assets(current_user.id)
 
@@ -278,7 +290,7 @@ async def create_precious_metal_asset(
     asset_in: PreciousMetalAssetCreate,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> PreciousMetalAsset:
     service = PhysicalAssetService(db)
     return await service.create_precious_metal_asset(current_user.id, asset_in)
 
@@ -289,7 +301,7 @@ async def update_precious_metal_asset(
     asset_in: PreciousMetalAssetUpdate,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> PreciousMetalAsset:
     service = PhysicalAssetService(db)
     asset = await service.update_precious_metal_asset(asset_id, current_user.id, asset_in)
     if not asset:
@@ -302,7 +314,7 @@ async def delete_precious_metal_asset(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> dict[str, str]:
     service = PhysicalAssetService(db)
     success = await service.delete_precious_metal_asset(asset_id, current_user.id)
     if not success:
@@ -310,18 +322,25 @@ async def delete_precious_metal_asset(
     return {"status": "success"}
 
 
-@router.post("/precious-metals/{asset_id}/refresh", response_model=ValuationRefreshResponse)
+@router.post(
+    "/precious-metals/{asset_id}/refresh", response_model=ValuationRefreshResponse
+)
 async def refresh_precious_metal_valuation(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> dict[str, Any]:
     service = PhysicalAssetService(db)
     result = await service.refresh_metal_valuation(asset_id, current_user.id)
     if result["status"] == "not_found":
-        raise HTTPException(status_code=404, detail=result.get("message", "Precious metal asset not found"))
+        raise HTTPException(
+            status_code=404,
+            detail=result.get("message", "Precious metal asset not found"),
+        )
     if result["status"] == "cooldown":
-        raise HTTPException(status_code=429, detail=result.get("message", "Too many refresh requests"))
+        raise HTTPException(
+            status_code=429, detail=result.get("message", "Too many refresh requests")
+        )
     return result
 
 
@@ -331,7 +350,7 @@ async def refresh_precious_metal_valuation(
 async def get_alternative_assets(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> List[AlternativeAsset]:
     service = PhysicalAssetService(db)
     return await service.get_alternative_assets(current_user.id)
 
@@ -341,7 +360,7 @@ async def create_alternative_asset(
     asset_in: AlternativeAssetCreate,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> AlternativeAsset:
     service = PhysicalAssetService(db)
     return await service.create_alternative_asset(current_user.id, asset_in)
 
@@ -352,7 +371,7 @@ async def update_alternative_asset(
     asset_in: AlternativeAssetUpdate,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> AlternativeAsset:
     service = PhysicalAssetService(db)
     asset = await service.update_alternative_asset(asset_id, current_user.id, asset_in)
     if not asset:
@@ -365,7 +384,7 @@ async def delete_alternative_asset(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> dict[str, str]:
     service = PhysicalAssetService(db)
     success = await service.delete_alternative_asset(asset_id, current_user.id)
     if not success:
@@ -381,11 +400,9 @@ async def get_asset_valuation_history(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-):
+) -> List[AssetValuation]:
     """Get historical valuation data for any asset."""
     service = PhysicalAssetService(db)
     return await service.get_valuation_history(
-        user_id=current_user.id,
-        asset_id=asset_id,
-        asset_type=asset_type
+        user_id=current_user.id, asset_id=asset_id, asset_type=asset_type
     )
