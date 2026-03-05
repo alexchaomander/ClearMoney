@@ -154,7 +154,46 @@ class PhysicalAssetService:
         await self.session.commit()
         return result.rowcount > 0
 
-    # --- Collectibles ---
+    # --- Search Services ---
+
+    async def search_properties(self, address: str, user_id: Optional[uuid.UUID] = None) -> List[PropertySearchResult]:
+        """Search for candidate properties by address."""
+        results = await zillow_service.search_by_address(address)
+
+        if user_id:
+            # Check if user already has these properties
+            existing_zpids = await self.session.execute(
+                select(RealEstateAsset.zillow_zpid).where(
+                    RealEstateAsset.user_id == user_id,
+                    RealEstateAsset.zillow_zpid.isnot(None)
+                )
+            )
+            owned_zpids = {r[0] for r in existing_zpids.all()}
+
+            # We could add an "is_owned" flag to the schema if needed
+            # For now, just ensuring the types are correct
+
+        return results
+
+    async def search_vehicles(self, vin: Optional[str] = None, make: Optional[str] = None, model: Optional[str] = None, year: Optional[int] = None) -> List[VehicleSearchResult]:
+        """Search for a vehicle by VIN or Specs."""
+        if vin:
+            result = await vehicle_valuation_service.search_by_vin(vin)
+            return [result] if result else []
+
+        if make and model and year:
+            val = await vehicle_valuation_service.get_market_value(make, model, year)
+            if val is not None:
+                return [VehicleSearchResult(
+                    make=make,
+                    model=model,
+                    year=year,
+                    market_value=val
+                )]
+
+        return []
+    # --- Summary ---
+
 
     async def get_collectible_assets(self, user_id: uuid.UUID) -> List[CollectibleAsset]:
         result = await self.session.execute(
