@@ -67,8 +67,6 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
-      </head>
-      <body className="min-h-screen">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -80,9 +78,11 @@ export default function RootLayout({
               logo: "https://clearmoney.com/og-image.png",
               description:
                 "The honest alternative to corporate finance media. Interactive calculators and unbiased advice.",
-            }),
+            }).replace(/</g, "\\u003c"),
           }}
         />
+      </head>
+      <body className="min-h-screen">
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-emerald-600 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white"
