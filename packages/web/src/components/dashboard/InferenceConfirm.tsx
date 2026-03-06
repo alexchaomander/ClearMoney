@@ -52,8 +52,8 @@ export function InferenceConfirm({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-trace-400 uppercase tracking-widest">System Inference</span>
-              <span className="px-1.5 py-0.5 rounded bg-trace-900/50 text-trace-500 text-[8px] font-mono">
+              <span className="text-xs font-bold text-trace-400 uppercase tracking-widest">System Inference</span>
+              <span className="px-1.5 py-0.5 rounded bg-trace-900/50 text-trace-500 text-xs font-mono">
                 {Math.round(inference.confidence * 100)}% Match
               </span>
             </div>
@@ -67,7 +67,7 @@ export function InferenceConfirm({
 
       <div className="bg-slate-950/50 rounded-xl border border-slate-800 p-3 mb-4">
         <p className="text-lg font-mono text-emerald-400 font-bold">{inference.value}</p>
-        <p className="text-[10px] text-slate-500 mt-1 italic leading-relaxed">
+        <p className="text-xs text-slate-500 mt-1 italic leading-relaxed">
           &quot;{inference.reasoning}&quot;
         </p>
       </div>

@@ -1597,7 +1597,7 @@ export function Calculator(): ReactElement {
                             className="w-6 rounded-md bg-sky-400/40 border border-sky-400/30"
                             style={{ height: `${heightPx}px` }}
                           />
-                          <span className="text-[10px] text-neutral-500">{label}</span>
+                          <span className="text-xs text-neutral-500">{label}</span>
                         </div>
                       );
                     })}
@@ -1760,12 +1760,12 @@ export function Calculator(): ReactElement {
                                     </button>
                                   </div>
                                   {reimbursed && (
-                                    <p className="mt-1 text-[10px] text-neutral-500">
+                                    <p className="mt-1 text-xs text-neutral-500">
                                       Reimbursed at: {new Date(t.reimbursedAt ?? "").toLocaleString()}
                                     </p>
                                   )}
                                   {!hasAccountsWrite && (
-                                    <p className="mt-1 text-[10px] text-neutral-500">
+                                    <p className="mt-1 text-xs text-neutral-500">
                                       Grant `accounts:write` to update reimbursements.
                                     </p>
                                   )}

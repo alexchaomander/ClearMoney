@@ -279,7 +279,7 @@ export default function AdvisorPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-neutral-200">Vanish Mode</p>
-                    <p className="text-[10px] text-neutral-500">Conversations are not saved to your history.</p>
+                    <p className="text-xs text-neutral-500">Conversations are not saved to your history.</p>
                   </div>
                 </div>
                 <button
@@ -359,7 +359,7 @@ export default function AdvisorPage() {
                       Financial Advisor
                     </p>
                     {activeSession.vanish_mode && (
-                      <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 text-[8px] font-black uppercase tracking-tighter border border-purple-500/30">
+                      <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 text-xs font-black uppercase tracking-tighter border border-purple-500/30">
                         <EyeOff className="w-2 h-2" />
                         Vanish
                       </span>
@@ -432,7 +432,7 @@ export default function AdvisorPage() {
                   <Send className="w-4 h-4" />
                 </button>
               </div>
-              <p className="text-[10px] text-neutral-600 mt-2 text-center">
+              <p className="text-xs text-neutral-600 mt-2 text-center">
                 Educational analysis only — not financial advice. Consult a
                 professional for personalized guidance.
               </p>

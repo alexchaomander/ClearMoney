@@ -96,7 +96,7 @@ export function PhysicalAssetsCard({
           <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             {formatCurrency(summary.total_value)}
           </div>
-          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-[0.15em] mt-1 bg-emerald-500/10 px-2 py-0.5 rounded-full inline-block">
+          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-[0.15em] mt-1 bg-emerald-500/10 px-2 py-0.5 rounded-full inline-block">
             {totalAssetCount} Assets Tracked
           </p>
         </div>
@@ -127,12 +127,12 @@ export function PhysicalAssetsCard({
               <div className="flex items-center justify-between mb-2 px-1">
                 <div className="flex items-center gap-2">
                   <Home className="w-4 h-4 text-emerald-500" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Real Estate Portfolio</span>
+                  <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Real Estate Portfolio</span>
                 </div>
                 {summary.real_estate.some(re => re.valuation_type === 'auto') && (
                   <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-brand-500/5 border border-brand-500/10">
                     <Zap className="w-3 h-3 text-brand-400" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-brand-400">Zillow Sync Active</span>
+                    <span className="text-xs font-black uppercase tracking-widest text-brand-400">Zillow Sync Active</span>
                   </div>
                 )}
               </div>
@@ -160,7 +160,7 @@ export function PhysicalAssetsCard({
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2 px-1">
                 <Briefcase className="w-4 h-4 text-emerald-500" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Alternative Investments</span>
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Alternative Investments</span>
               </div>
               <div className="grid gap-4">
                 {summary.alternative_assets.map((a) => (
@@ -186,12 +186,12 @@ export function PhysicalAssetsCard({
               <div className="flex items-center justify-between mb-2 px-1">
                 <div className="flex items-center gap-2">
                   <Car className="w-4 h-4 text-emerald-500" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Vehicle Fleet</span>
+                  <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Vehicle Fleet</span>
                 </div>
                 {summary.vehicles.some(v => v.valuation_type === 'auto') && (
                   <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-500/5 border border-blue-500/10">
                     <ShieldCheck className="w-3 h-3 text-blue-400" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-blue-400">KBB Verified</span>
+                    <span className="text-xs font-black uppercase tracking-widest text-blue-400">KBB Verified</span>
                   </div>
                 )}
               </div>
@@ -219,7 +219,7 @@ export function PhysicalAssetsCard({
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2 px-1">
                 <Watch className="w-4 h-4 text-emerald-500" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Luxury Goods & Collectibles</span>
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Luxury Goods & Collectibles</span>
               </div>
               <div className="grid gap-4">
                 {summary.collectibles.map((c) => (
@@ -244,7 +244,7 @@ export function PhysicalAssetsCard({
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2 px-1">
                 <Gem className="w-4 h-4 text-emerald-500" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Precious Metals</span>
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Precious Metals</span>
               </div>
               <div className="grid gap-4">
                 {summary.precious_metals.map((m) => (
@@ -312,11 +312,11 @@ function AssetItem({ icon, name, subtitle, value, type, valuationType, onRefresh
               <h4 className="font-bold text-slate-900 dark:text-white leading-tight">
                 {name}
               </h4>
-              <span className="text-[8px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-900 text-slate-400 border border-slate-200 dark:border-slate-700 uppercase tracking-widest">
+              <span className="text-xs font-black px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-900 text-slate-400 border border-slate-200 dark:border-slate-700 uppercase tracking-widest">
                 {type}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 mt-1 text-[10px] text-slate-500 font-bold uppercase tracking-tight">
+            <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500 font-bold uppercase tracking-tight">
               <MapPin className="w-3 h-3 text-slate-400" />
               <span className="truncate max-w-[150px]">{subtitle}</span>
             </div>
@@ -332,10 +332,10 @@ function AssetItem({ icon, name, subtitle, value, type, valuationType, onRefresh
               {valuationType === 'auto' ? (
                 <>
                   <RefreshCw className="w-2.5 h-2.5 text-brand-400 animate-spin-slow" />
-                  <span className="text-[9px] text-brand-400 uppercase font-black tracking-widest">Auto-Valuation</span>
+                  <span className="text-xs text-brand-400 uppercase font-black tracking-widest">Auto-Valuation</span>
                 </>
               ) : (
-                <span className="text-[9px] text-slate-400 uppercase font-black tracking-widest">Manual Entry</span>
+                <span className="text-xs text-slate-400 uppercase font-black tracking-widest">Manual Entry</span>
               )}
             </div>
           </div>

@@ -153,7 +153,7 @@ export default function WarRoomPage() {
           <div>
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-4">
               <ShieldAlert className="w-5 h-5" />
-              <span className="text-[10px] font-bold uppercase tracking-widest font-mono">Action Approval Queue</span>
+              <span className="text-xs font-bold uppercase tracking-widest font-mono">Action Approval Queue</span>
             </div>
             <h1 className="font-display text-4xl text-slate-900 dark:text-white mb-2">The War Room</h1>
             <p className="text-slate-500 dark:text-slate-400 max-w-xl">
@@ -164,11 +164,11 @@ export default function WarRoomPage() {
 
           <div className="flex items-center gap-4">
             <div className="px-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center min-w-[120px] shadow-sm">
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold mb-1">Pending</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 uppercase font-bold mb-1">Pending</p>
               <p className="text-xl font-mono font-bold text-amber-600 dark:text-amber-400">{stats.pending}</p>
             </div>
             <div className="px-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center min-w-[120px] shadow-sm">
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold mb-1">Executed</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 uppercase font-bold mb-1">Executed</p>
               <p className="text-xl font-mono font-bold text-emerald-600 dark:text-emerald-400">{stats.completed}</p>
             </div>
           </div>

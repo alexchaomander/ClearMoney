@@ -23,7 +23,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   if (active && payload && payload.length) {
     return (
       <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl ring-1 ring-black/5">
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+        <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
           {format(new Date(label), "MMMM yyyy")}
         </p>
         <div className="space-y-1.5">

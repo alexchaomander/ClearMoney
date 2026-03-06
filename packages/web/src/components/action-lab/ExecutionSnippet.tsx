@@ -26,7 +26,7 @@ export function ExecutionSnippet({ label, value, copyValue }: ExecutionSnippetPr
   return (
     <div className="p-3 rounded-xl bg-neutral-950 border border-neutral-800 flex items-center justify-between group">
       <div>
-        <div className="text-[9px] text-neutral-500 uppercase font-bold tracking-widest mb-0.5">
+        <div className="text-xs text-neutral-500 uppercase font-bold tracking-widest mb-0.5">
           {label}
         </div>
         <div className="text-sm font-mono text-emerald-400 truncate max-w-[180px]">

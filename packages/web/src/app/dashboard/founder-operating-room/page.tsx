@@ -629,7 +629,7 @@ export default function FounderOperatingRoomPage() {
               <article className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg text-slate-900 dark:text-white font-medium">Subscription audit</h2>
-                  <div className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40 text-[10px] font-bold">
+                  <div className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40 text-xs font-bold">
                     { subscriptionData?.subscription_count ?? 0 } ACTIVE
                   </div>
                 </div>
@@ -644,7 +644,7 @@ export default function FounderOperatingRoomPage() {
                     <div key={s.merchant} className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{s.merchant}</p>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase">{s.frequency}</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 uppercase">{s.frequency}</p>
                       </div>
                       <span className="text-xs font-bold text-slate-600 dark:text-slate-300 font-mono">
                         {formatCurrency(s.amount)}
@@ -675,7 +675,7 @@ export default function FounderOperatingRoomPage() {
                 <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
                   <p>YTD Biz Income: {formatCurrency(taxShield?.ytd_business_income as number ?? 0)}</p>
                   <p>Combined Rate: {formatPercent(taxShield?.estimated_combined_tax_rate as number ?? 0.31, 1)}</p>
-                  <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${
+                  <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-widest ${
                     taxShield?.safe_harbor_met
                       ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40"
                       : "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/40"

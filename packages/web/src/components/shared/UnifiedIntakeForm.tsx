@@ -196,7 +196,7 @@ export function UnifiedIntakeForm({
             </Button>
           </div>
           
-          <p className="text-[10px] text-neutral-600 mt-4 text-center">
+          <p className="text-xs text-neutral-600 mt-4 text-center">
             By joining, you agree to receive math-driven financial insights. No spam. Ever.
           </p>
         </form>
@@ -283,7 +283,7 @@ export function UnifiedIntakeForm({
                         "text-sm font-bold",
                         formData.interestedTier === t.id ? "text-brand-400" : "text-white"
                       )}>{t.label}</div>
-                      <div className="text-[10px] text-neutral-500">{t.desc}</div>
+                      <div className="text-xs text-neutral-500">{t.desc}</div>
                     </div>
                     {formData.interestedTier === t.id && <CheckCircle2 className="w-4 h-4 text-brand-400" />}
                   </button>

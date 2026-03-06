@@ -543,13 +543,13 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between mb-6 relative z-10">
                   <div>
                     <h3 className="font-serif text-xl text-slate-900 dark:text-slate-100">Crypto Assets</h3>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1">Multi-Chain Web3 Surface</p>
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mt-1">Multi-Chain Web3 Surface</p>
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-black text-slate-900 dark:text-white">
                       <AnimatedAmount value={Number(cryptoPortfolio.total_value_usd)} />
                     </p>
-                    <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">{cryptoPortfolio.assets.length} Assets</p>
+                    <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest">{cryptoPortfolio.assets.length} Assets</p>
                   </div>
                 </div>
 
@@ -560,30 +560,30 @@ export default function DashboardPage() {
                         {asset.logo_url ? (
                           <img src={asset.logo_url} alt={asset.name} className="w-6 h-6 rounded-full" />
                         ) : (
-                          <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold">{asset.symbol[0]}</div>
+                          <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold">{asset.symbol[0]}</div>
                         )}
                         <div>
                           <p className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight">{asset.symbol}</p>
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">{asset.chain}</p>
+                          <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">{asset.chain}</p>
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="text-xs font-black text-slate-700 dark:text-slate-200">
                           <AnimatedAmount value={Number(asset.balance_usd)} />
                         </p>
-                        <p className="text-[9px] text-slate-400 font-mono">{Number(asset.balance).toFixed(4)}</p>
+                        <p className="text-xs text-slate-400 font-mono">{Number(asset.balance).toFixed(4)}</p>
                       </div>
                     </div>
                   ))}
                   
                   {cryptoPortfolio.defi_positions.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 ml-1">DeFi Positions</p>
+                      <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3 ml-1">DeFi Positions</p>
                       {cryptoPortfolio.defi_positions.map((pos: DeFiPosition) => (
                         <div key={pos.protocol_name} className="flex items-center justify-between p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
                           <div className="flex items-center gap-2">
                             {pos.protocol_logo && <img src={pos.protocol_logo} alt="" className="w-4 h-4 rounded-sm" />}
-                            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">{pos.protocol_name}</span>
+                            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">{pos.protocol_name}</span>
                           </div>
                           <p className="text-xs font-black text-emerald-600 dark:text-emerald-400">
                             <AnimatedAmount value={Number(pos.value_usd)} />
@@ -597,7 +597,7 @@ export default function DashboardPage() {
                 <div className="mt-6">
                   <button
                     onClick={() => cryptoMutations.remove.mutate(cryptoPortfolio.wallets[0].id)} // Simplified
-                    className="w-full py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
+                    className="w-full py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
                   >
                     Disconnect Wallets
                   </button>

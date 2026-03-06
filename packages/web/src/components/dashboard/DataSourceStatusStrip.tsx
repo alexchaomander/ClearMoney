@@ -119,7 +119,7 @@ export function DataSourceStatusStrip({ items, usingDemoData }: DataSourceStatus
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 Financial Data Surface
                 {usingDemoData && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase tracking-tighter">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase tracking-tighter">
                     Synthetic Preview
                   </span>
                 )}
@@ -174,10 +174,10 @@ export function DataSourceStatusStrip({ items, usingDemoData }: DataSourceStatus
                         className="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 transition-colors"
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          <span className="text-xs font-black uppercase tracking-widest text-slate-500">
                             {item.title}
                           </span>
-                          <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", styles.badge)}>
+                          <span className={cn("text-xs font-bold px-1.5 py-0.5 rounded border", styles.badge)}>
                             {item.value}
                           </span>
                         </div>
@@ -185,14 +185,14 @@ export function DataSourceStatusStrip({ items, usingDemoData }: DataSourceStatus
                           {item.detail}
                         </p>
                         <div className="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-slate-100 dark:border-white/5">
-                          <span className={cn("text-[10px] flex items-center gap-1", syncStyle.text)}>
+                          <span className={cn("text-xs flex items-center gap-1", syncStyle.text)}>
                             <Clock3 className="w-3 h-3" />
                             {syncStyle.label}
                           </span>
                           {item.href && (
                             <Link 
                               href={item.href}
-                              className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors"
+                              className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors"
                             >
                               {item.actionLabel ?? "Link"} →
                             </Link>

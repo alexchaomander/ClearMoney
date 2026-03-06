@@ -147,7 +147,7 @@ export function MemoryWizard({ isOpen, onClose, initialValues }: MemoryWizardPro
             <div className="flex justify-between items-center mb-8">
               <div className="flex items-center gap-2 text-emerald-400">
                 <BrainCircuit className="w-5 h-5" />
-                <span className="text-[10px] font-bold uppercase tracking-widest font-mono">Financial Memory Wizard</span>
+                <span className="text-xs font-bold uppercase tracking-widest font-mono">Financial Memory Wizard</span>
               </div>
               <button onClick={onClose} className="p-1 rounded-lg text-slate-500 hover:text-white transition-colors">
                 <X className="w-5 h-5" />
@@ -240,7 +240,7 @@ export function MemoryWizard({ isOpen, onClose, initialValues }: MemoryWizardPro
           </div>
 
           <div className="px-8 py-4 bg-slate-950/50 border-t border-slate-800">
-            <p className="text-[10px] text-slate-600 text-center uppercase tracking-widest font-bold">
+            <p className="text-xs text-slate-600 text-center uppercase tracking-widest font-bold">
               Step {currentStepIndex + 1} of {STEPS.length} &middot; Updates Financial Context
             </p>
           </div>

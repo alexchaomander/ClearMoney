@@ -39,7 +39,7 @@ export function CardCreditRow({ credit, onValuationChange, actualMonthlySpend }:
       {showSpendWarning && (
           <div className="absolute top-0 right-0 left-0 bg-amber-100 dark:bg-amber-900/30 px-4 py-1 flex items-center justify-center space-x-2 border-b border-amber-200 dark:border-amber-800">
               <AlertTriangle className="h-3 w-3 text-amber-600" />
-              <span className="text-[10px] font-medium text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+              <span className="text-xs font-medium text-amber-700 dark:text-amber-400 uppercase tracking-wider">
                   Spend Sanity Check: Your avg monthly spend ({formatCurrency(actualMonthlySpend!)}) is less than this credit!
               </span>
           </div>

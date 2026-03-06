@@ -63,7 +63,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
               <h3 className="text-sm font-medium text-slate-100">
                 {recommendation.title}
               </h3>
-              <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded border ${
+              <span className={`text-xs uppercase tracking-widest px-2 py-0.5 rounded border ${
                 isExecuted 
                   ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" 
                   : "bg-slate-800 text-slate-500 border-slate-700"
@@ -121,7 +121,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
             <div className="p-4 space-y-4 text-xs">
               {details?.rationale && (
                 <div>
-                  <p className="text-slate-500 uppercase tracking-widest text-[10px] mb-2 font-bold">Rationale</p>
+                  <p className="text-slate-500 uppercase tracking-widest text-xs mb-2 font-bold">Rationale</p>
                   <ul className="space-y-1.5">
                     {details.rationale?.map((step: string, i: number) => (
                       <li key={i} className="flex gap-2 text-slate-300">
@@ -137,9 +137,9 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
                 <div className="rounded-lg bg-white/5 border border-white/10 p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <Info className="w-3 h-3 text-sky-400" />
-                    <span className="font-medium text-slate-200 uppercase tracking-wider text-[10px]">Action Payload</span>
+                    <span className="font-medium text-slate-200 uppercase tracking-wider text-xs">Action Payload</span>
                   </div>
-                  <pre className="bg-black/40 p-2 rounded text-[10px] text-slate-400 overflow-x-auto">
+                  <pre className="bg-black/40 p-2 rounded text-xs text-slate-400 overflow-x-auto">
                     {JSON.stringify(action, null, 2)}
                   </pre>
                 </div>
@@ -150,7 +150,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
                   <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                   <div>
                     <p className="font-semibold">Execution Failed</p>
-                    <p className="text-[10px] opacity-80">{error instanceof Error ? error.message : "An unexpected error occurred during execution."}</p>
+                    <p className="text-xs opacity-80">{error instanceof Error ? error.message : "An unexpected error occurred during execution."}</p>
                   </div>
                 </div>
               )}
@@ -161,7 +161,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     Success
                   </p>
-                  <p className="text-[10px] opacity-80 mt-1">
+                  <p className="text-xs opacity-80 mt-1">
                     Trace ID: {data.trace_id}
                   </p>
                 </div>

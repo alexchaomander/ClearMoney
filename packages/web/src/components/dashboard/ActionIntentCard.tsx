@@ -101,7 +101,7 @@ export function ActionIntentCard({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className={cn("text-[10px] font-bold uppercase tracking-widest", currentStatus.color)}>
+              <span className={cn("text-xs font-bold uppercase tracking-widest", currentStatus.color)}>
                 {currentStatus.label}
               </span>
               {status === "analyzing" && <Loader2 className="w-2.5 h-2.5 animate-spin text-trace-400" />}
@@ -113,9 +113,9 @@ export function ActionIntentCard({
         </div>
         
         <div className="text-right">
-          <span className="text-[9px] font-mono text-slate-500 uppercase">INTENT_{id.split('-')[0].toUpperCase()}</span>
+          <span className="text-xs font-mono text-slate-500 uppercase">INTENT_{id.split('-')[0].toUpperCase()}</span>
           {confidence < 0.95 && (
-            <div className="flex items-center gap-1 mt-1 justify-end text-[10px] text-amber-500/70">
+            <div className="flex items-center gap-1 mt-1 justify-end text-xs text-amber-500/70">
               <Info className="w-3 h-3" />
               <span>Low Confidence</span>
             </div>
@@ -131,7 +131,7 @@ export function ActionIntentCard({
         <div>
           {impact && (
             <>
-              <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-0.5">Estimated Impact</span>
+              <span className="text-xs text-slate-500 uppercase font-bold tracking-wider block mb-0.5">Estimated Impact</span>
               <span className="text-emerald-400 font-mono font-bold">{impact}</span>
             </>
           )}
