@@ -26,6 +26,8 @@ const nextConfig: NextConfig = {
         distDir: "dist",
       }
     : {}),
+  // Security headers are applied by the server at response time.
+  // They have no effect during static exports (output: "export").
   async headers() {
     return [
       {

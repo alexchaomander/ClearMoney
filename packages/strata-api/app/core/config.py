@@ -78,7 +78,6 @@ class Settings(BaseSettings):
 
     # Rate limiting
     rate_limit_default: str = "60/minute"
-    rate_limit_auth: str = "10/minute"
 
     model_config = {"env_prefix": "STRATA_"}
 

@@ -3,16 +3,23 @@
  *
  * Import this module early (e.g. in root layout or middleware) to surface
  * missing configuration at startup rather than at request time.
+ *
+ * During `next build` (including static exports) env vars may not be present,
+ * so we only enforce at request time in a running server.
  */
+
+const isBuildPhase =
+  process.env.NEXT_PHASE === "phase-production-build" ||
+  process.env.STATIC_EXPORT === "true";
 
 function required(name: string): string {
   const value = process.env[name];
-  if (!value) {
+  if (!value && !isBuildPhase) {
     throw new Error(
       `Missing required environment variable: ${name}. Check .env.local or your deployment config.`
     );
   }
-  return value;
+  return value ?? "";
 }
 
 function optional(name: string, fallback: string): string {
