@@ -641,7 +641,7 @@ export default function ProfilePage() {
                   }}
                   className="py-4"
                 />
-                <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">
+                <div className="flex justify-between text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">
                   <span>Conservative</span>
                   <span>Moderate</span>
                   <span>Aggressive</span>

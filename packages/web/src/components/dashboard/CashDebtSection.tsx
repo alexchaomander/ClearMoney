@@ -9,7 +9,7 @@ import { AnimatedAmount } from "@/components/shared/AnimatedAmount";
 
 function BusinessBadge() {
   return (
-    <span className="shrink-0 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">
+    <span className="shrink-0 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">
       Biz
     </span>
   );
@@ -59,11 +59,11 @@ export function CashDebtSection({ cashAccounts, debtAccounts, onDeleteCashAccoun
                 </p>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
                   {account.institution_name}
                 </p>
                 {account.apy != null && account.apy > 0 && (
-                  <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/10">
+                  <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/10">
                     {account.apy}% APY
                   </span>
                 )}
@@ -103,10 +103,10 @@ export function CashDebtSection({ cashAccounts, debtAccounts, onDeleteCashAccoun
                 </p>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
                   {account.institution_name}
                 </p>
-                <span className="text-[10px] font-black text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/10">
+                <span className="text-xs font-black text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/10">
                   {account.interest_rate}% APR
                 </span>
               </div>

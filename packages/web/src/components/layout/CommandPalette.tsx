@@ -88,7 +88,7 @@ export function CommandPalette() {
                         </div>
                       </Command.Empty>
 
-                      <Command.Group heading="Navigation" className="px-2 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                      <Command.Group heading="Navigation" className="px-2 py-1.5 text-xs font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
                         <CommandItem onSelect={() => runCommand(() => router.push("/dashboard"))}>
                           <LayoutDashboard className="mr-3 h-4 w-4" />
                           <span>Dashboard</span>
@@ -113,7 +113,7 @@ export function CommandPalette() {
 
                       <Command.Separator className="my-2 h-px bg-slate-100 dark:bg-slate-800" />
 
-                      <Command.Group heading="Actions" className="px-2 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                      <Command.Group heading="Actions" className="px-2 py-1.5 text-xs font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
                         <CommandItem onSelect={() => runCommand(toggleVanish)}>
                           {isVanished ? <Eye className="mr-3 h-4 w-4" /> : <EyeOff className="mr-3 h-4 w-4" />}
                           <span>{isVanished ? "Disable Vanish Mode" : "Enable Vanish Mode"}</span>
@@ -132,7 +132,7 @@ export function CommandPalette() {
                       {connections && connections.length > 0 && (
                         <>
                           <Command.Separator className="my-2 h-px bg-slate-100 dark:bg-slate-800" />
-                          <Command.Group heading="Institutions" className="px-2 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                          <Command.Group heading="Institutions" className="px-2 py-1.5 text-xs font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
                             {connections.map((conn) => (
                               <CommandItem key={conn.id} onSelect={() => runCommand(() => router.push(`/dashboard/connections/${conn.id}`))}>
                                 <Landmark className="mr-3 h-4 w-4 text-emerald-500" />
@@ -146,7 +146,7 @@ export function CommandPalette() {
                       {accounts && accounts.cash_accounts.length > 0 && (
                         <>
                           <Command.Separator className="my-2 h-px bg-slate-100 dark:bg-slate-800" />
-                          <Command.Group heading="Accounts" className="px-2 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                          <Command.Group heading="Accounts" className="px-2 py-1.5 text-xs font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
                             {[...accounts.cash_accounts, ...accounts.investment_accounts].map((acc) => (
                               <CommandItem key={acc.id} onSelect={() => runCommand(() => router.push(`/dashboard/accounts/${acc.id}`))}>
                                 <Wallet className="mr-3 h-4 w-4 text-brand-500" />
@@ -159,16 +159,16 @@ export function CommandPalette() {
                     </Command.List>
                     <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 px-4 py-3 bg-slate-50 dark:bg-slate-900/50">
                       <div className="flex gap-4">
-                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-400">
                           <kbd className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-sans font-medium text-slate-500 dark:text-slate-400">↑↓</kbd>
                           <span>Navigate</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-400">
                           <kbd className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-sans font-medium text-slate-500 dark:text-slate-400">↵</kbd>
                           <span>Select</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-slate-400">
                         <Shield className="h-3 w-3 text-emerald-500" />
                         <span>Secure Terminal</span>
                       </div>
@@ -213,7 +213,7 @@ function CommandShortcut({
   return (
     <span
       className={cn(
-        "ml-auto text-[10px] font-black tracking-widest text-slate-400 aria-selected:text-emerald-100",
+        "ml-auto text-xs font-black tracking-widest text-slate-400 aria-selected:text-emerald-100",
         className
       )}
       {...props}

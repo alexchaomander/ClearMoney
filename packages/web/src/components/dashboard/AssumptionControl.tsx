@@ -120,14 +120,14 @@ export function AssumptionControl() {
               </div>
 
               <div className="sm:col-span-3 pt-4 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[10px] text-slate-400 dark:text-neutral-500">
+                <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-neutral-500">
                   <Info className="w-3 h-3" />
                   Overrides are applied locally to all calculations on this page.
                 </div>
                 {isDirty && (
                   <button 
                     onClick={reset}
-                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                    className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white transition-colors"
                   >
                     <RotateCcw className="w-3 h-3" />
                     Reset Defaults

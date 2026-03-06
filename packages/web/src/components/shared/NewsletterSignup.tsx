@@ -167,7 +167,7 @@ export function NewsletterSignup({
               </>
             )}
           </button>
-          {errorMsg && <p className="text-[10px] text-red-400 text-center">{errorMsg}</p>}
+          {errorMsg && <p className="text-xs text-red-400 text-center">{errorMsg}</p>}
         </form>
       </div>
     );

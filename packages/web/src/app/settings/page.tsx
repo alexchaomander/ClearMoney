@@ -139,7 +139,7 @@ function BillingSettings() {
         <div className="grid sm:grid-cols-2 gap-4 mt-6">
           <div className="p-4 rounded-xl border-2 border-emerald-500/20 bg-emerald-500/5 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-2">
-              <div className="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
+              <div className="bg-emerald-500 text-white text-xs font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
                 Active
               </div>
             </div>
@@ -156,7 +156,7 @@ function BillingSettings() {
                   <Check className="w-3 h-3 text-emerald-500" />
                   {feat.label}
                   {typeof feat.current === 'number' && (
-                    <span className="ml-auto text-[10px] font-medium text-slate-400">
+                    <span className="ml-auto text-xs font-medium text-slate-400">
                       {feat.current}/{feat.max}
                     </span>
                   )}
@@ -511,7 +511,7 @@ export default function SettingsPage() {
                           <div className="flex gap-1 shrink-0 items-center">
                             <button
                               onClick={() => cashMutations.update.mutate({ id: account.id, data: { is_business: !account.is_business } })}
-                              className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
+                              className={`text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
                                 account.is_business
                                   ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-400"
                                   : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-500 dark:hover:text-slate-400"
@@ -569,7 +569,7 @@ export default function SettingsPage() {
                           <div className="flex gap-1 shrink-0 items-center">
                             <button
                               onClick={() => debtMutations.update.mutate({ id: account.id, data: { is_business: !account.is_business } })}
-                              className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
+                              className={`text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
                                 account.is_business
                                   ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-400"
                                   : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-500 dark:hover:text-slate-400"
@@ -626,7 +626,7 @@ export default function SettingsPage() {
                           <div className="flex gap-1 shrink-0 items-center">
                             <button
                               onClick={() => investmentMutations.update.mutate({ id: account.id, data: { is_business: !account.is_business } })}
-                              className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
+                              className={`text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-all ${
                                 account.is_business
                                   ? "bg-emerald-900/20 border-emerald-800/40 text-emerald-400"
                                   : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-500 dark:hover:text-slate-400"

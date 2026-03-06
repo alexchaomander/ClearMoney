@@ -427,7 +427,7 @@ function DocImportList({
               <p className="truncate text-xs font-medium text-white">
                 {doc.original_filename}
               </p>
-              <p className="text-[11px] text-neutral-400">
+              <p className="text-xs text-neutral-400">
                 {doc.document_type?.toUpperCase() ?? "Unknown"} · {doc.tax_year ?? "—"}
                 {doc.confidence_score != null &&
                   ` · ${Math.round(doc.confidence_score * 100)}%`}
@@ -435,7 +435,7 @@ function DocImportList({
             </div>
             <span
               className={cn(
-                "rounded-full px-2 py-0.5 text-[10px] font-medium",
+                "rounded-full px-2 py-0.5 text-xs font-medium",
                 doc.status === "completed"
                   ? "bg-emerald-500/20 text-emerald-200"
                   : "bg-amber-500/20 text-amber-200"
@@ -1663,11 +1663,11 @@ export function Calculator() {
                             <td className="px-3 py-3 text-white">
                               {option.label}
                               {option.revokedAt === "approved" ? (
-                                <span className="ml-2 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] text-emerald-200">
+                                <span className="ml-2 rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-200">
                                   approved
                                 </span>
                               ) : option.revokedAt ? (
-                                <span className="ml-2 rounded-full bg-rose-500/20 px-2 py-0.5 text-[10px] text-rose-200">
+                                <span className="ml-2 rounded-full bg-rose-500/20 px-2 py-0.5 text-xs text-rose-200">
                                   revoked
                                 </span>
                               ) : null}
@@ -1824,7 +1824,7 @@ export function Calculator() {
                       {(commentsQuery.data ?? []).slice(0, 6).map((comment) => (
                         <div key={comment.id} className="rounded-xl border border-neutral-800 bg-neutral-800 p-2.5">
                           <p className="text-xs text-neutral-200">{comment.body}</p>
-                          <p className="mt-1 text-[11px] text-neutral-500">{formatSavedAt(comment.created_at)}</p>
+                          <p className="mt-1 text-xs text-neutral-500">{formatSavedAt(comment.created_at)}</p>
                         </div>
                       ))}
                       {(commentsQuery.data ?? []).length === 0 && (
@@ -1868,7 +1868,7 @@ export function Calculator() {
                         <div key={collaborator.id} className="flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-800 p-2.5">
                           <div>
                             <p className="text-xs text-neutral-200">{collaborator.email}</p>
-                            <p className="text-[11px] text-neutral-500">{collaborator.role}</p>
+                            <p className="text-xs text-neutral-500">{collaborator.role}</p>
                           </div>
                           {!collaborator.revoked_at && (
                             <button
@@ -1876,7 +1876,7 @@ export function Calculator() {
                               onClick={() =>
                                 handleRevokeCollaborator(collaborator.id, collaborator.email)
                               }
-                              className="rounded-lg border border-rose-400/40 bg-rose-500/10 px-2 py-1 text-[11px] text-rose-200 hover:bg-rose-500/20"
+                              className="rounded-lg border border-rose-400/40 bg-rose-500/10 px-2 py-1 text-xs text-rose-200 hover:bg-rose-500/20"
                             >
                               Revoke
                             </button>
@@ -1896,7 +1896,7 @@ export function Calculator() {
                     {(eventsQuery.data ?? []).slice(0, 14).map((event) => (
                       <div key={event.id} className="rounded-xl border border-neutral-800 bg-neutral-800 p-2.5">
                         <p className="text-xs font-medium text-neutral-200">{event.event_type}</p>
-                        <p className="mt-1 text-[11px] text-neutral-500">{formatSavedAt(event.created_at)}</p>
+                        <p className="mt-1 text-xs text-neutral-500">{formatSavedAt(event.created_at)}</p>
                       </div>
                     ))}
                     {(eventsQuery.data ?? []).length === 0 && (

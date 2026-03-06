@@ -116,7 +116,7 @@ function TimelineChart({ timeline, fireNumber }: TimelineChartProps) {
                   style={{ height: `${height}%` }}
                 />
               </div>
-              <span className="text-[10px] text-neutral-500">{point.year}</span>
+              <span className="text-xs text-neutral-500">{point.year}</span>
             </div>
           );
         })}

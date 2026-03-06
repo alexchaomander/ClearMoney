@@ -213,14 +213,14 @@ export default function VerificationPortalPage() {
                   </p>
                   
                   <div className="bg-neutral-900/50 rounded-2xl p-6 mb-8 text-left border border-neutral-800">
-                    <div className="text-[10px] text-neutral-500 uppercase font-bold tracking-widest mb-2">Claim Statement</div>
+                    <div className="text-xs text-neutral-500 uppercase font-bold tracking-widest mb-2">Claim Statement</div>
                     <div className="text-xl font-medium text-white mb-6">
                       {validateMutation.data.statement}
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <div className="flex items-center gap-2 text-[10px] text-neutral-500 uppercase font-bold tracking-widest mb-1">
+                        <div className="flex items-center gap-2 text-xs text-neutral-500 uppercase font-bold tracking-widest mb-1">
                           <Calendar className="w-3 h-3" /> Issued
                         </div>
                         <div className="text-sm text-neutral-300">
@@ -228,7 +228,7 @@ export default function VerificationPortalPage() {
                         </div>
                       </div>
                       <div>
-                        <div className="flex items-center gap-2 text-[10px] text-neutral-500 uppercase font-bold tracking-widest mb-1">
+                        <div className="flex items-center gap-2 text-xs text-neutral-500 uppercase font-bold tracking-widest mb-1">
                           <Clock className="w-3 h-3" /> Expires
                         </div>
                         <div className="text-sm text-neutral-300">

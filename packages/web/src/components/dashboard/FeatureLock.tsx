@@ -46,13 +46,13 @@ export function FeatureLock({
         </p>
 
         <div className="w-full max-w-sm bg-slate-950/50 rounded-xl border border-slate-800 p-4 mb-8">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center justify-center gap-2">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center justify-center gap-2">
             <Database className="w-3 h-3" />
             Data Pillars Required
           </p>
           <div className="flex flex-wrap justify-center gap-2">
             {requiredData.map((data) => (
-              <span key={data} className="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-[10px] font-mono text-slate-300">
+              <span key={data} className="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-xs font-mono text-slate-300">
                 {data}
               </span>
             ))}

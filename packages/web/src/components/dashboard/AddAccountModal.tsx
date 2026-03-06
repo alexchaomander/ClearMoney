@@ -129,7 +129,7 @@ const inputClass =
   "w-full rounded-xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-all";
 const selectClass =
   "w-full rounded-xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-all appearance-none";
-const labelClass = "block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-neutral-500 mb-1.5 ml-1";
+const labelClass = "block text-xs font-black uppercase tracking-widest text-slate-400 dark:text-neutral-500 mb-1.5 ml-1";
 
 interface AddAccountModalProps {
   open: boolean;
@@ -742,7 +742,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                             required 
                           />
                           {addressError && (
-                            <p className="mt-1 text-[10px] font-bold text-rose-500 uppercase tracking-tight ml-1">{addressError}</p>
+                            <p className="mt-1 text-xs font-bold text-rose-500 uppercase tracking-tight ml-1">{addressError}</p>
                           )}
                         </div>
                         <div>
@@ -759,7 +759,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                           <input className={inputClass} value={cryptoLabel} onChange={(e) => setCryptoLabel(e.target.value)} placeholder="e.g. Ledger Nano X" />
                         </div>
                         <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 leading-relaxed">
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400 leading-relaxed">
                             <span className="font-black uppercase mr-1">Read-Only:</span>
                             We only need your public address. ClearMoney will never ask for your private keys or seed phrase.
                           </p>
@@ -774,7 +774,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                             type="button"
                             onClick={() => setPropertyMode("search")}
                             className={cn(
-                              "flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
+                              "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all",
                               propertyMode === "search" ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-sm" : "text-slate-500"
                             )}
                           >
@@ -785,7 +785,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                             type="button"
                             onClick={() => setPropertyMode("manual")}
                             className={cn(
-                              "flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
+                              "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all",
                               propertyMode === "manual" ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-sm" : "text-slate-500"
                             )}
                           >
@@ -827,7 +827,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                             {propertySearchError && (
                               <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center gap-2">
                                 <Shield className="w-3 h-3 text-rose-500" />
-                                <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-tight">{propertySearchError}</p>
+                                <p className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-tight">{propertySearchError}</p>
                               </div>
                             )}
 
@@ -845,19 +845,19 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                                     </div>
                                     <div>
                                       <p className="text-xs font-bold text-slate-900 dark:text-white">{res.address}</p>
-                                      <p className="text-[10px] text-slate-500">{res.city}, {res.state}</p>
+                                      <p className="text-xs text-slate-500">{res.city}, {res.state}</p>
                                     </div>
                                   </div>
                                   <div className="text-right">
                                     <p className="text-xs font-black text-slate-900 dark:text-white">
                                       {res.market_value != null ? `$${(Number(res.market_value) / 1000).toFixed(0)}k` : "N/A"}
                                     </p>
-                                    <p className="text-[8px] font-black uppercase tracking-widest text-emerald-500">Zestimate</p>
+                                    <p className="text-xs font-black uppercase tracking-widest text-emerald-500">Zestimate</p>
                                   </div>
                                 </button>
                               ))}
                               {reSearchQuery && reSearchResults.length === 0 && !searchProperties.isPending && (
-                                <p className="text-[10px] text-center py-4 text-slate-400 font-bold uppercase tracking-widest">Enter an address to auto-link</p>
+                                <p className="text-xs text-center py-4 text-slate-400 font-bold uppercase tracking-widest">Enter an address to auto-link</p>
                               )}
                             </div>
                           </div>
@@ -906,13 +906,13 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                               </div>
 
                               <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 leading-relaxed">
+                                <p className="text-xs text-emerald-600 dark:text-emerald-400 leading-relaxed">
                                   <span className="font-black uppercase mr-1">Zillow Integration:</span>
                                   We'll use your address to fetch live Zestimates. If the match isn't perfect, you can provide a Zillow Property ID (ZPID).
                                 </p>
                               </div>
                             </div>
-                            <button type="button" onClick={() => setPropertyMode("search")} className="w-full py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-emerald-500 transition-colors">← Back to Address Search</button>
+                            <button type="button" onClick={() => setPropertyMode("search")} className="w-full py-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-emerald-500 transition-colors">← Back to Address Search</button>
                           </>
                         )}
                       </div>
@@ -925,7 +925,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                             type="button"
                             onClick={() => setVehicleMode("search")}
                             className={cn(
-                              "flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
+                              "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all",
                               vehicleMode === "search" ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-sm" : "text-slate-500"
                             )}
                           >
@@ -936,7 +936,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                             type="button"
                             onClick={() => setVehicleMode("manual")}
                             className={cn(
-                              "flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
+                              "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all",
                               vehicleMode === "manual" ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-sm" : "text-slate-500"
                             )}
                           >
@@ -979,7 +979,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                             {vehicleSearchError && (
                               <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center gap-2">
                                 <Shield className="w-3 h-3 text-rose-500" />
-                                <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-tight">{vehicleSearchError}</p>
+                                <p className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-tight">{vehicleSearchError}</p>
                               </div>
                             )}
 
@@ -997,19 +997,19 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                                     </div>
                                     <div>
                                       <p className="text-xs font-bold text-slate-900 dark:text-white">{res.year} {res.make} {res.model}</p>
-                                      <p className="text-[10px] text-slate-500 uppercase tracking-widest">{res.vin}</p>
+                                      <p className="text-xs text-slate-500 uppercase tracking-widest">{res.vin}</p>
                                     </div>
                                   </div>
                                   <div className="text-right">
                                     <p className="text-xs font-black text-slate-900 dark:text-white">
                                       {res.market_value != null ? `$${(Number(res.market_value) / 1000).toFixed(1)}k` : "N/A"}
                                     </p>
-                                    <p className="text-[8px] font-black uppercase tracking-widest text-emerald-500">KBB Value</p>
+                                    <p className="text-xs font-black uppercase tracking-widest text-emerald-500">KBB Value</p>
                                   </div>
                                 </button>
                               ))}
                               {vSearchVin && vSearchResults.length === 0 && !searchVehicles.isPending && (
-                                <p className="text-[10px] text-center py-4 text-slate-400 font-bold uppercase tracking-widest">Enter VIN to identify specs & value</p>
+                                <p className="text-xs text-center py-4 text-slate-400 font-bold uppercase tracking-widest">Enter VIN to identify specs & value</p>
                               )}
                             </div>
                           </div>
@@ -1071,13 +1071,13 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                               </div>
 
                               <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 leading-relaxed">
+                                <p className="text-xs text-emerald-600 dark:text-emerald-400 leading-relaxed">
                                   <span className="font-black uppercase mr-1">KBB Integration:</span>
                                   We use your VIN to fetch specific build specs and live market values. If you don't have a VIN, you can enter specs manually.
                                 </p>
                               </div>
                             </div>
-                            <button type="button" onClick={() => setVehicleMode("search")} className="w-full py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-emerald-500 transition-colors">← Back to VIN Search</button>
+                            <button type="button" onClick={() => setVehicleMode("search")} className="w-full py-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-emerald-500 transition-colors">← Back to VIN Search</button>
                           </>
                         )}
                       </div>
@@ -1105,7 +1105,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                           </div>
                         </div>
                         <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
-                          <p className="text-[10px] text-slate-500 leading-relaxed italic">
+                          <p className="text-xs text-slate-500 leading-relaxed italic">
                             ClearMoney focuses on high-integrity manual valuation for unique luxury assets. Auto-valuation for watches via Chrono24 is currently in pilot.
                           </p>
                         </div>
@@ -1143,7 +1143,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                           </label>
 
                           <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 leading-relaxed">
+                            <p className="text-xs text-emerald-600 dark:text-emerald-400 leading-relaxed">
                               <span className="font-black uppercase mr-1">Spot Price Integration:</span>
                               We fetch real-time market data for gold, silver, platinum, and palladium to keep your metal holdings current.
                             </p>

@@ -67,7 +67,7 @@ export function GhostSidebar({ intent, onClose, onComplete }: GhostSidebarProps)
           </div>
           <div>
             <h2 className="font-serif text-lg text-white leading-tight">Ghost Copilot</h2>
-            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Guided Execution</p>
+            <p className="text-xs text-emerald-400 font-bold uppercase tracking-widest">Guided Execution</p>
           </div>
         </div>
         <button
@@ -90,7 +90,7 @@ export function GhostSidebar({ intent, onClose, onComplete }: GhostSidebarProps)
       <div className="flex-grow overflow-y-auto p-6 space-y-8">
         {/* Intent Info */}
         <div className="p-4 rounded-xl bg-neutral-900 border border-neutral-800">
-          <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Active Intent</div>
+          <div className="text-xs text-neutral-500 font-bold uppercase tracking-wider mb-1">Active Intent</div>
           <div className="text-sm font-medium text-white mb-2">{intent.title}</div>
           <div className="flex items-center gap-2 text-xs text-neutral-400">
             <Bot className="w-3 h-3 text-emerald-400" />
@@ -100,7 +100,7 @@ export function GhostSidebar({ intent, onClose, onComplete }: GhostSidebarProps)
 
         {/* Steps */}
         <div className="space-y-4">
-          <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Execution Path</div>
+          <div className="text-xs text-neutral-500 font-bold uppercase tracking-widest">Execution Path</div>
           {steps.length > 0 ? (
             steps.map((step, i) => {
               const isDone = completedSteps.includes(step.order);
@@ -193,7 +193,7 @@ export function GhostSidebar({ intent, onClose, onComplete }: GhostSidebarProps)
             "Complete all steps to finalize"
           )}
         </button>
-        <p className="text-center text-[9px] text-neutral-600 mt-4 uppercase tracking-[0.2em]">
+        <p className="text-center text-xs text-neutral-600 mt-4 uppercase tracking-[0.2em]">
           Verification takes 2-4 hours via Strata Sync
         </p>
       </div>

@@ -103,7 +103,7 @@ function YearlyChart({ breakdowns }: { breakdowns: YearlyBreakdown[] }) {
                 />
               </div>
               <span className="text-xs text-neutral-400">Year {row.year}</span>
-              <span className="text-[11px] text-neutral-500">
+              <span className="text-xs text-neutral-500">
                 {formatCurrency(row.totalCompensation)}
               </span>
             </div>

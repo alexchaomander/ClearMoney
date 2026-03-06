@@ -118,7 +118,7 @@ export default function ActionLabPage() {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-4"
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest mb-4"
             >
               <Activity className="w-3 h-3" />
               Strata Autonomous Action Layer (SAL)
@@ -143,7 +143,7 @@ export default function ActionLabPage() {
 
           <div className="flex items-center gap-4 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
             <div className="text-right">
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Agent Status</p>
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Agent Status</p>
               <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-2 justify-end">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -154,7 +154,7 @@ export default function ActionLabPage() {
             </div>
             <div className="w-px h-8 bg-slate-200 dark:bg-slate-800" />
             <div className="text-right">
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Drafted Intents</p>
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Drafted Intents</p>
               <p className="text-sm font-medium text-slate-900 dark:text-white">{allIntents.length} Pending</p>
             </div>
           </div>
@@ -191,10 +191,10 @@ export default function ActionLabPage() {
                       <intent.icon className="w-6 h-6" />
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                         {intent.status}
                       </span>
-                      <span className="text-[9px] text-slate-500 uppercase tracking-tighter font-mono">
+                      <span className="text-xs text-slate-500 uppercase tracking-tighter font-mono">
                         {intent.id ? intent.id.slice(0, 8) : ""}
                       </span>
                     </div>
@@ -207,7 +207,7 @@ export default function ActionLabPage() {
 
                   <div className="flex items-center justify-between pt-6 border-t border-slate-200 dark:border-slate-800">
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Est. Impact</span>
+                      <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">Est. Impact</span>
                       <span className="text-emerald-600 dark:text-emerald-400 font-bold">{intent.impact}</span>
                     </div>
                     <button
@@ -245,14 +245,14 @@ export default function ActionLabPage() {
                     Generate a signed attestation that your liquid assets exceed a specific dollar amount.
                   </p>
                 </div>
-                <div className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
+                <div className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                   SVP-1
                 </div>
               </div>
 
               <div className="space-y-4 mb-8">
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                  <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-2 block">
+                  <label className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-2 block">
                     Verification Threshold (USD)
                   </label>
                   <div className="flex items-center gap-3">
@@ -265,7 +265,7 @@ export default function ActionLabPage() {
                     />
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                <div className="flex items-center gap-2 text-xs text-slate-500">
                   <Info className="w-3 h-3" />
                   Proof valid for 24 hours. Includes liveness metadata.
                 </div>
@@ -437,7 +437,7 @@ export default function ActionLabPage() {
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </form>
-                <p className="text-[10px] text-slate-500 mt-6 uppercase tracking-[0.2em]">
+                <p className="text-xs text-slate-500 mt-6 uppercase tracking-[0.2em]">
                   Your feedback directly influences our Era 2 deployment priority.
                 </p>
               </motion.div>
@@ -483,9 +483,9 @@ export default function ActionLabPage() {
               <div className="p-8 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Action Intent Review</span>
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Action Intent Review</span>
                     <div className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-700" />
-                    <span className="text-[10px] font-mono text-slate-500">{activeIntent.id}</span>
+                    <span className="text-xs font-mono text-slate-500">{activeIntent.id}</span>
                   </div>
                   <h2 className="text-2xl font-serif text-slate-900 dark:text-white">{activeIntent.title}</h2>
                 </div>
@@ -501,16 +501,16 @@ export default function ActionLabPage() {
               <div className="flex-grow overflow-y-auto p-8 space-y-8">
                 {/* Reasoning Section */}
                 <section>
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
                     <Bot className="w-3 h-3" />
                     Agent Reasoning
                   </div>
                   <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold border border-emerald-200 dark:border-emerald-900">
+                      <div className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-200 dark:border-emerald-900">
                         {activeIntent.logic.rule}
                       </div>
-                      <div className="text-[10px] text-slate-500">Deterministic Confidence: 99.8%</div>
+                      <div className="text-xs text-slate-500">Deterministic Confidence: 99.8%</div>
                     </div>
                     <p className="text-slate-700 dark:text-slate-300 leading-relaxed italic">
                       &quot;{activeIntent.logic.reasoning}&quot;
@@ -520,14 +520,14 @@ export default function ActionLabPage() {
 
                 {/* Data Surface Section */}
                 <section>
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
                     <Database className="w-3 h-3" />
                     Data Surface Inputs
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {Object.entries(activeIntent.logic.dataPoints).map(([k, v]) => (
                       <div key={k} className="p-4 rounded-xl bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/50">
-                        <div className="text-[10px] text-slate-500 mb-1">{k}</div>
+                        <div className="text-xs text-slate-500 mb-1">{k}</div>
                         <div className="text-sm font-medium text-slate-900 dark:text-white">{v}</div>
                       </div>
                     ))}
@@ -536,14 +536,14 @@ export default function ActionLabPage() {
 
                 {/* Execution Plan Section */}
                 <section>
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
                     <Layers className="w-3 h-3" />
                     Planned Execution Steps
                   </div>
                   <div className="space-y-3">
                     {activeIntent.logic.steps.map((step, i) => (
                       <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-white/30 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800/30">
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-400">
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-400">
                           {i + 1}
                         </div>
                         <div className="text-sm text-slate-700 dark:text-slate-300">{step}</div>
@@ -557,11 +557,11 @@ export default function ActionLabPage() {
               <div className="p-8 border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-1 font-bold">Total Est. Annual Impact</div>
+                    <div className="text-xs text-slate-500 uppercase tracking-widest mb-1 font-bold">Total Est. Annual Impact</div>
                     <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{activeIntent.impact}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-1 font-bold">Status</div>
+                    <div className="text-xs text-slate-500 uppercase tracking-widest mb-1 font-bold">Status</div>
                     <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 font-bold">
                       <Lock className="w-3 h-3" />
                       Locked for Beta
@@ -604,7 +604,7 @@ export default function ActionLabPage() {
                     />
                   )}
                 </button>
-                <p className="text-center text-[10px] text-slate-500 mt-4 uppercase tracking-widest font-bold">
+                <p className="text-center text-xs text-slate-500 mt-4 uppercase tracking-widest font-bold">
                   Requires Biometric Confirmation
                 </p>
               </div>

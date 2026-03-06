@@ -72,7 +72,7 @@ export default function DataHealthPage() {
                     <Database className="h-5 w-5 text-emerald-400" />
                     <span className="text-sm font-medium text-white/60 uppercase tracking-wider">Overall Status</span>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest ${
                     health?.status === "ok" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                   }`}>
                     {health?.status || "Unknown"}

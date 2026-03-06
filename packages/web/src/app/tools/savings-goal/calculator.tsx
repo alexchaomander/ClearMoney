@@ -280,7 +280,7 @@ export function Calculator() {
                           style={{ left: `${(index + 1) * 25}%` }}
                         >
                           <div className="w-px h-2 bg-neutral-600 mx-auto" />
-                          <span className="text-[10px] text-neutral-500">
+                          <span className="text-xs text-neutral-500">
                             {label}
                           </span>
                         </div>

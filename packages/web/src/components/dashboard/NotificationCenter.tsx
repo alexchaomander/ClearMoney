@@ -89,7 +89,7 @@ export function NotificationCenter() {
               <div className="flex items-center gap-2">
                 <h3 className="font-medium text-slate-900 dark:text-white">Notifications</h3>
                 {unreadCount > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-emerald-900/30 text-emerald-400 text-[10px] font-bold">
+                  <span className="px-1.5 py-0.5 rounded-full bg-emerald-900/30 text-emerald-400 text-xs font-bold">
                     {unreadCount} NEW
                   </span>
                 )}
@@ -98,7 +98,7 @@ export function NotificationCenter() {
                 {unreadCount > 0 && (
                   <button
                     onClick={() => markAllRead.mutate()}
-                    className="text-[10px] uppercase tracking-widest text-slate-500 hover:text-emerald-400 transition-colors"
+                    className="text-xs uppercase tracking-widest text-slate-500 hover:text-emerald-400 transition-colors"
                   >
                     Mark all read
                   </button>
@@ -147,7 +147,7 @@ export function NotificationCenter() {
                           <p className={`text-sm font-medium leading-tight ${n.is_read ? "text-slate-700 dark:text-slate-300" : "text-slate-900 dark:text-white"}`}>
                             {n.title}
                           </p>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-600 whitespace-nowrap pt-0.5">
+                          <span className="text-xs text-slate-400 dark:text-slate-600 whitespace-nowrap pt-0.5">
                             {new Date(n.created_at).toLocaleDateString()}
                           </span>
                         </div>
@@ -163,7 +163,7 @@ export function NotificationCenter() {
                                 setIsOpen(false);
                                 if (!n.is_read) updateNotification.mutate({ id: n.id, data: { is_read: true } });
                               }}
-                              className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
+                              className="text-xs font-bold uppercase tracking-widest text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
                             >
                               Take Action
                               <ExternalLink className="w-2.5 h-2.5" />
@@ -172,7 +172,7 @@ export function NotificationCenter() {
                           {!n.is_read && (
                             <button
                               onClick={() => updateNotification.mutate({ id: n.id, data: { is_read: true } })}
-                              className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                              className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                             >
                               Dismiss
                             </button>
@@ -189,7 +189,7 @@ export function NotificationCenter() {
               <Link
                 href="/settings"
                 onClick={() => setIsOpen(false)}
-                className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               >
                 Notification Settings
               </Link>

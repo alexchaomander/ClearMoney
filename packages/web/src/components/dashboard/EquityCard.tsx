@@ -38,7 +38,7 @@ export function EquityCard({ portfolio, projections, onDeleteGrant }: EquityCard
           <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             {formatCurrency(portfolio.total_value)}
           </div>
-          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-[0.15em] mt-1 bg-emerald-500/10 px-2 py-0.5 rounded-full inline-block">
+          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-[0.15em] mt-1 bg-emerald-500/10 px-2 py-0.5 rounded-full inline-block">
             {formatCurrency(portfolio.total_vested_value)} Liquid
           </p>
         </div>
@@ -48,7 +48,7 @@ export function EquityCard({ portfolio, projections, onDeleteGrant }: EquityCard
         <div className="mb-12 relative z-10 bg-slate-50/50 dark:bg-slate-950/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2 mb-2">
             <LineChart className="w-4 h-4 text-emerald-500" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Wealth Vesting Schedule (24mo)</span>
+            <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Wealth Vesting Schedule (24mo)</span>
           </div>
           <EquityVestChart data={projections} />
         </div>
@@ -56,7 +56,7 @@ export function EquityCard({ portfolio, projections, onDeleteGrant }: EquityCard
 
       <div className="space-y-4 relative z-10">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Active Stock Grants</span>
+          <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Active Stock Grants</span>
         </div>
         
         {portfolio.grant_valuations.map((grant) => (
@@ -72,7 +72,7 @@ export function EquityCard({ portfolio, projections, onDeleteGrant }: EquityCard
                   <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter">
                     {grant.symbol}
                   </span>
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 uppercase tracking-widest">
+                  <span className="text-xs font-black px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 uppercase tracking-widest">
                     Common Stock
                   </span>
                 </div>
@@ -85,7 +85,7 @@ export function EquityCard({ portfolio, projections, onDeleteGrant }: EquityCard
                 <div className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
                   {formatCurrency(grant.total_value)}
                 </div>
-                <div className="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-1">
+                <div className="text-xs text-slate-400 uppercase font-black tracking-widest mt-1">
                   {grant.vested_quantity + grant.unvested_quantity} shares
                 </div>
               </div>
@@ -93,7 +93,7 @@ export function EquityCard({ portfolio, projections, onDeleteGrant }: EquityCard
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                <p className="text-[9px] uppercase tracking-[0.2em] text-emerald-600/70 dark:text-emerald-400/70 font-black mb-1">
+                <p className="text-xs uppercase tracking-[0.2em] text-emerald-600/70 dark:text-emerald-400/70 font-black mb-1">
                   Liquid (Vested)
                 </p>
                 <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">
@@ -101,7 +101,7 @@ export function EquityCard({ portfolio, projections, onDeleteGrant }: EquityCard
                 </p>
               </div>
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
-                <p className="text-[9px] uppercase tracking-[0.2em] text-slate-400 font-black mb-1">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400 font-black mb-1">
                   Projected (Unvested)
                 </p>
                 <p className="text-lg font-black text-slate-400">
@@ -117,7 +117,7 @@ export function EquityCard({ portfolio, projections, onDeleteGrant }: EquityCard
                     <Calendar className="w-4 h-4 text-emerald-400" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 block">Upcoming Vest</span>
+                    <span className="text-xs font-black uppercase tracking-widest text-emerald-500 block">Upcoming Vest</span>
                     <span className="text-xs font-bold text-slate-300">
                       {new Date(grant.next_vest_date).toLocaleDateString("en-US", {
                         month: "long",

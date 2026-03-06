@@ -44,15 +44,15 @@ export function BlogPageClient({ posts }: { posts: PostMeta[] }) {
       {/* Market Ticker */}
       <div className="bg-slate-900 text-white overflow-hidden whitespace-nowrap h-10 flex items-center">
         <div className="animate-marquee flex gap-12 items-center px-6">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 flex items-center gap-2 shrink-0">
+          <span className="text-xs font-bold uppercase tracking-widest text-emerald-400 flex items-center gap-2 shrink-0">
             <Activity className="w-3 h-3" /> Live Valuations
           </span>
           {VALUATIONS.map((v, i) => (
             <div key={i} className="flex items-center gap-3 shrink-0">
-              <span className="text-[10px] font-bold text-slate-400">{v.program}</span>
+              <span className="text-xs font-bold text-slate-400">{v.program}</span>
               <span className="font-mono text-xs font-bold">{v.value}</span>
               <span className={cn(
-                "text-[10px] font-bold",
+                "text-xs font-bold",
                 v.delta.startsWith("+") ? "text-emerald-400" : v.delta.startsWith("-") ? "text-rose-400" : "text-slate-500"
               )}>{v.delta}</span>
             </div>
@@ -66,7 +66,7 @@ export function BlogPageClient({ posts }: { posts: PostMeta[] }) {
           {/* Main Column */}
           <div className="lg:col-span-8 space-y-20">
             <section>
-              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] uppercase tracking-[0.2em] mb-4">
+              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-[0.2em] mb-4">
                 <Newspaper className="w-3 h-3" />
                 Latest Analysis
               </div>
@@ -160,7 +160,7 @@ export function BlogPageClient({ posts }: { posts: PostMeta[] }) {
 
             {/* Categories */}
             <div>
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">Research Sectors</h4>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Research Sectors</h4>
               <div className="flex flex-wrap gap-2">
                 {["Credit Strategy", "Tax Harvest", "Yield Arbitrage", "ACATS Rollover", "Equity Comp"].map(t => (
                   <span key={t} className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-medium border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 cursor-pointer transition-colors">
