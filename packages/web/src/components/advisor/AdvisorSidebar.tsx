@@ -211,20 +211,22 @@ export function AdvisorSidebar() {
                     <h2 className="font-display text-xl text-slate-900 dark:text-white">Financial Advisor</h2>
                     <div className="flex items-center gap-2">
                       <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Context Aware</span>
+                      <span className="text-xs font-mono text-slate-400 uppercase tracking-widest">Context Aware</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button 
+                  <button
                     onClick={() => setIsExpanded(!isExpanded)}
                     className="p-2 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors hidden lg:block"
+                    aria-label={isExpanded ? "Minimize sidebar" : "Expand sidebar"}
                   >
                     {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                   </button>
-                  <button 
+                  <button
                     onClick={() => setIsOpen(false)}
                     className="p-2 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    aria-label="Close advisor"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -239,7 +241,7 @@ export function AdvisorSidebar() {
                       <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 shadow-sm">
                         <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-2">
                           <Sparkles className="w-4 h-4" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest">Recommended Skill</span>
+                          <span className="text-xs font-bold uppercase tracking-widest">Recommended Skill</span>
                         </div>
                         <h3 className="font-display text-lg text-slate-900 dark:text-white mb-1">{currentSkill.display_name}</h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{currentSkill.description}</p>
@@ -254,7 +256,7 @@ export function AdvisorSidebar() {
                     )}
 
                     <div className="space-y-3">
-                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">General Assistance</p>
+                      <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">General Assistance</p>
                       <button 
                         onClick={() => startSession()}
                         className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 text-left transition-all group shadow-sm"
@@ -269,7 +271,7 @@ export function AdvisorSidebar() {
 
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Vanish Mode</p>
+                        <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Vanish Mode</p>
                         <button
                           onClick={() => setVanishMode(!vanishMode)}
                           className={cn(
@@ -285,7 +287,7 @@ export function AdvisorSidebar() {
                       </div>
                       <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-850/50 border border-slate-100 dark:border-slate-800">
                         <EyeOff className={cn("w-4 h-4 shrink-0 mt-0.5", vanishMode ? "text-purple-600 dark:text-purple-400" : "text-slate-400 dark:text-slate-600")} />
-                        <p className="text-[10px] text-slate-500 leading-relaxed">
+                        <p className="text-xs text-slate-500 leading-relaxed">
                           When active, session data is not persisted to your account history. Perfect for &quot;What-If&quot; scenarios.
                         </p>
                       </div>
@@ -295,14 +297,14 @@ export function AdvisorSidebar() {
                   <div className="flex flex-col h-full space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Active Session</span>
-                        <div className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[8px] font-mono border border-slate-200 dark:border-slate-700">
+                        <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Active Session</span>
+                        <div className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-mono border border-slate-200 dark:border-slate-700">
                           {activeSession.skill_name?.toUpperCase() || "GENERAL"}
                         </div>
                       </div>
                       <button 
                         onClick={() => setActiveSession(null)}
-                        className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 hover:text-emerald-500 dark:hover:text-emerald-400 uppercase tracking-widest"
+                        className="text-xs font-bold text-emerald-600 dark:text-emerald-500 hover:text-emerald-500 dark:hover:text-emerald-400 uppercase tracking-widest"
                       >
                         Reset
                       </button>
@@ -329,7 +331,7 @@ export function AdvisorSidebar() {
                             {msg.toolCalls && msg.toolCalls.length > 0 && (
                               <div className="mt-3 flex flex-wrap gap-2">
                                 {msg.toolCalls.map((tc, idx) => (
-                                  <div key={idx} className="flex items-center gap-1.5 px-2 py-1 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[9px] font-mono text-emerald-600 dark:text-emerald-500/70">
+                                  <div key={idx} className="flex items-center gap-1.5 px-2 py-1 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono text-emerald-600 dark:text-emerald-500/70">
                                     <Sparkles className="w-2.5 h-2.5" />
                                     {tc.name}
                                   </div>
@@ -387,7 +389,7 @@ export function AdvisorSidebar() {
                       </button>
                     </div>
                   </div>
-                  <p className="text-[9px] text-slate-400 dark:text-slate-600 mt-3 text-center uppercase tracking-widest font-bold">
+                  <p className="text-xs text-slate-400 dark:text-slate-600 mt-3 text-center uppercase tracking-widest font-bold">
                     Educational analysis only &middot; Not financial advice
                   </p>
                 </div>

@@ -5,6 +5,7 @@ import { AppProviders } from "@/components/layout/AppProviders";
 const SITE_NAME = "ClearMoney";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://clearmoney.com"),
   title: {
     default: `${SITE_NAME} - Financial Literacy for Everyone`,
     template: `%s | ${SITE_NAME}`,
@@ -31,12 +32,14 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} - Financial Literacy for Everyone`,
     description:
       "The honest alternative to corporate finance media. Interactive tools and unbiased advice.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: SITE_NAME }],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_NAME,
     description:
       "The honest alternative to corporate finance media. Interactive tools and unbiased advice.",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
@@ -66,6 +69,20 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "ClearMoney",
+              url: "https://clearmoney.com",
+              logo: "https://clearmoney.com/og-image.png",
+              description:
+                "The honest alternative to corporate finance media. Interactive calculators and unbiased advice.",
+            }),
+          }}
+        />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-emerald-600 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white"
