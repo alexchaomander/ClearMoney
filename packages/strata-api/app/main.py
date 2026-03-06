@@ -5,6 +5,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from app.api.accounts import router as accounts_router
 from app.api.action_approval import router as action_approval_router
@@ -80,6 +83,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await close_db()
 
 
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=[settings.rate_limit_default],
+    storage_uri=settings.redis_url or "memory://",
+)
+
 app = FastAPI(
     title=settings.app_name,
     version=settings.version,
@@ -87,6 +96,9 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
     lifespan=lifespan,
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,

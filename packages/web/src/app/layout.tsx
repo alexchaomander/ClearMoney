@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AppProviders } from "@/components/layout/AppProviders";
+import "@/lib/env";
 
 const SITE_NAME = "ClearMoney";
 
@@ -32,14 +33,12 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} - Financial Literacy for Everyone`,
     description:
       "The honest alternative to corporate finance media. Interactive tools and unbiased advice.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: SITE_NAME }],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_NAME,
     description:
       "The honest alternative to corporate finance media. Interactive tools and unbiased advice.",
-    images: ["/og-image.png"],
   },
   robots: {
     index: true,
@@ -55,6 +54,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#10b981" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -75,7 +77,7 @@ export default function RootLayout({
               "@type": "Organization",
               name: "ClearMoney",
               url: "https://clearmoney.com",
-              logo: "https://clearmoney.com/og-image.png",
+              logo: "https://clearmoney.com/opengraph-image",
               description:
                 "The honest alternative to corporate finance media. Interactive calculators and unbiased advice.",
             }).replace(/</g, "\\u003c"),
