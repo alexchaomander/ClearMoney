@@ -50,6 +50,7 @@ ClearMoney is a well-architected financial advisory platform with a strong found
 
 | Priority | Issue | Detail |
 |----------|-------|--------|
+| **P0** | **Encryption key committed to git** | `packages/strata-api/.env` contains a real Fernet encryption key (`STRATA_CREDENTIALS_ENCRYPTION_KEY=8tTf...`) and was committed in history (`eeca638`). The `.gitignore` only excludes `.env.local`, **not `.env` files**. **Action:** (1) Add `**/.env` to `.gitignore`, (2) remove `.env` from tracking, (3) rotate the encryption key, (4) consider scrubbing git history with `git filter-repo` or BFG. |
 | **P0** | Auth header bypass in dev | When `STRATA_CLERK_PEM_PUBLIC_KEY` is unset, anyone can pass `X-Clerk-User-Id` header to impersonate any user. Ensure PEM key is always set in production/staging. The config validator logs a warning, but does **not** block startup. |
 | **P0** | `auto_consent_on_missing` flag | If accidentally set to `true` in production, auto-grants all consent scopes. Must be `false` in production config. |
 | **P1** | CSP allows `unsafe-inline` + `unsafe-eval` for scripts | Necessary for Next.js hydration, but consider nonce-based CSP when Next.js supports it. |
@@ -187,6 +188,8 @@ For a public beta, consider **feature-flagging experimental features** (Action L
 ## Launch Readiness Checklist
 
 ### Must-have (P0) — Block launch
+- [ ] **Rotate the exposed encryption key** — generate a new `STRATA_CREDENTIALS_ENCRYPTION_KEY`, re-encrypt any stored credentials, and scrub git history
+- [ ] **Fix `.gitignore`** — add `**/.env` to prevent future secret leaks (currently only `.env.local` is ignored)
 - [ ] Verify `STRATA_CLERK_PEM_PUBLIC_KEY` is set in production; consider failing startup if missing in non-debug mode
 - [ ] Verify `auto_consent_on_missing` is `false` in production
 - [ ] Run `pnpm audit` and `pip audit` — fix critical/high vulnerabilities
@@ -217,11 +220,12 @@ For a public beta, consider **feature-flagging experimental features** (Action L
 
 ## Conclusion
 
-ClearMoney has impressive engineering maturity for its stage: proper auth, security headers, Sentry integration, CI/CD pipelines, and a substantial test suite. The **P0 items are small and quick to fix** — they're mostly configuration verification rather than architectural gaps.
+ClearMoney has impressive engineering maturity for its stage: proper auth, security headers, Sentry integration, CI/CD pipelines, and a substantial test suite. Most P0 items are configuration verification, but the **committed encryption key requires immediate rotation and git history cleanup**.
 
 The biggest risks for public beta are:
-1. **Large attack surface** — 100+ routes and 30+ API endpoints mean more places for bugs to hide
-2. **Financial data sensitivity** — any data leak is brand-destroying
-3. **AI advisor liability** — financial recommendations carry regulatory implications
+1. **Committed secret** — A Fernet encryption key is in git history; must be rotated before any public exposure
+2. **Large attack surface** — 100+ routes and 30+ API endpoints mean more places for bugs to hide
+3. **Financial data sensitivity** — any data leak is brand-destroying
+4. **AI advisor liability** — financial recommendations carry regulatory implications
 
-**Recommendation:** Fix P0 items, then launch the public beta with experimental features gated behind a "Labs" flag. Monitor Sentry closely in the first 48 hours. Have the rollback procedure documented and tested before go-live.
+**Recommendation:** Rotate the exposed encryption key and fix `.gitignore` first. Then address the remaining P0 items (auth enforcement, consent flag). Launch the public beta with experimental features gated behind a "Labs" flag. Monitor Sentry closely in the first 48 hours. Have the rollback procedure documented and tested before go-live.
