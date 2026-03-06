@@ -157,55 +157,55 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
       </div>
 
       <div className="overflow-x-auto">
-      <div className="min-w-[640px]">
-      {/* Table Header */}
-      <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-        <div className="col-span-4">
-          <SortHeader
-            label="Name"
-            sortKeyValue="name"
-            sortKey={sortKey}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-          />
-        </div>
-        <div className="col-span-2 text-right">
-          <SortHeader
-            label="Quantity"
-            sortKeyValue="quantity"
-            sortKey={sortKey}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-            className="justify-end"
-          />
-        </div>
-        <div className="col-span-2 text-right">
-          <SortHeader
-            label="Value"
-            sortKeyValue="market_value"
-            sortKey={sortKey}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-            className="justify-end"
-          />
-        </div>
-        <div className="col-span-2 text-right">
-          <span className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Allocation</span>
-        </div>
-        <div className="col-span-2">
-          <SortHeader
-            label="Account"
-            sortKeyValue="account_name"
-            sortKey={sortKey}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-          />
-        </div>
-      </div>
+        <div className="min-w-[640px]">
+          {/* Table Header */}
+          <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+            <div className="col-span-4">
+              <SortHeader
+                label="Name"
+                sortKeyValue="name"
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
+            </div>
+            <div className="col-span-2 text-right">
+              <SortHeader
+                label="Quantity"
+                sortKeyValue="quantity"
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                className="justify-end"
+              />
+            </div>
+            <div className="col-span-2 text-right">
+              <SortHeader
+                label="Value"
+                sortKeyValue="market_value"
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                className="justify-end"
+              />
+            </div>
+            <div className="col-span-2 text-right">
+              <span className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Allocation</span>
+            </div>
+            <div className="col-span-2">
+              <SortHeader
+                label="Account"
+                sortKeyValue="account_name"
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
+            </div>
+          </div>
 
-      {/* Table Body */}
-      <div className="divide-y divide-slate-100 dark:divide-slate-800">
-        {paginatedHoldings.map((holding) => {
+          {/* Table Body */}
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {paginatedHoldings.map((holding) => {
           const percentOfPortfolio = totalValue > 0
             ? (holding.market_value / totalValue) * 100
             : 0;
@@ -333,8 +333,8 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
             </div>
           );
         })}
-      </div>
-      </div>
+          </div>
+        </div>
       </div>
 
       {showPagination && (
