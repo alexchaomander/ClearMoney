@@ -40,4 +40,8 @@ export const env = {
 
   /** Sentry DSN — optional, enables error tracking when set */
   NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN || "",
+
+  /** PostHog — optional, enables product analytics when set */
+  NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY || "",
+  NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
 } as const;
