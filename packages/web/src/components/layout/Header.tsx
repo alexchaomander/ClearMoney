@@ -126,7 +126,7 @@ export function Header() {
 
                 {/* Dropdown Menu */}
                 {isToolsDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-[600px] bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl overflow-hidden animate-fade-up">
+                  <div className="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] max-w-[600px] bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl overflow-hidden animate-fade-up">
                     <div className="p-4 border-b border-neutral-800 bg-neutral-900/50">
                       <div className="flex items-center justify-between">
                         <div>
@@ -254,6 +254,7 @@ export function Header() {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 text-neutral-400 hover:text-white transition-colors"
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
             >
               {isMobileMenuOpen ? (
                 <X className="w-6 h-6" />

@@ -22,7 +22,7 @@ export function MemoryBadge({ field, preFilledFields, isActive, label }: MemoryB
   if (field && preFilledFields) {
     if (!preFilledFields.has(field)) return null;
     return (
-      <span className="inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full bg-emerald-900/30 border border-emerald-800/40 text-[11px] text-emerald-400">
+      <span className="inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full bg-emerald-900/30 border border-emerald-800/40 text-xs text-emerald-400">
         <User className="w-3 h-3" />
         <Link
           href="/profile"
@@ -36,6 +36,7 @@ export function MemoryBadge({ field, preFilledFields, isActive, label }: MemoryB
             setDismissed(true);
           }}
           className="ml-0.5 hover:text-emerald-200 transition-colors"
+          aria-label="Dismiss"
         >
           <X className="w-3 h-3" />
         </button>
@@ -46,7 +47,7 @@ export function MemoryBadge({ field, preFilledFields, isActive, label }: MemoryB
   if (!isActive) return null;
 
   return (
-    <span className="inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full bg-emerald-900/30 border border-emerald-800/40 text-[11px] text-emerald-400">
+    <span className="inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full bg-emerald-900/30 border border-emerald-800/40 text-xs text-emerald-400">
       <User className="w-3 h-3" />
       {label ?? "Memory"}
     </span>

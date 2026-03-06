@@ -61,11 +61,31 @@ export default async function BlogPostPage({ params }: PageProps) {
   const accentColor = (category?.color && colorMap[category.color]) || "#10b981";
   const categoryName = category?.name || post.tags[0] || "General";
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    datePublished: post.date,
+    author: { "@type": "Person", name: post.author },
+    publisher: {
+      "@type": "Organization",
+      name: "ClearMoney",
+      url: "https://clearmoney.com",
+    },
+    description: post.description,
+  };
+
   return (
-    <BlogPostClient
-      post={post}
-      accentColor={accentColor}
-      categoryName={categoryName}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
+      <BlogPostClient
+        post={post}
+        accentColor={accentColor}
+        categoryName={categoryName}
+      />
+    </>
   );
 }
