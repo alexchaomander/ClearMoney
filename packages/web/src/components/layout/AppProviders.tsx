@@ -35,18 +35,18 @@ function ProvidersContent({ children }: { children: ReactNode }) {
                   <DensityProvider>
                     <HighlightProvider>
                       <PrivacyProvider>
-                      <AnalyticsConsentProvider>
-                        <PostHogProvider />
-                        {hasClerkKey ? <StrataAuthSync /> : null}
-                        <DemoBanner />
-                        <CommandPalette />
-                        <div className="flex min-h-screen flex-col">
-                          <main id="main-content" className="flex-1">
-                            <PageTransition>{children}</PageTransition>
-                          </main>
-                        </div>
-                        <AdvisorSidebar />
-                      </AnalyticsConsentProvider>
+                        <AnalyticsConsentProvider>
+                          <PostHogProvider />
+                          {hasClerkKey ? <StrataAuthSync /> : null}
+                          <DemoBanner />
+                          <CommandPalette />
+                          <div className="flex min-h-screen flex-col">
+                            <main id="main-content" className="flex-1">
+                              <PageTransition>{children}</PageTransition>
+                            </main>
+                          </div>
+                          <AdvisorSidebar />
+                        </AnalyticsConsentProvider>
                       </PrivacyProvider>
                     </HighlightProvider>
                   </DensityProvider>
