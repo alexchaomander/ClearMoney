@@ -4,6 +4,24 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const isStaticExport = process.env.STATIC_EXPORT === "true";
 
+// CSP directives — joined into a single header value below.
+// Next.js injects inline scripts for hydration, so script-src needs 'unsafe-inline'.
+// Styles use 'unsafe-inline' because Tailwind + Next.js inject <style> tags.
+const cspDirectives = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.posthog.com https://*.sentry.io",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "img-src 'self' data: blob: https://*.clerk.com https://*.gravatar.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://*.posthog.com https://*.sentry.io https://*.ingest.sentry.io ws://localhost:* http://localhost:*",
+  "frame-src 'self' https://*.clerk.accounts.dev",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+];
+
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
@@ -16,6 +34,10 @@ const securityHeaders = [
   {
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=()",
+  },
+  {
+    key: "Content-Security-Policy",
+    value: cspDirectives.join("; "),
   },
 ];
 

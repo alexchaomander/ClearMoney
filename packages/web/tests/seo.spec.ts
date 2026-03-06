@@ -25,6 +25,14 @@ test.describe("SEO and meta", () => {
     expect(headers["referrer-policy"]).toBe(
       "strict-origin-when-cross-origin"
     );
+    expect(headers["content-security-policy"]).toContain("default-src 'self'");
+    expect(headers["content-security-policy"]).toContain("object-src 'none'");
+  });
+
+  test("opengraph image returns a PNG", async ({ request }) => {
+    const response = await request.get("/opengraph-image");
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toContain("image/png");
   });
 
   test("landing page has JSON-LD structured data", async ({ page }) => {
