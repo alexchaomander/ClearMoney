@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /connect
+Disallow: /api
+Disallow: /profile
+Disallow: /settings
+Disallow: /onboarding
+Sitemap: https://clearmoney.com/sitemap.xml
