@@ -17,7 +17,7 @@ export default function PrivacyPage() {
           Privacy Policy
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-12">
-          Last updated: February 2026
+          Last updated: March 2026
         </p>
 
         <div className="prose prose-slate dark:prose-invert max-w-none space-y-8 text-slate-700 dark:text-slate-300 leading-relaxed">
@@ -56,7 +56,9 @@ export default function PrivacyPage() {
               We use Plaid and SnapTrade to securely connect to your financial institutions.
               These services use read-only access and cannot move money or execute trades on your
               behalf. We use Sentry for error tracking (no financial data is included in error
-              reports).
+              reports). We use PostHog for privacy-friendly product analytics to understand how
+              people use the site; you can opt out via the consent banner, and no analytics data
+              is sold or shared with advertisers.
             </p>
           </section>
 
