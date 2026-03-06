@@ -76,6 +76,10 @@ class Settings(BaseSettings):
     data_dir: str = ""
     auto_consent_on_missing: bool = False
 
+    # Rate limiting
+    rate_limit_default: str = "60/minute"
+    rate_limit_auth: str = "10/minute"
+
     model_config = {"env_prefix": "STRATA_"}
 
     @field_validator("cors_allow_origins", "cors_allow_methods", "cors_allow_headers", mode="before")
