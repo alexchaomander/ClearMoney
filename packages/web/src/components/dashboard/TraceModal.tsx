@@ -74,10 +74,10 @@ export function TraceModal({ data, open, onOpenChange }: TraceModalProps) {
                           Decision Trace
                         </Dialog.Title>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="font-mono text-[10px] text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                          <span className="font-mono text-xs text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                             ID: {data.metricId}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-medium uppercase tracking-widest flex items-center gap-1">
+                          <span className="text-xs text-slate-400 font-medium uppercase tracking-widest flex items-center gap-1">
                             <Info className="w-3 h-3" />
                             Deterministic Math
                           </span>
@@ -105,7 +105,7 @@ export function TraceModal({ data, open, onOpenChange }: TraceModalProps) {
                       <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
                         <Calculator className="w-12 h-12 text-white" />
                       </div>
-                      <p className="text-[10px] uppercase tracking-[0.2em] text-emerald-500 mb-4 font-black">Computed Logic</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-emerald-500 mb-4 font-black">Computed Logic</p>
                       <code className="text-xl sm:text-2xl font-mono text-white break-words block tracking-tighter">
                         {data.formula}
                       </code>
@@ -115,7 +115,7 @@ export function TraceModal({ data, open, onOpenChange }: TraceModalProps) {
                     <div>
                       <div className="flex items-center gap-2 mb-6">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 font-black">Context Graph Inputs</p>
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 font-black">Context Graph Inputs</p>
                       </div>
                       
                       <div className="space-y-4 relative">
@@ -139,7 +139,7 @@ export function TraceModal({ data, open, onOpenChange }: TraceModalProps) {
                                 <div>
                                   <p className="text-xs font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wide">{point.label}</p>
                                   {point.source && (
-                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 flex items-center gap-1.5">
+                                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 flex items-center gap-1.5">
                                       <span className="w-1 h-1 rounded-full bg-emerald-500" />
                                       {point.source}
                                     </p>
@@ -189,10 +189,10 @@ export function TraceModal({ data, open, onOpenChange }: TraceModalProps) {
 
                   {/* Legal/Audit Link */}
                   <div className="px-8 py-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                    <span className="text-[10px] text-slate-400 font-mono tracking-tighter uppercase">
+                    <span className="text-xs text-slate-400 font-mono tracking-tighter uppercase">
                       Audit Trail: {data.metricId.slice(0, 12).toUpperCase()}
                     </span>
-                    <button className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 font-black uppercase tracking-[0.1em] flex items-center gap-2 transition-colors">
+                    <button className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 font-black uppercase tracking-[0.1em] flex items-center gap-2 transition-colors">
                       Full Methodology <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>

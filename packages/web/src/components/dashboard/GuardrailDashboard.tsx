@@ -79,7 +79,7 @@ export function GuardrailDashboard() {
             <p className="text-xs text-slate-400">Define the autonomous boundaries for your financial agent.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/30 text-emerald-400 text-[10px] font-bold uppercase tracking-widest border border-emerald-900/50">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/30 text-emerald-400 text-xs font-bold uppercase tracking-widest border border-emerald-900/50">
           <Activity className="w-3 h-3" />
           Policy Engine Active
         </div>
@@ -120,7 +120,7 @@ export function GuardrailDashboard() {
                       {policy.name}
                     </h3>
                     {policy.severity === "critical" && (
-                      <span className="px-1.5 py-0.5 rounded bg-error-950/30 text-error-400 border border-error-900/50 text-[9px] font-bold uppercase tracking-wider">
+                      <span className="px-1.5 py-0.5 rounded bg-error-950/30 text-error-400 border border-error-900/50 text-xs font-bold uppercase tracking-wider">
                         Critical
                       </span>
                     )}
@@ -133,7 +133,7 @@ export function GuardrailDashboard() {
 
               <div className="flex items-center gap-3">
                 <span className={cn(
-                  "text-[10px] font-bold uppercase tracking-widest transition-colors",
+                  "text-xs font-bold uppercase tracking-widest transition-colors",
                   policy.isEnabled ? "text-emerald-400" : "text-slate-600"
                 )}>
                   {policy.isEnabled ? "Enforced" : "Disabled"}

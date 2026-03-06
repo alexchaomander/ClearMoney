@@ -129,7 +129,7 @@ export function ScenarioLab({
                 onValueChange={(val) => setInputs(p => ({ ...p, monthlyBurnAdjustment: val[0] }))}
                 className="py-2"
               />
-              <p className="text-[10px] text-slate-500 mt-2">
+              <p className="text-xs text-slate-500 mt-2">
                 Simulate hiring (+$) or cost-cutting (-$).
               </p>
             </div>
@@ -157,7 +157,7 @@ export function ScenarioLab({
                 onValueChange={(val) => setInputs(p => ({ ...p, portfolioReturnAdjustment: val[0] }))}
                 className="py-2"
               />
-              <p className="text-[10px] text-slate-500 mt-2">
+              <p className="text-xs text-slate-500 mt-2">
                 Simulate a correction (-%) or bull market (+%).
               </p>
             </div>

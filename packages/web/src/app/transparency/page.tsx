@@ -25,7 +25,7 @@ export default function TransparencyPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/50 border border-emerald-900/50 text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/50 border border-emerald-900/50 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-4">
             <ShieldCheck className="w-3 h-3" />
             Radical Transparency
           </div>

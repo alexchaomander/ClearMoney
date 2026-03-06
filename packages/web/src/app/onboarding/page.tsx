@@ -82,7 +82,7 @@ function OnboardingContent() {
           Start Personalization
           <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
         </button>
-        <div className="flex items-center gap-2 text-[10px] text-neutral-600 uppercase font-black tracking-widest">
+        <div className="flex items-center gap-2 text-xs text-neutral-600 uppercase font-black tracking-widest">
           <ShieldCheck className="w-3 h-3" />
           SOC2 Type II Compliant Infrastructure
         </div>

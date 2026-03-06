@@ -53,7 +53,7 @@ export function PayoutDisclosure() {
             <p className="text-xs text-slate-400">We disclose potential revenue alongside our recommendation logic.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/30 text-emerald-400 text-[10px] font-bold uppercase tracking-widest border border-emerald-900/50">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/30 text-emerald-400 text-xs font-bold uppercase tracking-widest border border-emerald-900/50">
           <ShieldCheck className="w-3 h-3" />
           Audited Independent
         </div>
@@ -61,7 +61,7 @@ export function PayoutDisclosure() {
 
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-900 text-slate-500 font-medium uppercase tracking-wider text-[10px]">
+          <thead className="bg-slate-900 text-slate-500 font-medium uppercase tracking-wider text-xs">
             <tr>
               <th className="px-6 py-4">Product</th>
               <th className="px-6 py-4">Our Payout</th>
@@ -79,7 +79,7 @@ export function PayoutDisclosure() {
                 <td className="px-6 py-4 font-mono text-slate-300">
                   {item.ourPayout > 0 ? `$${item.ourPayout}` : "None"}
                   {item.ourPayout > 0 && item.ourPayout < item.marketMaxPayout && (
-                    <div className="text-[9px] text-slate-500 mt-1">
+                    <div className="text-xs text-slate-500 mt-1">
                       (Market Max: ${item.marketMaxPayout})
                     </div>
                   )}

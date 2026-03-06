@@ -111,7 +111,7 @@ export default function ScenarioLabPage() {
                   This model uses standard normal distribution for annual returns (7% mean, 15% volatility) 
                   and incorporates decumulation glide-paths where risk is automatically reduced during retirement years.
                 </p>
-                <div className="p-3 rounded-lg bg-black/20 text-[10px] font-mono text-slate-500">
+                <div className="p-3 rounded-lg bg-black/20 text-xs font-mono text-slate-500">
                   Model: RET-MC-V1 &middot; Iterations: 1,000 &middot; Confidence: 95%
                 </div>
               </div>

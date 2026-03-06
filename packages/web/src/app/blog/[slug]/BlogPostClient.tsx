@@ -46,7 +46,7 @@ export function BlogPostClient({ post, accentColor, categoryName }: BlogPostClie
           <div className="p-8 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-2">
               <Zap className="w-4 h-4 fill-current" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Just-In-Time Tooling</span>
+              <span className="text-xs font-black uppercase tracking-[0.2em]">Just-In-Time Tooling</span>
             </div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white">{title}</h3>
           </div>
@@ -142,7 +142,7 @@ export function BlogPostClient({ post, accentColor, categoryName }: BlogPostClie
                 <Sparkles className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">Sector Analysis</span>
+                <span className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">Sector Analysis</span>
                 <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">{categoryName}</span>
               </div>
             </motion.div>
@@ -197,7 +197,7 @@ export function BlogPostClient({ post, accentColor, categoryName }: BlogPostClie
                   <div className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-emerald-500 group-hover:border-emerald-500/50 transition-all">
                     <Share2 className="w-4 h-4" />
                   </div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
                     {copied ? "Copied!" : "Share"}
                   </span>
                 </button>
@@ -239,7 +239,7 @@ export function BlogPostClient({ post, accentColor, categoryName }: BlogPostClie
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 text-emerald-400 mb-4">
                     <Zap className="w-5 h-5 fill-current" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em]">Ready to Execute?</span>
+                    <span className="text-xs font-black uppercase tracking-[0.3em]">Ready to Execute?</span>
                   </div>
                   <h3 className="font-display text-3xl mb-4">Draft this maneuver.</h3>
                   <p className="text-slate-400 text-lg mb-8 max-w-md leading-relaxed">
@@ -264,7 +264,7 @@ export function BlogPostClient({ post, accentColor, categoryName }: BlogPostClie
                     <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400">
                       <BarChart3 className="w-4 h-4" />
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Live Lab Context</span>
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">Live Lab Context</span>
                   </div>
 
                   <h4 className="font-display text-xl text-slate-900 dark:text-white mb-4">The Rewards Index</h4>
@@ -279,7 +279,7 @@ export function BlogPostClient({ post, accentColor, categoryName }: BlogPostClie
                         <div className="text-right">
                           <p className="text-xs font-mono font-bold text-slate-900 dark:text-emerald-400">{item.val}</p>
                           <p className={cn(
-                            "text-[8px] font-black",
+                            "text-xs font-black",
                             item.status === "STRONG" ? "text-emerald-500" : item.status === "WEAK" ? "text-rose-500" : "text-slate-500"
                           )}>{item.status}</p>
                         </div>
@@ -287,7 +287,7 @@ export function BlogPostClient({ post, accentColor, categoryName }: BlogPostClie
                     ))}
                   </div>
 
-                  <button className="w-full mt-6 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  <button className="w-full mt-6 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                     Check Your Specific Math
                   </button>
                 </div>
@@ -296,7 +296,7 @@ export function BlogPostClient({ post, accentColor, categoryName }: BlogPostClie
                 <div className="p-6 rounded-3xl bg-slate-900 dark:bg-slate-950 text-white border border-slate-800">
                   <div className="flex items-center gap-2 mb-4 text-emerald-400">
                     <ShieldCheck className="w-4 h-4" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Audit Disclosure</span>
+                    <span className="text-xs font-black uppercase tracking-widest">Audit Disclosure</span>
                   </div>
                   <p className="text-xs text-slate-400 leading-relaxed italic">
                     &quot;ClearMoney maintains editorial independence. This analysis is computed via the PROTOCOL_V4 methodology ledger and is not influenced by affiliate partnerships.&quot;

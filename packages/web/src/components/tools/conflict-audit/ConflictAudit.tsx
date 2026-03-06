@@ -157,10 +157,10 @@ export function ConflictAudit({ showShell = true }: ConflictAuditProps) {
                           <h4 className="text-white font-bold">{card.name}</h4>
                           <div className="flex items-center gap-2">
                             <span className={cn(
-                              "text-[10px] font-black uppercase px-1.5 py-0.5 rounded",
+                              "text-xs font-black uppercase px-1.5 py-0.5 rounded",
                               card.rating === "Overpriced" ? "bg-rose-500/20 text-rose-400" : "bg-emerald-500/20 text-emerald-400"
                             )}>{card.rating}</span>
-                            <span className="text-[10px] text-neutral-500 flex items-center gap-1">
+                            <span className="text-xs text-neutral-500 flex items-center gap-1">
                               <History className="w-3 h-3" /> Historical Payout Data
                             </span>
                           </div>
@@ -169,11 +169,11 @@ export function ConflictAudit({ showShell = true }: ConflictAuditProps) {
                       
                       <div className="flex gap-12 text-right">
                         <div>
-                          <p className="text-[9px] text-neutral-500 uppercase font-black tracking-widest mb-1">Commission</p>
+                          <p className="text-xs text-neutral-500 uppercase font-black tracking-widest mb-1">Commission</p>
                           <p className="text-rose-400 font-mono font-bold text-xl">${card.commission}</p>
                         </div>
                         <div>
-                          <p className="text-[9px] text-neutral-500 uppercase font-black tracking-widest mb-1">Actual Value</p>
+                          <p className="text-xs text-neutral-500 uppercase font-black tracking-widest mb-1">Actual Value</p>
                           <p className="text-emerald-400 font-mono font-bold text-xl">${card.value}</p>
                         </div>
                       </div>

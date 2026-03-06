@@ -129,7 +129,7 @@ export function ShareModal({ toolId, payload, onRedact, trigger }: ShareModalPro
                           <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
                               <Label className="text-sm text-neutral-200">Redact PII</Label>
-                              <p className="text-[10px] text-neutral-500">Hide names, emails, and identifiers.</p>
+                              <p className="text-xs text-neutral-500">Hide names, emails, and identifiers.</p>
                             </div>
                             <Switch 
                               checked={settings.redactPII} 
@@ -140,7 +140,7 @@ export function ShareModal({ toolId, payload, onRedact, trigger }: ShareModalPro
                           <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
                               <Label className="text-sm text-neutral-200">Redact Institutions</Label>
-                              <p className="text-[10px] text-neutral-500">Replace bank names with generic labels.</p>
+                              <p className="text-xs text-neutral-500">Replace bank names with generic labels.</p>
                             </div>
                             <Switch 
                               checked={settings.redactInstitutions} 
@@ -151,7 +151,7 @@ export function ShareModal({ toolId, payload, onRedact, trigger }: ShareModalPro
                           <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
                               <Label className="text-sm text-neutral-200">Redact Exact Balances</Label>
-                              <p className="text-[10px] text-neutral-500">Show approximate ranges instead of exact $.</p>
+                              <p className="text-xs text-neutral-500">Show approximate ranges instead of exact $.</p>
                             </div>
                             <Switch 
                               checked={settings.redactExactBalances} 
@@ -163,7 +163,7 @@ export function ShareModal({ toolId, payload, onRedact, trigger }: ShareModalPro
                         <div className="p-4 rounded-xl bg-black/20 border border-neutral-800">
                           <div className="flex items-start gap-3">
                             <Lock className="w-4 h-4 text-emerald-500 mt-0.5" />
-                            <p className="text-[10px] text-neutral-400 leading-relaxed">
+                            <p className="text-xs text-neutral-400 leading-relaxed">
                               Reports are stored with salted hashes and expire in 30 days. You can revoke access at any time in Settings.
                             </p>
                           </div>
@@ -201,7 +201,7 @@ export function ShareModal({ toolId, payload, onRedact, trigger }: ShareModalPro
                           </button>
                         </div>
 
-                        <p className="text-[10px] text-neutral-500 text-center">
+                        <p className="text-xs text-neutral-500 text-center">
                           Anyone with this link can view the redacted version of your report.
                         </p>
 

@@ -119,7 +119,7 @@ export function ShareSheetPreview({ data, className }: ShareSheetPreviewProps) {
 
       {/* Live Preview */}
       <div className="relative">
-        <div className="absolute -top-3 left-4 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-[10px] font-bold uppercase tracking-widest text-slate-400 z-20 flex items-center gap-2">
+        <div className="absolute -top-3 left-4 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold uppercase tracking-widest text-slate-400 z-20 flex items-center gap-2">
           {settings.redactBalances ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
           Recipient View
         </div>
@@ -139,7 +139,7 @@ export function ShareSheetPreview({ data, className }: ShareSheetPreviewProps) {
                 </p>
               </div>
             </div>
-            <div className="px-2 py-1 rounded bg-emerald-950/30 text-emerald-400 text-[10px] font-bold border border-emerald-900/50">
+            <div className="px-2 py-1 rounded bg-emerald-950/30 text-emerald-400 text-xs font-bold border border-emerald-900/50">
               STRATA VERIFIED
             </div>
           </div>

@@ -631,7 +631,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
             {stateEstimatedTaxInfo.rule.label} ({stateEstimatedTaxInfo.rule.stateCode}) last verified{" "}
             {stateEstimatedTaxInfo.rule.lastVerified}. {scheduleHint}
           </p>
-          <p className="mt-2 text-[11px] text-neutral-500">
+          <p className="mt-2 text-xs text-neutral-500">
             Sources: {stateEstimatedTaxInfo.rule.sources.join(" ")}
           </p>
         </div>
@@ -746,7 +746,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
 
                 {demoFlow && (
                   <div className="mt-3 rounded-xl border border-sky-500/20 bg-neutral-950/40 p-3">
-                    <p className="text-[11px] uppercase tracking-wide text-sky-100/60">
+                    <p className="text-xs uppercase tracking-wide text-sky-100/60">
                       Progress
                     </p>
                     <p className="mt-1 text-xs text-sky-100/80">
@@ -869,7 +869,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                                 {r.revoked_at ? " · Revoked" : ""}
                               </p>
                               {!token && (
-                                <p className="mt-1 text-[11px] text-neutral-600">
+                                <p className="mt-1 text-xs text-neutral-600">
                                   Token not available on this device (only returned at creation time).
                                 </p>
                               )}
@@ -1248,11 +1248,11 @@ function CompareCard(args: { title: string; left: string; right: string; helper?
       <p className="text-xs text-neutral-400">{title}</p>
       <div className="mt-2 grid gap-3 md:grid-cols-2">
         <div className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2">
-          <p className="text-[10px] uppercase tracking-wide text-neutral-500">A</p>
+          <p className="text-xs uppercase tracking-wide text-neutral-500">A</p>
           <p className="text-sm text-white">{left}</p>
         </div>
         <div className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2">
-          <p className="text-[10px] uppercase tracking-wide text-neutral-500">B</p>
+          <p className="text-xs uppercase tracking-wide text-neutral-500">B</p>
           <p className="text-sm text-white">{right}</p>
         </div>
       </div>

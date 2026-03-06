@@ -164,7 +164,7 @@ export function ProductTour() {
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-2 text-emerald-400">
                   <step.icon className="w-5 h-5" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em]">Platform Tour</span>
+                  <span className="text-xs font-black uppercase tracking-[0.2em]">Platform Tour</span>
                 </div>
                 <button onClick={() => setActive(false)} className="text-slate-500 hover:text-white transition-colors">
                   <X className="w-4 h-4" />

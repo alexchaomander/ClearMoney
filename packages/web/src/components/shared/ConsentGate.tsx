@@ -51,7 +51,7 @@ export function ConsentGate({
             {scopes.map((scope) => (
               <span
                 key={scope}
-                className="rounded-full border border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-600 dark:text-neutral-300"
+                className="rounded-full border border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-neutral-300"
               >
                 {scope.replace(/:/g, " ")}
               </span>

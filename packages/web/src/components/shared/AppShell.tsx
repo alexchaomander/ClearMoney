@@ -75,7 +75,7 @@ export function AppShell({
               )}
               <div>
                 {category && (
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mb-1">
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-500 mb-1">
                     {category}
                   </p>
                 )}

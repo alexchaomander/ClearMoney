@@ -74,7 +74,7 @@ export function RetirementMonteCarloChart() {
           <p className="text-xs text-neutral-500 mt-1">Probabilistic outcome based on 1,000 market iterations</p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold mb-1">Success Rate</p>
+          <p className="text-xs uppercase tracking-widest text-neutral-500 font-bold mb-1">Success Rate</p>
           <div className="flex items-center gap-2">
             <span className={`text-2xl font-bold ${
               status === "strong" ? "text-emerald-400" : status === "moderate" ? "text-amber-400" : "text-rose-400"
@@ -149,15 +149,15 @@ export function RetirementMonteCarloChart() {
 
       <div className="mt-6 grid grid-cols-3 gap-4 border-t border-neutral-800 pt-6">
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold mb-1">Optimistic (P90)</p>
+          <p className="text-xs uppercase tracking-widest text-neutral-500 font-bold mb-1">Optimistic (P90)</p>
           <p className="text-sm text-neutral-200">{formatCurrency(chartData[chartData.length - 1]?.p90 ?? 0)}</p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold mb-1">Median (P50)</p>
+          <p className="text-xs uppercase tracking-widest text-neutral-500 font-bold mb-1">Median (P50)</p>
           <p className="text-sm text-white font-semibold">{formatCurrency(chartData[chartData.length - 1]?.p50 ?? 0)}</p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold mb-1">Conservative (P10)</p>
+          <p className="text-xs uppercase tracking-widest text-neutral-500 font-bold mb-1">Conservative (P10)</p>
           <p className="text-sm text-neutral-200">{formatCurrency(chartData[chartData.length - 1]?.p10 ?? 0)}</p>
         </div>
       </div>

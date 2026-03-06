@@ -126,7 +126,7 @@ const CardTile: React.FC<CardTileProps> = ({ result, isBest, baseline, timeframe
     <div className={`p-4 lg:p-6 rounded-xl lg:rounded-[2rem] border-2 transition-all flex flex-col justify-between relative overflow-hidden group ${containerStyle}`}>
 
       {isBest && (
-        <div className={`absolute top-0 right-0 text-[8px] lg:text-[10px] font-black uppercase px-3 lg:px-4 py-1.5 lg:py-2 rounded-bl-xl lg:rounded-bl-2xl tracking-widest z-20 ${badgeStyle}`}>
+        <div className={`absolute top-0 right-0 text-xs font-black uppercase px-3 lg:px-4 py-1.5 lg:py-2 rounded-bl-xl lg:rounded-bl-2xl tracking-widest z-20 ${badgeStyle}`}>
           {badgeText}
         </div>
       )}
@@ -134,13 +134,13 @@ const CardTile: React.FC<CardTileProps> = ({ result, isBest, baseline, timeframe
       <div>
         <div className="flex justify-between items-baseline mb-3 lg:mb-4">
           <h3 className="text-lg lg:text-2xl font-black uppercase tracking-tight">{result.cardTier}</h3>
-          <span className={`text-[10px] lg:text-xs font-bold px-2 py-1 rounded ${isBest && !baselineWins ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-100 text-zinc-500'}`}>
+          <span className={`text-xs font-bold px-2 py-1 rounded ${isBest && !baselineWins ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-100 text-zinc-500'}`}>
             ${card.annualFee} Fee
           </span>
         </div>
 
         <div className="flex flex-col gap-0.5 lg:gap-1 mb-4 lg:mb-6">
-           <span className={`text-[10px] lg:text-xs font-bold uppercase tracking-widest ${sublabelColor}`}>
+           <span className={`text-xs font-bold uppercase tracking-widest ${sublabelColor}`}>
              {isYear1 ? 'Year 1 Net Value' : 'Year 2+ Net Value'}
            </span>
            <p className={`text-3xl lg:text-5xl font-black tracking-tighter ${netValue < 0 ? 'text-rose-500' : headlineColor}`}>
@@ -206,7 +206,7 @@ const CardTile: React.FC<CardTileProps> = ({ result, isBest, baseline, timeframe
       {/* Footer comparing to alternate timeframe */}
       <div className="mt-3 lg:mt-4 pt-3 lg:pt-4">
         <div className="flex justify-between items-center opacity-60 hover:opacity-100 transition-opacity">
-             <span className={`text-[9px] lg:text-[10px] font-bold uppercase tracking-widest ${sublabelColor}`}>
+             <span className={`text-xs font-bold uppercase tracking-widest ${sublabelColor}`}>
                {isYear1 ? 'Year 2+ Recurring' : 'Year 1 (w/ Bonus)'}
              </span>
              <span className={`text-xs lg:text-sm font-bold ${valueColor}`}>
@@ -746,7 +746,7 @@ export default function BiltCalculator() {
                       <div className="flex-1 space-y-3 lg:space-y-6">
                         {details.highlights.map((item: string, i: number) => (
                           <div key={i} className="flex gap-2 lg:gap-4 text-sm lg:text-lg items-start">
-                            <span className={`shrink-0 mt-1 lg:mt-1.5 w-5 h-5 lg:w-6 lg:h-6 rounded-full flex items-center justify-center text-[10px] lg:text-xs font-bold ${checkStyle}`}>✓</span>
+                            <span className={`shrink-0 mt-1 lg:mt-1.5 w-5 h-5 lg:w-6 lg:h-6 rounded-full flex items-center justify-center text-xs font-bold ${checkStyle}`}>✓</span>
                             <span className={`font-medium`}>{item}</span>
                           </div>
                         ))}
@@ -1033,7 +1033,7 @@ export default function BiltCalculator() {
            <div className="flex-1 p-3 flex flex-col overflow-hidden min-h-0">
              <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2 flex items-center gap-2 shrink-0">
                <span className="text-amber-600 text-sm">📱</span>
-               <p className="text-[10px] text-amber-800 font-medium">Rotate your device to landscape for the best view</p>
+               <p className="text-xs text-amber-800 font-medium">Rotate your device to landscape for the best view</p>
              </div>
              <div className="flex-1 min-h-0 overflow-hidden [&_svg]:outline-none [&_svg]:focus:outline-none [&_.recharts-surface]:outline-none">
                <ResponsiveContainer width="100%" height="100%">
@@ -1080,7 +1080,7 @@ export default function BiltCalculator() {
                  </BarChart>
                </ResponsiveContainer>
              </div>
-             <div className="text-center mt-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest shrink-0">
+             <div className="text-center mt-2 text-xs font-bold text-zinc-400 uppercase tracking-widest shrink-0">
                {timeframe === 'year1' ? 'Year 1 Net Value (Incl. Sign-up Bonus)' : 'Year 2+ Recurring Annual Value'}
              </div>
            </div>
@@ -1125,7 +1125,7 @@ export default function BiltCalculator() {
           <button onClick={() => setShowValuation(true)} className="hidden sm:flex text-sm md:text-base font-black text-zinc-500 hover:text-black uppercase bg-zinc-50 hover:bg-zinc-100 px-3 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl border border-zinc-100 transition-colors items-center gap-2 group">
             <span className="hidden md:inline">Latest TPG Valuation</span>
             <span className="md:hidden">TPG</span>
-            <span className="w-4 h-4 rounded-full bg-zinc-200 text-[10px] flex items-center justify-center text-zinc-500 group-hover:bg-zinc-300">?</span>
+            <span className="w-4 h-4 rounded-full bg-zinc-200 text-xs flex items-center justify-center text-zinc-500 group-hover:bg-zinc-300">?</span>
           </button>
         </div>
       </header>
@@ -1162,7 +1162,7 @@ export default function BiltCalculator() {
 
           {/* City Presets */}
           <div className="mb-6 lg:mb-8">
-            <p className="text-[10px] lg:text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2 lg:mb-3">Quick Presets</p>
+            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2 lg:mb-3">Quick Presets</p>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => { setRent(3500); setDining(600); setGrocery(400); setTravel(300); setMisc(800); }}
@@ -1197,7 +1197,7 @@ export default function BiltCalculator() {
           <CompactSlider label="Travel" value={travel} min={0} max={5000} step={50} onChange={setTravel} />
           <CompactSlider label="Everything Else" value={misc} min={0} max={10000} step={100} onChange={setMisc} />
 
-           <div className="bg-zinc-50 rounded-xl p-3 lg:p-4 text-[10px] lg:text-xs text-zinc-500 font-medium border border-zinc-100 space-y-1">
+           <div className="bg-zinc-50 rounded-xl p-3 lg:p-4 text-xs text-zinc-500 font-medium border border-zinc-100 space-y-1">
             <p>* Calculations assume you meet the minimum spend requirements (e.g. $4k in 3mo for Palladium) to unlock all sign-up bonuses.</p>
             <p>* For Obsidian, calculator assumes you select the optimal 3x category (whichever has higher spend between Dining and Grocery).</p>
            </div>
@@ -1257,7 +1257,7 @@ export default function BiltCalculator() {
                  Year 2+ (Recurring)
                </button>
             </div>
-            <p className="text-[10px] lg:text-xs text-zinc-400 text-center max-w-md">
+            <p className="text-xs text-zinc-400 text-center max-w-md">
               {timeframe === 'year1'
                 ? "Includes one-time welcome bonus — great if you're evaluating the first-year value"
                 : "Ongoing annual value after bonus — what you'll earn long-term"}
@@ -1303,7 +1303,7 @@ export default function BiltCalculator() {
                  <h2 className="text-sm lg:text-base font-black text-zinc-400 uppercase tracking-widest">
                    {timeframe === 'year1' ? 'Year 1' : 'Year 2+'} Net Profit Breakdown
                  </h2>
-                 <p className="text-[10px] lg:text-xs text-zinc-400 mt-1 lg:mt-2 font-medium">Comparing Bilt Rewards vs. a Standard 2% Cash Back Card</p>
+                 <p className="text-xs text-zinc-400 mt-1 lg:mt-2 font-medium">Comparing Bilt Rewards vs. a Standard 2% Cash Back Card</p>
               </div>
               <div className="flex items-center gap-2">
                 {/* Full screen button - mobile only */}
@@ -1398,7 +1398,7 @@ export default function BiltCalculator() {
                 )}
               </div>
 
-              <div className="text-center mt-3 lg:mt-4 text-[10px] lg:text-xs font-bold text-zinc-400 uppercase tracking-widest">
+              <div className="text-center mt-3 lg:mt-4 text-xs font-bold text-zinc-400 uppercase tracking-widest">
                 Graph displays {timeframe === 'year1' ? 'Year 1 Net Value (Incl. Sign-up Bonus)' : 'Year 2+ Recurring Annual Value'}
               </div>
             </div>
@@ -1407,11 +1407,11 @@ export default function BiltCalculator() {
       </main>
 
       <footer className="px-4 lg:px-12 py-4 lg:py-6 border-t border-zinc-200 bg-white flex justify-between items-center shrink-0">
-          <div className="hidden sm:flex gap-4 lg:gap-8 text-[10px] lg:text-xs text-zinc-400">
+          <div className="hidden sm:flex gap-4 lg:gap-8 text-xs text-zinc-400">
             <p><strong>Option 1:</strong> Multipliers (0.5x-1.25x)</p>
             <p><strong>Option 2:</strong> 4% Bilt Cash to unlock points</p>
           </div>
-          <p className="font-bold text-zinc-300 uppercase text-[10px] lg:text-xs">Updated: Jan 16, 2026</p>
+          <p className="font-bold text-zinc-300 uppercase text-xs">Updated: Jan 16, 2026</p>
        </footer>
     </div>
   );

@@ -48,7 +48,7 @@ export function MethodologyAuditLog() {
             
             <div className="flex items-center gap-2 mb-1">
               <span className="font-mono text-xs text-slate-500">{entry.date}</span>
-              <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-[9px] font-mono border border-slate-700">
+              <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-xs font-mono border border-slate-700">
                 {entry.id}
               </span>
             </div>
@@ -56,7 +56,7 @@ export function MethodologyAuditLog() {
             <h4 className="text-sm font-medium text-white mb-1">{entry.change}</h4>
             <p className="text-xs text-slate-400 leading-relaxed mb-3">{entry.reason}</p>
             
-            <div className="flex items-center gap-2 text-[10px] text-slate-500">
+            <div className="flex items-center gap-2 text-xs text-slate-500">
               <span className="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center">
                 <FileText className="w-2.5 h-2.5" />
               </span>

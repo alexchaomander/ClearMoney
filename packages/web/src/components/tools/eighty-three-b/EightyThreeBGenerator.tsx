@@ -235,10 +235,10 @@ export function EightyThreeBGenerator({ showShell = true }: EightyThreeBGenerato
 
                 <div className="pt-20 flex justify-between items-end">
                   <div className="w-64 border-t border-black pt-2">
-                    <p className="text-[10px] uppercase font-bold">Taxpayer Signature</p>
+                    <p className="text-xs uppercase font-bold">Taxpayer Signature</p>
                   </div>
                   <div className="w-48 border-t border-black pt-2">
-                    <p className="text-[10px] uppercase font-bold">Date</p>
+                    <p className="text-xs uppercase font-bold">Date</p>
                   </div>
                 </div>
               </div>
@@ -259,7 +259,7 @@ export function EightyThreeBGenerator({ showShell = true }: EightyThreeBGenerato
                   "DO NOT MISS THE 30-DAY DEADLINE."
                 ].map((item, i) => (
                   <li key={i} className="flex gap-3 text-sm text-neutral-400">
-                    <div className="w-5 h-5 rounded-full bg-brand-500/10 flex items-center justify-center shrink-0 mt-0.5 text-brand-400 text-[10px] font-bold">
+                    <div className="w-5 h-5 rounded-full bg-brand-500/10 flex items-center justify-center shrink-0 mt-0.5 text-brand-400 text-xs font-bold">
                       {i + 1}
                     </div>
                     {item}

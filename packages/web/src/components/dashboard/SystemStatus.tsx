@@ -55,7 +55,7 @@ export function SystemStatus({
           </div>
           <div>
             <h3 className="text-sm font-bold text-white uppercase tracking-widest">Data Health</h3>
-            <p className="text-[10px] text-slate-500 font-mono">{healthPercent}% Surface Integrity</p>
+            <p className="text-xs text-slate-500 font-mono">{healthPercent}% Surface Integrity</p>
           </div>
         </div>
         <button 
@@ -82,9 +82,9 @@ export function SystemStatus({
               <div>
                 <p className="text-sm font-medium text-slate-200">{source.name}</p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">{source.provider}</span>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">{source.provider}</span>
                   <span className="w-1 h-1 rounded-full bg-slate-700" />
-                  <span className="text-[9px] text-slate-500 flex items-center gap-1">
+                  <span className="text-xs text-slate-500 flex items-center gap-1">
                     <Clock className="w-2.5 h-2.5" />
                     {source.lastSync}
                   </span>
@@ -95,7 +95,7 @@ export function SystemStatus({
             {source.status === "error" ? (
               <button 
                 onClick={() => onFix?.(source.id)}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-error-950/30 border border-error-900/50 text-[10px] font-bold text-error-400 hover:bg-error-900/50 transition-all"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-error-950/30 border border-error-900/50 text-xs font-bold text-error-400 hover:bg-error-900/50 transition-all"
               >
                 <Wrench className="w-3 h-3" />
                 Healing Required
@@ -114,7 +114,7 @@ export function SystemStatus({
       {/* Footer Info */}
       <div className="px-6 py-3 bg-slate-950/50 border-t border-slate-800 flex items-center gap-2">
         <ShieldAlert className="w-3 h-3 text-slate-600" />
-        <p className="text-[10px] text-slate-600 leading-none">
+        <p className="text-xs text-slate-600 leading-none">
           All links are encrypted via 256-bit Strata Vault. 
         </p>
       </div>

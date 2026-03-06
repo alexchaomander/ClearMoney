@@ -69,7 +69,7 @@ export function DashboardHeader({
                   >
                     {item.label}
                     {item.isPreview && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold">
+                      <span className="text-xs px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold">
                         PREVIEW
                       </span>
                     )}

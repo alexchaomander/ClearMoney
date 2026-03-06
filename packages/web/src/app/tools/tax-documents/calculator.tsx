@@ -163,7 +163,7 @@ function DocumentRow({
                     key={key}
                     className="rounded-xl border border-neutral-800 bg-neutral-900 px-3 py-2"
                   >
-                    <p className="text-[11px] text-neutral-500">{key}</p>
+                    <p className="text-xs text-neutral-500">{key}</p>
                     <p className="text-sm text-white">{String(value)}</p>
                   </div>
                 ))}

@@ -651,7 +651,7 @@ export function Calculator() {
                   {opportunity.description}
                 </p>
               </div>
-              <span className="rounded-full border border-slate-500/40 bg-slate-500/10 px-3 py-1 text-[11px] font-semibold text-slate-200">
+              <span className="rounded-full border border-slate-500/40 bg-slate-500/10 px-3 py-1 text-xs font-semibold text-slate-200">
                 {opportunity.complexity}
               </span>
             </div>

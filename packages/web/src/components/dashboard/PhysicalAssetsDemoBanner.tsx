@@ -60,7 +60,7 @@ export function PhysicalAssetsDemoBanner({ onStartDemo }: PhysicalAssetsDemoBann
         <div className="flex-1 max-w-2xl text-center md:text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-6">
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">New Feature Spotlight</span>
+            <span className="text-xs font-black uppercase tracking-[0.2em] text-emerald-400">New Feature Spotlight</span>
           </div>
           
           <h2 className="font-serif text-4xl md:text-5xl text-white mb-6 leading-[1.1] tracking-tight">
@@ -135,11 +135,11 @@ function DemoAssetCard({ icon, label, value, sub, delay }: { icon: React.ReactNo
       <div className="mb-4 bg-slate-900 w-12 h-12 rounded-xl flex items-center justify-center border border-slate-700 group-hover/item:scale-110 transition-transform">
         {icon}
       </div>
-      <div className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</div>
+      <div className="text-xs font-black uppercase tracking-widest text-slate-500 mb-1">{label}</div>
       <div className="text-xl font-black text-white tracking-tight mb-1">{value}</div>
       <div className="flex items-center gap-1">
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">{sub}</span>
+        <span className="text-xs font-black text-emerald-500 uppercase tracking-widest">{sub}</span>
       </div>
     </motion.div>
   );
