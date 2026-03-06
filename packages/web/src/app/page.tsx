@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import { 
-  ArrowRight, 
-  ShieldCheck, 
-  Zap, 
-  Target, 
-  Activity, 
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from "framer-motion";
+import {
+  ArrowRight,
+  ShieldCheck,
+  Zap,
+  Target,
+  Activity,
   ChevronRight,
+  ChevronLeft,
   Database,
   Lock,
   Globe,
@@ -17,7 +18,15 @@ import {
   Cpu,
   Fingerprint,
   CheckCircle2,
-  TrendingUp
+  TrendingUp,
+  GraduationCap,
+  Home,
+  Briefcase,
+  Flame,
+  PiggyBank,
+  DollarSign,
+  BarChart3,
+  Heart
 } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { VALUATIONS } from "@/lib/constants";
@@ -36,7 +45,7 @@ function ProductWindow({ children, title }: { children: React.ReactNode, title: 
             <div className="w-2.5 h-2.5 rounded-full bg-slate-200 dark:bg-slate-800" />
             <div className="w-2.5 h-2.5 rounded-full bg-slate-200 dark:bg-slate-800" />
           </div>
-          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">{title}</span>
+          <span className="text-[11px] font-mono text-slate-400 uppercase tracking-widest font-bold">{title}</span>
           <div className="w-10" />
         </div>
         <div className="relative">
@@ -49,6 +58,107 @@ function ProductWindow({ children, title }: { children: React.ReactNode, title: 
 
 // VALUATIONS imported from @/lib/constants
 
+// --- Persona Carousel Data ---
+
+const PERSONAS = [
+  {
+    persona: "Founder",
+    painPoint: "I don't know how long my cash will actually last.",
+    tool: "Cash Runway Planner.",
+    description: "See how long your cash can last across personal and business spending, with live account data and clear assumptions.",
+    href: "/tools/founder-runway",
+    icon: Briefcase,
+    previewTitle: "Cash Runway",
+    preview: {
+      metric: "14.2",
+      unit: "mo",
+      label: "Estimated Runway",
+      detail: "Best Fundraising Window: Aug 2026",
+      barWidth: "70%",
+    },
+  },
+  {
+    persona: "New Grad",
+    painPoint: "I have student loans, a new salary, and no idea where to start.",
+    tool: "Student Loan Payoff Strategy.",
+    description: "Compare repayment plans, see how extra payments shorten your timeline, and find the fastest path to debt-free.",
+    href: "/tools/student-loan-strategy",
+    icon: GraduationCap,
+    previewTitle: "Loan Payoff",
+    preview: {
+      metric: "$847",
+      unit: "/mo",
+      label: "Optimal Payment",
+      detail: "Debt-Free by: Mar 2031",
+      barWidth: "45%",
+    },
+  },
+  {
+    persona: "First-Time Buyer",
+    painPoint: "Can I actually afford a home, or am I fooling myself?",
+    tool: "Home Affordability Check.",
+    description: "Get a realistic picture of what you can afford based on your real income, debt, and savings — not a lender's maximum.",
+    href: "/tools/home-affordability",
+    icon: Home,
+    previewTitle: "Affordability",
+    preview: {
+      metric: "$485K",
+      unit: "",
+      label: "Comfortable Range",
+      detail: "DTI Ratio: 28% (Healthy)",
+      barWidth: "62%",
+    },
+  },
+  {
+    persona: "Tech Employee",
+    painPoint: "My RSUs vest soon and I have no idea what the tax hit will be.",
+    tool: "RSU Tax Planner.",
+    description: "Model your vesting schedule, see projected tax liability, and plan sell-vs-hold decisions with real numbers.",
+    href: "/tools/rsu-tax-calculator",
+    icon: BarChart3,
+    previewTitle: "RSU Taxes",
+    preview: {
+      metric: "$32K",
+      unit: "tax",
+      label: "Est. Tax on Next Vest",
+      detail: "Optimal Sell Window: Q2 2026",
+      barWidth: "55%",
+    },
+  },
+  {
+    persona: "Early Retiree",
+    painPoint: "I want to retire early but I'm not sure my math adds up.",
+    tool: "FIRE Calculator.",
+    description: "See your projected retirement date, safe withdrawal rate, and how market scenarios affect your independence timeline.",
+    href: "/tools/fire-calculator",
+    icon: Flame,
+    previewTitle: "FIRE Projection",
+    preview: {
+      metric: "2034",
+      unit: "",
+      label: "Projected FIRE Date",
+      detail: "Safe Withdrawal: $6,200/mo",
+      barWidth: "78%",
+    },
+  },
+  {
+    persona: "New Parent",
+    painPoint: "Everything costs more now and I need to actually plan ahead.",
+    tool: "Conscious Spending Plan.",
+    description: "Build a spending plan that reflects your new priorities — childcare, savings, and the things that matter most.",
+    href: "/tools/conscious-spending",
+    icon: Heart,
+    previewTitle: "Spending Plan",
+    preview: {
+      metric: "68%",
+      unit: "",
+      label: "Essential Coverage",
+      detail: "Emergency Fund: 4.2 Months",
+      barWidth: "68%",
+    },
+  },
+];
+
 // --- Main Page ---
 
 export default function LandingPage() {
@@ -57,6 +167,11 @@ export default function LandingPage() {
     target: containerRef,
     offset: ["start start", "end end"]
   });
+
+  const [personaIndex, setPersonaIndex] = useState(0);
+  const goNext = useCallback(() => setPersonaIndex((i) => (i + 1) % PERSONAS.length), []);
+  const goPrev = useCallback(() => setPersonaIndex((i) => (i - 1 + PERSONAS.length) % PERSONAS.length), []);
+  const persona = PERSONAS[personaIndex];
 
   return (
     <div ref={containerRef} className="min-h-screen bg-[#fafafa] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 selection:bg-emerald-500/30 overflow-x-hidden">
@@ -78,12 +193,22 @@ export default function LandingPage() {
         </div>
         
         <div className="hidden md:flex items-center gap-8">
-          <Link href="/transparency" className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-white transition-colors">Independence</Link>
-          <Link href="/blog" className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-white transition-colors">Intelligence</Link>
+          <Link
+            href="/transparency"
+            className="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:border-emerald-300 dark:hover:border-emerald-700 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+          >
+            How It Works
+          </Link>
+          <Link
+            href="/blog"
+            className="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:border-emerald-300 dark:hover:border-emerald-700 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+          >
+            Insights
+          </Link>
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
           <ThemeToggle />
           <Link href="/dashboard" className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-sm font-bold hover:bg-emerald-600 dark:hover:bg-emerald-400 transition-all">
-            Open OS
+            Get Started
           </Link>
         </div>
       </nav>
@@ -91,15 +216,15 @@ export default function LandingPage() {
       {/* Ticker */}
       <div className="relative z-40 border-y border-slate-200 dark:border-slate-900 bg-white/50 dark:bg-slate-950/50 backdrop-blur-md overflow-hidden whitespace-nowrap h-10 flex items-center">
         <div className="animate-marquee-slow flex gap-12 items-center px-6">
-          <span className="text-[9px] font-black uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400 flex items-center gap-2 shrink-0">
-            <Activity className="w-3 h-3" /> Live Independent Valuations
+          <span className="text-xs font-black uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400 flex items-center gap-2 shrink-0">
+            <Activity className="w-3 h-3" /> Live Card Point Values
           </span>
           {[...VALUATIONS, ...VALUATIONS].map((v, i) => (
             <div key={i} className="flex items-center gap-3 shrink-0">
-              <span className="text-[10px] font-bold text-slate-400">{v.program}</span>
-              <span className="font-mono text-xs font-bold">{v.value}</span>
+              <span className="text-xs font-bold text-slate-400">{v.program}</span>
+              <span className="font-mono text-sm font-bold">{v.value}</span>
               <span className={cn(
-                "text-[10px] font-bold",
+                "text-xs font-bold",
                 v.delta.startsWith("+") ? "text-emerald-500" : v.delta.startsWith("-") ? "text-rose-500" : "text-slate-500"
               )}>{v.delta}</span>
             </div>
@@ -113,10 +238,10 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-8 shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-[0.2em] mb-8 shadow-sm"
           >
             <Activity className="w-3 h-3 animate-pulse" />
-            The Financial Operating System
+            Your Money, One Clear Plan
           </motion.div>
           
           <motion.h1 
@@ -125,8 +250,8 @@ export default function LandingPage() {
             transition={{ delay: 0.1, duration: 0.8 }}
             className="text-6xl md:text-8xl lg:text-9xl font-display text-slate-900 dark:text-white leading-[0.85] tracking-tight mb-10"
           >
-            Sovereign wealth <br />
-            <span className="text-emerald-600 dark:text-emerald-400 italic">built on math.</span>
+            Feel confident <br />
+            <span className="text-emerald-600 dark:text-emerald-400 italic">about your money.</span>
           </motion.h1>
           
           <motion.p 
@@ -135,8 +260,8 @@ export default function LandingPage() {
             transition={{ delay: 0.2, duration: 0.8 }}
             className="text-lg md:text-2xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed mb-12 font-medium"
           >
-            Institutional-grade modeling, radical transparency, and autonomous action intents. 
-            Stop managing tools. Start managing your agent.
+            ClearMoney helps you track accounts, understand tradeoffs, and decide
+            your next best move without the jargon.
           </motion.p>
 
           <motion.div 
@@ -146,11 +271,11 @@ export default function LandingPage() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Link href="/dashboard" className="group w-full sm:w-auto px-10 py-5 rounded-2xl bg-slate-900 dark:bg-emerald-600 text-white font-bold text-xl hover:bg-emerald-600 dark:hover:bg-emerald-500 shadow-2xl shadow-emerald-900/20 transition-all flex items-center justify-center gap-3">
-              Launch OS
+              Get Started
               <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="/blog" className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
-              Read Analysis
+            <Link href="/transparency" className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+              See How It Works
             </Link>
           </motion.div>
 
@@ -163,11 +288,11 @@ export default function LandingPage() {
           >
             <div className="flex flex-wrap justify-center items-center gap-6">
               {[
-                { icon: Lock, label: "Bank-Grade Encryption" },
-                { icon: ShieldCheck, label: "No Affiliate Bias" },
-                { icon: Database, label: "Plaid & SnapTrade" },
+                { icon: Lock, label: "Bank-level security" },
+                { icon: ShieldCheck, label: "No paid recommendations" },
+                { icon: Database, label: "Connected account data" },
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 text-xs font-bold">
+                <div key={i} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 text-sm font-bold">
                   <item.icon className="w-3.5 h-3.5 text-emerald-500" />
                   {item.label}
                 </div>
@@ -176,53 +301,115 @@ export default function LandingPage() {
           </motion.div>
         </section>
 
-        {/* Featured JIT Tool Callout */}
+        {/* Featured Tool — Persona Carousel */}
         <section className="max-w-7xl mx-auto px-6 lg:px-8 mb-40">
           <div className="relative p-1 rounded-[2.5rem] bg-gradient-to-br from-emerald-500/20 to-transparent dark:from-emerald-500/10 dark:to-transparent">
-            <div className="bg-white dark:bg-slate-900/50 backdrop-blur-3xl rounded-[2.4rem] p-8 md:p-12 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center gap-10">
-              <div className="flex-1">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 mb-6">
+            <div className="bg-white dark:bg-slate-900/50 backdrop-blur-3xl rounded-[2.4rem] p-8 md:p-12 border border-slate-200 dark:border-slate-800 overflow-hidden">
+              {/* Header row with badge and arrows */}
+              <div className="flex items-center justify-between mb-8">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20">
                   <Zap className="w-3.5 h-3.5 text-brand-400" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-400">Featured JIT Tool</span>
+                  <span className="text-xs font-black uppercase tracking-[0.2em] text-brand-400">Featured Tool</span>
                 </div>
-                <h2 className="text-4xl md:text-5xl font-display text-slate-900 dark:text-white mb-6 leading-tight">
-                  The Founder <br />
-                  <span className="text-emerald-600 dark:text-emerald-400 italic">Runway Tester.</span>
-                </h2>
-                <p className="text-lg text-slate-500 dark:text-slate-400 mb-8 max-w-xl leading-relaxed">
-                  Is your personal burn killing your startup? Stop using generic spreadsheets. Model your true survival runway combining personal + company assets.
-                </p>
-                <Link href="/tools/founder-runway" className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold hover:gap-3 transition-all">
-                  Run the math for your startup
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-              </div>
-              <div className="w-full md:w-[400px] shrink-0">
-                <ProductWindow title="Live Simulation: FOUNDER_RUNWAY_V2">
-                  <div className="p-8 space-y-6">
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Combined Runway</p>
-                        <p className="text-5xl font-mono text-emerald-600 dark:text-emerald-400 font-bold tracking-tighter">14.2 mo</p>
-                      </div>
-                      <div className="h-12 w-12 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20">
-                        <TrendingUp className="w-6 h-6 text-emerald-500" />
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <motion.div 
-                          initial={{ width: "0%" }}
-                          whileInView={{ width: "70%" }}
-                          transition={{ duration: 1.5, delay: 0.5 }}
-                          className="h-full bg-emerald-500" 
-                        />
-                      </div>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center uppercase tracking-widest font-bold">Optimal Fundraising Window: AUG 2026</p>
-                    </div>
+                <div className="flex items-center gap-2">
+                  {/* Dot indicators */}
+                  <div className="hidden sm:flex items-center gap-1.5 mr-3">
+                    {PERSONAS.map((p, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setPersonaIndex(i)}
+                        aria-label={`Go to ${p.persona}`}
+                        aria-current={i === personaIndex ? "true" : undefined}
+                        className={cn(
+                          "w-1.5 h-1.5 rounded-full transition-all duration-300",
+                          i === personaIndex
+                            ? "bg-emerald-500 w-4"
+                            : "bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600"
+                        )}
+                      />
+                    ))}
                   </div>
-                </ProductWindow>
+                  <button
+                    onClick={goPrev}
+                    className="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all"
+                    aria-label="Previous persona"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={goNext}
+                    className="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all"
+                    aria-label="Next persona"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
+
+              {/* Carousel content */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={personaIndex}
+                  initial={{ opacity: 0, x: 40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -40 }}
+                  transition={{ duration: 0.35, ease: "easeInOut" }}
+                  className="flex flex-col md:flex-row items-center gap-10"
+                >
+                  <div className="flex-1 min-w-0">
+                    {/* Persona icon + pain point */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center">
+                        <persona.icon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <p className="text-sm text-slate-400 dark:text-slate-500 italic font-medium">
+                        &ldquo;{persona.painPoint}&rdquo;
+                      </p>
+                    </div>
+
+                    <h2 className="text-4xl md:text-5xl font-display text-slate-900 dark:text-white mb-6 leading-tight">
+                      {persona.persona} <br />
+                      <span className="text-emerald-600 dark:text-emerald-400 italic">{persona.tool}</span>
+                    </h2>
+                    <p className="text-lg text-slate-500 dark:text-slate-400 mb-8 max-w-xl leading-relaxed">
+                      {persona.description}
+                    </p>
+                    <Link href={persona.href} className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold hover:gap-3 transition-all">
+                      Try this tool
+                      <ArrowRight className="w-5 h-5" />
+                    </Link>
+                  </div>
+
+                  <div className="w-full md:w-[400px] shrink-0">
+                    <ProductWindow title={`Live Preview: ${persona.previewTitle}`}>
+                      <div className="p-8 space-y-6">
+                        <div className="flex justify-between items-end">
+                          <div>
+                            <p className="text-xs text-slate-400 uppercase font-black tracking-widest mb-1">{persona.preview.label}</p>
+                            <p className="text-5xl font-mono text-emerald-600 dark:text-emerald-400 font-bold tracking-tighter">
+                              {persona.preview.metric}{persona.preview.unit ? <span className="text-2xl ml-1">{persona.preview.unit}</span> : null}
+                            </p>
+                          </div>
+                          <div className="h-12 w-12 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20">
+                            <TrendingUp className="w-6 h-6 text-emerald-500" />
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: "0%" }}
+                              animate={{ width: persona.preview.barWidth }}
+                              transition={{ duration: 1.2, delay: 0.3 }}
+                              className="h-full bg-emerald-500"
+                            />
+                          </div>
+                          <p className="text-xs text-slate-400 dark:text-slate-500 text-center uppercase tracking-widest font-bold">{persona.preview.detail}</p>
+                        </div>
+                      </div>
+                    </ProductWindow>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </section>
@@ -240,24 +427,25 @@ export default function LandingPage() {
                   <ShieldCheck className="w-6 h-6" />
                 </div>
                 <h2 className="font-display text-5xl md:text-6xl text-slate-900 dark:text-white mb-8 leading-[1.1]">
-                  Radical <br />
-                  <span className="text-emerald-600 dark:text-emerald-400 italic">Transparency.</span>
+                  See the reason <br />
+                  <span className="text-emerald-600 dark:text-emerald-400 italic">behind each recommendation.</span>
                 </h2>
                 <p className="text-xl text-slate-500 dark:text-slate-400 leading-relaxed mb-10">
-                  Generic advice is for the average. You are not average. Every recommendation in ClearMoney is backed by a verifiable <strong>Logic Trace</strong>.
+                  Every suggestion shows the inputs used and the math behind the
+                  result, so you can verify it before taking action.
                 </p>
                 
                 <div className="space-y-6">
                   {[
-                    { title: "No Hallucination", desc: "Our agent uses deterministic math models, not LLM guesswork." },
-                    { title: "Pillar Integrity", desc: "Context is unified across Plaid, SnapTrade, and manual vaults." },
-                    { title: "Audited Independence", desc: "Live payout disclosures prove our math is unbiased." }
+                    { title: "Math, not guesswork", desc: "Recommendations use calculation models you can review." },
+                    { title: "One connected view", desc: "Banking, investing, and manual data in one place." },
+                    { title: "Transparent incentives", desc: "You can always see how we make money." }
                   ].map((f, i) => (
                     <div key={i} className="flex gap-4 group">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0 group-hover:scale-150 transition-transform" />
                       <div>
                         <h4 className="font-bold text-slate-900 dark:text-white text-lg">{f.title}</h4>
-                        <p className="text-slate-500 dark:text-slate-500 text-sm leading-relaxed">{f.desc}</p>
+                        <p className="text-slate-500 dark:text-slate-500 text-base leading-relaxed">{f.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -266,20 +454,20 @@ export default function LandingPage() {
             </div>
 
             <div className="lg:col-span-7">
-              <ProductWindow title="Live Decision Trace — ID: 9921">
+              <ProductWindow title="Live Recommendation Preview">
                 <div className="p-8 lg:p-12 space-y-8">
                   <motion.div 
                     initial={{ scale: 0.95, opacity: 0 }}
                     whileInView={{ scale: 1, opacity: 1 }}
                     className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 shadow-inner"
                   >
-                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-4">Core Model: RUNWAY_V2</p>
+                    <p className="text-xs text-slate-400 uppercase font-black tracking-widest mb-4">How It Is Calculated</p>
                     <div className="flex flex-col md:flex-row gap-6 items-baseline justify-between">
                       <code className="text-2xl font-mono text-emerald-600 dark:text-emerald-400 font-bold leading-none tracking-tighter">
                         (Cash + Invest) / Burn
                       </code>
-                      <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-black border border-emerald-500/20">
-                        <CheckCircle2 className="w-3 h-3" /> VERIFIED
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-black border border-emerald-500/20">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> VERIFIED
                       </div>
                     </div>
                   </motion.div>
@@ -288,7 +476,7 @@ export default function LandingPage() {
                     {[
                       { label: "Liquid Cash", val: "$12,450", source: "Plaid" },
                       { label: "Brokerage", val: "$142,000", source: "SnapTrade" },
-                      { label: "Monthly Burn", val: "$8,200", source: "Observed" }
+                      { label: "Monthly Spending", val: "$8,200", source: "Observed" }
                     ].map((item, i) => (
                       <motion.div 
                         key={i}
@@ -298,8 +486,8 @@ export default function LandingPage() {
                         className="p-4 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 flex justify-between items-center shadow-sm"
                       >
                         <div>
-                          <p className="text-[10px] text-slate-400 uppercase font-bold">{item.label}</p>
-                          <p className="text-[9px] text-slate-500">Source: {item.source}</p>
+                          <p className="text-xs text-slate-400 uppercase font-bold">{item.label}</p>
+                          <p className="text-xs text-slate-500">Source: {item.source}</p>
                         </div>
                         <span className="text-lg font-mono text-slate-900 dark:text-emerald-400 font-bold">{item.val}</span>
                       </motion.div>
@@ -312,10 +500,11 @@ export default function LandingPage() {
                     className="pt-8 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center"
                   >
                     <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Projected Success</p>
+                      <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Confidence</p>
                       <p className="text-5xl font-display text-emerald-600 dark:text-emerald-400 leading-none">94.2%</p>
                     </div>
-                    <Link href="/dashboard" className="p-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 hover:bg-emerald-600 dark:hover:bg-emerald-400 transition-all shadow-xl">
+                    <Link href="/dashboard" className="px-5 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 hover:bg-emerald-600 dark:hover:bg-emerald-400 transition-all shadow-xl inline-flex items-center gap-2 text-sm font-bold">
+                      Get Started
                       <ArrowRight className="w-6 h-6" />
                     </Link>
                   </motion.div>
@@ -335,17 +524,18 @@ export default function LandingPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                 >
                   <h2 className="font-display text-5xl md:text-7xl text-white mb-8 leading-[0.9]">
-                    Execution <br />
-                    <span className="text-emerald-400 italic">without friction.</span>
+                    Take action <br />
+                    <span className="text-emerald-400 italic">in minutes.</span>
                   </h2>
                   <p className="text-xl text-slate-400 leading-relaxed max-w-xl">
-                    ClearMoney doesn&apos;t just show you graphs. It drafts the necessary maneuvers to optimize your life—authorized by you with a single touch.
+                    ClearMoney not only shows insights, it lines up practical next
+                    steps you can review and approve in one place.
                   </p>
                 </motion.div>
               </div>
               <div className="flex justify-end">
                 <Link href="/dashboard/war-room" className="group px-8 py-4 rounded-2xl bg-white text-slate-950 font-bold text-lg hover:bg-emerald-400 transition-all flex items-center gap-3">
-                  Enter the War Room
+                  Review Your Next Steps
                   <ArrowUpRight className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                 </Link>
               </div>
@@ -355,18 +545,18 @@ export default function LandingPage() {
               {[
                 { 
                   icon: Zap, 
-                  title: "Action Intents", 
-                  desc: "Agent-drafted primitives for BoA transfers, Fidelity rollovers, and tax harvesting." 
+                  title: "Suggested Actions", 
+                  desc: "Get concrete recommendations for transfers, rebalancing, and tax moves." 
                 },
                 { 
                   icon: Lock, 
-                  title: "The War Room", 
-                  desc: "Your centralized approval queue. Review, authorize, and verify maneuvers in one place." 
+                  title: "Approval Center", 
+                  desc: "Review every recommendation before anything changes in your accounts." 
                 },
                 { 
                   icon: Fingerprint, 
-                  title: "Biometric Auth", 
-                  desc: "High-value asset movements require FaceID or TouchID directly on your hardware." 
+                  title: "Secure Sign-Off", 
+                  desc: "Sensitive actions require device-level verification for extra protection." 
                 }
               ].map((f, i) => (
                 <div key={i} className="p-10 rounded-[2.5rem] bg-slate-950 border border-slate-800 hover:border-emerald-500/50 transition-all group/card shadow-2xl shadow-black/50">
@@ -385,12 +575,12 @@ export default function LandingPage() {
         <section className="max-w-7xl mx-auto px-6 lg:px-8 py-40">
           <div className="grid lg:grid-cols-2 gap-24 items-center">
             <div className="order-2 lg:order-1 relative">
-              <ProductWindow title="Interactive Simulation Lab">
+              <ProductWindow title="Interactive Scenario Tool">
                 <div className="p-8 lg:p-12 space-y-12">
                   <div className="space-y-10">
                     <div className="space-y-4">
-                      <div className="flex justify-between text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                        <span>MARKET SHOCK</span>
+                      <div className="flex justify-between text-sm font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                        <span>MARKET DROP</span>
                         <span className="text-rose-500 font-mono">-20%</span>
                       </div>
                       <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -403,8 +593,8 @@ export default function LandingPage() {
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <div className="flex justify-between text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                        <span>MONTHLY BURN</span>
+                      <div className="flex justify-between text-sm font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                        <span>MONTHLY SPENDING</span>
                         <span className="text-emerald-500 font-mono">+$5,000</span>
                       </div>
                       <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -423,7 +613,7 @@ export default function LandingPage() {
                     whileInView={{ opacity: 1, scale: 1 }}
                     className="p-8 rounded-[2rem] bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center shadow-inner"
                   >
-                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-[0.3em] mb-4">Projected Runway Impact</p>
+                    <p className="text-xs text-slate-400 uppercase font-black tracking-[0.3em] mb-4">Runway After Changes</p>
                     <div className="flex items-center justify-center gap-3">
                       <p className="text-7xl font-display text-slate-900 dark:text-white leading-none">14.2</p>
                       <p className="text-xl font-display text-slate-400 italic">Months</p>
@@ -451,14 +641,15 @@ export default function LandingPage() {
                   <Target className="w-6 h-6" />
                 </div>
                 <h2 className="font-display text-5xl md:text-6xl text-slate-900 dark:text-white mb-8 leading-[1.1]">
-                  Model the <br />
-                  <span className="text-purple-600 dark:text-purple-400 italic">Future.</span>
+                  Test what-if <br />
+                  <span className="text-purple-600 dark:text-purple-400 italic">scenarios.</span>
                 </h2>
                 <p className="text-xl text-slate-500 dark:text-slate-400 leading-relaxed mb-10">
-                  Real wealth is about planning for the unknown. Use the <strong>Scenario Lab</strong> to stress-test your liquidity against market shocks, pivots, and hiring plans in real-time.
+                  Try different market changes and spending plans to see how your
+                  runway and risk profile shift before you commit.
                 </p>
                 <Link href="/dashboard/scenario-lab" className="group text-slate-900 dark:text-white font-bold text-lg flex items-center gap-2 hover:gap-3 transition-all">
-                  Try the Simulation
+                  Try Scenario Tool
                   <ArrowRight className="w-5 h-5 text-emerald-500" />
                 </Link>
               </motion.div>
@@ -476,18 +667,19 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               className="text-6xl md:text-8xl font-display text-slate-900 dark:text-white mb-10 leading-[0.9]"
             >
-              The end of <br />
-              <span className="text-emerald-600 dark:text-emerald-400 italic">affiliate bias.</span>
+              Advice without <br />
+              <span className="text-emerald-600 dark:text-emerald-400 italic">product hype.</span>
             </motion.h2>
             <p className="text-xl md:text-2xl text-slate-500 dark:text-slate-400 leading-relaxed mb-16 max-w-3xl mx-auto font-medium">
-              PFM media exists to sell you high-fee cards. We exist to build your intelligence. We tell you when a product is bad—even if it pays us $400.
+              Most finance sites push products. We focus on what is best for you,
+              and we publish clear disclosures so you can judge for yourself.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <Link href="/transparency" className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 font-bold text-xl hover:bg-emerald-600 dark:hover:bg-emerald-400 transition-all shadow-2xl">
-                View Transparency Hub
+                See How We Make Money
               </Link>
               <Link href="/blog" className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
-                Read Intelligence
+                Read Our Research
               </Link>
             </div>
           </div>
@@ -504,8 +696,8 @@ export default function LandingPage() {
                 <span className="font-display text-3xl text-slate-900 dark:text-white">ClearMoney</span>
               </div>
               <p className="text-slate-500 text-lg max-w-sm leading-relaxed mb-8">
-                Institutional financial intelligence for the independent mind. 
-                Built on the Strata Action Layer.
+                Straightforward financial guidance and tools built to help you make
+                better money decisions.
               </p>
               <div className="flex gap-4">
                 <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 hover:text-emerald-500 cursor-pointer transition-colors">
@@ -517,29 +709,29 @@ export default function LandingPage() {
               </div>
             </div>
             <div>
-              <h4 className="font-black text-slate-900 dark:text-white text-xs uppercase tracking-[0.3em] mb-8">Platform</h4>
+              <h4 className="font-black text-slate-900 dark:text-white text-sm uppercase tracking-[0.2em] mb-8">Platform</h4>
               <ul className="space-y-5 text-sm text-slate-500 font-bold">
                 <li><Link href="/dashboard" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Dashboard</Link></li>
-                <li><Link href="/dashboard/war-room" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">War Room</Link></li>
-                <li><Link href="/advisor" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">AI Advisor</Link></li>
-                <li><Link href="/tools" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Calculators</Link></li>
+                <li><Link href="/dashboard/war-room" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Action Center</Link></li>
+                <li><Link href="/advisor" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Money Assistant</Link></li>
+                <li><Link href="/tools" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Tools</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-black text-slate-900 dark:text-white text-xs uppercase tracking-[0.3em] mb-8">Intelligence</h4>
+              <h4 className="font-black text-slate-900 dark:text-white text-sm uppercase tracking-[0.2em] mb-8">Learn</h4>
               <ul className="space-y-5 text-sm text-slate-500 font-bold">
-                <li><Link href="/blog" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Latest Analysis</Link></li>
-                <li><Link href="/transparency" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Transparency Hub</Link></li>
-                <li><Link href="/methodology" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Methodology</Link></li>
+                <li><Link href="/blog" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Latest Research</Link></li>
+                <li><Link href="/transparency" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">How We Stay Unbiased</Link></li>
+                <li><Link href="/methodology" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">How Calculations Work</Link></li>
               </ul>
             </div>
           </div>
           
           <div className="pt-12 border-t border-slate-100 dark:border-slate-900 flex flex-col md:flex-row items-center justify-between gap-8">
-            <p className="text-[10px] text-slate-400 dark:text-slate-600 uppercase font-black tracking-[0.4em]">
-              &copy; 2026 ClearMoney Inc &middot; STRATA ACTION LAYER v1.0 &middot; PII-PROTECTED
+            <p className="text-xs text-slate-400 dark:text-slate-600 uppercase font-black tracking-[0.3em]">
+              &copy; 2026 ClearMoney Inc &middot; Privacy-first by design
             </p>
-            <div className="flex gap-10 text-[10px] text-slate-400 dark:text-slate-600 uppercase font-black tracking-[0.4em]">
+            <div className="flex gap-10 text-xs text-slate-400 dark:text-slate-600 uppercase font-black tracking-[0.3em]">
               <Link href="/privacy" className="hover:text-slate-900 dark:hover:text-white transition-colors">Privacy</Link>
               <Link href="/terms" className="hover:text-slate-900 dark:hover:text-white transition-colors">Terms</Link>
             </div>

@@ -156,54 +156,56 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
         </div>
       </div>
 
-      {/* Table Header */}
-      <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-        <div className="col-span-4">
-          <SortHeader
-            label="Name"
-            sortKeyValue="name"
-            sortKey={sortKey}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-          />
-        </div>
-        <div className="col-span-2 text-right">
-          <SortHeader
-            label="Quantity"
-            sortKeyValue="quantity"
-            sortKey={sortKey}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-            className="justify-end"
-          />
-        </div>
-        <div className="col-span-2 text-right">
-          <SortHeader
-            label="Value"
-            sortKeyValue="market_value"
-            sortKey={sortKey}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-            className="justify-end"
-          />
-        </div>
-        <div className="col-span-2 text-right">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Allocation</span>
-        </div>
-        <div className="col-span-2">
-          <SortHeader
-            label="Account"
-            sortKeyValue="account_name"
-            sortKey={sortKey}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-          />
-        </div>
-      </div>
+      <div className="overflow-x-auto">
+        <div className="min-w-[640px]">
+          {/* Table Header */}
+          <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+            <div className="col-span-4">
+              <SortHeader
+                label="Name"
+                sortKeyValue="name"
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
+            </div>
+            <div className="col-span-2 text-right">
+              <SortHeader
+                label="Quantity"
+                sortKeyValue="quantity"
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                className="justify-end"
+              />
+            </div>
+            <div className="col-span-2 text-right">
+              <SortHeader
+                label="Value"
+                sortKeyValue="market_value"
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                className="justify-end"
+              />
+            </div>
+            <div className="col-span-2 text-right">
+              <span className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Allocation</span>
+            </div>
+            <div className="col-span-2">
+              <SortHeader
+                label="Account"
+                sortKeyValue="account_name"
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
+            </div>
+          </div>
 
-      {/* Table Body */}
-      <div className="divide-y divide-slate-100 dark:divide-slate-800">
-        {paginatedHoldings.map((holding) => {
+          {/* Table Body */}
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {paginatedHoldings.map((holding) => {
           const percentOfPortfolio = totalValue > 0
             ? (holding.market_value / totalValue) * 100
             : 0;
@@ -223,14 +225,14 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
               >
                 {/* Name */}
                 <div className="col-span-4 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black uppercase tracking-tighter text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700">
+                  <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-black uppercase tracking-tighter text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700">
                     {holding.ticker ? holding.ticker.slice(0, 3) : "—"}
                   </div>
                   <div className="min-w-0">
                     <p className="font-bold text-sm text-slate-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                       {holding.ticker || holding.name}
                     </p>
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
                       {formatSecurityType(holding.security_type)}
                     </p>
                   </div>
@@ -255,7 +257,7 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
                 {/* % of Portfolio */}
                 <div className="col-span-2 text-right self-center">
                   <div className="inline-flex flex-col items-end gap-1.5 w-full">
-                    <span className="text-[10px] font-black text-slate-400">
+                    <span className="text-xs font-black text-slate-500">
                       {percentOfPortfolio.toFixed(1)}%
                     </span>
                     <div className="w-full h-1 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -285,17 +287,17 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
                   transition={{ duration: 0.2 }}
                   className="px-6 pb-6 bg-slate-50 dark:bg-slate-950/30"
                 >
-                  <div className="grid grid-cols-3 gap-8 pt-6 pl-12">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8 pt-6 pl-4 sm:pl-12">
                     {holding.cost_basis !== null && holding.cost_basis !== undefined && (
                       <>
                         <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Cost Basis</p>
+                          <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5">Cost Basis</p>
                           <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
                             <AnimatedAmount value={holding.cost_basis} />
                           </p>
                         </div>
                         <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Unrealized Gain</p>
+                          <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5">Unrealized Gain</p>
                           <div
                             className={`flex items-center gap-1.5 text-sm font-black ${
                               gainLoss && gainLoss >= 0
@@ -308,7 +310,7 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
                                 <span>{gainLoss >= 0 ? "+" : ""}</span>
                                 <AnimatedAmount value={Math.abs(gainLoss)} />
                                 {gainLossPercent !== null && (
-                                  <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-current/10">
+                                  <span className="ml-1 text-xs px-1.5 py-0.5 rounded bg-current/10">
                                     {gainLossPercent >= 0 ? "+" : ""}
                                     {gainLossPercent.toFixed(2)}%
                                   </span>
@@ -320,7 +322,7 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
                       </>
                     )}
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Account Strategy</p>
+                      <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5">Account Strategy</p>
                       <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
                         {formatTitleCase(holding.account_type)}
                       </p>
@@ -331,11 +333,13 @@ export function HoldingsTable({ holdings, totalValue }: HoldingsTableProps) {
             </div>
           );
         })}
+          </div>
+        </div>
       </div>
 
       {showPagination && (
         <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-transparent">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+          <span className="text-xs font-black uppercase tracking-widest text-slate-400">
             Page {currentPage + 1} of {totalPages}
           </span>
           <div className="flex items-center gap-2">
