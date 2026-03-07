@@ -6,20 +6,39 @@ backend logs can be correlated.  If the caller already supplies the header
 """
 
 import uuid
+from collections.abc import Callable
 
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from starlette.requests import Request
-from starlette.responses import Response
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-REQUEST_ID_HEADER = "X-Request-Id"
+REQUEST_ID_HEADER = b"x-request-id"
 
 
-class RequestIdMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        request_id = request.headers.get(REQUEST_ID_HEADER) or str(uuid.uuid4())
-        # Store on request state so handlers/services can access it
-        request.state.request_id = request_id
+class RequestIdMiddleware:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
 
-        response = await call_next(request)
-        response.headers[REQUEST_ID_HEADER] = request_id
-        return response
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] not in ("http", "websocket"):
+            await self.app(scope, receive, send)
+            return
+
+        # Extract or generate request ID
+        request_id: str = ""
+        for key, value in scope.get("headers", []):
+            if key == REQUEST_ID_HEADER:
+                request_id = value.decode()
+                break
+        if not request_id:
+            request_id = str(uuid.uuid4())
+
+        # Store on scope state so handlers can access via request.state.request_id
+        scope.setdefault("state", {})["request_id"] = request_id
+
+        async def send_with_request_id(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers", []))
+                headers.append((REQUEST_ID_HEADER, request_id.encode()))
+                message["headers"] = headers
+            await send(message)
+
+        await self.app(scope, receive, send_with_request_id)

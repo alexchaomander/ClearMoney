@@ -6,20 +6,20 @@ ClearMoney retains user financial data only as long as necessary to provide the 
 
 ## Retention Periods
 
-| Data Category | Retention Period | Notes |
-|---------------|-----------------|-------|
-| User account info | Until account deletion | Email, Clerk ID, preferences |
-| Financial transactions | Until account deletion | Synced from Plaid/SnapTrade |
-| Account balances & snapshots | Until account deletion | Historical balance tracking |
-| AI advisor conversations | 90 days | Automatically purged after 90 days |
-| Session data (Redis) | 15 minutes | Ephemeral, auto-expires via TTL |
-| Audit logs | 1 year | Access logs for compliance |
-| Analytics events (PostHog) | Per PostHog retention settings | Anonymized, consent-gated |
-| Waitlist signups | Until product launch or 1 year | Email + source only |
+| Data Category | Retention Period | Notes | Status |
+|---------------|-----------------|-------|--------|
+| User account info | Until account deletion | Email, Clerk ID, preferences | Implemented |
+| Financial transactions | Until account deletion | Synced from Plaid/SnapTrade | Implemented |
+| Account balances & snapshots | Until account deletion | Historical balance tracking | Implemented |
+| AI advisor conversations | 90 days | Purge job planned | Planned |
+| Session data (Redis) | 15 minutes | Ephemeral, auto-expires via TTL | Implemented |
+| Audit logs | 1 year | Access logs for compliance | Planned |
+| Analytics events (PostHog) | Per PostHog retention settings | Anonymized, consent-gated | Implemented |
+| Waitlist signups | Until product launch or 1 year | Email + source only | Implemented |
 
-## Account Deletion
+## Account Deletion (Planned)
 
-When a user requests account deletion:
+When a user requests account deletion, the following will occur:
 
 1. All user-owned records are permanently deleted from PostgreSQL
 2. Redis session data expires naturally (15-minute TTL)
@@ -27,13 +27,17 @@ When a user requests account deletion:
 4. PostHog data is anonymized (user ID stripped)
 5. Git history and backups may contain encrypted references — these are purged on the next backup rotation cycle
 
-## Data Export
+> **Note:** The account deletion flow is not yet implemented. This section describes the intended behavior. See the beta launch readiness checklist for tracking.
 
-Users can export their data in JSON format via the account settings page. The export includes:
+## Data Export (Planned)
+
+Users will be able to export their data in JSON format via the account settings page. The export will include:
 - Account balances and metadata
 - Transaction history
 - AI advisor conversation history
 - Consent grants
+
+> **Note:** The data export flow is not yet implemented.
 
 ## Compliance Notes
 

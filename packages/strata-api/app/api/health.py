@@ -24,12 +24,8 @@ async def health_check(
     if settings.redis_url:
         try:
             session_store = request.app.state.session_store
-            # RedisSessionStore exposes the underlying client
-            if hasattr(session_store, "_redis"):
-                await session_store._redis.ping()
-                redis_status = "ok"
-            else:
-                redis_status = "skipped"
+            await session_store.ping()
+            redis_status = "ok"
         except Exception:
             redis_status = "error"
 

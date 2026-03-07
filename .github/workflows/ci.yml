@@ -32,7 +32,7 @@ jobs:
         working-directory: .
       - run: pnpm lint
       - run: pnpm type-check
-      - run: pnpm test:run -- --coverage
+      - run: pnpm test:run
       - run: pnpm build
         env:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
@@ -70,7 +70,6 @@ jobs:
       - run: uv python install 3.12
       - run: uv venv --python 3.12
       - run: uv pip install -e ".[dev]"
-      - run: uv pip install coverage
       - run: .venv/bin/python -m coverage run -m pytest tests -v
       - run: .venv/bin/python -m coverage report --fail-under=70
 
