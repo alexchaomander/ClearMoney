@@ -39,8 +39,7 @@ export function ActionExecutionProvider({ children }: { children: ReactNode }) {
           data: { status: "pending_approval" }
         });
         stopExecution();
-      } catch (err) {
-        console.error("Failed to mark intent as complete", err);
+      } catch {
         // Sidebar remains open for retry
       }
     }
