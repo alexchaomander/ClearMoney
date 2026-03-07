@@ -1,19 +1,16 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_step_up
+from app.core.rate_limit import limiter
 from app.models.user import User
 from app.services.account_management import delete_user_account, export_user_data
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/account", tags=["Account Management"])
-
-limiter = Limiter(key_func=get_remote_address)
 
 
 @router.get("/export")

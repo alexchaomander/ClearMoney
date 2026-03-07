@@ -1,6 +1,8 @@
+import asyncio
 import logging
 import uuid
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,50 +22,55 @@ from app.services.providers.snaptrade import SnapTradeProvider
 logger = logging.getLogger(__name__)
 
 
+def _filter_user_visible_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Filter advisor session messages to only user-visible content.
+
+    Removes tool_use/tool_result content blocks that contain internal
+    system context not intended for end-user export.
+    """
+    filtered = []
+    for msg in messages:
+        content = msg.get("content")
+        if isinstance(content, list):
+            # Filter out tool_result messages and extract text from content blocks
+            text_blocks = [
+                b.get("text", "") for b in content
+                if isinstance(b, dict) and b.get("type") == "text"
+            ]
+            if text_blocks:
+                filtered.append({
+                    "role": msg["role"],
+                    "content": "\n".join(text_blocks),
+                })
+        elif isinstance(content, str):
+            filtered.append({"role": msg["role"], "content": content})
+    return filtered
+
+
 async def export_user_data(user_id: uuid.UUID, session: AsyncSession) -> dict:
     """Return a comprehensive JSON export of all user data.
 
     Reuses build_financial_context() for the bulk of financial data,
-    then appends consent grants, advisor sessions, tax plans, tax
-    documents metadata, action intents, and notifications.
+    then runs remaining queries concurrently for consent grants, advisor
+    sessions, tax plans, tax documents metadata, action intents, and
+    notifications.
     """
-    financial_context = await build_financial_context(user_id, session)
-
-    # Consent grants
-    consent_result = await session.execute(
-        select(ConsentGrant).where(ConsentGrant.user_id == user_id)
+    financial_context, *query_results = await asyncio.gather(
+        build_financial_context(user_id, session),
+        session.execute(select(ConsentGrant).where(ConsentGrant.user_id == user_id)),
+        session.execute(select(AgentSession).where(AgentSession.user_id == user_id)),
+        session.execute(select(TaxPlan).where(TaxPlan.user_id == user_id)),
+        session.execute(select(TaxDocument).where(TaxDocument.user_id == user_id)),
+        session.execute(select(ActionIntent).where(ActionIntent.user_id == user_id)),
+        session.execute(select(Notification).where(Notification.user_id == user_id)),
     )
-    consent_grants = consent_result.scalars().all()
 
-    # Advisor sessions with messages
-    sessions_result = await session.execute(
-        select(AgentSession).where(AgentSession.user_id == user_id)
-    )
-    advisor_sessions = sessions_result.scalars().all()
-
-    # Tax plans
-    tax_plans_result = await session.execute(
-        select(TaxPlan).where(TaxPlan.user_id == user_id)
-    )
-    tax_plans = tax_plans_result.scalars().all()
-
-    # Tax documents metadata (no binary content)
-    tax_docs_result = await session.execute(
-        select(TaxDocument).where(TaxDocument.user_id == user_id)
-    )
-    tax_documents = tax_docs_result.scalars().all()
-
-    # Action intents
-    intents_result = await session.execute(
-        select(ActionIntent).where(ActionIntent.user_id == user_id)
-    )
-    action_intents = intents_result.scalars().all()
-
-    # Notifications
-    notif_result = await session.execute(
-        select(Notification).where(Notification.user_id == user_id)
-    )
-    notifications = notif_result.scalars().all()
+    consent_grants = query_results[0].scalars().all()
+    advisor_sessions = query_results[1].scalars().all()
+    tax_plans = query_results[2].scalars().all()
+    tax_documents = query_results[3].scalars().all()
+    action_intents = query_results[4].scalars().all()
+    notifications = query_results[5].scalars().all()
 
     return {
         **financial_context,
@@ -83,7 +90,7 @@ async def export_user_data(user_id: uuid.UUID, session: AsyncSession) -> dict:
                 "id": str(s.id),
                 "skill_name": s.skill_name,
                 "status": s.status.value,
-                "messages": s.messages,
+                "messages": _filter_user_visible_messages(s.messages),
                 "created_at": s.created_at.isoformat() if s.created_at else None,
             }
             for s in advisor_sessions
@@ -168,21 +175,24 @@ async def delete_user_account(user_id: uuid.UUID, session: AsyncSession) -> None
     )
     connections = conn_result.scalars().all()
 
-    plaid_provider = PlaidProvider()
-    snaptrade_provider = SnapTradeProvider()
-
+    providers: dict[str, PlaidProvider | SnapTradeProvider] = {}
     for connection in connections:
         try:
             if connection.provider == "plaid":
-                await plaid_provider.delete_connection(connection)
+                if "plaid" not in providers:
+                    providers["plaid"] = PlaidProvider()
+                await providers["plaid"].delete_connection(connection)
             elif connection.provider == "snaptrade":
-                await snaptrade_provider.delete_connection(connection)
+                if "snaptrade" not in providers:
+                    providers["snaptrade"] = SnapTradeProvider()
+                await providers["snaptrade"].delete_connection(connection)
         except Exception:
             logger.warning(
                 "Failed to revoke %s connection %s for user %s, proceeding with deletion",
                 connection.provider,
                 connection.id,
                 user_id,
+                exc_info=True,
             )
 
     # 3. Delete user row — cascades handle all child records
