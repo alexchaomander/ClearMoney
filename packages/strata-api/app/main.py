@@ -5,10 +5,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 
+from app.api.account import router as account_router
 from app.api.accounts import router as accounts_router
 from app.api.action_approval import router as action_approval_router
 from app.api.action_intents import router as action_intents_router
@@ -39,6 +39,7 @@ from app.api.tax_plan_workspace import router as tax_plan_workspace_router
 from app.api.transactions import router as transactions_router
 from app.api.waitlist import router as waitlist_router
 from app.core.config import settings
+from app.core.rate_limit import limiter
 from app.db.session import close_db
 from app.middleware.request_id import RequestIdMiddleware
 from app.services.jobs.background import start_background_tasks
@@ -84,11 +85,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await close_db()
 
 
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=[settings.rate_limit_default],
-    storage_uri=settings.redis_url or "memory://",
-)
 
 app = FastAPI(
     title=settings.app_name,
@@ -139,4 +135,5 @@ app.include_router(tax_plan_workspace_router, prefix="/api/v1")
 app.include_router(data_router, prefix="/api/v1")
 app.include_router(equity_router, prefix="/api/v1")
 app.include_router(crypto_router, prefix="/api/v1")
+app.include_router(account_router, prefix="/api/v1")
 app.include_router(waitlist_router, prefix="/api/v1/waitlist", tags=["Waitlist"])

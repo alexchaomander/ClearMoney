@@ -9,6 +9,7 @@ os.environ.setdefault(
 os.environ.setdefault("STRATA_DEBUG", "true")
 os.environ.setdefault("STRATA_ENABLE_BACKGROUND_JOBS", "false")
 os.environ.setdefault("STRATA_AUTO_CONSENT_ON_MISSING", "true")
+os.environ.setdefault("STRATA_AGENT_STEP_UP_TOKEN", "test-step-up-token")
 
 import pytest  # noqa: E402
 from sqlalchemy.ext.asyncio import (
