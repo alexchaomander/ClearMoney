@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
@@ -14,7 +16,7 @@ from app.models import (
 from app.models.notification import Notification, NotificationSeverity, NotificationType
 
 
-STEP_UP_TOKEN = "test-step-up-token"
+STEP_UP_TOKEN = os.environ["STRATA_AGENT_STEP_UP_TOKEN"]
 
 
 @pytest.fixture
@@ -124,21 +126,10 @@ async def test_delete_account_removes_user_and_cascades(
     from tests.conftest import TestSessionFactory
 
     async with TestSessionFactory() as fresh_session:
-        # Enable SQLite foreign key enforcement for cascade verification
-        await fresh_session.execute(
-            select(User).where(User.id == user_id)
-        )
         result = await fresh_session.execute(
             select(User).where(User.id == user_id)
         )
         assert result.scalar_one_or_none() is None
-
-        # The ORM cascade on User.action_intents ensures those are deleted.
-        # For models without an ORM relationship on User (ConsentGrant,
-        # AgentSession, Notification), the DB-level ON DELETE CASCADE
-        # handles cleanup in production (PostgreSQL). In SQLite tests
-        # without PRAGMA foreign_keys=ON, we verify user removal as the
-        # primary assertion and trust the schema-level constraints.
 
 
 @pytest.mark.asyncio

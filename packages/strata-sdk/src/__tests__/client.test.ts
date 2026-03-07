@@ -52,6 +52,7 @@ describe('StrataApiError', () => {
 
 describe('StrataClient', () => {
   let client: StrataClient;
+  const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
     client = new StrataClient({
@@ -62,6 +63,7 @@ describe('StrataClient', () => {
   });
 
   afterEach(() => {
+    globalThis.fetch = originalFetch;
     vi.restoreAllMocks();
   });
 
@@ -158,28 +160,20 @@ describe('StrataClient', () => {
 
     it('should throw StrataApiError on non-ok response with detail', async () => {
       globalThis.fetch = mockFetchError(422, 'Validation failed');
-      await expect(client.healthCheck()).rejects.toThrow(StrataApiError);
-      try {
-        globalThis.fetch = mockFetchError(422, 'Validation failed');
-        await client.healthCheck();
-      } catch (e) {
-        const err = e as StrataApiError;
-        expect(err.status).toBe(422);
-        expect(err.message).toBe('Validation failed');
-        expect(err.detail).toBe('Validation failed');
-      }
+      const err = await client.healthCheck().catch((e) => e) as StrataApiError;
+      expect(err).toBeInstanceOf(StrataApiError);
+      expect(err.status).toBe(422);
+      expect(err.message).toBe('Validation failed');
+      expect(err.detail).toBe('Validation failed');
     });
 
     it('should throw StrataApiError with fallback message when no detail', async () => {
       globalThis.fetch = mockFetchError(500);
-      try {
-        await client.healthCheck();
-      } catch (e) {
-        const err = e as StrataApiError;
-        expect(err.status).toBe(500);
-        expect(err.message).toBe('Request failed: 500 Bad Request');
-        expect(err.detail).toBeUndefined();
-      }
+      const err = await client.healthCheck().catch((e) => e) as StrataApiError;
+      expect(err).toBeInstanceOf(StrataApiError);
+      expect(err.status).toBe(500);
+      expect(err.message).toBe('Request failed: 500 Bad Request');
+      expect(err.detail).toBeUndefined();
     });
 
     it('should handle non-JSON error body gracefully', async () => {
@@ -189,13 +183,10 @@ describe('StrataClient', () => {
         statusText: 'Bad Gateway',
         json: vi.fn().mockRejectedValue(new Error('not json')),
       });
-      try {
-        await client.healthCheck();
-      } catch (e) {
-        const err = e as StrataApiError;
-        expect(err.status).toBe(502);
-        expect(err.message).toBe('Request failed: 502 Bad Gateway');
-      }
+      const err = await client.healthCheck().catch((e) => e) as StrataApiError;
+      expect(err).toBeInstanceOf(StrataApiError);
+      expect(err.status).toBe(502);
+      expect(err.message).toBe('Request failed: 502 Bad Gateway');
     });
   });
 

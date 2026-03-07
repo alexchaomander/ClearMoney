@@ -145,28 +145,38 @@ async def delete_user_account(user_id: uuid.UUID, session: AsyncSession) -> None
     """Delete a user account and all associated data.
 
     Steps:
-    1. Revoke active provider connections (Plaid/SnapTrade) so external
+    1. Verify the user exists (raise ValueError if not).
+    2. Revoke active provider connections (Plaid/SnapTrade) so external
        access tokens are invalidated.
-    2. Delete the user row. Because the User model defines
+    3. Delete the user row. Because the User model defines
        cascade="all, delete-orphan" on all relationships and all child
        tables use ``ondelete="CASCADE"`` foreign keys, the database
        handles the rest.
-    3. Commit the transaction.
+    4. Commit the transaction.
     """
-    # 1. Revoke external provider connections
+    # 1. Verify user exists
+    user_result = await session.execute(
+        select(User).where(User.id == user_id)
+    )
+    user = user_result.scalar_one_or_none()
+    if user is None:
+        raise ValueError(f"User {user_id} not found")
+
+    # 2. Revoke external provider connections
     conn_result = await session.execute(
         select(Connection).where(Connection.user_id == user_id)
     )
     connections = conn_result.scalars().all()
 
+    plaid_provider = PlaidProvider()
+    snaptrade_provider = SnapTradeProvider()
+
     for connection in connections:
         try:
             if connection.provider == "plaid":
-                provider = PlaidProvider()
-                await provider.delete_connection(connection)
+                await plaid_provider.delete_connection(connection)
             elif connection.provider == "snaptrade":
-                provider = SnapTradeProvider()
-                await provider.delete_connection(connection)
+                await snaptrade_provider.delete_connection(connection)
         except Exception:
             logger.warning(
                 "Failed to revoke %s connection %s for user %s, proceeding with deletion",
@@ -175,17 +185,10 @@ async def delete_user_account(user_id: uuid.UUID, session: AsyncSession) -> None
                 user_id,
             )
 
-    # 2. Delete user row — cascades handle all child records
-    user_result = await session.execute(
-        select(User).where(User.id == user_id)
-    )
-    user = user_result.scalar_one_or_none()
-    if user is None:
-        return
-
+    # 3. Delete user row — cascades handle all child records
     await session.delete(user)
 
-    # 3. Commit
+    # 4. Commit
     await session.commit()
 
     logger.info("Deleted user account %s with %d connections revoked", user_id, len(connections))

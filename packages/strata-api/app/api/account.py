@@ -1,6 +1,8 @@
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_step_up
@@ -11,9 +13,13 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/account", tags=["Account Management"])
 
+limiter = Limiter(key_func=get_remote_address)
+
 
 @router.get("/export")
+@limiter.limit("5/minute")
 async def export_account_data(
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
@@ -27,7 +33,9 @@ async def export_account_data(
 
 
 @router.delete("")
+@limiter.limit("3/minute")
 async def delete_account(
+    request: Request,
     current_user: User = Depends(get_current_user),
     _step_up: None = Depends(require_step_up),
     db: AsyncSession = Depends(get_db),
@@ -37,5 +45,8 @@ async def delete_account(
     This is an irreversible action that requires step-up authentication
     via the ``X-Step-Up-Token`` header.
     """
-    await delete_user_account(current_user.id, db)
+    try:
+        await delete_user_account(current_user.id, db)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="User not found")
     return {"status": "deleted"}
