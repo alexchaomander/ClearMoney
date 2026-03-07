@@ -178,7 +178,6 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
       setReSearchResults(results);
     } catch (err) {
       setPropertySearchError("Property search failed. Please try again.");
-      console.error("Search failed", err);
     }
   };
 
@@ -210,7 +209,6 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
       setVSearchResults(results);
     } catch (err) {
       setVehicleSearchError("Vehicle search failed. Please try again.");
-      console.error("Vehicle search failed", err);
     }
   };
 

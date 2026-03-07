@@ -714,9 +714,8 @@ export default function DashboardPage() {
     setIsDrawerOpen(true);
   };
 
-  const handleRefreshConnection = (connectionId: string) => {
-    console.log('Refreshing connection:', connectionId);
-    // In a real app, this would trigger a sync
+  const handleRefreshConnection = (_connectionId: string) => {
+    // TODO: trigger a real sync via the API
   };
 
   return (

@@ -6,6 +6,16 @@ on:
   pull_request:
 
 jobs:
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   web:
     runs-on: ubuntu-latest
     defaults:
@@ -22,7 +32,7 @@ jobs:
         working-directory: .
       - run: pnpm lint
       - run: pnpm type-check
-      - run: pnpm test:run
+      - run: pnpm test:run -- --coverage
       - run: pnpm build
         env:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
@@ -60,7 +70,9 @@ jobs:
       - run: uv python install 3.12
       - run: uv venv --python 3.12
       - run: uv pip install -e ".[dev]"
-      - run: .venv/bin/python -m pytest tests -v
+      - run: uv pip install coverage
+      - run: .venv/bin/python -m coverage run -m pytest tests -v
+      - run: .venv/bin/python -m coverage report --fail-under=70
 
   deploy-api:
     needs: api

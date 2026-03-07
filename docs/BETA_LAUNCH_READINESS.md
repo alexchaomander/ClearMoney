@@ -50,13 +50,13 @@ ClearMoney is a well-architected financial advisory platform with a strong found
 
 | Priority | Issue | Detail |
 |----------|-------|--------|
-| **P0** | **Encryption key committed to git** | `packages/strata-api/.env` contains a real Fernet encryption key (`STRATA_CREDENTIALS_ENCRYPTION_KEY=8tTf...`) and was committed in history (`eeca638`). The `.gitignore` only excludes `.env.local`, **not `.env` files**. **Action:** (1) Add `**/.env` to `.gitignore`, (2) remove `.env` from tracking, (3) rotate the encryption key, (4) consider scrubbing git history with `git filter-repo` or BFG. |
-| **P0** | Auth header bypass in dev | When `STRATA_CLERK_PEM_PUBLIC_KEY` is unset, anyone can pass `X-Clerk-User-Id` header to impersonate any user. Ensure PEM key is always set in production/staging. The config validator logs a warning, but does **not** block startup. |
-| **P0** | `auto_consent_on_missing` flag | If accidentally set to `true` in production, auto-grants all consent scopes. Must be `false` in production config. |
+| **P0** | **Encryption key committed to git** | `packages/strata-api/.env` contained a real Fernet encryption key and was committed in history (`eeca638`). **FIXED:** `.gitignore` now excludes `**/.env` and the file is untracked. **Still needed:** rotate the key and scrub git history with `git filter-repo` or BFG. |
+| **P0** | Auth header bypass in dev | When `STRATA_CLERK_PEM_PUBLIC_KEY` is unset, anyone can pass `X-Clerk-User-Id` header to impersonate any user. **FIXED:** The config validator now **raises an error** and blocks startup when the PEM key is missing in non-debug mode. |
+| **P0** | `auto_consent_on_missing` flag | If accidentally set to `true` in production, auto-grants all consent scopes. **FIXED:** The config validator now **raises an error** if this flag is `true` in non-debug mode. |
 | **P1** | CSP allows `unsafe-inline` + `unsafe-eval` for scripts | Necessary for Next.js hydration, but consider nonce-based CSP when Next.js supports it. |
 | **P1** | No CSRF protection beyond SameSite cookies | Clerk handles session tokens, but custom API calls should validate origin. |
 | **P2** | Dependency audit | Run `pnpm audit` and `pip audit` before launch. No evidence of regular vulnerability scanning. |
-| **P2** | No secrets scanning in CI | Consider adding `gitleaks` or GitHub Advanced Security. |
+| **P2** | ~~No secrets scanning in CI~~ | **FIXED:** `gitleaks` added to CI pipeline. |
 
 ---
 
@@ -72,7 +72,7 @@ ClearMoney is a well-architected financial advisory platform with a strong found
 
 | Priority | Issue | Impact |
 |----------|-------|--------|
-| **P1** | No test coverage measurement or thresholds | Can't track regressions; no coverage gates in CI |
+| **P1** | ~~No test coverage measurement or thresholds~~ | **FIXED:** Coverage measurement added to CI (coverage.py for API with 70% threshold, vitest --coverage for web). |
 | **P1** | SDK package has zero tests | Internal, but any bug here cascades to the frontend |
 | **P2** | No API integration tests against real DB | All tests use SQLite; Postgres-specific behavior untested |
 | **P2** | No load/stress testing | Unknown how the app performs under concurrent beta users |
@@ -94,11 +94,11 @@ ClearMoney is a well-architected financial advisory platform with a strong found
 
 | Priority | Issue | Impact |
 |----------|-------|--------|
-| **P1** | Health check doesn't verify Redis | Only checks DB; Redis failure would silently degrade sessions/rate-limiting |
+| **P1** | ~~Health check doesn't verify Redis~~ | **FIXED:** Health endpoint now pings Redis and reports its status. |
 | **P1** | No alerting pipeline documented | Sentry is configured but unclear if PagerDuty/Slack/email alerts are wired |
-| **P2** | Frontend uses ~10 `console.log/warn/error` statements | Should be Sentry breadcrumbs instead of raw console |
-| **P2** | No request tracing (correlation IDs) | Hard to trace user issues across frontend → API |
-| **P2** | No database backup/restore procedure documented | Critical for a financial data app |
+| **P2** | ~~Frontend uses ~10 `console.log/warn/error` statements~~ | **FIXED:** Console statements removed or replaced across 7 files. |
+| **P2** | ~~No request tracing (correlation IDs)~~ | **FIXED:** `RequestIdMiddleware` added — attaches `X-Request-Id` header to all requests/responses. |
+| **P2** | ~~No database backup/restore procedure documented~~ | **FIXED:** See `docs/DATABASE_BACKUP.md`. |
 | **P3** | No uptime monitoring (external) | Consider Checkly, Uptime Robot, or similar |
 
 ---
@@ -118,7 +118,7 @@ ClearMoney is a well-architected financial advisory platform with a strong found
 | Priority | Issue | Impact |
 |----------|-------|--------|
 | **P1** | No staging environment documented | Unclear if changes are tested in staging before production |
-| **P1** | No rollback strategy documented | Railway/Vercel both support rollbacks, but no runbook exists |
+| **P1** | ~~No rollback strategy documented~~ | **FIXED:** See `docs/ROLLBACK_RUNBOOK.md`. |
 | **P2** | No database migration pre-flight checks | Alembic migrations should be tested against a staging DB |
 | **P2** | No feature flags | No way to gradually roll out features or kill-switch a broken feature |
 | **P3** | No container image for web | Only API has a Dockerfile; web relies on Vercel's build |
@@ -159,9 +159,9 @@ For a public beta, consider **feature-flagging experimental features** (Action L
 | Priority | Issue | Impact |
 |----------|-------|--------|
 | **P1** | No data deletion / account export flow | Users in public beta will expect data portability |
-| **P1** | No cookie consent banner | Required in many jurisdictions (PostHog, Clerk, Sentry all set cookies) |
+| **P1** | ~~No cookie consent banner~~ | **Already exists:** `AnalyticsConsentBanner` component added in PR #135 (commit `95fa219f`). PostHog only initializes after user grants consent. |
 | **P2** | No audit log for data access | Financial data app should log who accessed what |
-| **P2** | No data retention policy | How long are transactions, AI conversations, and account data kept? |
+| **P2** | ~~No data retention policy~~ | **FIXED:** See `docs/DATA_RETENTION_POLICY.md`. |
 
 ---
 
@@ -189,32 +189,32 @@ For a public beta, consider **feature-flagging experimental features** (Action L
 
 ### Must-have (P0) — Block launch
 - [ ] **Rotate the exposed encryption key** — generate a new `STRATA_CREDENTIALS_ENCRYPTION_KEY`, re-encrypt any stored credentials, and scrub git history
-- [ ] **Fix `.gitignore`** — add `**/.env` to prevent future secret leaks (currently only `.env.local` is ignored)
-- [ ] Verify `STRATA_CLERK_PEM_PUBLIC_KEY` is set in production; consider failing startup if missing in non-debug mode
-- [ ] Verify `auto_consent_on_missing` is `false` in production
+- [x] **Fix `.gitignore`** — added `**/.env` to prevent future secret leaks; `.env` removed from tracking
+- [x] Startup now **fails** if `STRATA_CLERK_PEM_PUBLIC_KEY` is unset in non-debug mode
+- [x] Startup now **fails** if `auto_consent_on_missing` is `true` in non-debug mode
 - [ ] Run `pnpm audit` and `pip audit` — fix critical/high vulnerabilities
 - [ ] Verify beta invite code system works end-to-end in production
 
 ### Should-have (P1) — Launch with plan to fix within 2 weeks
-- [ ] Add Redis check to health endpoint
+- [x] Add Redis check to health endpoint
 - [ ] Wire Sentry alerts to Slack/PagerDuty/email
 - [ ] Set up a staging environment for pre-production validation
-- [ ] Document rollback procedures for both Railway and Vercel
-- [ ] Add test coverage measurement to CI (Istanbul/c8 for web, coverage.py for API)
-- [ ] Add cookie consent banner
+- [x] Document rollback procedures for both Railway and Vercel (`docs/ROLLBACK_RUNBOOK.md`)
+- [x] Add test coverage measurement to CI (vitest --coverage for web, coverage.py for API)
+- [x] Cookie consent banner already exists (`AnalyticsConsentBanner` from PR #135)
 - [ ] Build account deletion / data export flow
 - [ ] Run basic load test (k6 or locust) against staging
 
 ### Nice-to-have (P2) — Address during beta
-- [ ] Add correlation IDs (request tracing) across frontend and API
-- [ ] Replace `console.log` statements with Sentry breadcrumbs
-- [ ] Add `gitleaks` or secret scanning to CI
+- [x] Add correlation IDs (request tracing) — `RequestIdMiddleware` with `X-Request-Id` header
+- [x] Remove `console.log` statements from frontend (9 statements across 7 files)
+- [x] Add `gitleaks` secret scanning to CI
 - [ ] Implement feature flags for experimental features
-- [ ] Add database backup documentation/runbook
+- [x] Add database backup documentation/runbook (`docs/DATABASE_BACKUP.md`)
 - [ ] Set up external uptime monitoring
 - [ ] Add pre-commit hooks (Husky + lint-staged)
 - [ ] Write tests for strata-sdk package
-- [ ] Document data retention policy
+- [x] Document data retention policy (`docs/DATA_RETENTION_POLICY.md`)
 
 ---
 

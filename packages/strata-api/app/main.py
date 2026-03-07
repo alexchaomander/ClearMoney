@@ -40,6 +40,7 @@ from app.api.transactions import router as transactions_router
 from app.api.waitlist import router as waitlist_router
 from app.core.config import settings
 from app.db.session import close_db
+from app.middleware.request_id import RequestIdMiddleware
 from app.services.jobs.background import start_background_tasks
 from app.services.providers.metal_price import metal_price_service
 from app.services.providers.vehicle_valuation import vehicle_valuation_service
@@ -107,6 +108,7 @@ app.add_middleware(
     allow_methods=settings.cors_allow_methods,
     allow_headers=settings.cors_allow_headers,
 )
+app.add_middleware(RequestIdMiddleware)
 
 # Include routers
 app.include_router(health_router, prefix="/api/v1")
