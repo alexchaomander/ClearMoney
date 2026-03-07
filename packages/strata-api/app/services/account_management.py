@@ -1,0 +1,204 @@
+import asyncio
+import logging
+import uuid
+from datetime import datetime, timezone
+from typing import Any
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.action_intent import ActionIntent
+from app.models.agent_session import AgentSession
+from app.models.connection import Connection
+from app.models.consent import ConsentGrant
+from app.models.notification import Notification
+from app.models.tax_document import TaxDocument
+from app.models.tax_plan_workspace import TaxPlan
+from app.models.user import User
+from app.services.financial_context import build_financial_context
+from app.services.providers.plaid import PlaidProvider
+from app.services.providers.snaptrade import SnapTradeProvider
+
+logger = logging.getLogger(__name__)
+
+
+def _filter_user_visible_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Filter advisor session messages to only user-visible content.
+
+    Removes tool_use/tool_result content blocks that contain internal
+    system context not intended for end-user export.
+    """
+    filtered = []
+    for msg in messages:
+        content = msg.get("content")
+        if isinstance(content, list):
+            # Filter out tool_result messages and extract text from content blocks
+            text_blocks = [
+                b.get("text", "") for b in content
+                if isinstance(b, dict) and b.get("type") == "text"
+            ]
+            if text_blocks:
+                filtered.append({
+                    "role": msg["role"],
+                    "content": "\n".join(text_blocks),
+                })
+        elif isinstance(content, str):
+            filtered.append({"role": msg["role"], "content": content})
+    return filtered
+
+
+async def export_user_data(user_id: uuid.UUID, session: AsyncSession) -> dict:
+    """Return a comprehensive JSON export of all user data.
+
+    Reuses build_financial_context() for the bulk of financial data,
+    then runs remaining queries concurrently for consent grants, advisor
+    sessions, tax plans, tax documents metadata, action intents, and
+    notifications.
+    """
+    financial_context, *query_results = await asyncio.gather(
+        build_financial_context(user_id, session),
+        session.execute(select(ConsentGrant).where(ConsentGrant.user_id == user_id)),
+        session.execute(select(AgentSession).where(AgentSession.user_id == user_id)),
+        session.execute(select(TaxPlan).where(TaxPlan.user_id == user_id)),
+        session.execute(select(TaxDocument).where(TaxDocument.user_id == user_id)),
+        session.execute(select(ActionIntent).where(ActionIntent.user_id == user_id)),
+        session.execute(select(Notification).where(Notification.user_id == user_id)),
+    )
+
+    consent_grants = query_results[0].scalars().all()
+    advisor_sessions = query_results[1].scalars().all()
+    tax_plans = query_results[2].scalars().all()
+    tax_documents = query_results[3].scalars().all()
+    action_intents = query_results[4].scalars().all()
+    notifications = query_results[5].scalars().all()
+
+    return {
+        **financial_context,
+        "consent_grants": [
+            {
+                "id": str(g.id),
+                "scopes": g.scopes,
+                "purpose": g.purpose,
+                "status": g.status.value,
+                "source": g.source,
+                "created_at": g.created_at.isoformat() if g.created_at else None,
+            }
+            for g in consent_grants
+        ],
+        "advisor_sessions": [
+            {
+                "id": str(s.id),
+                "skill_name": s.skill_name,
+                "status": s.status.value,
+                "messages": _filter_user_visible_messages(s.messages),
+                "created_at": s.created_at.isoformat() if s.created_at else None,
+            }
+            for s in advisor_sessions
+        ],
+        "tax_plans": [
+            {
+                "id": str(tp.id),
+                "name": tp.name,
+                "household_name": tp.household_name,
+                "status": tp.status,
+                "created_at": tp.created_at.isoformat() if tp.created_at else None,
+            }
+            for tp in tax_plans
+        ],
+        "tax_documents": [
+            {
+                "id": str(td.id),
+                "original_filename": td.original_filename,
+                "document_type": td.document_type,
+                "tax_year": td.tax_year,
+                "status": td.status,
+                "created_at": td.created_at.isoformat() if td.created_at else None,
+            }
+            for td in tax_documents
+        ],
+        "action_intents": [
+            {
+                "id": str(ai.id),
+                "intent_type": ai.intent_type.value,
+                "status": ai.status.value,
+                "title": ai.title,
+                "description": ai.description,
+                "payload": ai.payload,
+                "impact_summary": ai.impact_summary,
+                "created_at": ai.created_at.isoformat() if ai.created_at else None,
+            }
+            for ai in action_intents
+        ],
+        "notifications": [
+            {
+                "id": str(n.id),
+                "type": n.type.value,
+                "severity": n.severity.value,
+                "title": n.title,
+                "message": n.message,
+                "is_read": n.is_read,
+                "created_at": n.created_at.isoformat() if n.created_at else None,
+            }
+            for n in notifications
+        ],
+        "export_metadata": {
+            "exported_at": datetime.now(timezone.utc).isoformat(),
+            "format_version": "1.0",
+        },
+    }
+
+
+async def delete_user_account(user_id: uuid.UUID, session: AsyncSession) -> None:
+    """Delete a user account and all associated data.
+
+    Steps:
+    1. Verify the user exists (raise ValueError if not).
+    2. Revoke active provider connections (Plaid/SnapTrade) so external
+       access tokens are invalidated.
+    3. Delete the user row. Because the User model defines
+       cascade="all, delete-orphan" on all relationships and all child
+       tables use ``ondelete="CASCADE"`` foreign keys, the database
+       handles the rest.
+    4. Commit the transaction.
+    """
+    # 1. Verify user exists
+    user_result = await session.execute(
+        select(User).where(User.id == user_id)
+    )
+    user = user_result.scalar_one_or_none()
+    if user is None:
+        raise ValueError(f"User {user_id} not found")
+
+    # 2. Revoke external provider connections
+    conn_result = await session.execute(
+        select(Connection).where(Connection.user_id == user_id)
+    )
+    connections = conn_result.scalars().all()
+
+    providers: dict[str, PlaidProvider | SnapTradeProvider] = {}
+    for connection in connections:
+        try:
+            if connection.provider == "plaid":
+                if "plaid" not in providers:
+                    providers["plaid"] = PlaidProvider()
+                await providers["plaid"].delete_connection(connection)
+            elif connection.provider == "snaptrade":
+                if "snaptrade" not in providers:
+                    providers["snaptrade"] = SnapTradeProvider()
+                await providers["snaptrade"].delete_connection(connection)
+        except Exception:
+            logger.warning(
+                "Failed to revoke %s connection %s for user %s, proceeding with deletion",
+                connection.provider,
+                connection.id,
+                user_id,
+                exc_info=True,
+            )
+
+    # 3. Delete user row — cascades handle all child records
+    await session.delete(user)
+
+    # 4. Commit
+    await session.commit()
+
+    logger.info("Deleted user account %s with %d connections revoked", user_id, len(connections))
