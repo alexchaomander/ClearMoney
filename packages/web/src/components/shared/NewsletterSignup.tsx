@@ -60,7 +60,6 @@ export function NewsletterSignup({
       // Reset after 5 seconds
       setTimeout(() => setStatus("idle"), 5000);
     } catch (err: any) {
-      console.error("Newsletter signup error:", err);
       setStatus("error");
       setErrorMsg(err.message || "Something went wrong.");
       setTimeout(() => setStatus("idle"), 3000);

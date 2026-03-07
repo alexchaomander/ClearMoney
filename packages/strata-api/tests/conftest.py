@@ -6,6 +6,7 @@ os.environ.setdefault(
     "STRATA_CREDENTIALS_ENCRYPTION_KEY",
     "mkAPXR0pVobXiUOdyOROwMx-Cn_o17eqzjjHUBWUURM=",  # test-only key
 )
+os.environ.setdefault("STRATA_DEBUG", "true")
 os.environ.setdefault("STRATA_ENABLE_BACKGROUND_JOBS", "false")
 os.environ.setdefault("STRATA_AUTO_CONSENT_ON_MISSING", "true")
 

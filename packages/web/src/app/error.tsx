@@ -13,7 +13,6 @@ export default function Error({
 }) {
   useEffect(() => {
     Sentry.captureException(error);
-    console.error(error);
   }, [error]);
 
   return (

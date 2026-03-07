@@ -88,8 +88,8 @@ export default function ActionLabPage() {
     try {
       startExecution(activeIntent.id);
       setActiveIntent(null);
-    } catch (err) {
-      console.error("Failed to execute intent:", err);
+    } catch {
+      // Intent execution failed — UI state is reset below
     } finally {
       setIsExecuting(false);
     }
@@ -324,9 +324,7 @@ export default function ActionLabPage() {
                   desc: "Move your entire financial history and context between any AI agent with a single thumbprint.",
                   action: {
                     label: exportPassport.isPending ? "Generating..." : "Export Passport (FPP v1)",
-                    onClick: () => exportPassport.mutate(undefined, {
-                      onError: (error) => console.error("Passport export failed:", error)
-                    }),
+                    onClick: () => exportPassport.mutate(),
                     disabled: exportPassport.isPending
                   }
                 },
