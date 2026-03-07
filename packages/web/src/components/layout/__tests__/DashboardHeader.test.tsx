@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 
 import { DashboardHeader } from "../DashboardHeader";
 import { ThemeProvider } from "../../theme-provider";
+import { PrivacyProvider } from "@/lib/privacy-context";
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,
@@ -32,7 +33,9 @@ describe("DashboardHeader", () => {
   it("renders navigation items and branding", () => {
     render(
       <ThemeProvider>
-        <DashboardHeader />
+        <PrivacyProvider>
+          <DashboardHeader />
+        </PrivacyProvider>
       </ThemeProvider>
     );
 
