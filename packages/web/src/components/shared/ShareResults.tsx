@@ -66,8 +66,8 @@ export function ShareResults({
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
+    } catch {
+      // Clipboard API may not be available
     }
   };
 
@@ -101,8 +101,7 @@ export function ShareResults({
           url: shareUrl,
         });
       } catch {
-        // User cancelled or error
-        console.log("Share cancelled");
+        // User cancelled share dialog
       }
     }
     setShowMenu(false);

@@ -1,0 +1,9 @@
+# Gitleaks configuration
+# Allow known historical commits that contain secrets which have been rotated.
+# These entries will be removed once git history is scrubbed.
+
+[allowlist]
+  commits = [
+    "eeca6385bb180dbb3693dc6cb0c326e1d99050f7",
+  ]
+  description = "Historical commit with encryption key (rotated, pending history scrub)"

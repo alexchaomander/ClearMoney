@@ -13,6 +13,16 @@ export default defineConfig({
       "**/.{idea,git,cache,output,temp}/**",
       "tests/**",
     ],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "lcov"],
+      exclude: [
+        "node_modules/",
+        "src/test/",
+        "**/*.d.ts",
+        "tests/",
+      ],
+    },
   },
   resolve: {
     alias: {

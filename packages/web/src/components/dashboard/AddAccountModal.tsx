@@ -176,9 +176,8 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
         setPropertySearchError("No properties found for this address");
       }
       setReSearchResults(results);
-    } catch (err) {
+    } catch {
       setPropertySearchError("Property search failed. Please try again.");
-      console.error("Search failed", err);
     }
   };
 
@@ -208,9 +207,8 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
         setVehicleSearchError("Vehicle not found. Check the VIN and try again.");
       }
       setVSearchResults(results);
-    } catch (err) {
+    } catch {
       setVehicleSearchError("Vehicle search failed. Please try again.");
-      console.error("Vehicle search failed", err);
     }
   };
 

@@ -99,18 +99,18 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _validate_production_auth(self) -> "Settings":
-        import logging
-        import warnings
-
         if not self.debug and not self.clerk_pem_public_key:
-            msg = (
-                "STRATA_CLERK_PEM_PUBLIC_KEY is not set. "
-                "The API is running with the X-Clerk-User-Id header bypass active. "
+            raise ValueError(
+                "STRATA_CLERK_PEM_PUBLIC_KEY must be set in production. "
+                "The API refuses to start with the X-Clerk-User-Id header bypass active. "
                 "Set STRATA_CLERK_PEM_PUBLIC_KEY to enable JWT validation, "
-                "or set STRATA_DEBUG=true to suppress this warning."
+                "or set STRATA_DEBUG=true for local development."
             )
-            logging.getLogger("app.core.config").warning(msg)
-            warnings.warn(msg, stacklevel=2)
+        if not self.debug and self.auto_consent_on_missing:
+            raise ValueError(
+                "STRATA_AUTO_CONSENT_ON_MISSING must be false in production. "
+                "Auto-consenting all scopes is only intended for development."
+            )
         return self
 
 

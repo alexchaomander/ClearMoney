@@ -34,6 +34,9 @@ class SessionStore(ABC):
     @abstractmethod
     async def close(self) -> None: ...
 
+    @abstractmethod
+    async def ping(self) -> bool: ...
+
 
 class InMemorySessionStore(SessionStore):
     """Simple dict-backed store for local development."""
@@ -61,6 +64,9 @@ class InMemorySessionStore(SessionStore):
     async def close(self) -> None:
         self._store.clear()
 
+    async def ping(self) -> bool:
+        return True
+
 
 class RedisSessionStore(SessionStore):
     """Redis-backed store for production."""
@@ -84,6 +90,9 @@ class RedisSessionStore(SessionStore):
 
     async def close(self) -> None:
         await self._redis.aclose()
+
+    async def ping(self) -> bool:
+        return await self._redis.ping()
 
 
 def create_session_store(redis_url: str = "") -> SessionStore:
