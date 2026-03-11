@@ -325,7 +325,7 @@ What is only partially complete and must not be treated as finished:
 
 **Goal: Build the foundation for 10/10 agent-context alignment while still closing core market gaps.**
 
-#### 1.0 Context Operating System Foundation (P0)
+#### 1.1 Context Operating System Foundation (P0)
 
 | Workstream | Detailed Deliverables |
 |------------|-----------------------|
@@ -341,7 +341,7 @@ What is only partially complete and must not be treated as finished:
 | Deterministic computation boundary | Define exactly which outputs must be computed by deterministic services versus LLM-assisted synthesis. |
 | Connectivity resilience layer | Add continuity states for aggregator broken, stale, revoked, partially covered, manually substituted, and screen-assisted recovery. |
 
-**Phase 1.0 acceptance criteria**
+**Phase 1.1 acceptance criteria**
 - Every recommendation can reference stable context node IDs rather than only serialized blobs
 - Top 10 key dashboard metrics have live provenance payloads available from the API
 - Every advisor session records which skill version, heuristic version, and policy version were used
@@ -350,7 +350,7 @@ What is only partially complete and must not be treated as finished:
 - Every high-impact recommendation declares which claims are deterministic, inferred, or speculative
 - The product remains useful when a major aggregator connection is broken, revoked, or unsupported
 
-#### 1.0.1 User Correction and Feedback Loop (P0)
+#### 1.1.1 User Correction and Feedback Loop (P0)
 
 | Capability | Detailed Deliverables |
 |------------|-----------------------|
@@ -361,12 +361,12 @@ What is only partially complete and must not be treated as finished:
 | Post-correction measurement | Track whether future recommendations improved in the corrected domain |
 | Preference and behavior capture | Distinguish between "the model was wrong" and "the user intentionally prefers a non-optimal path" so the system learns style as well as facts |
 
-**Phase 1.0.1 acceptance criteria**
+**Phase 1.1.1 acceptance criteria**
 - Users can dispute at least metrics, transactions, derived spending, debt classification, and recommendation rationale
 - Each correction event can be traced to downstream recomputation or explicit dismissal
 - We can measure correction resolution time and repeat-error rate by domain
 
-#### 1.0.2 Live "Show the Math" Upgrade (P0)
+#### 1.1.2 Live "Show the Math" Upgrade (P0)
 
 | Capability | Detailed Deliverables |
 |------------|-----------------------|
@@ -375,12 +375,12 @@ What is only partially complete and must not be treated as finished:
 | Formula versioning | Every formula used in a metric trace is versioned and queryable |
 | User-facing gaps | Trace UI explicitly shows missing sources, stale dependencies, unresolved conflicts, and manual overrides |
 
-**Phase 1.0.2 acceptance criteria**
+**Phase 1.1.2 acceptance criteria**
 - The dashboard no longer relies on hard-coded methodology for the top financial metrics
 - Users can see which exact accounts, transactions, or memory fields drove a metric
 - Confidence can be explained numerically and reproduced server-side
 
-#### 1.1 Physical & Alternative Asset Tracking (P0)
+#### 1.2 Physical & Alternative Asset Tracking (P0)
 
 | Task | Details |
 |------|---------|
@@ -389,7 +389,7 @@ What is only partially complete and must not be treated as finished:
 | Manual asset registry | Structured entry for jewelry, art, collectibles, wine, crypto hardware wallets with custom valuation methods |
 | Net worth recalculation | Include all asset classes in net worth, allocation charts, and trace calculations |
 
-#### 1.2 Multi-Channel AI Access (P0)
+#### 1.3 Multi-Channel AI Access (P0)
 
 | Channel | Implementation | Priority |
 |---------|---------------|----------|
@@ -399,7 +399,7 @@ What is only partially complete and must not be treated as finished:
 | Web Push | Browser push notifications for alerts, market events, action reminders | P0 |
 | Mobile PWA | Service worker, app manifest, offline-capable dashboard, installable on iOS/Android | P1 |
 
-#### 1.2.1 Advisor Continuity and Briefing Layer (P0)
+#### 1.3.1 Advisor Continuity and Briefing Layer (P0)
 
 | Capability | Detailed Deliverables |
 |------------|-----------------------|
@@ -408,7 +408,7 @@ What is only partially complete and must not be treated as finished:
 | Session continuity | Voice, SMS, dashboard, and email all reference the same current advisory state |
 | Priority inbox | Surface the top 3-5 items that matter instead of forcing users to query the system manually |
 
-#### 1.3 Proactive Alert System (P1)
+#### 1.4 Proactive Alert System (P1)
 
 | Alert Type | Trigger |
 |------------|---------|
@@ -418,7 +418,7 @@ What is only partially complete and must not be treated as finished:
 | Tax alerts | Tax-loss harvesting opportunities, quarterly estimate due dates, wash sale warnings |
 | Founder alerts | Runway below 6 months, commingling detected, burn rate spike |
 
-#### 1.4 Tax Document Ingestion (P1)
+#### 1.5 Tax Document Ingestion (P1)
 
 | Feature | Details |
 |---------|---------|
@@ -427,13 +427,13 @@ What is only partially complete and must not be treated as finished:
 | Tax optimization report | AI analysis comparing current strategy to optimal, with specific dollar amounts |
 | YoY comparison | Track tax efficiency improvements across years |
 
-#### 1.5 Web Research in Advisor (P1)
+#### 1.6 Web Research in Advisor (P1)
 
 - Equip AI advisor with web search tool for real-time market data, news, and research
 - Integrate financial data APIs (Alpha Vantage, Polygon, FRED) for live pricing and economic data
 - Enable scenario analysis to pull real-world data (current rates, market conditions, inflation)
 
-#### 1.5.1 Source Curation and Consumer "Bloomberg Terminal" Discipline (P0)
+#### 1.6.1 Source Curation and Consumer "Bloomberg Terminal" Discipline (P0)
 
 | Capability | Detailed Deliverables |
 |------------|-----------------------|
@@ -444,7 +444,7 @@ What is only partially complete and must not be treated as finished:
 | Consumer Bloomberg discipline | Position ClearMoney as a high-signal personal finance command system, not a noisy wrapper around too many APIs |
 | Competitor / company monitoring | Limit to founder-relevant and portfolio-relevant use cases with explicit reliability and actionability standards |
 
-#### 1.5.2 Compliance and Trust Architecture (P0)
+#### 1.6.2 Compliance and Trust Architecture (P0)
 
 | Capability | Detailed Deliverables |
 |------------|-----------------------|
@@ -454,7 +454,7 @@ What is only partially complete and must not be treated as finished:
 | Password and credential minimization | Prefer tokenized aggregators and delegated auth; avoid raw credential handling wherever possible |
 | Audit-ready controls | Produce logs and artifacts suitable for compliance review and partner due diligence |
 
-#### 1.6 Domain Knowledge Registry (P0)
+#### 1.7 Domain Knowledge Registry (P0)
 
 | Capability | Detailed Deliverables |
 |------------|-----------------------|
@@ -465,15 +465,13 @@ What is only partially complete and must not be treated as finished:
 | Research linkage | Each rule references internal research or cited source material and has a review cadence |
 | Behavioral overlays | Encode when behaviorally realistic recommendations should override purely mathematical optimization |
 
-#### 1.7 Regional / Rails Strategy (P1)
+#### 1.8 Regional / Rails Strategy (P1)
 
 | Market | Implication |
 |--------|-------------|
 | United States | Rich advice market, fragmented execution, trust-heavy rollout, draft-first posture |
 | Brazil / Pix / Open Finance-like markets | Better candidate for earlier action execution due to stronger rails and regulated infrastructure |
 | EU / UK / AU open banking ecosystems | Evaluate for medium-term expansion where permissions and payment rails are cleaner |
-
-**Phase 1 Success Metrics:**
 
 **Phase 1 Success Metrics:**
 - Canonical context graph v1 deployed
