@@ -30,7 +30,7 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 
 **Goal:** Build a deterministic, trust-scored, resilient context layer that can support a true financial chief-of-staff experience.
 
-### 1.0 Deterministic Financial Core
+### 1.1 Deterministic Financial Core
 
 - [ ] **Computation Boundary Spec**:
     - Define which outputs are deterministic, inferred, speculative, or explanatory.
@@ -44,7 +44,7 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 - [ ] **Trace Labeling**:
     - Extend traces to show deterministic vs inferred components in API and UI.
 
-### 1.1 Canonical Context Graph
+### 1.2 Canonical Context Graph
 
 - [ ] **Graph Schema v1**:
     - People, households, entities, accounts, assets, liabilities, income, obligations, goals, documents, observations, recommendations, actions, corrections, reviews.
@@ -55,7 +55,7 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 - [ ] **Invalidation Rules**:
     - New syncs, document uploads, user edits, and reviewer actions trigger targeted recomputation.
 
-### 1.2 Provenance and Live "Show the Math"
+### 1.3 Provenance and Live "Show the Math"
 
 - [ ] **Provenance API**:
     - Build API endpoints for metric-level lineage.
@@ -69,7 +69,7 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 - [ ] **Confidence Decomposition**:
     - Explain confidence from freshness, coverage, source tier, conflict count, and inference depth.
 
-### 1.3 Connectivity Resilience
+### 1.4 Connectivity Resilience
 
 - [ ] **Aggregator Failure Handling**:
     - Add connection-health modeling and degraded-confidence behavior.
@@ -80,7 +80,7 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 - [ ] **Continuity UX**:
     - The advisor should stay useful when one or more account connections fail.
 
-### 1.4 Privacy, Trust, and Deployment Modes
+### 1.5 Privacy, Trust, and Deployment Modes
 
 - [ ] **Trust Mode Model**:
     - Hosted default
@@ -92,7 +92,7 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 - [ ] **Consent by Capability**:
     - Align scopes with actual product capabilities, not generic read/write buckets.
 
-### 1.5 Behavioral and Preference Context
+### 1.6 Behavioral and Preference Context
 
 - [ ] **Behavior Profile v1**:
     - Risk style
@@ -103,7 +103,7 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 - [ ] **Preference vs Error Distinction**:
     - Separate user preference signals from actual factual corrections.
 
-### 1.1 The "Beyond Mint" Data Connectors (DIY)
+### 1.7 The "Beyond Mint" Data Connectors (DIY)
 Instead of waiting for aggregators, we build lightweight, high-value connectors for modern assets.
 
 - [ ] **Equity Comp (RSUs/Options)**:
@@ -118,7 +118,7 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
     - Build UI for Private Equity, Angel Investments, and Collectibles.
     - Implement "Appraisal History" to track value over time.
 
-### 1.2 The Unified Context Graph (Mapping)
+### 1.8 The Unified Context Graph (Mapping)
 - [ ] **Schema Normalization**: Ensure that data from Plaid (Banks), SnapTrade (Brokerages), and Alchemy (Crypto) all map to the unified `Strata` graph model.
 - [ ] **Data Freshness Engine**: Implement a background worker to sync different providers at different cadences (e.g., Crypto: 5m, Banks: 6h).
 - [ ] **Normalization Logic**: Map fragmented merchant strings from Plaid into clean, categorized entities using an LLM-based categorization service.
