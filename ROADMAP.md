@@ -1,6 +1,6 @@
 # ClearMoney Roadmap
 
-*Last updated: February 2026*
+*Last updated: March 11, 2026*
 
 ---
 
@@ -66,6 +66,100 @@ CFO Silvia (Pompliano / ProCap Financial) is our closest competitor. They launch
 
 ---
 
+## Agent-Context Alignment: Path to 10/10
+
+The next stage of ClearMoney is not "more AI features." It is the deliberate construction of a **Context Operating System** that turns fragmented financial data, user corrections, domain heuristics, policies, and provenance into a maintained substrate for every recommendation and action.
+
+Today, ClearMoney already has the beginnings of this system:
+- Structured financial context assembled from accounts, memory, holdings, transactions, physical assets, and freshness metadata
+- Derived memory fields with change history
+- Skill-specific advisor prompts with required context
+- Decision traces, guardrails, and consent-aware access
+
+To reach a true 10/10 alignment with the strongest context-engineering principles, we must close four gaps:
+
+| Gap | Current State | 10/10 Standard |
+|-----|---------------|----------------|
+| **Living context** | Context is assembled well, but much of it is rebuilt at request time and only partially promoted into durable memory | Every important fact, inference, exception, and override has a durable home, owner, and lifecycle |
+| **Runtime provenance** | Recommendation traces are strong, but many metric explanations remain static methodology rather than live per-user lineage | Every number, recommendation, and action can point to exact inputs, transforms, timestamps, assumptions, and policy checks |
+| **Correction loops** | Users can update memory and traces are stored, but mistakes and overrides are not yet systematically folded back into the context layer | User corrections, advisor misses, and ops reviews automatically improve future context and reasoning |
+| **Institutional knowledge** | Skills and deterministic rules exist, but house knowledge is still thin and fragmented | ClearMoney has a governed, versioned corpus of heuristics, exception policies, definitions, and reviewable playbooks |
+
+### 10/10 Alignment Criteria
+
+ClearMoney reaches 10/10 alignment when:
+
+1. Every agent call is grounded in a canonical financial context graph rather than ad hoc prompt assembly.
+2. Every user-facing metric has live provenance, not static explanatory copy.
+3. Every recommendation records not just rationale, but the exact data lineage, rule lineage, policy lineage, and confidence decomposition.
+4. Every user correction produces a durable context update, with clear source attribution and downstream invalidation.
+5. Every important domain heuristic lives in a versioned registry, with review history and test coverage.
+6. Every stale, missing, conflicting, or low-confidence input is surfaced explicitly to both the agent and the user.
+7. Every automated or drafted action is backed by context completeness thresholds and policy checks.
+8. Every context object can be exported, shared, and ported with machine-readable semantics.
+
+### Core Program: Build the ClearMoney Context Operating System
+
+This program cuts across product, data, AI, trust, and platform. It is now a P0 alongside execution and founder tooling.
+
+**Workstream A: Canonical Context Graph**
+- Formalize a canonical schema for assets, liabilities, income, tax posture, entities, obligations, goals, preferences, policies, consents, documents, and derived observations
+- Add stable entity IDs and relationship edges so every recommendation references the same object graph
+- Distinguish raw facts, derived facts, inferred facts, and user-declared facts at the schema level
+- Add per-node ownership metadata: source system, ingestion time, freshness SLA, confidence, reviewer status, and invalidation rules
+
+**Workstream B: Provenance and Lineage**
+- Replace static "show the math" traces on key metrics with live, per-user provenance trees
+- Store formula versions, transformation steps, source records, timestamps, and confidence contributors for every computed metric
+- Make provenance queryable via API for dashboard metrics, advisor answers, exports, and support tooling
+
+**Workstream C: Correction and Learning Loops**
+- Capture user corrections as first-class objects, not just generic memory writes
+- Add "why this was wrong" labels for advisor misses, support escalations, and overridden recommendations
+- Feed accepted corrections back into derivation rules, categorization models, and prompt-time context assembly
+- Track whether future recommendations improved after a correction event
+
+**Workstream D: House Knowledge Registry**
+- Build a governed registry of heuristics, planning rules, scenario templates, exception policies, and review playbooks
+- Version every rule and skill with effective dates, owner, evidence, and test cases
+- Separate broad educational guidance from ClearMoney-specific execution policies and founder-specific house views
+
+**Workstream E: Context Quality and Eval**
+- Define completeness, freshness, consistency, and conflict metrics for context
+- Block or degrade recommendations when context quality falls below policy thresholds
+- Build evaluation suites for recommendation quality, trace fidelity, provenance completeness, and correction handling
+
+**Workstream F: Human Review and Trust**
+- Create ops tooling to inspect context nodes, lineage, conflicts, and stale dependencies
+- Add reviewer workflows for sensitive inferences: tax posture, equity assumptions, entity classification, and commingling decisions
+- Publish methodology version history and confidence methodology as part of the trust layer
+
+**Workstream G: Deterministic Financial Core**
+- Keep the LLM layer probabilistic only at the explanation and orchestration layer, not the numerical truth layer
+- Build deterministic engines for taxes, runway, debt payoff, allocation drift, liability prioritization, and recommendation readiness
+- Require every high-impact recommendation to identify which parts are deterministic, inferred, or speculative
+
+**Workstream H: Connectivity Resilience**
+- Treat aggregators as unreliable dependencies and design for revocations, broken auth, missing coverage, and degraded syncs
+- Blend aggregator data, uploaded documents, manual assertions, and screen-/portal-assisted recovery into one continuity model
+- Make data continuity and recovery a visible product feature instead of a hidden support problem
+
+**Workstream I: Trust and Deployment Modes**
+- Support hosted, private workspace, and future local-first / sovereign deployment modes for sensitive users and partners
+- Design execution isolation, skill sandboxing, and explicit filesystem/network boundaries for agents touching sensitive data
+- Add a trust score and capability score to every integration and external source
+
+**Workstream J: Behavioral and Preference Intelligence**
+- Capture not only what the user has, but how they decide: risk style, decision latency, override patterns, planning cadence, and aversions
+- Make recommendations adapt to behavioral context instead of assuming purely rational optimization
+
+**Workstream K: Regional Execution Strategy**
+- Separate advisory markets from execution markets
+- Prioritize jurisdictions with strong open-finance rails for action-layer expansion
+- Treat the U.S. as a trust-heavy, fragmented market and regions like Brazil as earlier action-execution candidates where regulated rails are stronger
+
+---
+
 ## Strategic Pillars
 
 ### Pillar 1: Radical Transparency (Existing Moat -- Deepen)
@@ -78,7 +172,21 @@ Every number on ClearMoney is auditable. This is not a feature; it is the produc
 - **Methodology Audit Log**: Public changelog of every calculation change
 - **Independence Reports**: Quarterly proof that recommendations != highest payout
 
-### Pillar 2: Multi-Surface Intelligence (Close the Gap)
+### Pillar 2: Context Operating System (New P0)
+
+ClearMoney must become the best-maintained financial context system in the market. This is the foundation for trustworthy agents, not a backend detail.
+
+- **Canonical Financial Graph**: One semantic model for facts, relationships, and derived observations across personal, founder, and entity finance
+- **Context Registry**: Versioned definitions for metrics, heuristics, assumptions, exception policies, and skill prerequisites
+- **Lineage Everywhere**: Every metric and recommendation links back to exact inputs, transforms, timestamps, and policy checks
+- **Correction Engine**: User edits, overrides, and support resolutions become durable context improvements
+- **Context Quality Gates**: Recommendation strength depends on completeness, freshness, conflict level, and evidence quality
+- **Human-in-the-Loop Review**: High-risk inferences can be reviewed, approved, disputed, or reverted with audit history
+- **Deterministic Financial Core**: Numerical truth comes from tested engines, not model improvisation
+- **Connectivity Resilience**: The system remains useful even when Plaid/Yodlee/SnapTrade break or revoke access
+- **Trust-Scored Infrastructure Layer**: APIs, skills, connectors, and sources are graded before they are allowed to influence decisions
+
+### Pillar 3: Multi-Surface Intelligence (Close the Gap)
 
 Meet users where they are, not just in a dashboard.
 
@@ -87,8 +195,10 @@ Meet users where they are, not just in a dashboard.
 - **Email**: Forward financial documents, ask questions, get analysis
 - **Web Dashboard**: Full institutional-grade experience
 - **Mobile (PWA -> Native)**: On-the-go access to alerts and key metrics
+- **Advisor Continuity**: ClearMoney behaves like a persistent financial chief of staff, not a stateless chatbot
+- **Ambient Briefings**: Daily/weekly summaries, watchlists, and "what changed since last time" digests across channels
 
-### Pillar 3: Founder-First Financial OS (Niche Dominance)
+### Pillar 4: Founder-First Financial OS (Niche Dominance)
 
 No competitor serves founders. This is our beachhead.
 
@@ -98,7 +208,7 @@ No competitor serves founders. This is our beachhead.
 - **Subscription Audit**: SaaS spend analysis with ROI scoring
 - **Cap Table Awareness**: Equity comp (RSUs, options, SAFEs) integrated into net worth
 
-### Pillar 4: Action Execution (Our Biggest Moat)
+### Pillar 5: Action Execution (Our Biggest Moat)
 
 Silvia tells you what to do. We do it.
 
@@ -107,8 +217,10 @@ Silvia tells you what to do. We do it.
 - **War Room**: Queue, review, authorize, and execute with biometric approval
 - **Ghost Navigation**: Step-by-step guides for legacy bank UIs
 - **Agent Execution**: Autonomous rebalancing within user-defined guardrails
+- **Mandate-Based Controls**: The agent can only observe, draft, or act within user-defined authority
+- **Interaction Layer**: Where APIs do not exist, ClearMoney can guide or operate brittle legacy portals with explicit approval and audit
 
-### Pillar 5: Comprehensive Wealth Picture (Parity + Beyond)
+### Pillar 6: Comprehensive Wealth Picture (Parity + Beyond)
 
 Track everything, not just financial accounts.
 
@@ -119,8 +231,9 @@ Track everything, not just financial accounts.
 - **Equity Compensation**: RSU vesting schedules, option exercise modeling, AMT impact
 - **Debt Complete Picture**: Student loans, mortgages, auto loans, credit cards with payoff strategies
 - **Tax Documents**: Upload W-2s, 1099s, K-1s, tax returns for comprehensive tax planning
+- **Cross-Border / High-Income Complexity**: Families with multiple jurisdictions, entities, accounts, and reporting obligations
 
-### Pillar 6: Publication & Distribution Engine (Organic Growth Moat)
+### Pillar 7: Publication & Distribution Engine (Organic Growth Moat)
 
 ClearMoney's publication arm is our primary distribution channel. Silvia relies on Pompliano's personal brand for distribution. We build organic, compounding reach through independent financial content that earns trust and drives product adoption.
 
@@ -184,7 +297,8 @@ This content drives top-of-funnel awareness (SEO + social) and builds trust that
 What we've already built:
 
 - [x] Unified dashboard with net worth, allocation, and holdings
-- [x] "Show the Math" decision traces on all metrics
+- [x] Initial financial context assembly spanning memory, accounts, holdings, transactions, and freshness
+- [x] Initial decision trace system for recommendations and advisor analyses
 - [x] Founder Operating Room (runway, commingling, tax shields, subscription audit)
 - [x] AI Advisor with specialized financial skills (Claude-based)
 - [x] War Room with action intent lifecycle and switch kit generation
@@ -198,11 +312,73 @@ What we've already built:
 - [x] Light/dark mode with Strata design system
 - [x] Blog infrastructure with editorial content
 
+What is only partially complete and must not be treated as finished:
+
+- [ ] Live provenance-backed "show the math" on all key metrics
+- [ ] Durable correction loops from user override -> improved future reasoning
+- [ ] Versioned registry for heuristics, exception policies, and context definitions
+- [ ] Context quality scoring with hard gates for low-confidence advice
+
 ---
 
-### Phase 1: Competitive Parity + Multi-Channel (Months 1-3)
+### Phase 1: Context OS Foundation + Competitive Parity (Months 1-3)
 
-**Goal: Close every gap Silvia has on us. Launch multi-channel access.**
+**Goal: Build the foundation for 10/10 agent-context alignment while still closing core market gaps.**
+
+#### 1.0 Context Operating System Foundation (P0)
+
+| Workstream | Detailed Deliverables |
+|------------|-----------------------|
+| Canonical context schema | Define the v1 graph for people, households, legal entities, accounts, positions, debts, income streams, tax documents, goals, policies, consents, documents, observations, and recommendations. Split raw facts vs. derived facts vs. inferred facts vs. user assertions. |
+| Context node metadata | Every node and edge gets `source`, `source_type`, `collected_at`, `effective_at`, `freshness_sla`, `confidence`, `review_status`, `owner`, `supersedes`, and `invalidates` metadata. |
+| Context registry | Add versioned registries for metric definitions, heuristic rules, assumptions, prompt fragments, execution policies, and skill prerequisites. Every registry item gets owner, status, evidence, and tests. |
+| Provenance service | Build a backend provenance service that can answer: "why is this number what it is?" with the exact chain of inputs, transforms, and timestamps. |
+| Trace schema v2 | Expand decision traces to include data lineage, formula lineage, skill version, rule version, policy version, and confidence decomposition. |
+| Context quality model | Introduce `completeness_score`, `freshness_score`, `conflict_score`, `evidence_score`, and `recommendation_readiness` for every major advisory domain. |
+| Invalidation model | Define how new documents, user edits, provider syncs, and reviewer actions invalidate stale derivations and trigger recomputation. |
+| Privacy architecture modes | Offer clear trust modes: hosted default, hardened private workspace, and future local-first / personal vault options for users who want tighter control over sensitive financial context. |
+| Source quality tiers | Classify sources into authoritative, user-declared, inferred, speculative, and external research tiers so the system never presents weak data with false certainty. |
+| Deterministic computation boundary | Define exactly which outputs must be computed by deterministic services versus LLM-assisted synthesis. |
+| Connectivity resilience layer | Add continuity states for aggregator broken, stale, revoked, partially covered, manually substituted, and screen-assisted recovery. |
+
+**Phase 1.0 acceptance criteria**
+- Every recommendation can reference stable context node IDs rather than only serialized blobs
+- Top 10 key dashboard metrics have live provenance payloads available from the API
+- Every advisor session records which skill version, heuristic version, and policy version were used
+- Recommendation generation is degraded or blocked when context quality falls below configured thresholds
+- Users can see whether a fact came from an authoritative integration, a document extraction, user input, or lower-confidence external research
+- Every high-impact recommendation declares which claims are deterministic, inferred, or speculative
+- The product remains useful when a major aggregator connection is broken, revoked, or unsupported
+
+#### 1.0.1 User Correction and Feedback Loop (P0)
+
+| Capability | Detailed Deliverables |
+|------------|-----------------------|
+| Correction object model | Add first-class objects for corrections, disputes, overrides, confirmations, and suppressions with domain-specific types |
+| UX for correction | Let users mark a metric, categorization, assumption, or recommendation as wrong, stale, incomplete, or missing context |
+| Reviewer workflow | Support agents and internal ops can triage correction events, resolve them, and attach root-cause labels |
+| Rule feedback ingestion | Corrections can be routed into categorization retraining, heuristic rule changes, prompt updates, or source suppression |
+| Post-correction measurement | Track whether future recommendations improved in the corrected domain |
+| Preference and behavior capture | Distinguish between "the model was wrong" and "the user intentionally prefers a non-optimal path" so the system learns style as well as facts |
+
+**Phase 1.0.1 acceptance criteria**
+- Users can dispute at least metrics, transactions, derived spending, debt classification, and recommendation rationale
+- Each correction event can be traced to downstream recomputation or explicit dismissal
+- We can measure correction resolution time and repeat-error rate by domain
+
+#### 1.0.2 Live "Show the Math" Upgrade (P0)
+
+| Capability | Detailed Deliverables |
+|------------|-----------------------|
+| Runtime metric traces | Replace static frontend methodology cards with live trace payloads for net worth, total assets, runway, savings rate, tax-advantaged ratio, and concentration risk |
+| Confidence methodology | Compute confidence from freshness, source coverage, conflict count, and inference depth instead of hand-authored static percentages |
+| Formula versioning | Every formula used in a metric trace is versioned and queryable |
+| User-facing gaps | Trace UI explicitly shows missing sources, stale dependencies, unresolved conflicts, and manual overrides |
+
+**Phase 1.0.2 acceptance criteria**
+- The dashboard no longer relies on hard-coded methodology for the top financial metrics
+- Users can see which exact accounts, transactions, or memory fields drove a metric
+- Confidence can be explained numerically and reproduced server-side
 
 #### 1.1 Physical & Alternative Asset Tracking (P0)
 
@@ -222,6 +398,15 @@ What we've already built:
 | Email | Inbound email parsing (SendGrid/Postmark), forward documents for analysis, receive weekly digests | P1 |
 | Web Push | Browser push notifications for alerts, market events, action reminders | P0 |
 | Mobile PWA | Service worker, app manifest, offline-capable dashboard, installable on iOS/Android | P1 |
+
+#### 1.2.1 Advisor Continuity and Briefing Layer (P0)
+
+| Capability | Detailed Deliverables |
+|------------|-----------------------|
+| Persistent advisor memory | Maintain open questions, pending recommendations, recent changes, and user goals across channels |
+| Morning / weekly briefings | Summaries of what changed, what matters now, and what needs review |
+| Session continuity | Voice, SMS, dashboard, and email all reference the same current advisory state |
+| Priority inbox | Surface the top 3-5 items that matter instead of forcing users to query the system manually |
 
 #### 1.3 Proactive Alert System (P1)
 
@@ -248,8 +433,56 @@ What we've already built:
 - Integrate financial data APIs (Alpha Vantage, Polygon, FRED) for live pricing and economic data
 - Enable scenario analysis to pull real-world data (current rates, market conditions, inflation)
 
+#### 1.5.1 Source Curation and Consumer "Bloomberg Terminal" Discipline (P0)
+
+| Capability | Detailed Deliverables |
+|------------|-----------------------|
+| Authoritative-source registry | Maintain an explicit registry of approved financial, market, tax, and research sources with confidence and permitted use cases |
+| Data quality labeling | Tag all external data as authoritative, contextual, speculative, stale, or unsupported for decisioning |
+| Research vs decision boundary | Separate "interesting context" from "safe for recommendation" so news, social sentiment, and noisy third-party data never silently drive strong guidance |
+| Backtestability standard | For any metric or recommendation that claims historical rigor, record the historical dataset, period coverage, and known gaps |
+| Consumer Bloomberg discipline | Position ClearMoney as a high-signal personal finance command system, not a noisy wrapper around too many APIs |
+| Competitor / company monitoring | Limit to founder-relevant and portfolio-relevant use cases with explicit reliability and actionability standards |
+
+#### 1.5.2 Compliance and Trust Architecture (P0)
+
+| Capability | Detailed Deliverables |
+|------------|-----------------------|
+| Capability-to-regulation matrix | Map every product capability to regulatory, custody, privacy, and liability constraints before launch |
+| HITL defaults | Make human approval the default for sensitive actions and recommendation escalation |
+| Sensitive-data execution isolation | Sandbox risky agent tasks and connectors with explicit mount/network scopes |
+| Password and credential minimization | Prefer tokenized aggregators and delegated auth; avoid raw credential handling wherever possible |
+| Audit-ready controls | Produce logs and artifacts suitable for compliance review and partner due diligence |
+
+#### 1.6 Domain Knowledge Registry (P0)
+
+| Capability | Detailed Deliverables |
+|------------|-----------------------|
+| Skill hardening | Move all advisor skills into a governed registry with owners, review dates, required context checks, and evaluation cases |
+| Heuristic packs | Encode reusable financial rule sets for emergency funds, debt payoff, concentration, equity comp, tax posture, and founder runway |
+| Exception policies | Document when standard heuristics should not apply: founders with illiquid equity, seasonal income, intentional leverage, bridge financing, etc. |
+| Jurisdiction support | Begin state-specific and filing-status-specific rule packs for tax and entity behavior |
+| Research linkage | Each rule references internal research or cited source material and has a review cadence |
+| Behavioral overlays | Encode when behaviorally realistic recommendations should override purely mathematical optimization |
+
+#### 1.7 Regional / Rails Strategy (P1)
+
+| Market | Implication |
+|--------|-------------|
+| United States | Rich advice market, fragmented execution, trust-heavy rollout, draft-first posture |
+| Brazil / Pix / Open Finance-like markets | Better candidate for earlier action execution due to stronger rails and regulated infrastructure |
+| EU / UK / AU open banking ecosystems | Evaluate for medium-term expansion where permissions and payment rails are cleaner |
+
 **Phase 1 Success Metrics:**
-- All Silvia feature gaps closed
+
+**Phase 1 Success Metrics:**
+- Canonical context graph v1 deployed
+- Top 10 metrics support live provenance
+- 90%+ of recommendations include lineage, freshness, and policy metadata
+- Correction workflow live in product and ops tooling
+- All Silvia feature gaps on P0 items closed
+- 100% of high-impact recommendations identify deterministic vs inferred components
+- Aggregator outage / revocation does not collapse the user's advisory continuity
 - SMS/voice channel live with <2s response time
 - 5+ alternative asset types trackable
 - Tax return upload processing 95%+ of common forms
@@ -259,6 +492,23 @@ What we've already built:
 ### Phase 2: Niche Dominance + Premium Value (Months 3-6)
 
 **Goal: Make ClearMoney indispensable for founders. Launch premium tier.**
+
+#### 2.0 Context Quality, Review, and Learning Systems
+
+| Capability | Detailed Deliverables |
+|------------|-----------------------|
+| Context health dashboard | Internal and user-facing views for completeness, freshness, conflict, missing sources, and recommendation readiness by domain |
+| Review queue | Ops console for unresolved conflicts, high-impact low-confidence recommendations, stale critical context, and disputed derivations |
+| Evaluation harness | Automated eval suites for recommendation quality, trace completeness, correction handling, and provenance fidelity |
+| House view management | Allow ClearMoney to ship versioned "house views" on budgeting, equity risk, tax buffers, emergency fund policy, and founder cash management |
+| Recommendation memory | Track which recommendations were accepted, dismissed, snoozed, ignored, or manually modified and use that to tune future suggestions |
+| Advisor continuity model | Maintain continuity across sessions so the user feels like they are working with one persistent advisor who remembers objectives, open questions, pending actions, and prior decisions |
+| Behavior model | Track decision styles, compliance with prior plans, and change-aversion so advice can be realistic rather than purely optimal |
+
+**Phase 2.0 acceptance criteria**
+- We can quantify recommendation quality by context completeness tier
+- Internal reviewers can inspect and resolve context conflicts without direct DB access
+- Recommendation recurrence and user follow-through are available as training signals
 
 #### 2.1 Founder Operating Room v2
 
@@ -305,18 +555,40 @@ What we've already built:
 | QuickBooks / Xero | Business accounting data |
 | Zillow / Redfin | Real estate valuations |
 | KBB / Edmunds | Vehicle valuations |
+| Recovery / screen-assisted connectors | Fallback acquisition when official APIs are absent or broken |
 
 **Phase 2 Success Metrics:**
 - 500+ founder users with Founder Pro subscriptions
 - Premium conversion rate >8% of free users
 - 3+ integrations live beyond Plaid
 - NPS >60 among founder users
+- 95%+ of high-priority recommendations pass trace completeness checks
+- <5% repeat-error rate on previously corrected context domains
+- Users report that the advisor feels continuous and context-aware across sessions and channels
 
 ---
 
 ### Phase 3: Action Layer + Trust Protocol (Months 6-12)
 
 **Goal: Execute financial actions, not just advise. Establish ClearMoney as a verifiable financial identity.**
+
+#### 3.0 Context-Gated Execution
+
+| Capability | Detailed Deliverables |
+|------------|-----------------------|
+| Action readiness policies | Every action type defines minimum freshness, completeness, evidence, and reviewer thresholds before it can be drafted or executed |
+| Pre-execution simulation | Show expected outcome, dependencies, failure modes, and confidence before authorization |
+| Context freeze | Snapshot the exact context used for an executed action so the action can be audited later even if upstream data changes |
+| Disagreement handling | When user intent conflicts with recommendation logic, persist the divergence and treat it as a valuable context signal |
+| Post-action learning | Compare expected vs. actual result and feed deltas into action heuristics and trust scoring |
+| User control plane | Give users explicit knobs for autonomy: inform only, draft only, require approval, pre-authorize bounded actions, and emergency stop |
+| Mandate templates | Family-office style authorization profiles for households, founders, and high-income professionals |
+
+**Phase 3.0 acceptance criteria**
+- No high-impact action can execute without an auditable context freeze
+- Users can see why an action is blocked, degraded, or requires review
+- Action result deltas are fed into future confidence calculations
+- Users can always inspect and change the current autonomy mode before any action leaves draft state
 
 #### 3.1 Action Execution Engine v2
 
@@ -368,12 +640,25 @@ Scale the ClearMoney publication from blog-only to full multi-channel content op
 - YouTube channel at 5,000+ subscribers
 - Community with 500+ active members
 - 6+ SEO-optimized credit card articles published targeting specific long-tail keywords, with top-3 ranking for at least 2 long-tail terms
+- 100% of executed actions have full pre/post context snapshots and auditability
+- 80%+ of blocked actions provide machine-readable remediation steps to improve context quality
 
 ---
 
 ### Phase 4: The Agentic Ledger (Months 12-24)
 
 **Goal: Autonomous financial operations within user-defined guardrails. ClearMoney becomes the system of record.**
+
+#### 4.0 Portable Context Network
+
+| Feature | Details |
+|---------|---------|
+| Financial context passport | Export a signed, portable representation of facts, derivations, provenance, reviewer states, and user overrides |
+| Delegated agent access | Third-party agents consume scoped slices of the context graph with explicit consent and policy boundaries |
+| Cross-agent memory | Preserve corrections, preferences, and house rules across channels and specialized agents |
+| Context interoperability | Map ClearMoney context to FPP / JSON-LD representations and support import from external tools where feasible |
+| Trust scoring layer | External consumers can verify not just claims, but also evidence quality and freshness characteristics |
+| Infrastructure layer products | Expose parts of Strata as infrastructure for other apps needing trust-scored connectors, context graphs, or mandate-based controls |
 
 #### 4.1 Smart Accounts
 
@@ -417,6 +702,8 @@ Scale the ClearMoney publication from blog-only to full multi-channel content op
 - FPP protocol adopted by 3+ third-party platforms
 - Native apps with 4.5+ star ratings
 - 50,000+ total users
+- Context passport accepted by at least 3 external counterparties or partner workflows
+- Third-party agent access operates with zero policy-breach incidents
 
 ---
 
@@ -466,9 +753,21 @@ WE WILL ALWAYS:
 
 5. **Data minimization + consent.** Users see, control, and revoke every data scope. Privacy is a feature, not a checkbox.
 
-6. **Decision traces are the data model.** Every recommendation writes a trace that captures inputs, policy, rationale, and confidence. This is our moat and our audit trail.
+6. **Context is the product substrate.** Agents, dashboards, exports, notifications, and actions all read from the same governed context layer.
 
-7. **Earn trust through proof, not promises.** Independence reports, payout transparency, and open methodology. Trust is built with data, not marketing.
+7. **Be the financial chief of staff, not a chat wrapper.** Continuity, memory, and relevance matter more than breadth of integrations for their own sake.
+
+8. **Decision traces are the data model.** Every recommendation writes a trace that captures inputs, lineage, policy, rationale, and confidence. This is our moat and our audit trail.
+
+9. **Corrections are gold.** Every user override, reviewer fix, and failed recommendation is a chance to harden the context system.
+
+10. **Deterministic core, probabilistic shell.** The model explains, orchestrates, and prioritizes; tested engines compute critical financial truth.
+
+11. **Source quality beats source quantity.** We do not ingest data just because it is available; we ingest it when we can explain how it should and should not influence decisions.
+
+12. **Trust architecture is the product.** Compliance, isolation, privacy modes, and user control are category-defining capabilities, not back-office concerns.
+
+13. **Earn trust through proof, not promises.** Independence reports, payout transparency, and open methodology. Trust is built with data, not marketing.
 
 ---
 
@@ -482,6 +781,15 @@ WE WILL ALWAYS:
 | User acquisition cost too high | Medium | Content engine + SEO + founder community creates organic growth |
 | Plaid/SnapTrade reliability | Medium | Multi-provider strategy; graceful degradation; manual entry fallback |
 | Free pricing pressure from Silvia | Medium | Premium value justifies cost; founders already pay for specialized tools |
+| Context graph complexity slows shipping | Medium | Treat context work as platform leverage; ship by domain slices with explicit quality gates |
+| Provenance UX overwhelms users | Medium | Progressive disclosure: simple summary first, deep trace on demand |
+| Feedback loops create noisy training signals | Medium | Typed correction taxonomy, reviewer adjudication, and confidence weighting |
+| Weak external data creates false confidence | High | Source-tiering, research/decision separation, and explicit unsupported-data policies |
+| Privacy concerns block adoption of full-context advisor | High | Clear trust modes, local/private deployment paths, granular consent, and strong user-visible controls |
+| Users reject autonomous actions | Medium | Default to draft-only, make autonomy user-configurable, and prove control before increasing automation |
+| Aggregators break or revoke access | High | Build connectivity resilience, fallback capture, continuity modes, and productized recovery workflows |
+| Compliance blocks speed | High | Capability-to-regulation mapping, launch sequencing by risk class, and partner-first execution strategy |
+| Open-source / plugin ecosystems introduce malware risk | High | Signed skills, sandboxed execution, explicit mounts, trust scoring, and private-by-default connector policies |
 
 ---
 
