@@ -53,6 +53,48 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 - [x] **Advisor Trace Upgrade v1**:
     - Added context-quality metadata and readiness gating to advisor-created traces and recommendation generation.
 
+### Next Build Slice: Recommendation-Trace Convergence (In Progress)
+
+**Objective:** Move ClearMoney from explainable metrics to explainable advisory behavior by putting analysis and recommendation traces onto the same trust contract.
+
+**Deliverables**
+- [ ] **Shared Decision Trace v2 Contract**:
+    - Typed payload for advisor `analysis` and `recommendation` traces.
+    - Required fields:
+        - `trace_version`
+        - `trace_kind`
+        - `rules_applied`
+        - `insights`
+        - `assumptions`
+        - `confidence_score`
+        - `confidence_factors`
+        - `determinism_class`
+        - `source_tier`
+        - `continuity_status`
+        - `recommendation_readiness`
+        - `coverage_status`
+        - `policy_version`
+        - `freshness`
+        - `context_quality`
+        - `warnings`
+        - `remediation_actions`
+        - `correction_targets`
+- [ ] **Recommendation Remediation UX**:
+    - The UI should explain why a recommendation is `cautious` or `blocked`.
+    - It should point users to reconnect accounts, refresh stale data, or fill missing profile inputs.
+- [ ] **Decision Trace UI Migration**:
+    - Replace raw JSON-heavy trace viewers with structured rendering of rules, insights, assumptions, confidence, and remediation.
+- [ ] **Backward Compatibility**:
+    - Existing traces should still render via fallback parsing while new traces emit the typed v2 shape.
+
+**Execution Sequence**
+1. Add `DecisionTracePayload` and response parsing in the API/schema layer.
+2. Build a shared decision-trace payload builder in the advisor backend.
+3. Update advisor-created traces to use the shared builder.
+4. Expose parsed `trace_payload` from `/api/v1/agent/decision-traces`.
+5. Update SDK types and frontend trace rendering.
+6. Add regression tests for stored traces, API serialization, and readiness/remediation display.
+
 ### 1.1 Deterministic Financial Core
 
 - [ ] **Computation Boundary Spec**:
@@ -93,6 +135,7 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
     - Confidence is now decomposed into freshness, coverage, and metric-specific factors.
 - [ ] **Recommendation Trace Convergence**:
     - Migrate recommendation traces fully onto the same provenance v2 contract used by metrics.
+    - Status: in progress via shared `DecisionTracePayload` and UI remediation rendering.
 - [ ] **Allocation Drift Provenance**:
     - Extend the registry + trace stack to allocation drift and concentration metrics.
 
