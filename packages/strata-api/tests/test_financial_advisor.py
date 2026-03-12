@@ -8,8 +8,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.main import app
-from app.models import AgentSession, DecisionTrace, FinancialMemory, Recommendation, User
+from app.models import AgentSession, DecisionTrace, FinancialMemory, Recommendation, RecommendationReview, User
 from app.models.agent_session import RecommendationStatus, SessionStatus
+from app.models.recommendation_review import RecommendationReviewType
 from app.services.financial_advisor import FinancialAdvisor
 
 
@@ -331,6 +332,56 @@ async def test_decision_traces_api_exposes_trace_payload(
     assert data[0]["trace_payload"]["trace_version"] == "v2"
     assert data[0]["trace_payload"]["trace_kind"] == "recommendation"
     assert "remediation_actions" in data[0]["trace_payload"]
+
+
+@pytest.mark.asyncio
+async def test_advisor_blocks_duplicate_recommendation_when_open_review_exists(
+    session: AsyncSession,
+    test_user: User,
+) -> None:
+    advisor = FinancialAdvisor(session)
+    agent_session = await advisor.start_session(test_user.id, "cash_management")
+
+    first_result = await advisor._handle_tool_call(
+        test_user.id,
+        agent_session.id,
+        "create_recommendation",
+        {
+            "title": "Move excess cash to high yield savings",
+            "summary": "Shift idle checking cash into a higher-yield account.",
+            "details": {"amount": 5000},
+        },
+    )
+    assert first_result["status"] == "created"
+
+    trace_result = await session.execute(
+        select(DecisionTrace).where(DecisionTrace.user_id == test_user.id)
+    )
+    trace = trace_result.scalar_one()
+
+    review = RecommendationReview(
+        user_id=test_user.id,
+        decision_trace_id=trace.id,
+        recommendation_id=trace.recommendation_id,
+        review_type=RecommendationReviewType.user_dispute,
+        opened_reason="The cash is reserved for taxes.",
+    )
+    session.add(review)
+    await session.commit()
+
+    second_result = await advisor._handle_tool_call(
+        test_user.id,
+        agent_session.id,
+        "create_recommendation",
+        {
+            "title": "Move excess cash to high yield savings",
+            "summary": "Shift idle checking cash into a higher-yield account.",
+            "details": {"amount": 5000},
+        },
+    )
+
+    assert "error" in second_result
+    assert "open review" in second_result["error"].lower()
 
 
 @pytest.mark.asyncio

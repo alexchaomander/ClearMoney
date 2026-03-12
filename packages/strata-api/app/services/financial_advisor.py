@@ -29,6 +29,7 @@ from app.services.context_renderer import render_context_as_markdown
 from app.services.decision_engine import run_deterministic_checks
 from app.services.decision_trace_builder import build_decision_trace_payload
 from app.services.financial_context import build_financial_context
+from app.services.recommendation_reviews import RecommendationReviewService
 from app.services.skill_registry import get_skill_registry
 
 logger = logging.getLogger(__name__)
@@ -625,6 +626,8 @@ class FinancialAdvisor:
         deterministic = run_deterministic_checks(context)
         rule_checks = self._build_rule_checks(context, freshness_status) + deterministic["rules_applied"]
         assumptions = self._build_assumptions(context) + deterministic["assumptions"]
+        review_service = RecommendationReviewService(self._session)
+        open_review_count = await review_service.open_review_count(user_id)
 
         if context_quality.recommendation_readiness == "blocked":
             return {
@@ -641,6 +644,12 @@ class FinancialAdvisor:
             return {"error": f"Session {session_id} not found"}
 
         details = tool_input.get("details", {})
+        proposed_title = str(tool_input.get("title", "")).strip()
+        if proposed_title and await review_service.has_open_review_for_recommendation_title(user_id, proposed_title):
+            return {
+                "error": "A matching recommendation already has an open review. Resolve that review before creating a replacement recommendation.",
+                "open_review_count": open_review_count,
+            }
         action = details.get("action") if isinstance(details, dict) else None
         if action and isinstance(action, dict):
             action_type = action.get("type")
@@ -680,6 +689,25 @@ class FinancialAdvisor:
         for warning in context_quality.warnings:
             if warning not in warnings:
                 warnings.append(warning)
+        if open_review_count > 0:
+            review_warning = (
+                f"There {'is' if open_review_count == 1 else 'are'} {open_review_count} open recommendation "
+                f"{'review' if open_review_count == 1 else 'reviews'} on your account. New guidance is being framed cautiously until those are resolved."
+            )
+            if review_warning not in warnings:
+                warnings.append(review_warning)
+            assumptions.append(
+                "Open recommendation reviews indicate unresolved disputes or follow-up items that may affect trust in related guidance."
+            )
+            deterministic["insights"] = [
+                {
+                    "title": "Open review backlog",
+                    "summary": review_warning,
+                    "recommendation": "Resolve existing recommendation reviews before acting on overlapping advice.",
+                    "severity": "medium",
+                },
+                *deterministic["insights"],
+            ]
         tool_trace = tool_input.get("trace") or {}
         trace_payload = build_decision_trace_payload(
             trace_kind="recommendation",
@@ -693,6 +721,13 @@ class FinancialAdvisor:
             summary=rec.summary,
             confidence_score=tool_input.get("confidence"),
             warnings=warnings,
+            review_summary={
+                "review_status": "open" if open_review_count > 0 else None,
+                "open_review_count": open_review_count,
+                "latest_resolution": None,
+                "latest_resolution_notes": None,
+                "reviewer_label": None,
+            },
         )
 
         trace = DecisionTrace(

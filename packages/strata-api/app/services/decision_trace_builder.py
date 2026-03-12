@@ -7,6 +7,7 @@ from app.schemas.agent import (
     ContextQualityResponse,
     DecisionTracePayload,
     DecisionTraceRemediationAction,
+    DecisionTraceReviewSummary,
     DecisionTraceRuleCheck,
     DecisionTraceInsight,
     FreshnessStatus,
@@ -43,6 +44,7 @@ def build_trace_remediation_actions(
     context: dict[str, Any],
     context_quality: ContextQualityResponse,
     freshness_status: dict[str, Any],
+    review_summary: DecisionTraceReviewSummary | None = None,
 ) -> list[DecisionTraceRemediationAction]:
     actions: list[DecisionTraceRemediationAction] = []
     profile = context.get("profile", {}) or {}
@@ -91,6 +93,17 @@ def build_trace_remediation_actions(
             )
         )
 
+    if review_summary and review_summary.open_review_count > 0:
+        actions.append(
+            DecisionTraceRemediationAction(
+                action_id="resolve_open_reviews",
+                label="Resolve open recommendation reviews",
+                description="Unresolved disputes or review requests should be addressed before relying on related guidance.",
+                href="/dashboard/recommendation-reviews",
+                priority="high",
+            )
+        )
+
     unique: dict[str, DecisionTraceRemediationAction] = {}
     for action in actions:
         unique[action.action_id] = action
@@ -112,9 +125,16 @@ def build_decision_trace_payload(
     confidence_factors: list[ConfidenceFactor] | None = None,
     warnings: list[str] | None = None,
     correction_targets: list[TraceCorrectionTarget] | None = None,
+    review_summary: DecisionTraceReviewSummary | None = None,
 ) -> dict[str, Any]:
     freshness = FreshnessStatus(**freshness_status)
+    if review_summary is not None and isinstance(review_summary, dict):
+        review_summary = DecisionTraceReviewSummary(**review_summary)
     merged_warnings = list(dict.fromkeys([*(warnings or []), *context_quality.warnings]))
+    if review_summary and review_summary.open_review_count > 0:
+        merged_warnings.append(
+            "There are open recommendation reviews tied to this guidance. Treat it as pending adjudication until those reviews are resolved."
+        )
     payload = DecisionTracePayload(
         trace_kind=trace_kind,
         title=title,
@@ -141,8 +161,14 @@ def build_decision_trace_payload(
         freshness=freshness,
         context_quality=context_quality,
         warnings=merged_warnings,
-        remediation_actions=build_trace_remediation_actions(context, context_quality, freshness_status),
+        remediation_actions=build_trace_remediation_actions(
+            context,
+            context_quality,
+            freshness_status,
+            review_summary=review_summary,
+        ),
         correction_targets=correction_targets or list(_DEFAULT_CORRECTION_TARGETS),
+        review_summary=review_summary,
         deterministic={
             "rules_applied": rules_applied,
             "insights": insights,
