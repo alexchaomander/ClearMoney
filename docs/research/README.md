@@ -10,12 +10,15 @@ This research serves as the foundation for building ClearMoney's suite of financ
 2. **Counter misinformation** with transparent, math-based alternatives
 3. **Respect different philosophies** while providing objective analysis
 4. **Empower users** to make informed decisions
+5. **Build a context-native financial agent** with durable memory, provenance, correction loops, and governed house knowledge
 
 ## Directory Structure
 
 ```
 docs/research/
 ├── README.md                         # This file
+├── agent-context-systems-alignment.md # Requirements for a 10/10 context-native agent platform
+├── linkedin-openclaw-personal-finance-market-feedback.md # Operator feedback from Andrew Chen's LinkedIn thread
 ├── influencer-profiles/              # Deep dives on key finance personalities
 │   ├── the-points-guy.md            # TPG - our primary counter-position
 │   ├── dave-ramsey.md               # Debt-free philosophy
@@ -53,6 +56,8 @@ docs/research/
 1. Read relevant influencer profiles to understand the philosophy behind a tool
 2. Check tool-opportunities docs for specific feature ideas
 3. Reference competitive-analysis.md to understand market positioning
+4. Reference `agent-context-systems-alignment.md` for advisor, memory, provenance, trust, and action-layer work
+5. Reference `linkedin-openclaw-personal-finance-market-feedback.md` for market signal on trust, compliance, determinism, local-first demand, and aggregator fragility
 
 ### For Agent Prompts
 Each app specification in `/docs/app-specs/` references this research. When building an app:
@@ -65,7 +70,32 @@ Each app specification in `/docs/app-specs/` references this research. When buil
 - Tool opportunities contain content angles and educational value
 - Competitive analysis shows gaps we can fill with content
 
+### For Context and Agent Architecture
+- Use `agent-context-systems-alignment.md` when designing financial memory, decision traces, provenance, context quality gates, review workflows, or portability
+- Use `linkedin-openclaw-personal-finance-market-feedback.md` when evaluating whether a proposed feature actually addresses the market's trust, control, and continuity concerns
+- Any new advisor or automation feature should answer four questions before implementation:
+  - What canonical context does it depend on?
+  - What provenance can it expose?
+  - How are corrections captured and replayed?
+  - What quality threshold is required before strong guidance or execution?
+
 ## Key Insights Summary
+
+### Agent Context Systems (NEW)
+
+ClearMoney's largest long-term moat will come from the quality of its maintained context layer, not from model choice alone.
+
+Key takeaways:
+- Structured context beats raw prompting
+- Durable memory beats ephemeral session state
+- Live provenance beats static explanation copy
+- Typed correction loops beat vague feedback collection
+- Versioned house knowledge beats scattered prompt instructions
+- Context quality gating is required for high-trust financial actions
+- Deterministic financial cores are expected by serious operators
+- Compliance and trust architecture are the real category gates
+- Aggregator fragility is a product problem, not just an infrastructure annoyance
+- Local/private deployment options matter for trust-sensitive users
 
 ### General Personal Finance
 
@@ -123,6 +153,7 @@ This research was compiled from:
 - Industry analysis (Digiday, CNBC, Fortune)
 - Critical analysis pieces (Kitces, Accountable.us)
 - Direct content from the influencers themselves
+- Product and architecture analysis of the ClearMoney codebase and planning docs
 
 All sources are cited within individual documents.
 
@@ -137,4 +168,4 @@ When adding new research:
 
 ---
 
-*Last updated: January 2026*
+*Last updated: March 11, 2026*
