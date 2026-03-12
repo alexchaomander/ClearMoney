@@ -13,6 +13,7 @@ from app.models.decision_trace import DecisionTrace, DecisionTraceType
 from app.models.user import User
 from app.schemas.agent import (
     AgentContextResponse,
+    ContextQualityResponse,
     DecisionTraceResponse,
     ExecuteRecommendationRequest,
     ExecuteRecommendationResponse,
@@ -22,6 +23,7 @@ from app.schemas.agent import (
 from app.services.action_policy import ActionPolicyService
 from app.services.agent_guardrails import evaluate_freshness
 from app.services.brokerage_execution import BrokerageExecutionService
+from app.services.context_quality import evaluate_context_quality
 from app.services.deep_links import DeepLinkService
 from app.services.financial_context import build_financial_context
 from app.services.metric_trace import build_metric_trace
@@ -87,6 +89,19 @@ async def get_metric_trace(
         return await build_metric_trace(user.id, metric_id, session)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/context-quality", response_model=ContextQualityResponse)
+async def get_context_quality(
+    user: User = Depends(require_scopes(["portfolio:read"])),
+    session: AsyncSession = Depends(get_async_session),
+) -> ContextQualityResponse:
+    context = await build_financial_context(user.id, session)
+    connection_result = await session.execute(
+        select(Connection).where(Connection.user_id == user.id)
+    )
+    connections = list(connection_result.scalars().all())
+    return evaluate_context_quality(context, connections)
 
 
 @router.post(

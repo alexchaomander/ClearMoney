@@ -19,6 +19,7 @@ from app.api.banking import router as banking_router
 from app.api.calculators import router as calculators_router
 from app.api.cash_debt import router as cash_debt_router
 from app.api.connections import router as connections_router
+from app.api.corrections import router as corrections_router
 from app.api.consent import router as consent_router
 from app.api.credit_cards import router as credit_cards_router
 from app.api.crypto import router as crypto_router
@@ -119,6 +120,7 @@ app.include_router(portfolio_router, prefix="/api/v1")
 app.include_router(portability_router, prefix="/api/v1")
 app.include_router(transactions_router, prefix="/api/v1")
 app.include_router(memory_router, prefix="/api/v1")
+app.include_router(corrections_router, prefix="/api/v1")
 app.include_router(notifications_router, prefix="/api/v1")
 app.include_router(physical_assets_router, prefix="/api/v1/physical-assets", tags=["Physical Assets"])
 app.include_router(skills_router, prefix="/api/v1")

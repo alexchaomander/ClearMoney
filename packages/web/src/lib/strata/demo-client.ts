@@ -15,6 +15,7 @@ import type {
   CashAccountCreate,
   CashAccountUpdate,
   Connection,
+  ContextQuality,
   ConnectionCallbackRequest,
   DebtAccount,
   DebtAccountCreate,
@@ -30,6 +31,8 @@ import type {
   ConsentCreateRequest,
   ConsentResponse,
   DecisionTrace,
+  FinancialCorrection,
+  FinancialCorrectionCreate,
   FinancialContext,
   FinancialMemory,
   FinancialPassport,
@@ -85,6 +88,7 @@ import type {
   LinkSessionResponse,
   MemoryEvent,
   NotificationResponse,
+  MetricTrace,
   PortfolioHistoryPoint,
   PortfolioHistoryRange,
   PortfolioSummary,
@@ -584,6 +588,7 @@ export class DemoStrataClient implements StrataClientInterface {
         alternative_assets: [],
       },
       holdings: [],
+      equity: {},
       recent_transactions: [],
       portfolio_metrics: {
         net_worth: 642000,
@@ -740,6 +745,83 @@ export class DemoStrataClient implements StrataClientInterface {
   async getDecisionTraces(params?: { sessionId?: string; recommendationId?: string }): Promise<DecisionTrace[]> {
     void params;
     await delay(300);
+    return [];
+  }
+
+  async getMetricTrace(metricId: string): Promise<MetricTrace> {
+    await delay(200);
+    return {
+      metric_id: metricId,
+      formula_id: `demo.${metricId}`,
+      formula_version: "2.0.0",
+      label: metricId,
+      formula: "Demo Formula",
+      description: "Demo provenance trace.",
+      data_points: [],
+      components: [],
+      confidence_score: 0.88,
+      confidence_factors: [],
+      determinism_class: "deterministic",
+      source_tier: "derived_context",
+      continuity_status: "healthy",
+      recommendation_readiness: "ready",
+      coverage_status: "full",
+      methodology_version: "2.0.0",
+      as_of: new Date().toISOString(),
+      warnings: [],
+      policy_version: "context-policy-v1",
+      correction_targets: [],
+    };
+  }
+
+  async getContextQuality(): Promise<ContextQuality> {
+    await delay(200);
+    return {
+      continuity_status: "healthy",
+      recommendation_readiness: "ready",
+      confidence_score: 0.9,
+      freshness: {
+        is_fresh: true,
+        age_hours: 2,
+        max_age_hours: 24,
+        last_sync: new Date().toISOString(),
+        warning: null,
+      },
+      coverage_ratio: 1,
+      active_connection_count: 3,
+      total_connection_count: 3,
+      stale_connection_count: 0,
+      errored_connection_count: 0,
+      warnings: [],
+      confidence_factors: [],
+    };
+  }
+
+  async createCorrection(data: FinancialCorrectionCreate): Promise<FinancialCorrection> {
+    await delay(300);
+    const now = new Date().toISOString();
+    return {
+      id: "corr-1",
+      user_id: "u1",
+      trace_id: data.trace_id ?? null,
+      metric_id: data.metric_id ?? null,
+      correction_type: data.correction_type,
+      status: "applied",
+      target_field: data.target_field,
+      target_id: data.target_id ?? null,
+      summary: data.summary ?? null,
+      reason: data.reason,
+      original_value: {},
+      proposed_value: data.proposed_value,
+      resolved_value: data.proposed_value,
+      impact_summary: {},
+      created_at: now,
+      updated_at: now,
+    };
+  }
+
+  async getCorrections(_metricId?: string): Promise<FinancialCorrection[]> {
+    await delay(200);
     return [];
   }
 
