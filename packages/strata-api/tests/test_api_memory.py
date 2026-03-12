@@ -340,6 +340,10 @@ async def test_get_context_json(headers: dict) -> None:
         assert resp.status_code == 200
         data = resp.json()
         assert "profile" in data
+        assert "accounts" in data
+        assert "equity" in data
+        assert "portfolio_metrics" in data
+        assert "data_freshness" in data
         assert data["profile"]["age"] == 30
 
 
