@@ -27,20 +27,31 @@ export function MetricCorrectionDialog({ metricId, targets }: MetricCorrectionDi
     setTargetField(targets[0]?.field ?? "");
   }, [targets]);
 
+  useEffect(() => {
+    setValue("");
+  }, [targetField]);
+
   if (!targets.length) {
     return null;
   }
 
   const selectedTarget = targets.find((target) => target.field === targetField) ?? targets[0];
+  const requiresValue = selectedTarget?.field !== "manual_review";
+  const parsedNumericValue = selectedTarget?.inputType === "currency" ? Number(value) : null;
+  const hasValidValue = requiresValue
+    ? selectedTarget?.inputType === "currency"
+      ? value.trim().length > 0 && Number.isFinite(parsedNumericValue)
+      : value.trim().length > 0
+    : true;
 
   async function handleSubmit() {
-    if (!selectedTarget || !reason.trim()) {
+    if (!selectedTarget || !reason.trim() || !hasValidValue) {
       return;
     }
 
     const proposedValue =
       selectedTarget.inputType === "currency"
-        ? { value: Number(value) || 0 }
+        ? { value: parsedNumericValue ?? 0 }
         : selectedTarget.field === "manual_review"
           ? { note: value || reason }
           : { value };
@@ -133,7 +144,7 @@ export function MetricCorrectionDialog({ metricId, targets }: MetricCorrectionDi
             </Dialog.Close>
             <button
               onClick={handleSubmit}
-              disabled={createCorrection.isPending || !reason.trim()}
+              disabled={createCorrection.isPending || !reason.trim() || !hasValidValue}
               className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             >
               {createCorrection.isPending ? "Applying..." : "Submit correction"}

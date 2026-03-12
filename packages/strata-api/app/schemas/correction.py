@@ -4,11 +4,16 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.financial_correction import (
+    FinancialCorrectionStatus,
+    FinancialCorrectionType,
+)
+
 
 class FinancialCorrectionCreate(BaseModel):
     metric_id: str | None = None
     trace_id: uuid.UUID | None = None
-    correction_type: str
+    correction_type: FinancialCorrectionType
     target_field: str
     target_id: str | None = None
     summary: str | None = None
@@ -18,7 +23,7 @@ class FinancialCorrectionCreate(BaseModel):
 
 
 class FinancialCorrectionUpdate(BaseModel):
-    status: str | None = None
+    status: FinancialCorrectionStatus | None = None
     summary: str | None = None
     resolved_value: dict[str, Any] | None = None
     impact_summary: dict[str, Any] | None = None
@@ -29,8 +34,8 @@ class FinancialCorrectionResponse(BaseModel):
     user_id: uuid.UUID
     trace_id: uuid.UUID | None
     metric_id: str | None
-    correction_type: str
-    status: str
+    correction_type: FinancialCorrectionType
+    status: FinancialCorrectionStatus
     target_field: str
     target_id: str | None
     summary: str | None

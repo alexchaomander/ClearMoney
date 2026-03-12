@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.cash_account import CashAccount
 from app.models.bank_transaction import BankTransaction
 from app.models.decision_trace import DecisionTrace
 from app.models.financial_correction import (
@@ -101,8 +102,8 @@ class CorrectionService:
                 raise HTTPException(status_code=400, detail="transaction_category corrections require target_id")
             result = await self._session.execute(
                 select(BankTransaction)
-                .join(BankTransaction.cash_account)
-                .where(BankTransaction.id == uuid.UUID(target_id), BankTransaction.cash_account.has(user_id=user_id))
+                .join(CashAccount, BankTransaction.cash_account_id == CashAccount.id)
+                .where(BankTransaction.id == uuid.UUID(target_id), CashAccount.user_id == user_id)
             )
             tx = result.scalar_one_or_none()
             if tx is None:
@@ -155,8 +156,8 @@ class CorrectionService:
                 raise HTTPException(status_code=400, detail="proposed_value.primary_category is required")
             result = await self._session.execute(
                 select(BankTransaction)
-                .join(BankTransaction.cash_account)
-                .where(BankTransaction.id == uuid.UUID(target_id), BankTransaction.cash_account.has(user_id=user_id))
+                .join(CashAccount, BankTransaction.cash_account_id == CashAccount.id)
+                .where(BankTransaction.id == uuid.UUID(target_id), CashAccount.user_id == user_id)
             )
             tx = result.scalar_one_or_none()
             if tx is None:
