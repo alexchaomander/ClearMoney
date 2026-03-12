@@ -38,6 +38,7 @@ from app.models import (  # noqa: F401
     InvestmentAccount,
     MemoryEvent,
     PortfolioSnapshot,
+    RecommendationReview,
     Recommendation,
     Security,
     ShareReport,

@@ -1126,6 +1126,20 @@ export interface DecisionTrace {
   trace_payload: DecisionTracePayload | null;
 }
 
+export type RecommendationReviewType =
+  | 'user_dispute'
+  | 'outdated'
+  | 'human_review'
+  | 'context_block'
+  | 'factual_followup';
+
+export type RecommendationReviewStatus =
+  | 'open'
+  | 'resolved'
+  | 'dismissed'
+  | 'converted_to_correction'
+  | 'superseded';
+
 export interface DecisionTraceRuleCheck {
   name: string;
   passed: boolean | null;
@@ -1147,6 +1161,14 @@ export interface DecisionTraceRemediationAction {
   description: string;
   href: string;
   priority: string;
+}
+
+export interface DecisionTraceReviewSummary {
+  review_status: RecommendationReviewStatus | string | null;
+  open_review_count: number;
+  latest_resolution: string | null;
+  latest_resolution_notes: string | null;
+  reviewer_label: string | null;
 }
 
 export interface MetricTraceDataPoint {
@@ -1223,6 +1245,7 @@ export interface DecisionTracePayload {
   warnings: string[];
   remediation_actions: DecisionTraceRemediationAction[];
   correction_targets: TraceCorrectionTarget[];
+  review_summary: DecisionTraceReviewSummary | null;
   deterministic: Record<string, unknown>;
 }
 
@@ -1276,6 +1299,44 @@ export interface FinancialCorrection {
   proposed_value: Record<string, unknown>;
   resolved_value: Record<string, unknown> | null;
   impact_summary: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecommendationReviewCreate {
+  decision_trace_id: string;
+  recommendation_id?: string | null;
+  review_type?: RecommendationReviewType;
+  opened_reason: string;
+}
+
+export interface RecommendationReviewResolve {
+  status: RecommendationReviewStatus;
+  resolution: string;
+  resolution_notes?: string | null;
+  reviewer_label?: string | null;
+  applied_changes?: Record<string, unknown>;
+}
+
+export interface RecommendationReviewConvertToCorrection {
+  correction: FinancialCorrectionCreate;
+  reviewer_label?: string | null;
+  resolution_notes?: string | null;
+}
+
+export interface RecommendationReview {
+  id: string;
+  user_id: string;
+  decision_trace_id: string;
+  recommendation_id: string | null;
+  review_type: RecommendationReviewType;
+  status: RecommendationReviewStatus;
+  opened_reason: string;
+  resolution: string | null;
+  resolution_notes: string | null;
+  applied_changes: Record<string, unknown>;
+  reviewer_label: string | null;
+  resolved_at: string | null;
   created_at: string;
   updated_at: string;
 }

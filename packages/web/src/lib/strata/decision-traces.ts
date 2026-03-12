@@ -96,6 +96,10 @@ export function getDecisionTracePayload(trace: DecisionTrace): DecisionTracePayl
     correction_targets: Array.isArray(raw.correction_targets)
       ? (raw.correction_targets as DecisionTracePayload["correction_targets"])
       : [],
+    review_summary:
+      typeof raw.review_summary === "object" && raw.review_summary !== null
+        ? (raw.review_summary as DecisionTracePayload["review_summary"])
+        : null,
     deterministic,
   };
 }

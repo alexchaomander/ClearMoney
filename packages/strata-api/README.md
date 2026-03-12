@@ -176,11 +176,24 @@ All endpoints are prefixed with `/api/v1`. Full OpenAPI docs are available at `/
 |--------|------|-------------|
 | `GET` | `/agent/context` | Get financial context for agent |
 | `GET` | `/agent/decision-traces` | List decision traces |
+| `GET` | `/agent/metric-traces/{metric_id}` | Get live metric provenance |
+| `GET` | `/agent/context-quality` | Get context continuity and readiness |
 | `GET` | `/agent/audit-summary` | Audit summary (trace stats) |
 | `POST` | `/agent/recommendations/{id}/execute` | Execute a recommendation |
 | `GET` | `/agent/action-policy` | Get user's action policies |
 | `POST` | `/action-intents` | Create action intent |
 | `GET` | `/action-intents` | List action intents |
+
+### Corrections & Reviews
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/corrections` | Create a deterministic correction |
+| `GET` | `/corrections` | List submitted corrections |
+| `POST` | `/recommendation-reviews` | Open a recommendation review or dispute |
+| `GET` | `/recommendation-reviews` | List recommendation reviews |
+| `POST` | `/recommendation-reviews/{id}/resolve` | Resolve or dismiss a recommendation review |
+| `POST` | `/recommendation-reviews/{id}/convert-to-correction` | Convert a review into a correction workflow |
 
 ### Notifications
 

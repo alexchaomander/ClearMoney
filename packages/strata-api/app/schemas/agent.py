@@ -77,6 +77,14 @@ class DecisionTraceRemediationAction(BaseModel):
     priority: str = "medium"
 
 
+class DecisionTraceReviewSummary(BaseModel):
+    review_status: str | None = None
+    open_review_count: int = 0
+    latest_resolution: str | None = None
+    latest_resolution_notes: str | None = None
+    reviewer_label: str | None = None
+
+
 class DecisionTracePayload(BaseModel):
     trace_version: str = "v2"
     trace_kind: str
@@ -98,6 +106,7 @@ class DecisionTracePayload(BaseModel):
     warnings: list[str] = Field(default_factory=list)
     remediation_actions: list[DecisionTraceRemediationAction] = Field(default_factory=list)
     correction_targets: list[TraceCorrectionTarget] = Field(default_factory=list)
+    review_summary: DecisionTraceReviewSummary | None = None
     deterministic: dict[str, Any] = Field(default_factory=dict)
 
 

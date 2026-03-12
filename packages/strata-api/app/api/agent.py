@@ -29,12 +29,16 @@ from app.services.deep_links import DeepLinkService
 from app.services.financial_context import build_financial_context
 from app.services.metric_trace import build_metric_trace
 from app.services.plaid_transfer import PlaidTransferService
+from app.services.recommendation_reviews import RecommendationReviewService
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 AUDIT_SCOPES = ["decision_traces:read"]
 
 
-def _serialize_decision_trace(trace: DecisionTrace) -> DecisionTraceResponse:
+def _serialize_decision_trace(
+    trace: DecisionTrace,
+    review_summary: dict | None = None,
+) -> DecisionTraceResponse:
     raw_payload = trace.outputs.get("trace") if isinstance(trace.outputs, dict) else None
     trace_payload = None
     if isinstance(raw_payload, dict):
@@ -42,6 +46,10 @@ def _serialize_decision_trace(trace: DecisionTrace) -> DecisionTraceResponse:
             trace_payload = DecisionTracePayload.model_validate(raw_payload)
         except Exception:
             trace_payload = None
+    if trace_payload and review_summary:
+        payload_data = trace_payload.model_dump()
+        payload_data["review_summary"] = review_summary
+        trace_payload = DecisionTracePayload.model_validate(payload_data)
 
     return DecisionTraceResponse(
         id=trace.id,
@@ -102,7 +110,11 @@ async def list_decision_traces(
         query = query.where(DecisionTrace.recommendation_id == recommendation_id)
     result = await session.execute(query.order_by(DecisionTrace.created_at.desc()))
     traces = result.scalars().all()
-    return [_serialize_decision_trace(t) for t in traces]
+    summaries = await RecommendationReviewService(session).summarize_by_trace(
+        user.id,
+        [trace.id for trace in traces],
+    )
+    return [_serialize_decision_trace(t, summaries.get(t.id)) for t in traces]
 
 
 @router.get("/metric-traces/{metric_id}", response_model=MetricTraceResponse)
