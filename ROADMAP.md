@@ -1,6 +1,6 @@
 # ClearMoney Roadmap
 
-*Last updated: March 11, 2026*
+*Last updated: March 12, 2026*
 
 ---
 
@@ -75,6 +75,8 @@ Today, ClearMoney already has the beginnings of this system:
 - Derived memory fields with change history
 - Skill-specific advisor prompts with required context
 - Decision traces, guardrails, and consent-aware access
+- Live metric provenance for core financial metrics with formula versioning, continuity status, confidence decomposition, and correction entry points
+- First-class correction objects for deterministically fixable metric inputs
 
 To reach a true 10/10 alignment with the strongest context-engineering principles, we must close four gaps:
 
@@ -112,12 +114,18 @@ This program cuts across product, data, AI, trust, and platform. It is now a P0 
 - Replace static "show the math" traces on key metrics with live, per-user provenance trees
 - Store formula versions, transformation steps, source records, timestamps, and confidence contributors for every computed metric
 - Make provenance queryable via API for dashboard metrics, advisor answers, exports, and support tooling
+Status:
+- Metric-level provenance is now live for net worth, total assets, savings rate, and personal runway
+- Recommendation traces still need to converge on the same contract
 
 **Workstream C: Correction and Learning Loops**
 - Capture user corrections as first-class objects, not just generic memory writes
 - Add "why this was wrong" labels for advisor misses, support escalations, and overridden recommendations
 - Feed accepted corrections back into derivation rules, categorization models, and prompt-time context assembly
 - Track whether future recommendations improved after a correction event
+Status:
+- v1 correction objects and deterministic application flows are live for monthly income, monthly expenses, and transaction category corrections
+- Reviewer tooling and recommendation-miss handling remain open
 
 **Workstream D: House Knowledge Registry**
 - Build a governed registry of heuristics, planning rules, scenario templates, exception policies, and review playbooks
@@ -128,6 +136,9 @@ This program cuts across product, data, AI, trust, and platform. It is now a P0 
 - Define completeness, freshness, consistency, and conflict metrics for context
 - Block or degrade recommendations when context quality falls below policy thresholds
 - Build evaluation suites for recommendation quality, trace fidelity, provenance completeness, and correction handling
+Status:
+- v1 continuity states and recommendation readiness are implemented
+- evaluation coverage still needs expansion beyond current targeted API tests
 
 **Workstream F: Human Review and Trust**
 - Create ops tooling to inspect context nodes, lineage, conflicts, and stale dependencies

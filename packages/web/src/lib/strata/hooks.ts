@@ -84,6 +84,8 @@ export const queryKeys = {
   decisionTraces: (filters?: { sessionId?: string; recommendationId?: string }) =>
     ["decisionTraces", filters?.sessionId ?? "", filters?.recommendationId ?? ""] as const,
   metricTrace: (metricId: string) => ["metricTrace", metricId] as const,
+  contextQuality: ["agent", "contextQuality"] as const,
+  corrections: (metricId?: string) => ["corrections", metricId ?? "all"] as const,
   // Banking (Plaid)
   bankAccounts: ["banking", "accounts"] as const,
   bankTransactions: (params?: BankTransactionQuery) =>
@@ -127,6 +129,40 @@ export function useMetricTrace(metricId: string, options?: { enabled?: boolean }
     queryKey: queryKeys.metricTrace(metricId),
     queryFn: () => client.getMetricTrace(metricId),
     enabled: options?.enabled ?? true,
+  });
+}
+
+export function useContextQuality(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.contextQuality,
+    queryFn: () => client.getContextQuality(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useCorrections(metricId?: string, options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.corrections(metricId),
+    queryFn: () => client.getCorrections(metricId),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useCreateCorrection() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof client.createCorrection>[0]) => client.createCorrection(data),
+    onSuccess: (correction) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.corrections(correction.metric_id ?? undefined) });
+      if (correction.metric_id) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.metricTrace(correction.metric_id) });
+      }
+      queryClient.invalidateQueries({ queryKey: queryKeys.contextQuality });
+      queryClient.invalidateQueries({ queryKey: queryKeys.financialMemory });
+    },
   });
 }
 
