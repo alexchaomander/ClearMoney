@@ -14,6 +14,7 @@ from app.models.user import User
 from app.schemas.agent import (
     AgentContextResponse,
     ContextQualityResponse,
+    DecisionTracePayload,
     DecisionTraceResponse,
     ExecuteRecommendationRequest,
     ExecuteRecommendationResponse,
@@ -31,6 +32,31 @@ from app.services.plaid_transfer import PlaidTransferService
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 AUDIT_SCOPES = ["decision_traces:read"]
+
+
+def _serialize_decision_trace(trace: DecisionTrace) -> DecisionTraceResponse:
+    raw_payload = trace.outputs.get("trace") if isinstance(trace.outputs, dict) else None
+    trace_payload = None
+    if isinstance(raw_payload, dict):
+        try:
+            trace_payload = DecisionTracePayload.model_validate(raw_payload)
+        except Exception:
+            trace_payload = None
+
+    return DecisionTraceResponse(
+        id=trace.id,
+        session_id=trace.session_id,
+        recommendation_id=trace.recommendation_id,
+        trace_type=trace.trace_type.value if hasattr(trace.trace_type, "value") else str(trace.trace_type),
+        input_data=trace.input_data,
+        reasoning_steps=trace.reasoning_steps,
+        outputs=trace.outputs,
+        data_freshness=trace.data_freshness,
+        warnings=trace.warnings,
+        source=trace.source,
+        created_at=trace.created_at,
+        trace_payload=trace_payload,
+    )
 
 
 @router.get("/context", response_model=AgentContextResponse)
@@ -76,7 +102,7 @@ async def list_decision_traces(
         query = query.where(DecisionTrace.recommendation_id == recommendation_id)
     result = await session.execute(query.order_by(DecisionTrace.created_at.desc()))
     traces = result.scalars().all()
-    return [DecisionTraceResponse.model_validate(t) for t in traces]
+    return [_serialize_decision_trace(t) for t in traces]
 
 
 @router.get("/metric-traces/{metric_id}", response_model=MetricTraceResponse)
