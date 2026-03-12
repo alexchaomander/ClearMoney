@@ -11,6 +11,7 @@ import type {
   CashAccountCreate,
   CashAccountUpdate,
   Connection,
+  ContextQuality,
   ConnectionCallbackRequest,
   DebtAccount,
   DebtAccountCreate,
@@ -74,6 +75,8 @@ import type {
   DecisionTrace,
   ExecuteRecommendationRequest,
   ExecuteRecommendationResponse,
+  FinancialCorrection,
+  FinancialCorrectionCreate,
   MetricTrace,
   PointsProgram,
   TransparencyPayload,
@@ -190,6 +193,9 @@ export interface StrataClientInterface {
     recommendationId?: string;
   }): Promise<DecisionTrace[]>;
   getMetricTrace(metricId: string): Promise<MetricTrace>;
+  getContextQuality(): Promise<ContextQuality>;
+  createCorrection(data: FinancialCorrectionCreate): Promise<FinancialCorrection>;
+  getCorrections(metricId?: string): Promise<FinancialCorrection[]>;
   // Consent
   listConsents(): Promise<ConsentResponse[]>;
   createConsent(data: ConsentCreateRequest): Promise<ConsentResponse>;
@@ -812,6 +818,23 @@ export class StrataClient implements StrataClientInterface {
 
   async getMetricTrace(metricId: string): Promise<MetricTrace> {
     return this.request<MetricTrace>(`/api/v1/agent/metric-traces/${metricId}`);
+  }
+
+  async getContextQuality(): Promise<ContextQuality> {
+    return this.request<ContextQuality>('/api/v1/agent/context-quality');
+  }
+
+  async createCorrection(data: FinancialCorrectionCreate): Promise<FinancialCorrection> {
+    return this.request<FinancialCorrection>('/api/v1/corrections', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getCorrections(metricId?: string): Promise<FinancialCorrection[]> {
+    return this.request<FinancialCorrection[]>(
+      this.buildUrl('/api/v1/corrections', { metric_id: metricId })
+    );
   }
 
   // === Consent ===

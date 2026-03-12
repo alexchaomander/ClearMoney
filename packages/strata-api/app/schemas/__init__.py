@@ -2,12 +2,18 @@ from app.schemas.action_approval import ActionApprovalResponse
 from app.schemas.action_policy import ActionPolicyRequest, ActionPolicyResponse
 from app.schemas.agent import (
     AgentContextResponse,
+    ContextQualityResponse,
     DecisionTraceResponse,
     ExecuteRecommendationRequest,
     ExecuteRecommendationResponse,
     FinancialContextPayload,
     FreshnessStatus,
     MetricTraceResponse,
+)
+from app.schemas.correction import (
+    FinancialCorrectionCreate,
+    FinancialCorrectionResponse,
+    FinancialCorrectionUpdate,
 )
 from app.schemas.cash_account import (
     CashAccountCreate,
@@ -93,11 +99,15 @@ __all__ = [
     "LinkSessionResponse",
     "AgentContextResponse",
     "DecisionTraceResponse",
+    "ContextQualityResponse",
     "FinancialContextPayload",
     "FreshnessStatus",
     "MetricTraceResponse",
     "ExecuteRecommendationRequest",
     "ExecuteRecommendationResponse",
+    "FinancialCorrectionCreate",
+    "FinancialCorrectionResponse",
+    "FinancialCorrectionUpdate",
     "ActionPolicyRequest",
     "ActionPolicyResponse",
     "ActionApprovalResponse",

@@ -154,11 +154,7 @@ export const FALLBACK_DECISION_TRACES: DecisionTrace[] = [
       updated_at: new Date().toISOString(),
     },
     warnings: [
-      {
-        id: "w-1",
-        title: "Forecast uncertainty",
-        detail: "Real outcomes vary with market regime and tax assumptions.",
-      },
+      "Forecast uncertainty: real outcomes vary with market regime and tax assumptions.",
     ],
     source: "preview",
     created_at: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),

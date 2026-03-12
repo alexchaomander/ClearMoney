@@ -31,6 +31,7 @@ from app.models import (  # noqa: F401
     ConsentGrant,
     DebtAccount,
     FinancialMemory,
+    FinancialCorrection,
     Holding,
     IncomeSource,
     Institution,

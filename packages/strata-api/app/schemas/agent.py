@@ -13,6 +13,47 @@ class FreshnessStatus(BaseModel):
     warning: str | None = None
 
 
+class ConfidenceFactor(BaseModel):
+    label: str
+    value: float
+    impact: str
+    reason: str
+
+
+class TraceCorrectionTarget(BaseModel):
+    field: str
+    label: str
+    input_type: str
+    metric_ids: list[str] = Field(default_factory=list)
+
+
+class TraceComponent(BaseModel):
+    component_kind: str
+    label: str
+    raw_value: float | int | str | None = None
+    display_value: str
+    source: str | None = None
+    source_tier: str
+    determinism_class: str
+    as_of: str | None = None
+    freshness_status: str | None = None
+    policy_reference: str | None = None
+
+
+class ContextQualityResponse(BaseModel):
+    continuity_status: str
+    recommendation_readiness: str
+    confidence_score: float
+    freshness: FreshnessStatus
+    coverage_ratio: float
+    active_connection_count: int
+    total_connection_count: int
+    stale_connection_count: int
+    errored_connection_count: int
+    warnings: list[str] = Field(default_factory=list)
+    confidence_factors: list[ConfidenceFactor] = Field(default_factory=list)
+
+
 class FinancialContextAccount(BaseModel):
     name: str
     type: str
@@ -146,14 +187,25 @@ class MetricTraceDataPoint(BaseModel):
 
 class MetricTraceResponse(BaseModel):
     metric_id: str
+    formula_id: str
+    formula_version: str
     label: str
     formula: str
     description: str
     data_points: list[MetricTraceDataPoint] = Field(default_factory=list)
+    components: list[TraceComponent] = Field(default_factory=list)
     confidence_score: float
+    confidence_factors: list[ConfidenceFactor] = Field(default_factory=list)
+    determinism_class: str = "deterministic"
+    source_tier: str = "derived_context"
+    continuity_status: str = "healthy"
+    recommendation_readiness: str = "ready"
+    coverage_status: str = "full"
     methodology_version: str = "v1"
     as_of: str | None = None
     warnings: list[str] = Field(default_factory=list)
+    policy_version: str = "context-policy-v1"
+    correction_targets: list[TraceCorrectionTarget] = Field(default_factory=list)
 
 
 class ExecuteRecommendationRequest(BaseModel):
