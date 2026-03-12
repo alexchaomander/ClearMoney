@@ -2,6 +2,7 @@
 
 import logging
 from functools import cached_property
+from types import SimpleNamespace
 
 from app.core.config import settings
 from app.schemas.tax_document import ExtractionResult
@@ -13,6 +14,25 @@ from app.services.providers.base_extraction import (
 logger = logging.getLogger(__name__)
 
 GEMINI_DEFAULT_MODEL = "gemini-2.0-flash"
+
+
+class _FallbackPart:
+    @staticmethod
+    def from_bytes(*, data: bytes, mime_type: str) -> dict[str, object]:
+        return {"data": data, "mime_type": mime_type}
+
+
+class _FallbackGenerateContentConfig:
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+
+
+def _fallback_types_module() -> SimpleNamespace:
+    # Keep mocked tests working even when the optional google-genai SDK is absent.
+    return SimpleNamespace(
+        Part=_FallbackPart,
+        GenerateContentConfig=_FallbackGenerateContentConfig,
+    )
 
 
 class GeminiExtractionProvider(ExtractionProvider):
@@ -33,6 +53,17 @@ class GeminiExtractionProvider(ExtractionProvider):
                 "Run: uv pip install 'strata-api[providers]'"
             ) from None
         return genai.Client(api_key=settings.google_api_key)
+
+    @cached_property
+    def _types(self):
+        try:
+            from google.genai import types
+        except ImportError:
+            logger.warning(
+                "google-genai package not installed; using fallback Gemini types for mocked execution only"
+            )
+            return _fallback_types_module()
+        return types
 
     def supported_mime_types(self) -> list[str]:
         return ["image/png", "image/jpeg", "image/webp", "application/pdf"]
@@ -65,8 +96,7 @@ class GeminiExtractionProvider(ExtractionProvider):
         document_type_hint: str | None = None,
     ) -> ExtractionResult:
         client = self._client
-
-        from google.genai import types
+        types = self._types
 
         part = types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
         user_text = self.build_user_prompt(filename, document_type_hint)

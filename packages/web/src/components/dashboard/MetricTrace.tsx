@@ -43,6 +43,8 @@ export function MetricTrace({ metricId, className }: MetricTraceProps) {
   const data = liveTrace
     ? {
         metricId: liveTrace.metric_id,
+        formulaId: liveTrace.formula_id,
+        formulaVersion: liveTrace.formula_version,
         label: liveTrace.label,
         formula: liveTrace.formula,
         description: liveTrace.description,
@@ -52,9 +54,20 @@ export function MetricTrace({ metricId, className }: MetricTraceProps) {
           source: point.source ?? undefined,
         })),
         confidenceScore: liveTrace.confidence_score,
+        confidenceFactors: liveTrace.confidence_factors,
+        determinismClass: liveTrace.determinism_class,
+        sourceTier: liveTrace.source_tier,
+        continuityStatus: liveTrace.continuity_status,
+        recommendationReadiness: liveTrace.recommendation_readiness,
         methodologyVersion: liveTrace.methodology_version,
         asOf: liveTrace.as_of,
         warnings: liveTrace.warnings,
+        policyVersion: liveTrace.policy_version,
+        correctionTargets: liveTrace.correction_targets.map((target) => ({
+          field: target.field,
+          label: target.label,
+          inputType: target.input_type,
+        })),
       }
     : fallback;
 

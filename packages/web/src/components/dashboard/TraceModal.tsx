@@ -5,9 +5,12 @@ import { X, Calculator, ShieldCheck, Info, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useDensity } from "@/components/layout/DensityContext";
+import { MetricCorrectionDialog } from "./MetricCorrectionDialog";
 
 export interface MetricTraceData {
   metricId: string;
+  formulaId?: string;
+  formulaVersion?: string;
   label: string;
   formula: string;
   description: string;
@@ -17,9 +20,25 @@ export interface MetricTraceData {
     source?: string;
   }[];
   confidenceScore: number; // 0 to 1
+  confidenceFactors?: {
+    label: string;
+    value: number;
+    impact: string;
+    reason: string;
+  }[];
+  determinismClass?: string;
+  sourceTier?: string;
+  continuityStatus?: string;
+  recommendationReadiness?: string;
   methodologyVersion?: string;
   asOf?: string | null;
   warnings?: string[];
+  policyVersion?: string;
+  correctionTargets?: {
+    field: string;
+    label: string;
+    inputType: string;
+  }[];
 }
 
 interface TraceModalProps {
@@ -95,6 +114,14 @@ export function TraceModal({ data, open, onOpenChange }: TraceModalProps) {
                   </div>
 
                   <div className={cn("px-8 py-8 space-y-8", isCompact ? "space-y-6" : "")}>
+                    {(data.determinismClass || data.continuityStatus || data.recommendationReadiness) ? (
+                      <div className="flex flex-wrap gap-2">
+                        {data.determinismClass ? <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600 dark:bg-slate-800 dark:text-slate-300">{data.determinismClass}</span> : null}
+                        {data.continuityStatus ? <span className="rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">{data.continuityStatus}</span> : null}
+                        {data.recommendationReadiness ? <span className="rounded-full bg-amber-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">{data.recommendationReadiness}</span> : null}
+                      </div>
+                    ) : null}
+
                     {/* Definition */}
                     <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800/50">
                       <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200 mb-2">{data.label}</h3>
@@ -194,19 +221,39 @@ export function TraceModal({ data, open, onOpenChange }: TraceModalProps) {
                         {data.warnings.join(" ")}
                       </div>
                     ) : null}
+
+                    {data.confidenceFactors && data.confidenceFactors.length > 0 ? (
+                      <div className="space-y-3">
+                        <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Confidence Factors</p>
+                        <div className="space-y-2">
+                          {data.confidenceFactors.map((factor) => (
+                            <div key={factor.label} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900/50">
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{factor.label}</span>
+                                <span className="text-xs font-mono text-slate-500">{Math.round(factor.value * 100)}%</span>
+                              </div>
+                              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{factor.reason}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
 
                   {/* Legal/Audit Link */}
                   <div className="px-8 py-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
                     <span className="text-xs text-slate-400 font-mono tracking-tighter uppercase">
-                      Audit Trail: {data.metricId.slice(0, 12).toUpperCase()}
+                      Audit Trail: {(data.formulaId ?? data.metricId).slice(0, 18).toUpperCase()}
                     </span>
-                    <div className="text-right">
-                      <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-slate-400">
-                        {data.methodologyVersion ? `Method ${data.methodologyVersion}` : "Method Reference"}
-                      </div>
-                      <div className="text-[10px] text-slate-400">
-                        {data.asOf ? `As of ${new Date(data.asOf).toLocaleString()}` : "Current snapshot"}
+                    <div className="flex items-center gap-4">
+                      <MetricCorrectionDialog metricId={data.metricId} targets={data.correctionTargets ?? []} />
+                      <div className="text-right">
+                        <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-slate-400">
+                          {data.formulaVersion ? `Formula ${data.formulaVersion}` : data.methodologyVersion ? `Method ${data.methodologyVersion}` : "Method Reference"}
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          {data.asOf ? `As of ${new Date(data.asOf).toLocaleString()}` : "Current snapshot"}
+                        </div>
                       </div>
                     </div>
                   </div>

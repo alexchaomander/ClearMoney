@@ -1131,16 +1131,105 @@ export interface MetricTraceDataPoint {
   source: string | null;
 }
 
+export interface ConfidenceFactor {
+  label: string;
+  value: number;
+  impact: string;
+  reason: string;
+}
+
+export interface TraceComponent {
+  component_kind: string;
+  label: string;
+  raw_value: string | number | null;
+  display_value: string;
+  source: string | null;
+  source_tier: string;
+  determinism_class: string;
+  as_of: string | null;
+  freshness_status: string | null;
+  policy_reference: string | null;
+}
+
+export interface TraceCorrectionTarget {
+  field: string;
+  label: string;
+  input_type: string;
+  metric_ids: string[];
+}
+
+export interface ContextQuality {
+  continuity_status: string;
+  recommendation_readiness: string;
+  confidence_score: number;
+  freshness: {
+    is_fresh: boolean;
+    age_hours: number | null;
+    max_age_hours: number;
+    last_sync: string | null;
+    warning: string | null;
+  };
+  coverage_ratio: number;
+  active_connection_count: number;
+  total_connection_count: number;
+  stale_connection_count: number;
+  errored_connection_count: number;
+  warnings: string[];
+  confidence_factors: ConfidenceFactor[];
+}
+
 export interface MetricTrace {
   metric_id: string;
+  formula_id: string;
+  formula_version: string;
   label: string;
   formula: string;
   description: string;
   data_points: MetricTraceDataPoint[];
+  components: TraceComponent[];
   confidence_score: number;
+  confidence_factors: ConfidenceFactor[];
+  determinism_class: string;
+  source_tier: string;
+  continuity_status: string;
+  recommendation_readiness: string;
+  coverage_status: string;
   methodology_version: string;
   as_of: string | null;
   warnings: string[];
+  policy_version: string;
+  correction_targets: TraceCorrectionTarget[];
+}
+
+export interface FinancialCorrectionCreate {
+  metric_id?: string | null;
+  trace_id?: string | null;
+  correction_type: string;
+  target_field: string;
+  target_id?: string | null;
+  summary?: string | null;
+  reason: string;
+  proposed_value: Record<string, unknown>;
+  apply_immediately?: boolean;
+}
+
+export interface FinancialCorrection {
+  id: string;
+  user_id: string;
+  trace_id: string | null;
+  metric_id: string | null;
+  correction_type: string;
+  status: string;
+  target_field: string;
+  target_id: string | null;
+  summary: string | null;
+  reason: string;
+  original_value: Record<string, unknown>;
+  proposed_value: Record<string, unknown>;
+  resolved_value: Record<string, unknown> | null;
+  impact_summary: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
 }
 
 // Shared data source types
