@@ -1,6 +1,6 @@
 # Implementation Plan: Strata Platform + ClearMoney (AI-Native Mint)
 
-*Last updated: March 11, 2026*
+*Last updated: March 12, 2026*
 
 This document outlines the strategic engineering execution plan to build **Strata** (the multi-tenant Action-Layer platform) and **ClearMoney** (the flagship AI-native successor to Mint).
 
@@ -30,6 +30,29 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 
 **Goal:** Build a deterministic, trust-scored, resilient context layer that can support a true financial chief-of-staff experience.
 
+### Recently Completed (March 12, 2026)
+
+- [x] **Typed Context Contracts**:
+    - Added typed response models for assembled financial context payloads.
+    - Aligned SDK types with richer context structures.
+- [x] **Live Provenance Pilot**:
+    - Replaced static methodology with live metric trace APIs for:
+        - Net worth
+        - Total assets
+        - Savings rate
+        - Personal runway
+- [x] **Trace Schema v2 (Metrics)**:
+    - Added `formula_id`, `formula_version`, `determinism_class`, `source_tier`, `continuity_status`, `recommendation_readiness`, `confidence_factors`, and correction targets to metric traces.
+- [x] **Formula Registry v1**:
+    - Registered versioned formulas for the initial core metrics.
+- [x] **Correction Engine v1**:
+    - Added first-class corrections with deterministic application for monthly income, monthly expenses, and transaction category fixes.
+    - Added recomputation impact summaries for corrected metrics.
+- [x] **Context Quality / Continuity v1**:
+    - Added context-quality evaluation and API surface with continuity states and recommendation readiness.
+- [x] **Advisor Trace Upgrade v1**:
+    - Added context-quality metadata and readiness gating to advisor-created traces and recommendation generation.
+
 ### 1.1 Deterministic Financial Core
 
 - [ ] **Computation Boundary Spec**:
@@ -57,17 +80,21 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 
 ### 1.3 Provenance and Live "Show the Math"
 
-- [ ] **Provenance API**:
-    - Build API endpoints for metric-level lineage.
-- [ ] **Formula Versioning**:
-    - Store formula IDs and versions for all key user-facing metrics.
-- [ ] **Initial Metrics Migration**:
+- [x] **Provenance API**:
+    - Built API endpoints for metric-level lineage.
+- [x] **Formula Versioning**:
+    - Store formula IDs and versions for key user-facing metrics in the registry-backed trace contract.
+- [x] **Initial Metrics Migration**:
     - Net worth
-    - Runway
+    - Personal runway
     - Savings rate
-    - Allocation drift
-- [ ] **Confidence Decomposition**:
-    - Explain confidence from freshness, coverage, source tier, conflict count, and inference depth.
+    - Total assets
+- [x] **Confidence Decomposition**:
+    - Confidence is now decomposed into freshness, coverage, and metric-specific factors.
+- [ ] **Recommendation Trace Convergence**:
+    - Migrate recommendation traces fully onto the same provenance v2 contract used by metrics.
+- [ ] **Allocation Drift Provenance**:
+    - Extend the registry + trace stack to allocation drift and concentration metrics.
 
 ### 1.4 Connectivity Resilience
 
@@ -151,12 +178,14 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
 
 ### 2.3 Correction Engine
 
-- [ ] **Correction Types**:
+- [x] **Correction Types**:
     - wrong_fact, stale_fact, wrong_categorization, wrong_assumption, wrong_recommendation, intentional_exception, source_mistrust, execution_mismatch.
-- [ ] **Correction Workflow**:
-    - report -> classify -> invalidate -> resolve -> recompute -> measure.
+- [x] **Correction Workflow**:
+    - report -> classify -> apply when deterministic -> recompute impacted traces.
 - [ ] **Reviewer Console**:
     - Internal tooling for triage and adjudication.
+- [ ] **Recommendation Correction Handling**:
+    - Distinguish metric/input corrections from recommendation-rationale disputes and advisor misses.
 
 ### 2.4 Advisor Continuity
 
@@ -234,12 +263,22 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
 
 ---
 
-## Immediate Next Steps (March 2026)
+## Immediate Next Steps (Post-March 12, 2026)
 
-1.  **Context Graph Spec**: Write the canonical graph, metadata, and determinism-boundary spec.
-2.  **Trace Schema v2**: Add provenance, source-tier, determinism-class, and policy-version fields.
-3.  **Live Provenance Pilot**: Migrate net worth, runway, and savings rate from static methodology to live lineage.
-4.  **Correction Engine v1**: Implement typed corrections for spending, debt classification, and recommendation rationale.
-5.  **Connectivity Resilience**: Add degraded / revoked / partially-covered connection states and UI handling.
-6.  **Advisor Continuity**: Implement persistent advisory state and first weekly briefing workflow.
-7.  **Action Mandates**: Add observe / recommend / draft / approval-required modes before deeper automation.
+1.  **Recommendation Trace Convergence**:
+    - Move recommendation traces onto the same v2 provenance contract as metric traces.
+    - Add determinism/source-tier labels directly to the decision narrative UI.
+2.  **Connectivity Resilience UX**:
+    - Surface continuity states (`healthy`, `stale`, `degraded`, `revoked`, `manual_substitute`) in dashboard experiences.
+    - Add explicit recovery paths when readiness is blocked.
+3.  **Correction Expansion**:
+    - Add debt-balance, allocation, and recommendation-rationale correction flows.
+    - Introduce reviewer resolution states and audit tooling.
+4.  **Formula Registry Expansion**:
+    - Cover allocation drift, concentration risk, debt load, and advisor-readiness metrics.
+5.  **Canonical Context Graph Spec**:
+    - Formalize stable node/edge IDs and metadata ownership for durable context nodes.
+6.  **Advisor Continuity**:
+    - Persist open questions, blocked actions, and "what changed" summaries as first-class advisory state.
+7.  **Action Mandates**:
+    - Tie recommendation readiness and context quality directly into observe/recommend/draft/approval-required execution boundaries.

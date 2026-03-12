@@ -17,12 +17,14 @@ from app.models.agent_session import (
     RecommendationStatus,
     SessionStatus,
 )
+from app.models.connection import Connection
 from app.models.decision_trace import DecisionTrace, DecisionTraceType
 from app.models.financial_memory import FilingStatus, FinancialMemory, RiskTolerance
 from app.models.memory_event import MemoryEvent, MemoryEventSource
 from app.services.action_policy import ActionPolicyService
 from app.services.agent_guardrails import evaluate_freshness
 from app.services.agent_runtime import AgentRuntime
+from app.services.context_quality import evaluate_context_quality
 from app.services.context_renderer import render_context_as_markdown
 from app.services.decision_engine import run_deterministic_checks
 from app.services.financial_context import build_financial_context
@@ -426,10 +428,20 @@ class FinancialAdvisor:
         if not agent_session.vanish_mode and not created_recommendation and full_response.strip():
             context = await build_financial_context(user_id, self._session)
             freshness_status = evaluate_freshness(context)
+            connection_result = await self._session.execute(
+                select(Connection).where(Connection.user_id == user_id)
+            )
+            context_quality = evaluate_context_quality(
+                context,
+                list(connection_result.scalars().all()),
+            )
             warning = freshness_status.get("warning")
             deterministic = run_deterministic_checks(context)
             rule_checks = self._build_rule_checks(context, freshness_status) + deterministic["rules_applied"]
             assumptions = self._build_assumptions(context) + deterministic["assumptions"]
+            trace_warnings = list(context_quality.warnings)
+            if warning and warning not in trace_warnings:
+                trace_warnings.append(warning)
             trace = DecisionTrace(
                 user_id=user_id,
                 session_id=session_id,
@@ -443,11 +455,13 @@ class FinancialAdvisor:
                         "rules_applied": rule_checks,
                         "assumptions": assumptions,
                         "freshness": freshness_status,
+                        "context_quality": context_quality.model_dump(),
+                        "trace_version": "v2",
                         "deterministic": deterministic,
                     },
                 },
                 data_freshness=context.get("data_freshness", {}),
-                warnings=[warning] if warning else [],
+                warnings=trace_warnings,
                 source="advisor",
             )
             self._session.add(trace)
@@ -596,9 +610,22 @@ class FinancialAdvisor:
     ) -> dict:
         context = await build_financial_context(user_id, self._session)
         freshness_status = evaluate_freshness(context)
+        connection_result = await self._session.execute(
+            select(Connection).where(Connection.user_id == user_id)
+        )
+        context_quality = evaluate_context_quality(
+            context,
+            list(connection_result.scalars().all()),
+        )
         deterministic = run_deterministic_checks(context)
         rule_checks = self._build_rule_checks(context, freshness_status) + deterministic["rules_applied"]
         assumptions = self._build_assumptions(context) + deterministic["assumptions"]
+
+        if context_quality.recommendation_readiness == "blocked":
+            return {
+                "error": "Context quality is too weak for an action-ready recommendation.",
+                "context_quality": context_quality.model_dump(),
+            }
 
         # Get skill name from session
         result = await self._session.execute(
@@ -649,7 +676,15 @@ class FinancialAdvisor:
         trace_payload.setdefault("assumptions", assumptions)
         trace_payload.setdefault("confidence", tool_input.get("confidence"))
         trace_payload.setdefault("freshness", freshness_status)
+        trace_payload.setdefault("context_quality", context_quality.model_dump())
+        trace_payload.setdefault("trace_version", "v2")
+        trace_payload.setdefault("recommendation_readiness", context_quality.recommendation_readiness)
         trace_payload.setdefault("deterministic", deterministic)
+
+        warnings = list(tool_input.get("warnings", []))
+        for warning in context_quality.warnings:
+            if warning not in warnings:
+                warnings.append(warning)
 
         trace = DecisionTrace(
             user_id=user_id,
@@ -665,7 +700,7 @@ class FinancialAdvisor:
                 "trace": trace_payload,
             },
             data_freshness=tool_input.get("freshness_summary", freshness_status),
-            warnings=tool_input.get("warnings", []),
+            warnings=warnings,
             source="advisor",
         )
         self._session.add(trace)
