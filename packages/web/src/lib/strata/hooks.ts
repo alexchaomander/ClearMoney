@@ -160,6 +160,14 @@ export function useCreateCorrection() {
       if (correction.metric_id) {
         queryClient.invalidateQueries({ queryKey: queryKeys.metricTrace(correction.metric_id) });
       }
+      const impactedMetrics = correction.impact_summary?.impacted_metrics;
+      if (Array.isArray(impactedMetrics)) {
+        for (const metricId of impactedMetrics) {
+          if (typeof metricId === "string" && metricId.length > 0) {
+            queryClient.invalidateQueries({ queryKey: queryKeys.metricTrace(metricId) });
+          }
+        }
+      }
       queryClient.invalidateQueries({ queryKey: queryKeys.contextQuality });
       queryClient.invalidateQueries({ queryKey: queryKeys.financialMemory });
     },
