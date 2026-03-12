@@ -54,6 +54,53 @@ class ContextQualityResponse(BaseModel):
     confidence_factors: list[ConfidenceFactor] = Field(default_factory=list)
 
 
+class DecisionTraceRuleCheck(BaseModel):
+    name: str
+    passed: bool | None = None
+    value: float | int | str | None = None
+    threshold: float | int | str | None = None
+    message: str | None = None
+
+
+class DecisionTraceInsight(BaseModel):
+    title: str
+    summary: str | None = None
+    recommendation: str | None = None
+    severity: str | None = None
+
+
+class DecisionTraceRemediationAction(BaseModel):
+    action_id: str
+    label: str
+    description: str
+    href: str
+    priority: str = "medium"
+
+
+class DecisionTracePayload(BaseModel):
+    trace_version: str = "v2"
+    trace_kind: str
+    title: str | None = None
+    summary: str | None = None
+    rules_applied: list[DecisionTraceRuleCheck] = Field(default_factory=list)
+    insights: list[DecisionTraceInsight] = Field(default_factory=list)
+    assumptions: list[str] = Field(default_factory=list)
+    confidence_score: float | None = None
+    confidence_factors: list[ConfidenceFactor] = Field(default_factory=list)
+    determinism_class: str = "deterministic"
+    source_tier: str = "derived_context"
+    continuity_status: str = "healthy"
+    recommendation_readiness: str = "ready"
+    coverage_status: str = "full"
+    policy_version: str = "context-policy-v1"
+    freshness: FreshnessStatus
+    context_quality: ContextQualityResponse
+    warnings: list[str] = Field(default_factory=list)
+    remediation_actions: list[DecisionTraceRemediationAction] = Field(default_factory=list)
+    correction_targets: list[TraceCorrectionTarget] = Field(default_factory=list)
+    deterministic: dict[str, Any] = Field(default_factory=dict)
+
+
 class FinancialContextAccount(BaseModel):
     name: str
     type: str
@@ -175,6 +222,7 @@ class DecisionTraceResponse(BaseModel):
     warnings: list[str]
     source: str
     created_at: datetime
+    trace_payload: DecisionTracePayload | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

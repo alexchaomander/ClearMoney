@@ -1123,6 +1123,30 @@ export interface DecisionTrace {
   warnings: string[];
   source: string;
   created_at: string;
+  trace_payload: DecisionTracePayload | null;
+}
+
+export interface DecisionTraceRuleCheck {
+  name: string;
+  passed: boolean | null;
+  value?: string | number | null;
+  threshold?: string | number | null;
+  message?: string | null;
+}
+
+export interface DecisionTraceInsight {
+  title: string;
+  summary?: string | null;
+  recommendation?: string | null;
+  severity?: string | null;
+}
+
+export interface DecisionTraceRemediationAction {
+  action_id: string;
+  label: string;
+  description: string;
+  href: string;
+  priority: string;
 }
 
 export interface MetricTraceDataPoint {
@@ -1176,6 +1200,30 @@ export interface ContextQuality {
   errored_connection_count: number;
   warnings: string[];
   confidence_factors: ConfidenceFactor[];
+}
+
+export interface DecisionTracePayload {
+  trace_version: string;
+  trace_kind: string;
+  title?: string | null;
+  summary?: string | null;
+  rules_applied: DecisionTraceRuleCheck[];
+  insights: DecisionTraceInsight[];
+  assumptions: string[];
+  confidence_score?: number | null;
+  confidence_factors: ConfidenceFactor[];
+  determinism_class: string;
+  source_tier: string;
+  continuity_status: string;
+  recommendation_readiness: string;
+  coverage_status: string;
+  policy_version: string;
+  freshness: ContextQuality["freshness"];
+  context_quality: ContextQuality;
+  warnings: string[];
+  remediation_actions: DecisionTraceRemediationAction[];
+  correction_targets: TraceCorrectionTarget[];
+  deterministic: Record<string, unknown>;
 }
 
 export interface MetricTrace {
