@@ -83,6 +83,7 @@ export const queryKeys = {
   consents: ["consents"] as const,
   decisionTraces: (filters?: { sessionId?: string; recommendationId?: string }) =>
     ["decisionTraces", filters?.sessionId ?? "", filters?.recommendationId ?? ""] as const,
+  metricTrace: (metricId: string) => ["metricTrace", metricId] as const,
   // Banking (Plaid)
   bankAccounts: ["banking", "accounts"] as const,
   bankTransactions: (params?: BankTransactionQuery) =>
@@ -116,6 +117,15 @@ export function usePortfolioSummary(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.portfolioSummary,
     queryFn: () => client.getPortfolioSummary(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useMetricTrace(metricId: string, options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.metricTrace(metricId),
+    queryFn: () => client.getMetricTrace(metricId),
     enabled: options?.enabled ?? true,
   });
 }
