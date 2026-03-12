@@ -17,7 +17,9 @@ from app.models.financial_correction import (
 from app.models.financial_memory import FinancialMemory
 from app.models.memory_event import MemoryEvent, MemoryEventSource
 from app.schemas.correction import FinancialCorrectionCreate
+from app.services.commingling import ComminglingDetectionEngine
 from app.services.metric_trace import build_metric_trace
+from app.services.spending_derivation import update_memory_spending_categories
 
 IMMEDIATE_MEMORY_FIELDS = {
     "monthly_income": "monthly_income",
@@ -163,11 +165,21 @@ class CorrectionService:
             if tx is None:
                 raise HTTPException(status_code=404, detail="Bank transaction not found")
             tx.primary_category = category.strip()
+            spending_categories_updated = await update_memory_spending_categories(self._session, user_id)
+            commingling_summary = await ComminglingDetectionEngine(self._session).scan_and_flag(user_id)
             return {
                 "applied": True,
                 "target_field": "transaction_category",
                 "transaction_id": target_id,
                 "new_primary_category": tx.primary_category,
+                "impacted_fields": ["spending_categories_monthly", "is_commingled"],
+                "spending_categories_updated": spending_categories_updated,
+                "commingling_summary": {
+                    "total_count": commingling_summary["total_count"],
+                    "commingled_count": commingling_summary["commingled_count"],
+                    "commingled_amount": float(commingling_summary["commingled_amount"]),
+                },
+                "transaction_is_commingled": tx.is_commingled,
             }
 
         return None

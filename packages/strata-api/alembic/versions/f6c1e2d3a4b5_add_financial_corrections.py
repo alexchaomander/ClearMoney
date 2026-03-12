@@ -77,3 +77,7 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_financial_corrections_trace_id"), table_name="financial_corrections")
     op.drop_index(op.f("ix_financial_corrections_user_id"), table_name="financial_corrections")
     op.drop_table("financial_corrections")
+    bind = op.get_bind()
+    if bind.dialect.name == "postgresql":
+        op.execute("DROP TYPE IF EXISTS financialcorrectionstatus")
+        op.execute("DROP TYPE IF EXISTS financialcorrectiontype")
