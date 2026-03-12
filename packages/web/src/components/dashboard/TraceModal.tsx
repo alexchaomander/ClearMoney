@@ -1,7 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, Calculator, ShieldCheck, Activity, ArrowRight, Info, Zap } from "lucide-react";
+import { X, Calculator, ShieldCheck, Info, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useDensity } from "@/components/layout/DensityContext";
@@ -17,6 +17,9 @@ export interface MetricTraceData {
     source?: string;
   }[];
   confidenceScore: number; // 0 to 1
+  methodologyVersion?: string;
+  asOf?: string | null;
+  warnings?: string[];
 }
 
 interface TraceModalProps {
@@ -185,6 +188,12 @@ export function TraceModal({ data, open, onOpenChange }: TraceModalProps) {
                         </span>
                       </div>
                     </div>
+
+                    {data.warnings && data.warnings.length > 0 ? (
+                      <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+                        {data.warnings.join(" ")}
+                      </div>
+                    ) : null}
                   </div>
 
                   {/* Legal/Audit Link */}
@@ -192,9 +201,14 @@ export function TraceModal({ data, open, onOpenChange }: TraceModalProps) {
                     <span className="text-xs text-slate-400 font-mono tracking-tighter uppercase">
                       Audit Trail: {data.metricId.slice(0, 12).toUpperCase()}
                     </span>
-                    <button className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 font-black uppercase tracking-[0.1em] flex items-center gap-2 transition-colors">
-                      Full Methodology <ArrowRight className="w-3 h-3" />
-                    </button>
+                    <div className="text-right">
+                      <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-slate-400">
+                        {data.methodologyVersion ? `Method ${data.methodologyVersion}` : "Method Reference"}
+                      </div>
+                      <div className="text-[10px] text-slate-400">
+                        {data.asOf ? `As of ${new Date(data.asOf).toLocaleString()}` : "Current snapshot"}
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               </div>
