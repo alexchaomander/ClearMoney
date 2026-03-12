@@ -230,6 +230,153 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
 - [ ] **Recommendation Correction Handling**:
     - Distinguish metric/input corrections from recommendation-rationale disputes and advisor misses.
 
+### 2.3.1 Detailed Next Program: Recommendation Review and Correction Loop
+
+**Objective:** Turn recommendation traces into a governed workflow where weak, disputed, or high-risk recommendations are routed through correction, review, and continuity state updates instead of silently degrading trust.
+
+**Primary Product Outcomes**
+- Users can tell ClearMoney not just "this number is wrong," but:
+    - "this recommendation is based on a wrong assumption"
+    - "this recommendation is directionally wrong for my situation"
+    - "this recommendation is blocked because my context is incomplete"
+- Internal reviewers can adjudicate disputes, apply overrides, and update trace status without mutating raw financial history manually.
+- Future advisor sessions inherit the outcome of prior corrections and reviews.
+
+**Scope v1**
+- Recommendation traces created by advisor `analysis` and `recommendation` flows
+- Manual-review corrections and recommendation-rationale disputes
+- Reviewer decisioning for:
+    - approve current recommendation
+    - dismiss user dispute
+    - mark recommendation stale
+    - convert dispute into factual correction
+    - mark recommendation blocked pending context recovery
+
+**Non-Goals v1**
+- Full policy engine for every action type
+- Multi-reviewer approval chains
+- External-facing support tooling
+- Automated model retraining
+
+**Data Model Additions**
+- [ ] **Recommendation Review Entity**
+    - `id`
+    - `user_id`
+    - `decision_trace_id`
+    - `recommendation_id`
+    - `review_type`
+    - `status`
+    - `opened_reason`
+    - `resolution`
+    - `resolution_notes`
+    - `applied_changes`
+    - `reviewer_id` or `reviewer_label`
+    - `created_at`, `updated_at`, `resolved_at`
+- [ ] **Recommendation Status Extensions**
+    - Add trace-/recommendation-level states such as:
+        - `active`
+        - `cautious`
+        - `blocked`
+        - `superseded`
+        - `needs_review`
+        - `resolved`
+- [ ] **Continuity Carry-Forward**
+    - Store open review items and unresolved recommendation disputes in continuity state so future sessions can reference them.
+
+**Backend Workstreams**
+1. **Recommendation Review Schema + Migration**
+   - Add `recommendation_reviews` table.
+   - Add indexes on `user_id`, `decision_trace_id`, `recommendation_id`, and `status`.
+   - Ensure downgrade paths clean up enum/types correctly.
+2. **Review Service**
+   - Create service methods for:
+       - open review
+       - list reviews
+       - resolve review
+       - convert review into correction
+       - mark recommendation superseded
+   - Guarantee every resolution writes an audit trail.
+3. **Decision Trace Status Projection**
+   - Extend `DecisionTracePayload` with optional review summary:
+       - `review_status`
+       - `open_review_count`
+       - `latest_resolution`
+       - `superseded_by_trace_id`
+   - Ensure `/agent/decision-traces` returns current review state without clients reconstructing it.
+4. **Advisor Continuity Hooks**
+   - When an advisor session starts, inject:
+       - open recommendation disputes
+       - unresolved review items
+       - recommendations blocked by stale or partial context
+   - Prevent the advisor from re-issuing identical recommendations while a review is unresolved.
+
+**Frontend Workstreams**
+1. **Decision Trace Review Surface**
+   - Add actions in the trace UI:
+       - `Report recommendation issue`
+       - `Mark as outdated`
+       - `Request human review`
+   - Render current review state with visible badges.
+2. **Reviewer Console v1**
+   - Build an internal page with:
+       - queue filters by `status`, `severity`, `trace_kind`, and `continuity_status`
+       - trace summary card
+       - linked recommendation, linked corrections, linked context quality
+       - resolution actions
+   - Keep console read/write behind internal auth or a feature flag.
+3. **Continuity and Remediation UX**
+   - Show when a recommendation is blocked because context needs repair.
+   - Route users to the right remediation action:
+       - reconnect accounts
+       - refresh data
+       - update profile
+       - resolve open review
+
+**API Surface**
+- [ ] `POST /api/v1/recommendation-reviews`
+- [ ] `GET /api/v1/recommendation-reviews`
+- [ ] `POST /api/v1/recommendation-reviews/{id}/resolve`
+- [ ] `POST /api/v1/recommendation-reviews/{id}/convert-to-correction`
+- [ ] Extend `GET /api/v1/agent/decision-traces` with review summary fields
+
+**Execution Order**
+1. Build review model + migration
+2. Build review service + API
+3. Extend decision trace payload with review summary
+4. Add internal reviewer console
+5. Add user-facing recommendation dispute actions
+6. Feed open review state into advisor continuity and recommendation suppression
+
+**Acceptance Criteria**
+- Every disputed recommendation can be tracked without mutating raw trace payloads by hand.
+- Review resolution is visible in the trace UI and retrievable by API.
+- A resolved recommendation dispute can either:
+    - update recommendation state, or
+    - create downstream factual corrections.
+- Advisor sessions surface unresolved reviews and avoid repeating superseded guidance.
+- Reviewer console can process the full loop from open -> resolve -> audit.
+
+**Rollout Plan**
+- Stage 1: Internal-only reviewer APIs and console
+- Stage 2: User-facing "request review" on recommendation traces
+- Stage 3: Advisor continuity integration
+- Stage 4: Recommendation suppression / supersession logic
+
+**Suggested Sprint Breakdown**
+- **Sprint A**
+    - migration
+    - backend review models
+    - base review APIs
+    - tests for open/list/resolve
+- **Sprint B**
+    - trace payload review summary
+    - reviewer console
+    - audit trail + links to corrections
+- **Sprint C**
+    - user-facing dispute entry point
+    - continuity injection into advisor
+    - recommendation suppression and supersession behavior
+
 ### 2.4 Advisor Continuity
 
 - [ ] **Persistent Advisory State**:
