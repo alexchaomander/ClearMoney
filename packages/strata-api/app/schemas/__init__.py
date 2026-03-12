@@ -5,7 +5,9 @@ from app.schemas.agent import (
     DecisionTraceResponse,
     ExecuteRecommendationRequest,
     ExecuteRecommendationResponse,
+    FinancialContextPayload,
     FreshnessStatus,
+    MetricTraceResponse,
 )
 from app.schemas.cash_account import (
     CashAccountCreate,
@@ -91,7 +93,9 @@ __all__ = [
     "LinkSessionResponse",
     "AgentContextResponse",
     "DecisionTraceResponse",
+    "FinancialContextPayload",
     "FreshnessStatus",
+    "MetricTraceResponse",
     "ExecuteRecommendationRequest",
     "ExecuteRecommendationResponse",
     "ActionPolicyRequest",
