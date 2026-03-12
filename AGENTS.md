@@ -310,6 +310,10 @@ This setup provides a robust, scalable foundation for building modern web applic
  - **Use uv for virtual environment management**
  - **Python version**: Python 3.12
  - **Virtual environment location**: `.venv` directory
+ - **Default rule**: All Python commands, checks, and tests should run via the repo root `.venv`
+ - **Backend package**: Install the FastAPI app from `packages/strata-api` into the root `.venv`
+ - **Test runner**: Prefer `.venv/bin/python -m pytest ...` over bare `python` or `pytest`
+ - **Dependency installs**: Use `uv pip install --python .venv/bin/python ...`
 
  ### Setting up the environment:
  ```bash
@@ -320,21 +324,26 @@ This setup provides a robust, scalable foundation for building modern web applic
  source .venv/bin/activate  # On Unix/macOS
  # or
  .venv\Scripts\activate  # On Windows
+
+ # Install backend package and dev dependencies
+ uv pip install --python .venv/bin/python -e "packages/strata-api[dev]"
  ```
 
  ### Installing dependencies:
  ```bash
  # Use uv for pip installing any dependencies
- uv pip install <package-name>
+ uv pip install --python .venv/bin/python <package-name>
 
  # For requirements.txt
- uv pip install -r requirements.txt
+ uv pip install --python .venv/bin/python -r requirements.txt
  ```
 
  ### Important notes:
  - Always check if `.venv` already exists before creating a new one
  - Use the existing `.venv` if present to maintain consistency
  - All Python dependencies should be installed using `uv pip install`
+ - Do not run Python tests outside `.venv`
+ - If a FastAPI import fails during tests because of a missing package, install it into `.venv` and rerun the test there
 
  ## Streamlit Development Guidelines
  - **DO NOT** launch or relaunch Streamlit apps automatically
