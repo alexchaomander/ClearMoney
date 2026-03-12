@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { ChevronRight, Database, Info } from "lucide-react";
 import { useDecisionTraces } from "@/lib/strata/hooks";
 import { getDecisionTracePayload } from "@/lib/strata/decision-traces";
 import { format } from "date-fns";
 import type { DecisionTrace } from "@clearmoney/strata-sdk";
+import { RecommendationReviewDialog } from "@/components/dashboard/RecommendationReviewDialog";
 
 function formatTraceType(type: DecisionTrace["trace_type"]) {
   switch (type) {
@@ -78,6 +80,11 @@ export function DecisionTracePanel() {
                       <span className="rounded-full border border-emerald-200 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700 dark:border-emerald-900 dark:text-emerald-300">
                         {payload.recommendation_readiness}
                       </span>
+                      {payload.review_summary?.open_review_count ? (
+                        <span className="rounded-full border border-amber-200 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-700 dark:border-amber-900 dark:text-amber-300">
+                          {payload.review_summary.open_review_count} open review{payload.review_summary.open_review_count === 1 ? "" : "s"}
+                        </span>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
@@ -110,19 +117,74 @@ export function DecisionTracePanel() {
             <div className="grid gap-4 overflow-y-auto p-6 text-sm text-slate-700 dark:text-neutral-200">
               {tracePayload ? (
                 <section className="rounded-xl border border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900/40 p-4">
-                  <div className="flex flex-wrap gap-2">
-                    <span className="rounded-full bg-slate-900 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white dark:bg-slate-100 dark:text-slate-900">
-                      {tracePayload.trace_kind}
-                    </span>
-                    <span className="rounded-full border border-slate-200 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-600 dark:border-neutral-700 dark:text-neutral-300">
-                      {tracePayload.continuity_status}
-                    </span>
-                    <span className="rounded-full border border-emerald-200 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700 dark:border-emerald-900 dark:text-emerald-300">
-                      {tracePayload.recommendation_readiness}
-                    </span>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="rounded-full bg-slate-900 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white dark:bg-slate-100 dark:text-slate-900">
+                          {tracePayload.trace_kind}
+                        </span>
+                        <span className="rounded-full border border-slate-200 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-600 dark:border-neutral-700 dark:text-neutral-300">
+                          {tracePayload.continuity_status}
+                        </span>
+                        <span className="rounded-full border border-emerald-200 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700 dark:border-emerald-900 dark:text-emerald-300">
+                          {tracePayload.recommendation_readiness}
+                        </span>
+                        {tracePayload.review_summary?.open_review_count ? (
+                          <span className="rounded-full border border-amber-200 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700 dark:border-amber-900 dark:text-amber-300">
+                            {tracePayload.review_summary.open_review_count} open review{tracePayload.review_summary.open_review_count === 1 ? "" : "s"}
+                          </span>
+                        ) : null}
+                      </div>
+                      {tracePayload.summary ? (
+                        <p className="mt-3 text-sm text-slate-600 dark:text-neutral-300">{tracePayload.summary}</p>
+                      ) : null}
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <RecommendationReviewDialog
+                        decisionTraceId={activeTrace.id}
+                        recommendationId={activeTrace.recommendation_id}
+                        reviewSummary={tracePayload.review_summary}
+                      />
+                      <Link
+                        href="/dashboard/recommendation-reviews"
+                        className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 transition hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white"
+                      >
+                        Open queue
+                      </Link>
+                    </div>
                   </div>
-                  {tracePayload.summary ? (
-                    <p className="mt-3 text-sm text-slate-600 dark:text-neutral-300">{tracePayload.summary}</p>
+                </section>
+              ) : null}
+              {tracePayload?.review_summary ? (
+                <section className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/20 p-4">
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">
+                    <Info className="h-4 w-4" />
+                    Review Status
+                  </div>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-lg border border-amber-200 bg-white px-3 py-2 dark:border-amber-900/60 dark:bg-slate-950/50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-neutral-400">Current status</p>
+                      <p className="mt-1 text-sm text-slate-900 dark:text-white">
+                        {tracePayload.review_summary.review_status ?? "no_reviews"}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-amber-200 bg-white px-3 py-2 dark:border-amber-900/60 dark:bg-slate-950/50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-neutral-400">Open count</p>
+                      <p className="mt-1 text-sm text-slate-900 dark:text-white">
+                        {tracePayload.review_summary.open_review_count}
+                      </p>
+                    </div>
+                  </div>
+                  {tracePayload.review_summary.latest_resolution ? (
+                    <p className="mt-3 text-xs text-slate-600 dark:text-neutral-300">
+                      Latest resolution: {tracePayload.review_summary.latest_resolution}
+                      {tracePayload.review_summary.reviewer_label ? ` by ${tracePayload.review_summary.reviewer_label}` : ""}
+                    </p>
+                  ) : null}
+                  {tracePayload.review_summary.latest_resolution_notes ? (
+                    <p className="mt-2 text-xs text-slate-500 dark:text-neutral-400">
+                      {tracePayload.review_summary.latest_resolution_notes}
+                    </p>
                   ) : null}
                 </section>
               ) : null}

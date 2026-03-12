@@ -53,12 +53,12 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 - [x] **Advisor Trace Upgrade v1**:
     - Added context-quality metadata and readiness gating to advisor-created traces and recommendation generation.
 
-### Next Build Slice: Recommendation-Trace Convergence (In Progress)
+### Next Build Slice: Recommendation-Trace Convergence (Completed)
 
 **Objective:** Move ClearMoney from explainable metrics to explainable advisory behavior by putting analysis and recommendation traces onto the same trust contract.
 
 **Deliverables**
-- [ ] **Shared Decision Trace v2 Contract**:
+- [x] **Shared Decision Trace v2 Contract**:
     - Typed payload for advisor `analysis` and `recommendation` traces.
     - Required fields:
         - `trace_version`
@@ -79,13 +79,18 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
         - `warnings`
         - `remediation_actions`
         - `correction_targets`
-- [ ] **Recommendation Remediation UX**:
+- [x] **Recommendation Remediation UX**:
     - The UI should explain why a recommendation is `cautious` or `blocked`.
     - It should point users to reconnect accounts, refresh stale data, or fill missing profile inputs.
-- [ ] **Decision Trace UI Migration**:
+- [x] **Decision Trace UI Migration**:
     - Replace raw JSON-heavy trace viewers with structured rendering of rules, insights, assumptions, confidence, and remediation.
-- [ ] **Backward Compatibility**:
+- [x] **Backward Compatibility**:
     - Existing traces should still render via fallback parsing while new traces emit the typed v2 shape.
+
+**Delivered**
+- Shared `DecisionTracePayload` is now live across advisor traces, API serialization, SDK types, and dashboard rendering.
+- Recommendation traces now carry remediation actions, correction targets, and review summaries.
+- User-facing review entry points and a recommendation review queue are implemented.
 
 **Execution Sequence**
 1. Add `DecisionTracePayload` and response parsing in the API/schema layer.
@@ -225,10 +230,10 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
     - wrong_fact, stale_fact, wrong_categorization, wrong_assumption, wrong_recommendation, intentional_exception, source_mistrust, execution_mismatch.
 - [x] **Correction Workflow**:
     - report -> classify -> apply when deterministic -> recompute impacted traces.
-- [ ] **Reviewer Console**:
-    - Internal tooling for triage and adjudication.
-- [ ] **Recommendation Correction Handling**:
-    - Distinguish metric/input corrections from recommendation-rationale disputes and advisor misses.
+- [x] **Reviewer Console v1**:
+    - Queue for recommendation disputes, stale guidance, and correction conversion.
+- [x] **Recommendation Correction Handling v1**:
+    - Recommendation reviews can be converted into correction objects and fed back into continuity state.
 
 ### 2.3.1 Detailed Next Program: Recommendation Review and Correction Loop
 
@@ -259,7 +264,7 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
 - Automated model retraining
 
 **Data Model Additions**
-- [ ] **Recommendation Review Entity**
+- [x] **Recommendation Review Entity**
     - `id`
     - `user_id`
     - `decision_trace_id`
@@ -280,8 +285,8 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
         - `superseded`
         - `needs_review`
         - `resolved`
-- [ ] **Continuity Carry-Forward**
-    - Store open review items and unresolved recommendation disputes in continuity state so future sessions can reference them.
+- [x] **Continuity Carry-Forward v1**
+    - Open review items and unresolved recommendation disputes now flow into trace review summaries and continuity warnings.
 
 **Backend Workstreams**
 1. **Recommendation Review Schema + Migration**
@@ -333,19 +338,19 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
        - resolve open review
 
 **API Surface**
-- [ ] `POST /api/v1/recommendation-reviews`
-- [ ] `GET /api/v1/recommendation-reviews`
-- [ ] `POST /api/v1/recommendation-reviews/{id}/resolve`
-- [ ] `POST /api/v1/recommendation-reviews/{id}/convert-to-correction`
-- [ ] Extend `GET /api/v1/agent/decision-traces` with review summary fields
+- [x] `POST /api/v1/recommendation-reviews`
+- [x] `GET /api/v1/recommendation-reviews`
+- [x] `POST /api/v1/recommendation-reviews/{id}/resolve`
+- [x] `POST /api/v1/recommendation-reviews/{id}/convert-to-correction`
+- [x] Extend `GET /api/v1/agent/decision-traces` with review summary fields
 
 **Execution Order**
-1. Build review model + migration
-2. Build review service + API
-3. Extend decision trace payload with review summary
-4. Add internal reviewer console
-5. Add user-facing recommendation dispute actions
-6. Feed open review state into advisor continuity and recommendation suppression
+1. Build review model + migration: completed
+2. Build review service + API: completed
+3. Extend decision trace payload with review summary: completed
+4. Add internal reviewer console: completed in v1
+5. Add user-facing recommendation dispute actions: completed
+6. Feed open review state into advisor continuity and recommendation suppression: completed in v1
 
 **Acceptance Criteria**
 - Every disputed recommendation can be tracked without mutating raw trace payloads by hand.
@@ -353,8 +358,8 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
 - A resolved recommendation dispute can either:
     - update recommendation state, or
     - create downstream factual corrections.
-- Advisor sessions surface unresolved reviews and avoid repeating superseded guidance.
-- Reviewer console can process the full loop from open -> resolve -> audit.
+- Advisor sessions surface unresolved reviews and avoid repeating identical guidance under active review.
+- Reviewer console can process the full loop from open -> resolve/convert -> audit.
 
 **Rollout Plan**
 - Stage 1: Internal-only reviewer APIs and console

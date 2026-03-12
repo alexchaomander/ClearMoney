@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import {
@@ -29,6 +30,7 @@ import {
 import { getDecisionTracePayload } from "@/lib/strata/decision-traces";
 import type { DecisionTrace } from "@clearmoney/strata-sdk";
 import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
+import { RecommendationReviewDialog } from "@/components/dashboard/RecommendationReviewDialog";
 
 type Filter = "all" | "analysis" | "recommendation" | "action";
 
@@ -417,6 +419,26 @@ export default function DecisionNarrativePage() {
                           <span className="rounded-full border border-slate-300 px-2 py-1 text-slate-600 dark:border-slate-700 dark:text-slate-300">
                             {activePayload.continuity_status}
                           </span>
+                          {activePayload.review_summary?.open_review_count ? (
+                            <span className="rounded-full border border-amber-300 px-2 py-1 text-amber-700 dark:border-amber-900 dark:text-amber-300">
+                              {activePayload.review_summary.open_review_count} open review{activePayload.review_summary.open_review_count === 1 ? "" : "s"}
+                            </span>
+                          ) : null}
+                        </div>
+                      ) : null}
+                      {active ? (
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                          <RecommendationReviewDialog
+                            decisionTraceId={active.id}
+                            recommendationId={active.recommendation_id}
+                            reviewSummary={activePayload?.review_summary ?? null}
+                          />
+                          <Link
+                            href="/dashboard/recommendation-reviews"
+                            className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 transition hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white"
+                          >
+                            Open review queue
+                          </Link>
                         </div>
                       ) : null}
                     </div>
@@ -459,6 +481,33 @@ export default function DecisionNarrativePage() {
                           </a>
                         ))}
                       </div>
+                    </div>
+                  ) : null}
+                  {activePayload?.review_summary ? (
+                    <div className="rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/20 p-4">
+                      <h3 className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-500" />
+                        Review continuity
+                      </h3>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-lg border border-amber-200 bg-white px-3 py-2 dark:border-amber-900/60 dark:bg-slate-950/50">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Status</p>
+                          <p className="mt-1 text-sm text-slate-900 dark:text-white">
+                            {activePayload.review_summary.review_status ?? "no_reviews"}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-amber-200 bg-white px-3 py-2 dark:border-amber-900/60 dark:bg-slate-950/50">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Open count</p>
+                          <p className="mt-1 text-sm text-slate-900 dark:text-white">
+                            {activePayload.review_summary.open_review_count}
+                          </p>
+                        </div>
+                      </div>
+                      {activePayload.review_summary.latest_resolution_notes ? (
+                        <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+                          {activePayload.review_summary.latest_resolution_notes}
+                        </p>
+                      ) : null}
                     </div>
                   ) : null}
 
