@@ -17,12 +17,14 @@ from app.schemas.agent import (
     ExecuteRecommendationRequest,
     ExecuteRecommendationResponse,
     FreshnessStatus,
+    MetricTraceResponse,
 )
 from app.services.action_policy import ActionPolicyService
 from app.services.agent_guardrails import evaluate_freshness
 from app.services.brokerage_execution import BrokerageExecutionService
 from app.services.deep_links import DeepLinkService
 from app.services.financial_context import build_financial_context
+from app.services.metric_trace import build_metric_trace
 from app.services.plaid_transfer import PlaidTransferService
 
 router = APIRouter(prefix="/agent", tags=["agent"])
@@ -73,6 +75,18 @@ async def list_decision_traces(
     result = await session.execute(query.order_by(DecisionTrace.created_at.desc()))
     traces = result.scalars().all()
     return [DecisionTraceResponse.model_validate(t) for t in traces]
+
+
+@router.get("/metric-traces/{metric_id}", response_model=MetricTraceResponse)
+async def get_metric_trace(
+    metric_id: str,
+    user: User = Depends(require_scopes(["portfolio:read"])),
+    session: AsyncSession = Depends(get_async_session),
+) -> MetricTraceResponse:
+    try:
+        return await build_metric_trace(user.id, metric_id, session)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.post(
