@@ -901,6 +901,41 @@ export interface FinancialContextAccount {
   minimum_payment?: number | null;
 }
 
+export interface FinancialContextRealEstateAsset {
+  name: string;
+  address: string | null;
+  type: string;
+  market_value: number | null;
+}
+
+export interface FinancialContextVehicleAsset {
+  name: string;
+  make: string | null;
+  model: string | null;
+  year: number | null;
+  type: string;
+  market_value: number | null;
+}
+
+export interface FinancialContextCollectibleAsset {
+  name: string;
+  type: string;
+  market_value: number | null;
+}
+
+export interface FinancialContextPreciousMetalAsset {
+  name: string;
+  type: string;
+  weight_oz: number | null;
+  market_value: number | null;
+}
+
+export interface FinancialContextAlternativeAsset {
+  name: string;
+  type: string;
+  market_value: number | null;
+}
+
 export interface FinancialContextHolding {
   ticker: string | null;
   name: string;
@@ -912,19 +947,24 @@ export interface FinancialContextHolding {
 }
 
 export interface PortfolioMetrics {
-  net_worth: number;
-  total_investment_value: number;
-  total_cash_value: number;
-  total_debt_value: number;
-  tax_advantaged_value: number;
-  taxable_value: number;
+  net_worth: number | null;
+  total_investment_value: number | null;
+  total_cash_value: number | null;
+  total_debt_value: number | null;
+  total_physical_asset_value?: number | null;
+  total_equity_vested_value?: number | null;
+  total_equity_unvested_value?: number | null;
+  tax_advantaged_value: number | null;
+  taxable_value: number | null;
+  allocation_by_asset_type?: Record<string, number>;
+  runway_months?: number | null;
 }
 
 export interface DataFreshness {
   last_sync: string | null;
   profile_updated: string | null;
-  accounts_count: number;
-  connections_count: number;
+  accounts_count: number | null;
+  connections_count: number | null;
 }
 
 // Skill types
@@ -1000,38 +1040,14 @@ export interface FinancialContext {
     investment: FinancialContextAccount[];
     cash: FinancialContextAccount[];
     debt: FinancialContextAccount[];
-    real_estate: {
-      name: string;
-      address: string;
-      type: string;
-      market_value: number | null;
-    }[];
-    vehicles: {
-      name: string;
-      make: string;
-      model: string;
-      year: number;
-      type: string;
-      market_value: number | null;
-    }[];
-    collectibles: {
-      name: string;
-      type: string;
-      market_value: number | null;
-    }[];
-    precious_metals: {
-      name: string;
-      type: string;
-      weight_oz: number | null;
-      market_value: number | null;
-    }[];
-    alternative_assets: {
-      name: string;
-      type: string;
-      market_value: number | null;
-    }[];
+    real_estate: FinancialContextRealEstateAsset[];
+    vehicles: FinancialContextVehicleAsset[];
+    collectibles: FinancialContextCollectibleAsset[];
+    precious_metals: FinancialContextPreciousMetalAsset[];
+    alternative_assets: FinancialContextAlternativeAsset[];
   };
   holdings: FinancialContextHolding[];
+  equity: Record<string, unknown>;
   recent_transactions: {
     type: string;
     amount: number | null;
@@ -1104,9 +1120,27 @@ export interface DecisionTrace {
   reasoning_steps: unknown[];
   outputs: Record<string, unknown>;
   data_freshness: Record<string, unknown>;
-  warnings: unknown[];
+  warnings: string[];
   source: string;
   created_at: string;
+}
+
+export interface MetricTraceDataPoint {
+  label: string;
+  value: string | number;
+  source: string | null;
+}
+
+export interface MetricTrace {
+  metric_id: string;
+  label: string;
+  formula: string;
+  description: string;
+  data_points: MetricTraceDataPoint[];
+  confidence_score: number;
+  methodology_version: string;
+  as_of: string | null;
+  warnings: string[];
 }
 
 // Shared data source types

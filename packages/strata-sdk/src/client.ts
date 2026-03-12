@@ -74,6 +74,7 @@ import type {
   DecisionTrace,
   ExecuteRecommendationRequest,
   ExecuteRecommendationResponse,
+  MetricTrace,
   PointsProgram,
   TransparencyPayload,
   CreditCardData,
@@ -188,6 +189,7 @@ export interface StrataClientInterface {
     sessionId?: string;
     recommendationId?: string;
   }): Promise<DecisionTrace[]>;
+  getMetricTrace(metricId: string): Promise<MetricTrace>;
   // Consent
   listConsents(): Promise<ConsentResponse[]>;
   createConsent(data: ConsentCreateRequest): Promise<ConsentResponse>;
@@ -806,6 +808,10 @@ export class StrataClient implements StrataClientInterface {
         recommendation_id: params?.recommendationId,
       })
     );
+  }
+
+  async getMetricTrace(metricId: string): Promise<MetricTrace> {
+    return this.request<MetricTrace>(`/api/v1/agent/metric-traces/${metricId}`);
   }
 
   // === Consent ===
