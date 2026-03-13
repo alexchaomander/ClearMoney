@@ -140,11 +140,13 @@ export function DecisionTracePanel() {
                       ) : null}
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <RecommendationReviewDialog
-                        decisionTraceId={activeTrace.id}
-                        recommendationId={activeTrace.recommendation_id}
-                        reviewSummary={tracePayload.review_summary}
-                      />
+                      {activeTrace.trace_type !== "action" ? (
+                        <RecommendationReviewDialog
+                          decisionTraceId={activeTrace.id}
+                          recommendationId={activeTrace.recommendation_id}
+                          reviewSummary={tracePayload.review_summary}
+                        />
+                      ) : null}
                       <Link
                         href="/dashboard/recommendation-reviews"
                         className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 transition hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white"
@@ -155,7 +157,7 @@ export function DecisionTracePanel() {
                   </div>
                 </section>
               ) : null}
-              {tracePayload?.review_summary ? (
+              {tracePayload?.review_summary && activeTrace.trace_type !== "action" ? (
                 <section className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/20 p-4">
                   <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">
                     <Info className="h-4 w-4" />

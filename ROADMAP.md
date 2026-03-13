@@ -146,7 +146,7 @@ Status:
 - Publish methodology version history and confidence methodology as part of the trust layer
 Next concrete build sequence:
 - recommendation review objects and reviewer APIs: implemented
-- internal reviewer console for trace triage and adjudication: implemented in v1
+- recommendation review queue for trace triage and adjudication: implemented in v1
 - user-facing recommendation dispute actions in decision traces: implemented
 - advisor continuity hooks so unresolved reviews suppress or reframe future recommendations: implemented in v1
 
@@ -208,7 +208,7 @@ The next planning and execution focus is **Recommendation Review + Continuity**.
 
 This means ClearMoney must support:
 - first-class recommendation disputes, not just metric corrections: implemented in v1
-- an internal reviewer console to resolve or supersede questionable guidance: implemented in v1
+- a recommendation review queue to resolve or supersede questionable guidance: implemented in v1
 - trace-level review status and audit history: implemented in v1
 - advisor continuity that knows when a prior recommendation is unresolved, stale, or superseded: partially implemented, with duplicate-title suppression and caution-state injection live
 

@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.agent_session import Recommendation
@@ -31,6 +31,12 @@ class RecommendationReviewService:
         payload: RecommendationReviewCreate,
     ) -> RecommendationReview:
         trace = await self._get_trace(user_id, payload.decision_trace_id)
+        trace_type = trace.trace_type.value if hasattr(trace.trace_type, "value") else str(trace.trace_type)
+        if trace_type == "action":
+            raise HTTPException(
+                status_code=400,
+                detail="Recommendation reviews are only supported for analysis and recommendation traces",
+            )
         recommendation_id = payload.recommendation_id or trace.recommendation_id
         if recommendation_id is not None:
             await self._get_recommendation(user_id, recommendation_id)
@@ -68,12 +74,12 @@ class RecommendationReviewService:
 
     async def open_review_count(self, user_id: uuid.UUID) -> int:
         result = await self._session.execute(
-            select(RecommendationReview).where(
+            select(func.count()).select_from(RecommendationReview).where(
                 RecommendationReview.user_id == user_id,
                 RecommendationReview.status == RecommendationReviewStatus.open,
             )
         )
-        return len(list(result.scalars().all()))
+        return int(result.scalar_one())
 
     async def has_open_review_for_recommendation_title(
         self,
@@ -84,23 +90,18 @@ class RecommendationReviewService:
         if not normalized_title:
             return False
         result = await self._session.execute(
-            select(RecommendationReview, Recommendation)
+            select(Recommendation.title)
+            .select_from(RecommendationReview)
             .join(
                 Recommendation,
                 Recommendation.id == RecommendationReview.recommendation_id,
-                isouter=True,
             )
             .where(
                 RecommendationReview.user_id == user_id,
                 RecommendationReview.status == RecommendationReviewStatus.open,
             )
         )
-        for review, recommendation in result.all():
-            candidate = None
-            if recommendation is not None and recommendation.title:
-                candidate = recommendation.title
-            elif review.resolution_notes:
-                candidate = review.resolution_notes
+        for candidate in result.scalars().all():
             if candidate and candidate.strip().lower() == normalized_title:
                 return True
         return False
@@ -129,6 +130,8 @@ class RecommendationReviewService:
         payload: RecommendationReviewConvertToCorrection,
     ) -> RecommendationReview:
         review = await self._get_review(user_id, review_id)
+        if review.status != RecommendationReviewStatus.open:
+            raise HTTPException(status_code=409, detail="Only open recommendation reviews can be converted")
         correction_payload = payload.correction.model_copy(deep=True)
         if correction_payload.trace_id is None:
             correction_payload.trace_id = review.decision_trace_id
@@ -173,12 +176,13 @@ class RecommendationReviewService:
         for trace_id, items in grouped.items():
             latest = items[0]
             open_count = sum(1 for item in items if item.status == RecommendationReviewStatus.open)
+            latest_resolution_item = next((item for item in items if item.status != RecommendationReviewStatus.open), None)
             summaries[trace_id] = {
-                "review_status": latest.status.value,
+                "review_status": RecommendationReviewStatus.open.value if open_count > 0 else latest.status.value,
                 "open_review_count": open_count,
-                "latest_resolution": latest.resolution,
-                "latest_resolution_notes": latest.resolution_notes,
-                "reviewer_label": latest.reviewer_label,
+                "latest_resolution": latest_resolution_item.resolution if latest_resolution_item else None,
+                "latest_resolution_notes": latest_resolution_item.resolution_notes if latest_resolution_item else None,
+                "reviewer_label": latest_resolution_item.reviewer_label if latest_resolution_item else None,
             }
         return summaries
 
