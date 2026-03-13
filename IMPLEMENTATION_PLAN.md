@@ -230,8 +230,8 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
     - wrong_fact, stale_fact, wrong_categorization, wrong_assumption, wrong_recommendation, intentional_exception, source_mistrust, execution_mismatch.
 - [x] **Correction Workflow**:
     - report -> classify -> apply when deterministic -> recompute impacted traces.
-- [x] **Reviewer Console v1**:
-    - Queue for recommendation disputes, stale guidance, and correction conversion.
+- [x] **Recommendation Review Queue v1**:
+    - Dashboard queue for recommendation disputes, stale guidance, and correction conversion.
 - [x] **Recommendation Correction Handling v1**:
     - Recommendation reviews can be converted into correction objects and fed back into continuity state.
 
@@ -322,13 +322,13 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
        - `Mark as outdated`
        - `Request human review`
    - Render current review state with visible badges.
-2. **Reviewer Console v1**
-   - Build an internal page with:
+2. **Recommendation Review Queue v1**
+   - Build a review page with:
        - queue filters by `status`, `severity`, `trace_kind`, and `continuity_status`
        - trace summary card
        - linked recommendation, linked corrections, linked context quality
        - resolution actions
-   - Keep console read/write behind internal auth or a feature flag.
+   - Keep room for future internal-only escalation controls.
 3. **Continuity and Remediation UX**
    - Show when a recommendation is blocked because context needs repair.
    - Route users to the right remediation action:
@@ -348,7 +348,7 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
 1. Build review model + migration: completed
 2. Build review service + API: completed
 3. Extend decision trace payload with review summary: completed
-4. Add internal reviewer console: completed in v1
+4. Add recommendation review queue: completed in v1
 5. Add user-facing recommendation dispute actions: completed
 6. Feed open review state into advisor continuity and recommendation suppression: completed in v1
 
@@ -359,7 +359,7 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
     - update recommendation state, or
     - create downstream factual corrections.
 - Advisor sessions surface unresolved reviews and avoid repeating identical guidance under active review.
-- Reviewer console can process the full loop from open -> resolve/convert -> audit.
+- Review queue can process the full loop from open -> resolve/convert -> audit.
 
 **Rollout Plan**
 - Stage 1: Internal-only reviewer APIs and console
