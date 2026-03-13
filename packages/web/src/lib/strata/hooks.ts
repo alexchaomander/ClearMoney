@@ -225,6 +225,27 @@ export function useResolveRecommendationReview() {
   });
 }
 
+export function useReopenRecommendationReview() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      reviewId,
+      notes,
+    }: {
+      reviewId: string;
+      notes?: string;
+    }) => client.reopenRecommendationReview(reviewId, notes),
+    onSuccess: (review) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.recommendationReviews() });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.recommendationReviews({ decisionTraceId: review.decision_trace_id }),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.decisionTraces() });
+    },
+  });
+}
+
 export function useConvertRecommendationReviewToCorrection() {
   const client = useClient();
   const queryClient = useQueryClient();

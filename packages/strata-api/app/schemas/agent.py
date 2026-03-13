@@ -90,6 +90,10 @@ class DecisionTracePayload(BaseModel):
     trace_kind: str
     title: str | None = None
     summary: str | None = None
+    recommendation_status: str | None = None
+    superseded_by_trace_id: str | None = None
+    superseded_at: str | None = None
+    blocked_reason: str | None = None
     rules_applied: list[DecisionTraceRuleCheck] = Field(default_factory=list)
     insights: list[DecisionTraceInsight] = Field(default_factory=list)
     assumptions: list[str] = Field(default_factory=list)

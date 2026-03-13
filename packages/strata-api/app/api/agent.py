@@ -35,21 +35,41 @@ router = APIRouter(prefix="/agent", tags=["agent"])
 AUDIT_SCOPES = ["decision_traces:read"]
 
 
-def _serialize_decision_trace(
+async def _serialize_decision_trace(
+    session: AsyncSession,
     trace: DecisionTrace,
     review_summary: dict | None = None,
 ) -> DecisionTraceResponse:
     raw_payload = trace.outputs.get("trace") if isinstance(trace.outputs, dict) else None
     trace_payload = None
+
     if isinstance(raw_payload, dict):
+        payload_data = dict(raw_payload)
+
+        # Fetch latest recommendation status if applicable
+        if trace.recommendation_id:
+            recommendation = await session.scalar(
+                select(Recommendation).where(Recommendation.id == trace.recommendation_id)
+            )
+            if recommendation:
+                payload_data["recommendation_status"] = recommendation.status.value if hasattr(recommendation.status, "value") else str(recommendation.status)
+                if recommendation.superseded_by_recommendation_id:
+                    # Find the trace ID for the superseding recommendation
+                    superseding_trace_id = await session.scalar(
+                        select(DecisionTrace.id).where(DecisionTrace.recommendation_id == recommendation.superseded_by_recommendation_id)
+                    )
+                    if superseding_trace_id:
+                        payload_data["superseded_by_trace_id"] = str(superseding_trace_id)
+                    if recommendation.status == RecommendationStatus.superseded:
+                        payload_data["superseded_at"] = recommendation.updated_at.isoformat()
+
+        if review_summary:
+            payload_data["review_summary"] = review_summary
+
         try:
-            trace_payload = DecisionTracePayload.model_validate(raw_payload)
+            trace_payload = DecisionTracePayload.model_validate(payload_data)
         except Exception:
             trace_payload = None
-    if trace_payload and review_summary:
-        payload_data = trace_payload.model_dump()
-        payload_data["review_summary"] = review_summary
-        trace_payload = DecisionTracePayload.model_validate(payload_data)
 
     return DecisionTraceResponse(
         id=trace.id,
@@ -114,7 +134,7 @@ async def list_decision_traces(
         user.id,
         [trace.id for trace in traces],
     )
-    return [_serialize_decision_trace(t, summaries.get(t.id)) for t in traces]
+    return [await _serialize_decision_trace(session, t, summaries.get(t.id)) for t in traces]
 
 
 @router.get("/metric-traces/{metric_id}", response_model=MetricTraceResponse)
