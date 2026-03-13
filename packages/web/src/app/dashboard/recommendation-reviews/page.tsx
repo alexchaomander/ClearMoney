@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { AlertTriangle, ArrowUpRight, CheckCircle2, FileWarning } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, CheckCircle2, FileWarning, Ban, RotateCcw, FastForward } from "lucide-react";
 import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { ConsentGate } from "@/components/shared/ConsentGate";
@@ -14,6 +14,7 @@ import {
   useConvertRecommendationReviewToCorrection,
   useRecommendationReviews,
   useResolveRecommendationReview,
+  useReopenRecommendationReview,
 } from "@/lib/strata/hooks";
 import type { RecommendationReview, RecommendationReviewStatus } from "@clearmoney/strata-sdk";
 
@@ -23,14 +24,25 @@ function ReviewCard({
   review,
   onResolve,
   onConvert,
+  onReopen,
   busy,
 }: {
   review: RecommendationReview;
-  onResolve: (review: RecommendationReview) => Promise<void>;
+  onResolve: (review: RecommendationReview, status: RecommendationReviewStatus) => Promise<void>;
   onConvert: (review: RecommendationReview) => Promise<void>;
+  onReopen: (review: RecommendationReview) => Promise<void>;
   busy: boolean;
 }) {
   const isOpen = review.status === "open";
+
+  const statusColors = {
+    open: "border-amber-200 text-amber-700 dark:border-amber-900 dark:text-amber-300",
+    resolved: "border-emerald-200 text-emerald-700 dark:border-emerald-900 dark:text-emerald-300",
+    dismissed: "border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-300",
+    converted_to_correction: "border-blue-200 text-blue-700 dark:border-blue-900 dark:text-blue-300",
+    superseded: "border-purple-200 text-purple-700 dark:border-purple-900 dark:text-purple-300",
+    blocked: "border-red-200 text-red-700 dark:border-red-900 dark:text-red-300",
+  };
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/70 dark:shadow-none">
@@ -40,7 +52,7 @@ function ReviewCard({
             <span className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:border-slate-700 dark:text-slate-400">
               {review.review_type}
             </span>
-            <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${isOpen ? "border border-amber-200 text-amber-700 dark:border-amber-900 dark:text-amber-300" : "border border-emerald-200 text-emerald-700 dark:border-emerald-900 dark:text-emerald-300"}`}>
+            <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] border ${statusColors[review.status] || ""}`}>
               {review.status}
             </span>
           </div>
@@ -73,12 +85,28 @@ function ReviewCard({
         {isOpen ? (
           <>
             <button
-              onClick={() => void onResolve(review)}
+              onClick={() => void onResolve(review, "resolved")}
               disabled={busy}
               className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white disabled:opacity-50"
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
               Resolve
+            </button>
+            <button
+              onClick={() => void onResolve(review, "blocked")}
+              disabled={busy}
+              className="inline-flex items-center gap-2 rounded-2xl border border-red-200 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-red-700 disabled:opacity-50 dark:border-red-900 dark:text-red-300"
+            >
+              <Ban className="h-3.5 w-3.5" />
+              Block
+            </button>
+            <button
+              onClick={() => void onResolve(review, "superseded")}
+              disabled={busy}
+              className="inline-flex items-center gap-2 rounded-2xl border border-purple-200 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-purple-700 disabled:opacity-50 dark:border-purple-900 dark:text-purple-300"
+            >
+              <FastForward className="h-3.5 w-3.5" />
+              Supersede
             </button>
             <button
               onClick={() => void onConvert(review)}
@@ -89,7 +117,16 @@ function ReviewCard({
               Convert to correction
             </button>
           </>
-        ) : null}
+        ) : (
+          <button
+            onClick={() => void onReopen(review)}
+            disabled={busy}
+            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-700 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Reopen
+          </button>
+        )}
       </div>
     </div>
   );
@@ -105,26 +142,40 @@ export default function RecommendationReviewsPage() {
   );
   const resolveReview = useResolveRecommendationReview();
   const convertReview = useConvertRecommendationReviewToCorrection();
+  const reopenReview = useReopenRecommendationReview();
 
   const reviews = useMemo(() => data ?? [], [data]);
   const openCount = reviews.filter((review) => review.status === "open").length;
 
-  async function handleResolve(review: RecommendationReview) {
+  async function handleResolve(review: RecommendationReview, status: RecommendationReviewStatus) {
     try {
       await resolveReview.mutateAsync({
         reviewId: review.id,
         data: {
-          status: "resolved",
-          resolution: "review_resolved",
-          resolution_notes: "Resolved from the recommendation review console.",
+          status,
+          resolution: status === "resolved" ? "review_resolved" : status,
+          resolution_notes: `Marked as ${status} from the recommendation review console.`,
           reviewer_label: "user_console",
           applied_changes: {},
         },
       });
-      pushToast({ title: "Review resolved", variant: "success" });
+      pushToast({ title: `Review marked as ${status}`, variant: "success" });
     } catch (mutationError) {
-      const message = mutationError instanceof Error ? mutationError.message : "Could not resolve review";
-      pushToast({ title: "Resolve failed", message, variant: "error" });
+      const message = mutationError instanceof Error ? mutationError.message : "Could not update review";
+      pushToast({ title: "Update failed", message, variant: "error" });
+    }
+  }
+
+  async function handleReopen(review: RecommendationReview) {
+    try {
+      await reopenReview.mutateAsync({
+        reviewId: review.id,
+        notes: "Reopened from review console.",
+      });
+      pushToast({ title: "Review reopened", variant: "success" });
+    } catch (mutationError) {
+      const message = mutationError instanceof Error ? mutationError.message : "Could not reopen review";
+      pushToast({ title: "Reopen failed", message, variant: "error" });
     }
   }
 
@@ -202,7 +253,7 @@ export default function RecommendationReviewsPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {(["all", "open", "resolved", "converted_to_correction", "dismissed", "superseded"] as const).map((option) => (
+          {(["all", "open", "resolved", "converted_to_correction", "dismissed", "superseded", "blocked"] as const).map((option) => (
             <button
               key={option}
               onClick={() => setFilter(option)}
@@ -239,7 +290,8 @@ export default function RecommendationReviewsPage() {
                 review={review}
                 onResolve={handleResolve}
                 onConvert={handleConvert}
-                busy={resolveReview.isPending || convertReview.isPending}
+                onReopen={handleReopen}
+                busy={resolveReview.isPending || convertReview.isPending || reopenReview.isPending}
               />
             ))}
           </div>

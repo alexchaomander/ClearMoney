@@ -883,6 +883,30 @@ export class DemoStrataClient implements StrataClientInterface {
     };
   }
 
+  async reopenRecommendationReview(
+    reviewId: string,
+    notes?: string
+  ): Promise<RecommendationReview> {
+    await delay(250);
+    const now = new Date().toISOString();
+    return {
+      id: reviewId,
+      user_id: "demo-user-001",
+      decision_trace_id: "demo-trace-1",
+      recommendation_id: null,
+      review_type: "human_review",
+      status: "open",
+      opened_reason: "Demo review",
+      resolution: null,
+      resolution_notes: notes ?? null,
+      applied_changes: {},
+      reviewer_label: null,
+      resolved_at: null,
+      created_at: now,
+      updated_at: now,
+    };
+  }
+
   async convertRecommendationReviewToCorrection(
     reviewId: string,
     data: RecommendationReviewConvertToCorrection

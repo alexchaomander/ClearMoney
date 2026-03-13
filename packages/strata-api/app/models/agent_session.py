@@ -17,6 +17,11 @@ class RecommendationStatus(str, enum.Enum):
     pending = "pending"
     accepted = "accepted"
     dismissed = "dismissed"
+    needs_review = "needs_review"
+    cautious = "cautious"
+    blocked = "blocked"
+    superseded = "superseded"
+    resolved = "resolved"
 
 
 class AgentSession(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -50,4 +55,10 @@ class Recommendation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     status: Mapped[RecommendationStatus] = mapped_column(
         Enum(RecommendationStatus, values_callable=lambda e: [x.value for x in e]),
         default=RecommendationStatus.pending,
+    )
+    superseded_recommendation_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("recommendations.id", ondelete="SET NULL"), nullable=True
+    )
+    superseded_by_recommendation_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("recommendations.id", ondelete="SET NULL"), nullable=True
     )
