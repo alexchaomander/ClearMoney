@@ -144,6 +144,11 @@ Status:
 - Create ops tooling to inspect context nodes, lineage, conflicts, and stale dependencies
 - Add reviewer workflows for sensitive inferences: tax posture, equity assumptions, entity classification, and commingling decisions
 - Publish methodology version history and confidence methodology as part of the trust layer
+Next concrete build sequence:
+- recommendation review objects and reviewer APIs: implemented
+- recommendation review queue for trace triage and adjudication: implemented in v1
+- user-facing recommendation dispute actions in decision traces: implemented
+- advisor continuity hooks so unresolved reviews suppress or reframe future recommendations: implemented in v1
 
 **Workstream G: Deterministic Financial Core**
 - Keep the LLM layer probabilistic only at the explanation and orchestration layer, not the numerical truth layer
@@ -196,6 +201,18 @@ ClearMoney must become the best-maintained financial context system in the marke
 - **Deterministic Financial Core**: Numerical truth comes from tested engines, not model improvisation
 - **Connectivity Resilience**: The system remains useful even when Plaid/Yodlee/SnapTrade break or revoke access
 - **Trust-Scored Infrastructure Layer**: APIs, skills, connectors, and sources are graded before they are allowed to influence decisions
+
+### Immediate Planning Priority
+
+The next planning and execution focus is **Recommendation Review + Continuity**.
+
+This means ClearMoney must support:
+- first-class recommendation disputes, not just metric corrections: implemented in v1
+- a recommendation review queue to resolve or supersede questionable guidance: implemented in v1
+- trace-level review status and audit history: implemented in v1
+- advisor continuity that knows when a prior recommendation is unresolved, stale, or superseded: partially implemented, with duplicate-title suppression and caution-state injection live
+
+We should treat this as the bridge between "explainable recommendations" and "governed financial chief of staff."
 
 ### Pillar 3: Multi-Surface Intelligence (Close the Gap)
 

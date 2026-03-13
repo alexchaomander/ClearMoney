@@ -33,6 +33,10 @@ import type {
   DecisionTrace,
   FinancialCorrection,
   FinancialCorrectionCreate,
+  RecommendationReview,
+  RecommendationReviewConvertToCorrection,
+  RecommendationReviewCreate,
+  RecommendationReviewResolve,
   FinancialContext,
   FinancialMemory,
   FinancialPassport,
@@ -823,6 +827,84 @@ export class DemoStrataClient implements StrataClientInterface {
   async getCorrections(_metricId?: string): Promise<FinancialCorrection[]> {
     await delay(200);
     return [];
+  }
+
+  async createRecommendationReview(data: RecommendationReviewCreate): Promise<RecommendationReview> {
+    await delay(250);
+    const now = new Date().toISOString();
+    return {
+      id: "demo-review-1",
+      user_id: "demo-user-001",
+      decision_trace_id: data.decision_trace_id,
+      recommendation_id: data.recommendation_id ?? null,
+      review_type: data.review_type ?? "user_dispute",
+      status: "open",
+      opened_reason: data.opened_reason,
+      resolution: null,
+      resolution_notes: null,
+      applied_changes: {},
+      reviewer_label: null,
+      resolved_at: null,
+      created_at: now,
+      updated_at: now,
+    };
+  }
+
+  async getRecommendationReviews(_params?: {
+    status?: string;
+    recommendationId?: string;
+    decisionTraceId?: string;
+  }): Promise<RecommendationReview[]> {
+    await delay(200);
+    return [];
+  }
+
+  async resolveRecommendationReview(
+    reviewId: string,
+    data: RecommendationReviewResolve
+  ): Promise<RecommendationReview> {
+    await delay(250);
+    const now = new Date().toISOString();
+    return {
+      id: reviewId,
+      user_id: "demo-user-001",
+      decision_trace_id: "demo-trace-1",
+      recommendation_id: null,
+      review_type: "human_review",
+      status: data.status,
+      opened_reason: "Demo review",
+      resolution: data.resolution,
+      resolution_notes: data.resolution_notes ?? null,
+      applied_changes: data.applied_changes ?? {},
+      reviewer_label: data.reviewer_label ?? null,
+      resolved_at: now,
+      created_at: now,
+      updated_at: now,
+    };
+  }
+
+  async convertRecommendationReviewToCorrection(
+    reviewId: string,
+    data: RecommendationReviewConvertToCorrection
+  ): Promise<RecommendationReview> {
+    await delay(250);
+    const now = new Date().toISOString();
+    return {
+      id: reviewId,
+      user_id: "demo-user-001",
+      decision_trace_id: data.correction.trace_id ?? "demo-trace-1",
+      recommendation_id: null,
+      review_type: "user_dispute",
+      status: "converted_to_correction",
+      opened_reason: "Demo review",
+      resolution: "converted_to_correction",
+      resolution_notes: data.resolution_notes ?? null,
+      applied_changes: { correction_id: "demo-correction-1" },
+      reviewer_label: data.reviewer_label ?? null,
+      resolved_at: now,
+      created_at: now,
+      updated_at: now,
+    };
   }
 
   // === Consent ===
