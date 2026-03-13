@@ -64,6 +64,12 @@ from app.schemas.investment_account import (
     InvestmentAccountWithHoldingsResponse,
 )
 from app.schemas.portfolio import AssetAllocation, PortfolioSummary
+from app.schemas.recommendation_review import (
+    RecommendationReviewConvertToCorrection,
+    RecommendationReviewCreate,
+    RecommendationReviewResolve,
+    RecommendationReviewResponse,
+)
 from app.schemas.security import SecurityCreate, SecurityResponse, SecurityUpdate
 from app.schemas.user import UserCreate, UserResponse
 
@@ -112,6 +118,10 @@ __all__ = [
     "ActionPolicyResponse",
     "ActionApprovalResponse",
     "PortfolioSummary",
+    "RecommendationReviewConvertToCorrection",
+    "RecommendationReviewCreate",
+    "RecommendationReviewResolve",
+    "RecommendationReviewResponse",
     "SecurityCreate",
     "SecurityResponse",
     "SecurityUpdate",

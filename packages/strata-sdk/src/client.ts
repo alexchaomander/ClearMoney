@@ -77,6 +77,10 @@ import type {
   ExecuteRecommendationResponse,
   FinancialCorrection,
   FinancialCorrectionCreate,
+  RecommendationReview,
+  RecommendationReviewConvertToCorrection,
+  RecommendationReviewCreate,
+  RecommendationReviewResolve,
   MetricTrace,
   PointsProgram,
   TransparencyPayload,
@@ -196,6 +200,20 @@ export interface StrataClientInterface {
   getContextQuality(): Promise<ContextQuality>;
   createCorrection(data: FinancialCorrectionCreate): Promise<FinancialCorrection>;
   getCorrections(metricId?: string): Promise<FinancialCorrection[]>;
+  createRecommendationReview(data: RecommendationReviewCreate): Promise<RecommendationReview>;
+  getRecommendationReviews(params?: {
+    status?: string;
+    recommendationId?: string;
+    decisionTraceId?: string;
+  }): Promise<RecommendationReview[]>;
+  resolveRecommendationReview(
+    reviewId: string,
+    data: RecommendationReviewResolve
+  ): Promise<RecommendationReview>;
+  convertRecommendationReviewToCorrection(
+    reviewId: string,
+    data: RecommendationReviewConvertToCorrection
+  ): Promise<RecommendationReview>;
   // Consent
   listConsents(): Promise<ConsentResponse[]>;
   createConsent(data: ConsentCreateRequest): Promise<ConsentResponse>;
@@ -834,6 +852,53 @@ export class StrataClient implements StrataClientInterface {
   async getCorrections(metricId?: string): Promise<FinancialCorrection[]> {
     return this.request<FinancialCorrection[]>(
       this.buildUrl('/api/v1/corrections', { metric_id: metricId })
+    );
+  }
+
+  async createRecommendationReview(data: RecommendationReviewCreate): Promise<RecommendationReview> {
+    return this.request<RecommendationReview>('/api/v1/recommendation-reviews', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getRecommendationReviews(params?: {
+    status?: string;
+    recommendationId?: string;
+    decisionTraceId?: string;
+  }): Promise<RecommendationReview[]> {
+    return this.request<RecommendationReview[]>(
+      this.buildUrl('/api/v1/recommendation-reviews', {
+        status: params?.status,
+        recommendation_id: params?.recommendationId,
+        decision_trace_id: params?.decisionTraceId,
+      })
+    );
+  }
+
+  async resolveRecommendationReview(
+    reviewId: string,
+    data: RecommendationReviewResolve
+  ): Promise<RecommendationReview> {
+    return this.request<RecommendationReview>(
+      `/api/v1/recommendation-reviews/${reviewId}/resolve`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    );
+  }
+
+  async convertRecommendationReviewToCorrection(
+    reviewId: string,
+    data: RecommendationReviewConvertToCorrection
+  ): Promise<RecommendationReview> {
+    return this.request<RecommendationReview>(
+      `/api/v1/recommendation-reviews/${reviewId}/convert-to-correction`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
     );
   }
 

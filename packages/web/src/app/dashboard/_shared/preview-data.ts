@@ -158,6 +158,7 @@ export const FALLBACK_DECISION_TRACES: DecisionTrace[] = [
     ],
     source: "preview",
     created_at: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
+    trace_payload: null,
   },
   {
     id: "preview-decision-2",
@@ -214,6 +215,7 @@ export const FALLBACK_DECISION_TRACES: DecisionTrace[] = [
     warnings: [],
     source: "preview",
     created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    trace_payload: null,
   },
 ];
 

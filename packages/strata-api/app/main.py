@@ -33,6 +33,7 @@ from app.api.notifications import router as notifications_router
 from app.api.physical_assets import router as physical_assets_router
 from app.api.portability import router as portability_router
 from app.api.portfolio import router as portfolio_router
+from app.api.recommendation_reviews import router as recommendation_reviews_router
 from app.api.share_reports import router as share_reports_router
 from app.api.skills import router as skills_router
 from app.api.tax_documents import router as tax_documents_router
@@ -118,6 +119,7 @@ app.include_router(consent_router, prefix="/api/v1")
 app.include_router(institutions_router, prefix="/api/v1")
 app.include_router(portfolio_router, prefix="/api/v1")
 app.include_router(portability_router, prefix="/api/v1")
+app.include_router(recommendation_reviews_router, prefix="/api/v1")
 app.include_router(transactions_router, prefix="/api/v1")
 app.include_router(memory_router, prefix="/api/v1")
 app.include_router(corrections_router, prefix="/api/v1")
