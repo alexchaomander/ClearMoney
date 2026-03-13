@@ -426,7 +426,7 @@ export default function DecisionNarrativePage() {
                           ) : null}
                         </div>
                       ) : null}
-                      {active ? (
+                      {active && active.trace_type !== "action" ? (
                         <div className="mt-4 flex flex-wrap items-center gap-3">
                           <RecommendationReviewDialog
                             decisionTraceId={active.id}
@@ -483,7 +483,7 @@ export default function DecisionNarrativePage() {
                       </div>
                     </div>
                   ) : null}
-                  {activePayload?.review_summary ? (
+                  {activePayload?.review_summary && active.trace_type !== "action" ? (
                     <div className="rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/20 p-4">
                       <h3 className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4 text-amber-500" />

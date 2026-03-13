@@ -232,3 +232,95 @@ async def test_decision_traces_include_review_summary(
     data = response.json()
     assert data[0]["trace_payload"]["review_summary"]["review_status"] == "open"
     assert data[0]["trace_payload"]["review_summary"]["open_review_count"] == 1
+
+
+@pytest.mark.asyncio
+async def test_recommendation_review_rejects_action_trace(
+    session: AsyncSession,
+    review_user: User,
+    review_headers: dict[str, str],
+) -> None:
+    agent_session = AgentSession(
+        user_id=review_user.id,
+        skill_name="general",
+        status=SessionStatus.active,
+        messages=[],
+    )
+    session.add(agent_session)
+    await session.commit()
+    await session.refresh(agent_session)
+
+    action_trace = DecisionTrace(
+        user_id=review_user.id,
+        session_id=agent_session.id,
+        recommendation_id=None,
+        trace_type=DecisionTraceType.action,
+        input_data={},
+        reasoning_steps=[],
+        outputs={},
+        data_freshness={},
+        warnings=[],
+        source="api",
+    )
+    session.add(action_trace)
+    await session.commit()
+    await session.refresh(action_trace)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/recommendation-reviews",
+            headers=review_headers,
+            json={
+                "decision_trace_id": str(action_trace.id),
+                "review_type": "user_dispute",
+                "opened_reason": "This should not be reviewable.",
+            },
+        )
+
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_convert_recommendation_review_only_once(
+    review_headers: dict[str, str],
+    review_trace: dict[str, str],
+) -> None:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        create_response = await client.post(
+            "/api/v1/recommendation-reviews",
+            headers=review_headers,
+            json={
+                "decision_trace_id": review_trace["trace_id"],
+                "recommendation_id": review_trace["recommendation_id"],
+                "review_type": "factual_followup",
+                "opened_reason": "Needs correction conversion once.",
+            },
+        )
+        review_id = create_response.json()["id"]
+        payload = {
+            "reviewer_label": "ops_console",
+            "resolution_notes": "Escalated into correction workflow.",
+            "correction": {
+                "trace_id": review_trace["trace_id"],
+                "metric_id": "recommendationReview",
+                "correction_type": "wrong_assumption",
+                "target_field": "manual_review",
+                "summary": "Escalated recommendation review",
+                "reason": "Needs correction conversion once.",
+                "proposed_value": {"note": "manual review required"},
+                "apply_immediately": False,
+            },
+        }
+        first_response = await client.post(
+            f"/api/v1/recommendation-reviews/{review_id}/convert-to-correction",
+            headers=review_headers,
+            json=payload,
+        )
+        second_response = await client.post(
+            f"/api/v1/recommendation-reviews/{review_id}/convert-to-correction",
+            headers=review_headers,
+            json=payload,
+        )
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 409
