@@ -1123,6 +1123,52 @@ export interface DecisionTrace {
   warnings: string[];
   source: string;
   created_at: string;
+  trace_payload: DecisionTracePayload | null;
+}
+
+export type RecommendationReviewType =
+  | 'user_dispute'
+  | 'outdated'
+  | 'human_review'
+  | 'context_block'
+  | 'factual_followup';
+
+export type RecommendationReviewStatus =
+  | 'open'
+  | 'resolved'
+  | 'dismissed'
+  | 'converted_to_correction'
+  | 'superseded';
+
+export interface DecisionTraceRuleCheck {
+  name: string;
+  passed: boolean | null;
+  value?: string | number | null;
+  threshold?: string | number | null;
+  message?: string | null;
+}
+
+export interface DecisionTraceInsight {
+  title: string;
+  summary?: string | null;
+  recommendation?: string | null;
+  severity?: string | null;
+}
+
+export interface DecisionTraceRemediationAction {
+  action_id: string;
+  label: string;
+  description: string;
+  href: string;
+  priority: string;
+}
+
+export interface DecisionTraceReviewSummary {
+  review_status: RecommendationReviewStatus | string | null;
+  open_review_count: number;
+  latest_resolution: string | null;
+  latest_resolution_notes: string | null;
+  reviewer_label: string | null;
 }
 
 export interface MetricTraceDataPoint {
@@ -1178,6 +1224,31 @@ export interface ContextQuality {
   confidence_factors: ConfidenceFactor[];
 }
 
+export interface DecisionTracePayload {
+  trace_version: string;
+  trace_kind: string;
+  title?: string | null;
+  summary?: string | null;
+  rules_applied: DecisionTraceRuleCheck[];
+  insights: DecisionTraceInsight[];
+  assumptions: string[];
+  confidence_score?: number | null;
+  confidence_factors: ConfidenceFactor[];
+  determinism_class: string;
+  source_tier: string;
+  continuity_status: string;
+  recommendation_readiness: string;
+  coverage_status: string;
+  policy_version: string;
+  freshness: ContextQuality["freshness"];
+  context_quality: ContextQuality;
+  warnings: string[];
+  remediation_actions: DecisionTraceRemediationAction[];
+  correction_targets: TraceCorrectionTarget[];
+  review_summary: DecisionTraceReviewSummary | null;
+  deterministic: Record<string, unknown>;
+}
+
 export interface MetricTrace {
   metric_id: string;
   formula_id: string;
@@ -1228,6 +1299,44 @@ export interface FinancialCorrection {
   proposed_value: Record<string, unknown>;
   resolved_value: Record<string, unknown> | null;
   impact_summary: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecommendationReviewCreate {
+  decision_trace_id: string;
+  recommendation_id?: string | null;
+  review_type?: RecommendationReviewType;
+  opened_reason: string;
+}
+
+export interface RecommendationReviewResolve {
+  status: RecommendationReviewStatus;
+  resolution: string;
+  resolution_notes?: string | null;
+  reviewer_label?: string | null;
+  applied_changes?: Record<string, unknown>;
+}
+
+export interface RecommendationReviewConvertToCorrection {
+  correction: FinancialCorrectionCreate;
+  reviewer_label?: string | null;
+  resolution_notes?: string | null;
+}
+
+export interface RecommendationReview {
+  id: string;
+  user_id: string;
+  decision_trace_id: string;
+  recommendation_id: string | null;
+  review_type: RecommendationReviewType;
+  status: RecommendationReviewStatus;
+  opened_reason: string;
+  resolution: string | null;
+  resolution_notes: string | null;
+  applied_changes: Record<string, unknown>;
+  reviewer_label: string | null;
+  resolved_at: string | null;
   created_at: string;
   updated_at: string;
 }

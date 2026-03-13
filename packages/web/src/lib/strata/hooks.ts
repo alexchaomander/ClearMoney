@@ -86,6 +86,8 @@ export const queryKeys = {
   metricTrace: (metricId: string) => ["metricTrace", metricId] as const,
   contextQuality: ["agent", "contextQuality"] as const,
   corrections: (metricId?: string) => ["corrections", metricId ?? "all"] as const,
+  recommendationReviews: (filters?: { status?: string; recommendationId?: string; decisionTraceId?: string }) =>
+    ["recommendationReviews", filters?.status ?? "all", filters?.recommendationId ?? "", filters?.decisionTraceId ?? ""] as const,
   // Banking (Plaid)
   bankAccounts: ["banking", "accounts"] as const,
   bankTransactions: (params?: BankTransactionQuery) =>
@@ -170,6 +172,77 @@ export function useCreateCorrection() {
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.contextQuality });
       queryClient.invalidateQueries({ queryKey: queryKeys.financialMemory });
+    },
+  });
+}
+
+export function useRecommendationReviews(
+  filters?: { status?: string; recommendationId?: string; decisionTraceId?: string },
+  options?: { enabled?: boolean }
+) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.recommendationReviews(filters),
+    queryFn: () => client.getRecommendationReviews(filters),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useCreateRecommendationReview() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof client.createRecommendationReview>[0]) =>
+      client.createRecommendationReview(data),
+    onSuccess: (review) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.recommendationReviews() });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.recommendationReviews({ decisionTraceId: review.decision_trace_id }),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.decisionTraces() });
+    },
+  });
+}
+
+export function useResolveRecommendationReview() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      reviewId,
+      data,
+    }: {
+      reviewId: string;
+      data: Parameters<typeof client.resolveRecommendationReview>[1];
+    }) => client.resolveRecommendationReview(reviewId, data),
+    onSuccess: (review) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.recommendationReviews() });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.recommendationReviews({ decisionTraceId: review.decision_trace_id }),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.decisionTraces() });
+    },
+  });
+}
+
+export function useConvertRecommendationReviewToCorrection() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      reviewId,
+      data,
+    }: {
+      reviewId: string;
+      data: Parameters<typeof client.convertRecommendationReviewToCorrection>[1];
+    }) => client.convertRecommendationReviewToCorrection(reviewId, data),
+    onSuccess: (review) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.recommendationReviews() });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.recommendationReviews({ decisionTraceId: review.decision_trace_id }),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.decisionTraces() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.corrections("recommendationReview") });
     },
   });
 }

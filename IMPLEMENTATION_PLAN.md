@@ -53,6 +53,53 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 - [x] **Advisor Trace Upgrade v1**:
     - Added context-quality metadata and readiness gating to advisor-created traces and recommendation generation.
 
+### Next Build Slice: Recommendation-Trace Convergence (Completed)
+
+**Objective:** Move ClearMoney from explainable metrics to explainable advisory behavior by putting analysis and recommendation traces onto the same trust contract.
+
+**Deliverables**
+- [x] **Shared Decision Trace v2 Contract**:
+    - Typed payload for advisor `analysis` and `recommendation` traces.
+    - Required fields:
+        - `trace_version`
+        - `trace_kind`
+        - `rules_applied`
+        - `insights`
+        - `assumptions`
+        - `confidence_score`
+        - `confidence_factors`
+        - `determinism_class`
+        - `source_tier`
+        - `continuity_status`
+        - `recommendation_readiness`
+        - `coverage_status`
+        - `policy_version`
+        - `freshness`
+        - `context_quality`
+        - `warnings`
+        - `remediation_actions`
+        - `correction_targets`
+- [x] **Recommendation Remediation UX**:
+    - The UI should explain why a recommendation is `cautious` or `blocked`.
+    - It should point users to reconnect accounts, refresh stale data, or fill missing profile inputs.
+- [x] **Decision Trace UI Migration**:
+    - Replace raw JSON-heavy trace viewers with structured rendering of rules, insights, assumptions, confidence, and remediation.
+- [x] **Backward Compatibility**:
+    - Existing traces should still render via fallback parsing while new traces emit the typed v2 shape.
+
+**Delivered**
+- Shared `DecisionTracePayload` is now live across advisor traces, API serialization, SDK types, and dashboard rendering.
+- Recommendation traces now carry remediation actions, correction targets, and review summaries.
+- User-facing review entry points and a recommendation review queue are implemented.
+
+**Execution Sequence**
+1. Add `DecisionTracePayload` and response parsing in the API/schema layer.
+2. Build a shared decision-trace payload builder in the advisor backend.
+3. Update advisor-created traces to use the shared builder.
+4. Expose parsed `trace_payload` from `/api/v1/agent/decision-traces`.
+5. Update SDK types and frontend trace rendering.
+6. Add regression tests for stored traces, API serialization, and readiness/remediation display.
+
 ### 1.1 Deterministic Financial Core
 
 - [ ] **Computation Boundary Spec**:
@@ -93,6 +140,7 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
     - Confidence is now decomposed into freshness, coverage, and metric-specific factors.
 - [ ] **Recommendation Trace Convergence**:
     - Migrate recommendation traces fully onto the same provenance v2 contract used by metrics.
+    - Status: in progress via shared `DecisionTracePayload` and UI remediation rendering.
 - [ ] **Allocation Drift Provenance**:
     - Extend the registry + trace stack to allocation drift and concentration metrics.
 
@@ -182,10 +230,157 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
     - wrong_fact, stale_fact, wrong_categorization, wrong_assumption, wrong_recommendation, intentional_exception, source_mistrust, execution_mismatch.
 - [x] **Correction Workflow**:
     - report -> classify -> apply when deterministic -> recompute impacted traces.
-- [ ] **Reviewer Console**:
-    - Internal tooling for triage and adjudication.
-- [ ] **Recommendation Correction Handling**:
-    - Distinguish metric/input corrections from recommendation-rationale disputes and advisor misses.
+- [x] **Recommendation Review Queue v1**:
+    - Dashboard queue for recommendation disputes, stale guidance, and correction conversion.
+- [x] **Recommendation Correction Handling v1**:
+    - Recommendation reviews can be converted into correction objects and fed back into continuity state.
+
+### 2.3.1 Detailed Next Program: Recommendation Review and Correction Loop
+
+**Objective:** Turn recommendation traces into a governed workflow where weak, disputed, or high-risk recommendations are routed through correction, review, and continuity state updates instead of silently degrading trust.
+
+**Primary Product Outcomes**
+- Users can tell ClearMoney not just "this number is wrong," but:
+    - "this recommendation is based on a wrong assumption"
+    - "this recommendation is directionally wrong for my situation"
+    - "this recommendation is blocked because my context is incomplete"
+- Internal reviewers can adjudicate disputes, apply overrides, and update trace status without mutating raw financial history manually.
+- Future advisor sessions inherit the outcome of prior corrections and reviews.
+
+**Scope v1**
+- Recommendation traces created by advisor `analysis` and `recommendation` flows
+- Manual-review corrections and recommendation-rationale disputes
+- Reviewer decisioning for:
+    - approve current recommendation
+    - dismiss user dispute
+    - mark recommendation stale
+    - convert dispute into factual correction
+    - mark recommendation blocked pending context recovery
+
+**Non-Goals v1**
+- Full policy engine for every action type
+- Multi-reviewer approval chains
+- External-facing support tooling
+- Automated model retraining
+
+**Data Model Additions**
+- [x] **Recommendation Review Entity**
+    - `id`
+    - `user_id`
+    - `decision_trace_id`
+    - `recommendation_id`
+    - `review_type`
+    - `status`
+    - `opened_reason`
+    - `resolution`
+    - `resolution_notes`
+    - `applied_changes`
+    - `reviewer_id` or `reviewer_label`
+    - `created_at`, `updated_at`, `resolved_at`
+- [ ] **Recommendation Status Extensions**
+    - Add trace-/recommendation-level states such as:
+        - `active`
+        - `cautious`
+        - `blocked`
+        - `superseded`
+        - `needs_review`
+        - `resolved`
+- [x] **Continuity Carry-Forward v1**
+    - Open review items and unresolved recommendation disputes now flow into trace review summaries and continuity warnings.
+
+**Backend Workstreams**
+1. **Recommendation Review Schema + Migration**
+   - Add `recommendation_reviews` table.
+   - Add indexes on `user_id`, `decision_trace_id`, `recommendation_id`, and `status`.
+   - Ensure downgrade paths clean up enum/types correctly.
+2. **Review Service**
+   - Create service methods for:
+       - open review
+       - list reviews
+       - resolve review
+       - convert review into correction
+       - mark recommendation superseded
+   - Guarantee every resolution writes an audit trail.
+3. **Decision Trace Status Projection**
+   - Extend `DecisionTracePayload` with optional review summary:
+       - `review_status`
+       - `open_review_count`
+       - `latest_resolution`
+       - `superseded_by_trace_id`
+   - Ensure `/agent/decision-traces` returns current review state without clients reconstructing it.
+4. **Advisor Continuity Hooks**
+   - When an advisor session starts, inject:
+       - open recommendation disputes
+       - unresolved review items
+       - recommendations blocked by stale or partial context
+   - Prevent the advisor from re-issuing identical recommendations while a review is unresolved.
+
+**Frontend Workstreams**
+1. **Decision Trace Review Surface**
+   - Add actions in the trace UI:
+       - `Report recommendation issue`
+       - `Mark as outdated`
+       - `Request human review`
+   - Render current review state with visible badges.
+2. **Recommendation Review Queue v1**
+   - Build a review page with:
+       - queue filters by `status`, `severity`, `trace_kind`, and `continuity_status`
+       - trace summary card
+       - linked recommendation, linked corrections, linked context quality
+       - resolution actions
+   - Keep room for future internal-only escalation controls.
+3. **Continuity and Remediation UX**
+   - Show when a recommendation is blocked because context needs repair.
+   - Route users to the right remediation action:
+       - reconnect accounts
+       - refresh data
+       - update profile
+       - resolve open review
+
+**API Surface**
+- [x] `POST /api/v1/recommendation-reviews`
+- [x] `GET /api/v1/recommendation-reviews`
+- [x] `POST /api/v1/recommendation-reviews/{id}/resolve`
+- [x] `POST /api/v1/recommendation-reviews/{id}/convert-to-correction`
+- [x] Extend `GET /api/v1/agent/decision-traces` with review summary fields
+
+**Execution Order**
+1. Build review model + migration: completed
+2. Build review service + API: completed
+3. Extend decision trace payload with review summary: completed
+4. Add recommendation review queue: completed in v1
+5. Add user-facing recommendation dispute actions: completed
+6. Feed open review state into advisor continuity and recommendation suppression: completed in v1
+
+**Acceptance Criteria**
+- Every disputed recommendation can be tracked without mutating raw trace payloads by hand.
+- Review resolution is visible in the trace UI and retrievable by API.
+- A resolved recommendation dispute can either:
+    - update recommendation state, or
+    - create downstream factual corrections.
+- Advisor sessions surface unresolved reviews and avoid repeating identical guidance under active review.
+- Review queue can process the full loop from open -> resolve/convert -> audit.
+
+**Rollout Plan**
+- Stage 1: Internal-only reviewer APIs and console
+- Stage 2: User-facing "request review" on recommendation traces
+- Stage 3: Advisor continuity integration
+- Stage 4: Recommendation suppression / supersession logic
+
+**Suggested Sprint Breakdown**
+- **Sprint A**
+    - migration
+    - backend review models
+    - base review APIs
+    - tests for open/list/resolve
+- **Sprint B**
+    - trace payload review summary
+    - reviewer console
+    - audit trail + links to corrections
+- **Sprint C**
+    - user-facing dispute entry point
+    - continuity injection into advisor
+    - recommendation suppression and supersession behavior
 
 ### 2.4 Advisor Continuity
 

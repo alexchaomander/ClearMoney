@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import {
@@ -26,8 +27,10 @@ import {
   useSyncAllConnections,
   useConnections,
 } from "@/lib/strata/hooks";
+import { getDecisionTracePayload } from "@/lib/strata/decision-traces";
 import type { DecisionTrace } from "@clearmoney/strata-sdk";
 import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
+import { RecommendationReviewDialog } from "@/components/dashboard/RecommendationReviewDialog";
 
 type Filter = "all" | "analysis" | "recommendation" | "action";
 
@@ -36,8 +39,7 @@ function getDeterministic(trace: DecisionTrace): {
   insights: Array<{ title: string; summary?: string; recommendation?: string; severity?: string }>;
   assumptions: string[];
 } {
-  const raw =
-    (trace.outputs as { trace?: Record<string, unknown> })?.trace?.deterministic ?? {};
+  const raw = getDecisionTracePayload(trace)?.deterministic ?? {};
 
   const rules =
     typeof raw === "object" && raw !== null && Array.isArray((raw as Record<string, unknown>).rules_applied)
@@ -152,6 +154,10 @@ export default function DecisionNarrativePage() {
 
   const [filter, setFilter] = useState<Filter>("all");
   const [activeTrace, setActiveTrace] = useState<DecisionTrace | null>(null);
+  const activePayload = useMemo(
+    () => (activeTrace ? getDecisionTracePayload(activeTrace) : null),
+    [activeTrace]
+  );
 
   const source = traces && traces.length > 0 ? traces : FALLBACK_DECISION_TRACES;
   const profile = memory ?? FALLBACK_FINANCIAL_MEMORY;
@@ -397,11 +403,44 @@ export default function DecisionNarrativePage() {
                     <div>
                       <p className="text-sm text-slate-600 dark:text-slate-400">Trace details</p>
                       <h2 className="text-xl text-slate-900 dark:text-white mt-1">
-                        {(getDeterministic(active).insights[0]?.title) ?? `Decision ${active.trace_type}`}
+                        {activePayload?.title ?? getDeterministic(active).insights[0]?.title ?? `Decision ${active.trace_type}`}
                       </h2>
                       <p className="text-xs text-slate-500 mt-1">
                         {active.recommendation_id ? `Recommendation ${active.recommendation_id}` : `Type: ${active.trace_type}`}
                       </p>
+                      {activePayload ? (
+                        <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.12em]">
+                          <span className="rounded-full border border-slate-300 px-2 py-1 text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                            {activePayload.determinism_class}
+                          </span>
+                          <span className="rounded-full border border-emerald-300 px-2 py-1 text-emerald-700 dark:border-emerald-900 dark:text-emerald-300">
+                            {activePayload.recommendation_readiness}
+                          </span>
+                          <span className="rounded-full border border-slate-300 px-2 py-1 text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                            {activePayload.continuity_status}
+                          </span>
+                          {activePayload.review_summary?.open_review_count ? (
+                            <span className="rounded-full border border-amber-300 px-2 py-1 text-amber-700 dark:border-amber-900 dark:text-amber-300">
+                              {activePayload.review_summary.open_review_count} open review{activePayload.review_summary.open_review_count === 1 ? "" : "s"}
+                            </span>
+                          ) : null}
+                        </div>
+                      ) : null}
+                      {active && active.trace_type !== "action" ? (
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                          <RecommendationReviewDialog
+                            decisionTraceId={active.id}
+                            recommendationId={active.recommendation_id}
+                            reviewSummary={activePayload?.review_summary ?? null}
+                          />
+                          <Link
+                            href="/dashboard/recommendation-reviews"
+                            className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 transition hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white"
+                          >
+                            Open review queue
+                          </Link>
+                        </div>
+                      ) : null}
                     </div>
 
                     <span className="text-xs rounded-full border border-slate-300 dark:border-slate-700 px-2 py-1 text-slate-600 dark:text-slate-400">
@@ -415,10 +454,62 @@ export default function DecisionNarrativePage() {
                       Summary
                     </h3>
                     <p className="text-sm text-slate-700 dark:text-slate-300 mt-2">
-                      {(active.outputs as { summary?: string })?.summary ??
+                      {activePayload?.summary ??
+                        (active.outputs as { summary?: string })?.summary ??
                         "This trace records the deterministic decision logic and recommendations used at the time of generation."}
                     </p>
                   </div>
+
+                  {activePayload?.remediation_actions?.length ? (
+                    <div className="rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/20 p-4">
+                      <h3 className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-500" />
+                        Recommended remediation
+                      </h3>
+                      <div className="mt-3 space-y-2">
+                        {activePayload.remediation_actions.map((action) => (
+                          <a
+                            key={action.action_id}
+                            href={action.href}
+                            className="block rounded-lg border border-amber-200 bg-white px-3 py-2 dark:border-amber-900/60 dark:bg-slate-950/50"
+                          >
+                            <div className="flex items-center justify-between gap-4">
+                              <p className="text-sm text-slate-900 dark:text-white">{action.label}</p>
+                              <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-amber-700 dark:text-amber-300">{action.priority}</span>
+                            </div>
+                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{action.description}</p>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  {activePayload?.review_summary && active.trace_type !== "action" ? (
+                    <div className="rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/20 p-4">
+                      <h3 className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-500" />
+                        Review continuity
+                      </h3>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-lg border border-amber-200 bg-white px-3 py-2 dark:border-amber-900/60 dark:bg-slate-950/50">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Status</p>
+                          <p className="mt-1 text-sm text-slate-900 dark:text-white">
+                            {activePayload.review_summary.review_status ?? "no_reviews"}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-amber-200 bg-white px-3 py-2 dark:border-amber-900/60 dark:bg-slate-950/50">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Open count</p>
+                          <p className="mt-1 text-sm text-slate-900 dark:text-white">
+                            {activePayload.review_summary.open_review_count}
+                          </p>
+                        </div>
+                      </div>
+                      {activePayload.review_summary.latest_resolution_notes ? (
+                        <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+                          {activePayload.review_summary.latest_resolution_notes}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
 
                   <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-4">
                     <h3 className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">

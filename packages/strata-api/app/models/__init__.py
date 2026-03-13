@@ -40,6 +40,11 @@ from app.models.physical_asset import (
     VehicleType,
 )
 from app.models.portfolio_snapshot import PortfolioSnapshot
+from app.models.recommendation_review import (
+    RecommendationReview,
+    RecommendationReviewStatus,
+    RecommendationReviewType,
+)
 from app.models.security import Security, SecurityType
 from app.models.share_report import ShareReport
 from app.models.tax_document import TaxDocument
@@ -107,6 +112,9 @@ __all__ = [
     "VehicleAsset",
     "VehicleType",
     "PortfolioSnapshot",
+    "RecommendationReview",
+    "RecommendationReviewStatus",
+    "RecommendationReviewType",
     "Recommendation",
     "RecommendationStatus",
     "RiskTolerance",
