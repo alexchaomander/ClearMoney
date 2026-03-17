@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Database, Info } from "lucide-react";
+import { ChevronRight, Database, Info, ArrowUpRight } from "lucide-react";
 import { useDecisionTraces } from "@/lib/strata/hooks";
 import { getDecisionTracePayload } from "@/lib/strata/decision-traces";
 import { format } from "date-fns";
@@ -80,6 +80,15 @@ export function DecisionTracePanel() {
                       <span className="rounded-full border border-emerald-200 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700 dark:border-emerald-900 dark:text-emerald-300">
                         {payload.recommendation_readiness}
                       </span>
+                      {payload.recommendation_status && (
+                        <span className={`rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${
+                          payload.recommendation_status === "superseded" ? "border-purple-200 text-purple-700 dark:border-purple-900 dark:text-purple-300" :
+                          payload.recommendation_status === "blocked" ? "border-red-200 text-red-700 dark:border-red-900 dark:text-red-300" :
+                          "border-slate-200 text-slate-500 dark:border-neutral-700 dark:text-neutral-400"
+                        }`}>
+                          {payload.recommendation_status}
+                        </span>
+                      )}
                       {payload.review_summary?.open_review_count ? (
                         <span className="rounded-full border border-amber-200 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-700 dark:border-amber-900 dark:text-amber-300">
                           {payload.review_summary.open_review_count} open review{payload.review_summary.open_review_count === 1 ? "" : "s"}
@@ -129,6 +138,15 @@ export function DecisionTracePanel() {
                         <span className="rounded-full border border-emerald-200 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700 dark:border-emerald-900 dark:text-emerald-300">
                           {tracePayload.recommendation_readiness}
                         </span>
+                        {tracePayload.recommendation_status && (
+                          <span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${
+                            tracePayload.recommendation_status === "superseded" ? "border-purple-200 text-purple-700 dark:border-purple-900 dark:text-purple-300" :
+                            tracePayload.recommendation_status === "blocked" ? "border-red-200 text-red-700 dark:border-red-900 dark:text-red-300" :
+                            "border-slate-200 text-slate-500 dark:border-neutral-700 dark:text-neutral-400"
+                          }`}>
+                            {tracePayload.recommendation_status}
+                          </span>
+                        )}
                         {tracePayload.review_summary?.open_review_count ? (
                           <span className="rounded-full border border-amber-200 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700 dark:border-amber-900 dark:text-amber-300">
                             {tracePayload.review_summary.open_review_count} open review{tracePayload.review_summary.open_review_count === 1 ? "" : "s"}
@@ -138,6 +156,26 @@ export function DecisionTracePanel() {
                       {tracePayload.summary ? (
                         <p className="mt-3 text-sm text-slate-600 dark:text-neutral-300">{tracePayload.summary}</p>
                       ) : null}
+                      {tracePayload.superseded_by_trace_id && (
+                        <div className="mt-4 rounded-xl border border-purple-100 bg-purple-50 p-4 dark:border-purple-900/50 dark:bg-purple-950/20">
+                          <p className="text-xs font-bold uppercase tracking-[0.12em] text-purple-700 dark:text-purple-300">
+                            Superseded Guidance
+                          </p>
+                          <p className="mt-2 text-sm text-purple-900 dark:text-purple-100">
+                            This recommendation has been retired and replaced by a newer decision trace.
+                          </p>
+                          <button
+                            onClick={() => {
+                              const targetTrace = traces?.find(t => t.id === tracePayload.superseded_by_trace_id);
+                              if (targetTrace) setActiveTrace(targetTrace);
+                            }}
+                            className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-purple-700 underline underline-offset-4 hover:text-purple-900 dark:text-purple-300 dark:hover:text-purple-100"
+                          >
+                            View replacement trace ({tracePayload.superseded_by_trace_id.slice(0, 8)})
+                            <ArrowUpRight className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       {activeTrace.trace_type !== "action" ? (

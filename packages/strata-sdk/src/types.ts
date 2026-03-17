@@ -984,7 +984,15 @@ export interface SkillDetail extends SkillSummary {
 
 // Advisor types
 export type SessionStatus = 'active' | 'completed' | 'paused';
-export type RecommendationStatus = 'pending' | 'accepted' | 'dismissed';
+export type RecommendationStatus =
+  | 'pending'
+  | 'accepted'
+  | 'dismissed'
+  | 'needs_review'
+  | 'cautious'
+  | 'blocked'
+  | 'superseded'
+  | 'resolved';
 
 export interface AdvisorSession {
   id: string;
@@ -1030,6 +1038,8 @@ export interface AdvisorRecommendation {
   summary: string;
   details: Record<string, unknown>;
   status: RecommendationStatus;
+  superseded_recommendation_id?: string | null;
+  superseded_by_recommendation_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -1138,7 +1148,8 @@ export type RecommendationReviewStatus =
   | 'resolved'
   | 'dismissed'
   | 'converted_to_correction'
-  | 'superseded';
+  | 'superseded'
+  | 'blocked';
 
 export interface DecisionTraceRuleCheck {
   name: string;
@@ -1229,6 +1240,10 @@ export interface DecisionTracePayload {
   trace_kind: string;
   title?: string | null;
   summary?: string | null;
+  recommendation_status?: RecommendationStatus | string | null;
+  superseded_by_trace_id?: string | null;
+  superseded_at?: string | null;
+  blocked_reason?: string | null;
   rules_applied: DecisionTraceRuleCheck[];
   insights: DecisionTraceInsight[];
   assumptions: string[];

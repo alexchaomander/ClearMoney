@@ -22,6 +22,7 @@ class RecommendationReviewStatus(str, enum.Enum):
     dismissed = "dismissed"
     converted_to_correction = "converted_to_correction"
     superseded = "superseded"
+    blocked = "blocked"
 
 
 class RecommendationReview(UUIDPrimaryKeyMixin, TimestampMixin, Base):
