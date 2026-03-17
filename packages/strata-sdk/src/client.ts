@@ -210,6 +210,10 @@ export interface StrataClientInterface {
     reviewId: string,
     data: RecommendationReviewResolve
   ): Promise<RecommendationReview>;
+  reopenRecommendationReview(
+    reviewId: string,
+    notes?: string
+  ): Promise<RecommendationReview>;
   convertRecommendationReviewToCorrection(
     reviewId: string,
     data: RecommendationReviewConvertToCorrection
@@ -885,6 +889,18 @@ export class StrataClient implements StrataClientInterface {
       {
         method: 'POST',
         body: JSON.stringify(data),
+      }
+    );
+  }
+
+  async reopenRecommendationReview(
+    reviewId: string,
+    notes?: string
+  ): Promise<RecommendationReview> {
+    return this.request<RecommendationReview>(
+      this.buildUrl(`/api/v1/recommendation-reviews/${reviewId}/reopen`, { notes }),
+      {
+        method: 'POST',
       }
     );
   }

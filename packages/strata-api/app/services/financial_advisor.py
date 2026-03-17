@@ -192,6 +192,10 @@ ADVISOR_TOOLS = [
                     "type": "number",
                     "description": "Confidence score from 0 to 1 for the recommendation.",
                 },
+                "supersedes_recommendation_id": {
+                    "type": "string",
+                    "description": "Optional UUID of a prior recommendation that this one replaces.",
+                },
             },
             "required": ["title", "summary"],
         },
@@ -645,11 +649,24 @@ class FinancialAdvisor:
 
         details = tool_input.get("details", {})
         proposed_title = str(tool_input.get("title", "")).strip()
+        supersedes_id_str = tool_input.get("supersedes_recommendation_id")
+        supersedes_id = uuid.UUID(supersedes_id_str) if supersedes_id_str else None
+
+        # Lineage-aware continuity checks
         if proposed_title and await review_service.has_open_review_for_recommendation_title(user_id, proposed_title):
             return {
-                "error": "A matching recommendation already has an open review. Resolve that review before creating a replacement recommendation.",
+                "error": "A matching recommendation title already has an open review. Resolve that review before creating a replacement recommendation.",
                 "open_review_count": open_review_count,
             }
+
+        # Check for semantic overlap
+        skill_name = agent_session.skill_name or "general"
+        if not supersedes_id and await review_service.has_overlapping_open_review(user_id, skill_name, details):
+            return {
+                "error": f"Guidance in the '{skill_name}' domain already has active reviews. Resolve the existing reviews or explicitly supersede the related guidance to proceed.",
+                "open_review_count": open_review_count,
+            }
+
         action = details.get("action") if isinstance(details, dict) else None
         if action and isinstance(action, dict):
             action_type = action.get("type")
@@ -674,8 +691,25 @@ class FinancialAdvisor:
             summary=tool_input.get("summary", ""),
             details=details,
             status=RecommendationStatus.pending,
+            superseded_recommendation_id=supersedes_id,
         )
         self._session.add(rec)
+        await self._session.flush() # Get rec.id
+
+        # If superseding, update the old recommendation
+        if supersedes_id:
+            old_rec_result = await self._session.execute(
+                select(Recommendation).where(
+                    Recommendation.id == supersedes_id,
+                    Recommendation.user_id == user_id,
+                )
+            )
+            old_rec = old_rec_result.scalar_one_or_none()
+            if old_rec:
+                old_rec.status = RecommendationStatus.superseded
+                old_rec.superseded_by_recommendation_id = rec.id
+                # Log event or trace if needed
+
         await self._session.commit()
         await self._session.refresh(rec)
 
@@ -708,6 +742,11 @@ class FinancialAdvisor:
                 },
                 *deterministic["insights"],
             ]
+
+        # Check for superseded status in continuity
+        if supersedes_id:
+            warnings.append(f"This recommendation replaces prior guidance (ID: {supersedes_id_str}).")
+
         tool_trace = tool_input.get("trace") or {}
         trace_payload = build_decision_trace_payload(
             trace_kind="recommendation",
@@ -719,6 +758,7 @@ class FinancialAdvisor:
             assumptions=tool_trace.get("assumptions") or assumptions,
             title=rec.title,
             summary=rec.summary,
+            recommendation_status=rec.status.value,
             confidence_score=tool_input.get("confidence"),
             warnings=warnings,
             review_summary={

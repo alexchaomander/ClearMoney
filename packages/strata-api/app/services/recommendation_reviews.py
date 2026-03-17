@@ -106,6 +106,50 @@ class RecommendationReviewService:
                 return True
         return False
 
+    async def has_overlapping_open_review(
+        self,
+        user_id: uuid.UUID,
+        skill_name: str,
+        details: dict | None = None,
+    ) -> bool:
+        """Check for open reviews that overlap semantically with the proposed recommendation."""
+        query = (
+            select(Recommendation)
+            .select_from(RecommendationReview)
+            .join(
+                Recommendation,
+                Recommendation.id == RecommendationReview.recommendation_id,
+            )
+            .where(
+                RecommendationReview.user_id == user_id,
+                RecommendationReview.status == RecommendationReviewStatus.open,
+                Recommendation.skill_name == skill_name,
+            )
+        )
+        result = await self._session.execute(query)
+        open_recommendations = result.scalars().all()
+
+        if not open_recommendations:
+            return False
+
+        # If details are provided, check for intent/metric overlap
+        if details:
+            proposed_intent = details.get("intent_type") or details.get("action", {}).get("type")
+            proposed_metric = details.get("affected_metric")
+
+            for rec in open_recommendations:
+                rec_details = rec.details or {}
+                rec_intent = rec_details.get("intent_type") or rec_details.get("action", {}).get("type")
+                rec_metric = rec_details.get("affected_metric")
+
+                if proposed_intent and rec_intent == proposed_intent:
+                    return True
+                if proposed_metric and rec_metric == proposed_metric:
+                    return True
+
+        # Fallback to skill match if no specific overlap found but many open reviews for same skill
+        return len(open_recommendations) >= 3 # Arbitrary threshold for "high overlap" if no specific intent match
+
     async def resolve_review(
         self,
         user_id: uuid.UUID,
@@ -119,6 +163,48 @@ class RecommendationReviewService:
         review.reviewer_label = payload.reviewer_label
         review.applied_changes = payload.applied_changes
         review.resolved_at = datetime.now(timezone.utc)
+
+        # Update underlying recommendation status if present
+        if review.recommendation_id:
+            from app.models.agent_session import RecommendationStatus
+            recommendation = await self._get_recommendation(user_id, review.recommendation_id)
+
+            if payload.status == RecommendationReviewStatus.resolved:
+                recommendation.status = RecommendationStatus.resolved
+            elif payload.status == RecommendationReviewStatus.dismissed:
+                recommendation.status = RecommendationStatus.accepted # Back to accepted if dismissal means the recommendation was actually fine
+            elif payload.status == RecommendationReviewStatus.superseded:
+                recommendation.status = RecommendationStatus.superseded
+                # If a superseding recommendation ID is provided in applied_changes, link it
+                superseded_by = payload.applied_changes.get("superseded_by_recommendation_id")
+                if superseded_by:
+                    recommendation.superseded_by_recommendation_id = uuid.UUID(superseded_by)
+            elif payload.status == RecommendationReviewStatus.blocked:
+                recommendation.status = RecommendationStatus.blocked
+
+        await self._session.commit()
+        await self._session.refresh(review)
+        return review
+
+    async def reopen_review(
+        self,
+        user_id: uuid.UUID,
+        review_id: uuid.UUID,
+        notes: str | None = None,
+    ) -> RecommendationReview:
+        review = await self._get_review(user_id, review_id)
+        review.status = RecommendationReviewStatus.open
+        review.resolution = None
+        if notes:
+            review.resolution_notes = (review.resolution_notes + "\n\n" + notes) if review.resolution_notes else notes
+        review.resolved_at = None
+
+        # If there's a recommendation, we might want to move it back to pending or needs_review
+        if review.recommendation_id:
+            from app.models.agent_session import RecommendationStatus
+            recommendation = await self._get_recommendation(user_id, review.recommendation_id)
+            recommendation.status = RecommendationStatus.needs_review
+
         await self._session.commit()
         await self._session.refresh(review)
         return review

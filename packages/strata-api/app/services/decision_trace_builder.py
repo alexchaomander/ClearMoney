@@ -121,6 +121,10 @@ def build_decision_trace_payload(
     assumptions: list[str],
     title: str | None = None,
     summary: str | None = None,
+    recommendation_status: str | None = None,
+    superseded_by_trace_id: str | None = None,
+    superseded_at: str | None = None,
+    blocked_reason: str | None = None,
     confidence_score: float | None = None,
     confidence_factors: list[ConfidenceFactor] | None = None,
     warnings: list[str] | None = None,
@@ -139,6 +143,10 @@ def build_decision_trace_payload(
         trace_kind=trace_kind,
         title=title,
         summary=summary,
+        recommendation_status=recommendation_status,
+        superseded_by_trace_id=superseded_by_trace_id,
+        superseded_at=superseded_at,
+        blocked_reason=blocked_reason,
         rules_applied=[DecisionTraceRuleCheck(**rule) for rule in rules_applied],
         insights=[
             DecisionTraceInsight(
