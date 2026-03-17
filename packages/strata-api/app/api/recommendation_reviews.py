@@ -56,6 +56,17 @@ async def resolve_recommendation_review(
     return RecommendationReviewResponse.model_validate(review)
 
 
+@router.post("/{review_id}/reopen", response_model=RecommendationReviewResponse)
+async def reopen_recommendation_review(
+    review_id: uuid.UUID,
+    notes: str | None = Query(default=None),
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> RecommendationReviewResponse:
+    review = await RecommendationReviewService(session).reopen_review(user.id, review_id, notes)
+    return RecommendationReviewResponse.model_validate(review)
+
+
 @router.post("/{review_id}/convert-to-correction", response_model=RecommendationReviewResponse)
 async def convert_recommendation_review_to_correction(
     review_id: uuid.UUID,
