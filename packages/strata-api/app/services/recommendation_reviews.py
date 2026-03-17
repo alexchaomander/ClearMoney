@@ -157,6 +157,8 @@ class RecommendationReviewService:
         payload: RecommendationReviewResolve,
     ) -> RecommendationReview:
         review = await self._get_review(user_id, review_id)
+        if review.status != RecommendationReviewStatus.open:
+            raise HTTPException(status_code=409, detail="Only open recommendation reviews can be resolved")
         review.status = payload.status
         review.resolution = payload.resolution
         review.resolution_notes = payload.resolution_notes
