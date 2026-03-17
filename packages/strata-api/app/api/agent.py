@@ -183,8 +183,15 @@ async def execute_recommendation(
     if not recommendation:
         raise HTTPException(status_code=404, detail="Recommendation not found")
 
-    if recommendation.status == RecommendationStatus.dismissed:
-        raise HTTPException(status_code=409, detail="Cannot execute a dismissed recommendation")
+    if recommendation.status in (
+        RecommendationStatus.dismissed,
+        RecommendationStatus.superseded,
+        RecommendationStatus.blocked,
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Cannot execute a {recommendation.status.value} recommendation",
+        )
 
     action_payload = request.payload or {}
     action_type = request.action
