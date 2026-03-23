@@ -13,6 +13,8 @@ class UserResponse(BaseModel):
     id: uuid.UUID
     clerk_id: str
     email: str
+    plan: str
+    subscription_status: str
     created_at: datetime
     updated_at: datetime
 

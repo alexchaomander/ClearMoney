@@ -12,6 +12,16 @@ export interface DataHealthResponse {
   details: Record<string, string> | null;
 }
 
+export interface UserResponse {
+  id: string;
+  clerk_id: string;
+  email: string;
+  plan: string;
+  subscription_status: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface TransparencyPayoutDisclosureRow {
   card: string;
   payout_usd: number;

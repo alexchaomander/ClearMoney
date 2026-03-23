@@ -32,9 +32,9 @@ def _try_decode_jwt(token: str) -> str | None:
         return None
 
     try:
-        from jose import JWTError, jwt  # type: ignore[import-untyped]
+        import jwt
     except ImportError:
-        logger.warning("python-jose not installed; skipping JWT validation")
+        logger.warning("PyJWT not installed; skipping JWT validation")
         return None
 
     try:
@@ -48,7 +48,7 @@ def _try_decode_jwt(token: str) -> str | None:
         if not sub:
             raise HTTPException(status_code=401, detail="Invalid token: missing sub")
         return str(sub)
-    except JWTError as exc:
+    except jwt.PyJWTError as exc:
         raise HTTPException(status_code=401, detail=f"Invalid token: {exc}") from exc
 
 

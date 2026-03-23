@@ -54,6 +54,7 @@ _MEMORY_FIELDS = {
     "portfolio_summary",
     "equity_compensation",
     "notes",
+    "preferences",
 }
 
 

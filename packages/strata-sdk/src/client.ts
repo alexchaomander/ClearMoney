@@ -109,6 +109,7 @@ import type {
   TaxPlanVersion,
   TaxPlanVersionCreateRequest,
   NotificationResponse,
+  UserResponse,
   ActionPolicyRequest,
   ActionPolicyResponse,
   ActionIntent,
@@ -171,6 +172,11 @@ export interface StrataClientInterface {
   getMemoryEvents(): Promise<MemoryEvent[]>;
   deriveMemory(): Promise<FinancialMemory>;
   getFinancialContext(format?: 'json' | 'markdown'): Promise<FinancialContext | string>;
+  // Account
+  getMe(): Promise<UserResponse>;
+  upgradeAccount(): Promise<UserResponse>;
+  exportAccountData(): Promise<any>;
+  deleteAccount(): Promise<void>;
   // Notifications
   listNotifications(): Promise<NotificationResponse[]>;
   updateNotification(id: string, data: { is_read: boolean }): Promise<NotificationResponse>;
@@ -718,6 +724,28 @@ export class StrataClient implements StrataClientInterface {
       return response.text();
     }
     return this.request<FinancialContext>('/api/v1/memory/context');
+  }
+
+  // === Account ===
+
+  async getMe(): Promise<UserResponse> {
+    return this.request<UserResponse>('/api/v1/account/me');
+  }
+
+  async upgradeAccount(): Promise<UserResponse> {
+    return this.request<UserResponse>('/api/v1/account/upgrade', {
+      method: 'POST',
+    });
+  }
+
+  async exportAccountData(): Promise<any> {
+    return this.request<any>('/api/v1/account/export');
+  }
+
+  async deleteAccount(): Promise<void> {
+    await this.request<void>('/api/v1/account', {
+      method: 'DELETE',
+    });
   }
 
   // === Notifications ===
