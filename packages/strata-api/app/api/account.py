@@ -6,11 +6,32 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db, require_step_up
 from app.core.rate_limit import limiter
 from app.models.user import User
+from app.schemas.user import UserResponse
 from app.services.account_management import delete_user_account, export_user_data
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/account", tags=["Account Management"])
+
+
+@router.get("/me", response_model=UserResponse)
+async def get_me(
+    current_user: User = Depends(get_current_user),
+) -> UserResponse:
+    """Get the current user's profile and plan information."""
+    return UserResponse.model_validate(current_user)
+
+
+@router.post("/upgrade", response_model=UserResponse)
+async def upgrade_account(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserResponse:
+    """Simulate upgrading the user's account to the Premium tier."""
+    current_user.plan = "premium"
+    await db.commit()
+    await db.refresh(current_user)
+    return UserResponse.model_validate(current_user)
 
 
 @router.get("/export")

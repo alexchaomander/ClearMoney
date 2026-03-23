@@ -109,11 +109,32 @@ export const queryKeys = {
   // Crypto
   cryptoWallets: ["crypto", "wallets"] as const,
   cryptoPortfolio: ["crypto", "portfolio"] as const,
+  user: ["account", "me"] as const,
 };
 
 function useClient() {
   const client = useStrataClientContext();
   return client!;
+}
+
+export function useMe(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.user,
+    queryFn: () => client.getMe(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useUpgradeAccount() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => client.upgradeAccount(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.user });
+    },
+  });
 }
 
 export function usePortfolioSummary(options?: { enabled?: boolean }) {

@@ -92,6 +92,7 @@ import type {
   LinkSessionResponse,
   MemoryEvent,
   NotificationResponse,
+  UserResponse,
   MetricTrace,
   PortfolioHistoryPoint,
   PortfolioHistoryRange,
@@ -609,6 +610,36 @@ export class DemoStrataClient implements StrataClientInterface {
         connections_count: 2
       }
     };
+  }
+
+  // === Account ===
+
+  async getMe(): Promise<UserResponse> {
+    await delay(300);
+    return {
+      id: "demo-user-001",
+      clerk_id: "user_2demo",
+      email: "demo@clearmoney.ai",
+      plan: "free",
+      subscription_status: "active",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  async upgradeAccount(): Promise<UserResponse> {
+    await delay(1000);
+    const me = await this.getMe();
+    return { ...me, plan: "premium" };
+  }
+
+  async exportAccountData(): Promise<any> {
+    await delay(1500);
+    return { status: "success", data: {} };
+  }
+
+  async deleteAccount(): Promise<void> {
+    await delay(1000);
   }
 
   // === Notifications ===
