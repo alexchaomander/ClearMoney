@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 # Set a test encryption key before app modules are imported
 os.environ.setdefault(
     "STRATA_CREDENTIALS_ENCRYPTION_KEY",
-    "mkAPXR0pVobXiUOdyOROwMx-Cn_o17eqzjjHUBWUURM=",  # test-only key
+    "UEuAuRkVkg_VE_f-A9cL5YNa-J0L1QOu6rl71lHtC00=",  # test-only key
 )
 os.environ.setdefault("STRATA_DEBUG", "true")
 os.environ.setdefault("STRATA_ENABLE_BACKGROUND_JOBS", "false")

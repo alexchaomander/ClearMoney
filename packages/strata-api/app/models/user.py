@@ -27,6 +27,8 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         String(255), unique=True, index=True
     )
     email: Mapped[str] = mapped_column(String(320))
+    plan: Mapped[str] = mapped_column(String(50), default="free")
+    subscription_status: Mapped[str] = mapped_column(String(50), default="active")
 
     entities: Mapped[list["LegalEntity"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

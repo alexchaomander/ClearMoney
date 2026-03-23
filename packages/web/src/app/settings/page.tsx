@@ -20,6 +20,8 @@ import {
   useUpdateMemory,
   useActionPolicy,
   useUpsertActionPolicy,
+  useMe,
+  useUpgradeAccount,
 } from "@/lib/strata/hooks";
 import { formatTitleCase, getInitials } from "@/lib/shared/formatters";
 import type { Institution, FinancialMemoryUpdate, ActionPolicyRequest } from "@clearmoney/strata-sdk";
@@ -122,7 +124,20 @@ function BillingSettings() {
   const sectionClass = "p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800";
   const { data: consents } = useConsents();
   const { data: connections } = useConnections();
-  
+  const { data: user, isLoading: userLoading } = useMe();
+  const upgrade = useUpgradeAccount();
+  const { pushToast } = useToast();
+
+  const handleUpgrade = () => {
+    upgrade.mutate(undefined, {
+      onSuccess: () => pushToast({ title: "Welcome to Premium!", variant: "success" }),
+    });
+  };
+
+  if (userLoading) return <div className="h-48 rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse" />;
+
+  const isPremium = user?.plan === "premium";
+
   return (
     <div className="space-y-6">
       <motion.div
@@ -133,16 +148,22 @@ function BillingSettings() {
         <SectionHeader 
           icon={CreditCard} 
           title="Current Plan" 
-          description="You are currently on the Free tier."
+          description={isPremium ? "You are on the Premium tier." : "You are currently on the Free tier."}
         />
         
         <div className="grid sm:grid-cols-2 gap-4 mt-6">
-          <div className="p-4 rounded-xl border-2 border-emerald-500/20 bg-emerald-500/5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-2">
-              <div className="bg-emerald-500 text-white text-xs font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
-                Active
+          <div className={`p-4 rounded-xl border-2 relative overflow-hidden transition-all ${
+            !isPremium 
+              ? "border-emerald-500/20 bg-emerald-500/5" 
+              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 opacity-60"
+          }`}>
+            {!isPremium && (
+              <div className="absolute top-0 right-0 p-2">
+                <div className="bg-emerald-500 text-white text-xs font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
+                  Active
+                </div>
               </div>
-            </div>
+            )}
             <h4 className="font-bold text-slate-900 dark:text-white mb-1">ClearMoney Free</h4>
             <p className="text-2xl font-black text-slate-900 dark:text-white">$0<span className="text-xs font-normal text-slate-500">/mo</span></p>
             <ul className="mt-4 space-y-2">
@@ -165,21 +186,43 @@ function BillingSettings() {
             </ul>
           </div>
           
-          <button className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500/50 transition-all text-left group">
+          <div className={`p-4 rounded-xl border-2 relative overflow-hidden transition-all ${
+            isPremium 
+              ? "border-emerald-500/20 bg-emerald-500/5" 
+              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500/50 group"
+          }`}>
+            {isPremium && (
+              <div className="absolute top-0 right-0 p-2">
+                <div className="bg-emerald-500 text-white text-xs font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
+                  Active
+                </div>
+              </div>
+            )}
             <h4 className="font-bold text-slate-900 dark:text-white mb-1 group-hover:text-emerald-500 transition-colors">ClearMoney Premium</h4>
             <p className="text-2xl font-black text-slate-900 dark:text-white">$29<span className="text-xs font-normal text-slate-500">/mo</span></p>
             <ul className="mt-4 space-y-2">
-              {["Unlimited accounts", "SMS/Voice access", "Tax doc ingestion", "Action execution"].map(feat => (
-                <li key={feat} className="flex items-center gap-2 text-xs text-slate-500">
-                  <Plus className="w-3 h-3 text-slate-300" />
-                  {feat}
+              {[
+                { label: "Unlimited accounts", current: true },
+                { label: "Founder Operating Room", current: true },
+                { label: "Advanced tax modeling", current: true },
+                { label: "Direct execution (Strata)", current: true }
+              ].map((feat, i) => (
+                <li key={i} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                  <Check className="w-3 h-3 text-emerald-500" />
+                  {feat.label}
                 </li>
               ))}
             </ul>
-            <div className="mt-6 w-full py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg text-center text-xs font-bold transition-transform active:scale-95">
-              Upgrade to Premium
-            </div>
-          </button>
+            {!isPremium && (
+              <button 
+                onClick={handleUpgrade}
+                disabled={upgrade.isPending}
+                className="mt-6 w-full py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg text-center text-xs font-bold transition-transform active:scale-95 disabled:opacity-50"
+              >
+                {upgrade.isPending ? "Upgrading..." : "Upgrade to Premium"}
+              </button>
+            )}
+          </div>
         </div>
       </motion.div>
 
@@ -348,7 +391,7 @@ export default function SettingsPage() {
 
   const preferences = memory?.preferences || {};
 
-  const savePreference = (key: string, value: number | null) => {
+  const savePreference = (key: string, value: any) => {
     updateMemory.mutate({
       preferences: { ...preferences, [key]: value },
     }, {
@@ -802,23 +845,35 @@ export default function SettingsPage() {
                 <h2 className="font-serif text-xl text-slate-900 dark:text-white mb-4">
                   Notifications
                 </h2>
-                <div className="space-y-3">
-                  <label className="flex items-center justify-between">
-                    <span className="text-sm text-slate-700 dark:text-slate-300">
-                      Email notifications
-                    </span>
-                    <div className="w-10 h-6 rounded-full bg-slate-200 dark:bg-slate-700 relative cursor-not-allowed opacity-50">
-                      <div className="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-400 absolute top-1 left-1" />
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm text-slate-700 dark:text-slate-300">
+                        Email notifications
+                      </Label>
+                      <p className="text-xs text-slate-500">
+                        Receive important account and security alerts via email.
+                      </p>
                     </div>
-                  </label>
-                  <label className="flex items-center justify-between">
-                    <span className="text-sm text-slate-700 dark:text-slate-300">
-                      Weekly portfolio summary
-                    </span>
-                    <div className="w-10 h-6 rounded-full bg-slate-200 dark:bg-slate-700 relative cursor-not-allowed opacity-50">
-                      <div className="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-400 absolute top-1 left-1" />
+                    <Switch
+                      checked={!!preferences.email_notifications}
+                      onCheckedChange={(checked) => savePreference("email_notifications", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm text-slate-700 dark:text-slate-300">
+                        Weekly portfolio summary
+                      </Label>
+                      <p className="text-xs text-slate-500">
+                        A digest of your portfolio performance sent every Monday.
+                      </p>
                     </div>
-                  </label>
+                    <Switch
+                      checked={!!preferences.weekly_summary}
+                      onCheckedChange={(checked) => savePreference("weekly_summary", checked)}
+                    />
+                  </div>
                 </div>
               </motion.div>
 
