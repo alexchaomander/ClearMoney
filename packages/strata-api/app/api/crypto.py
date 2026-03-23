@@ -16,7 +16,7 @@ from app.schemas.crypto import (
 )
 from app.services.crypto import CryptoService
 
-router = APIRouter(prefix="/v1/crypto", tags=["Crypto"])
+router = APIRouter(prefix="/crypto", tags=["Crypto"])
 
 
 @router.get("/wallets", response_model=list[CryptoWalletSchema])
