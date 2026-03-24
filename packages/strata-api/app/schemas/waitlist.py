@@ -14,6 +14,7 @@ class WaitlistCreate(BaseModel):
     referred_by: Optional[str] = None
     metadata_json: Optional[Dict] = None
 
+
 class WaitlistResponse(BaseModel):
     id: UUID
     referral_code: str

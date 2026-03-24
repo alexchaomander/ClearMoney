@@ -147,7 +147,10 @@ async def test_context_includes_profile(
 
 @pytest.mark.asyncio
 async def test_context_includes_accounts(
-    session: AsyncSession, user: User, memory: FinancialMemory, accounts_and_holdings: dict
+    session: AsyncSession,
+    user: User,
+    memory: FinancialMemory,
+    accounts_and_holdings: dict,
 ) -> None:
     ctx = await build_financial_context(user.id, session)
     accounts = ctx["accounts"]
@@ -158,7 +161,10 @@ async def test_context_includes_accounts(
 
 @pytest.mark.asyncio
 async def test_context_includes_holdings(
-    session: AsyncSession, user: User, memory: FinancialMemory, accounts_and_holdings: dict
+    session: AsyncSession,
+    user: User,
+    memory: FinancialMemory,
+    accounts_and_holdings: dict,
 ) -> None:
     ctx = await build_financial_context(user.id, session)
     assert len(ctx["holdings"]) >= 1
@@ -168,7 +174,10 @@ async def test_context_includes_holdings(
 
 @pytest.mark.asyncio
 async def test_context_portfolio_metrics(
-    session: AsyncSession, user: User, memory: FinancialMemory, accounts_and_holdings: dict
+    session: AsyncSession,
+    user: User,
+    memory: FinancialMemory,
+    accounts_and_holdings: dict,
 ) -> None:
     ctx = await build_financial_context(user.id, session)
     metrics = ctx["portfolio_metrics"]
@@ -187,7 +196,10 @@ async def test_context_portfolio_metrics(
 
 @pytest.mark.asyncio
 async def test_markdown_rendering(
-    session: AsyncSession, user: User, memory: FinancialMemory, accounts_and_holdings: dict
+    session: AsyncSession,
+    user: User,
+    memory: FinancialMemory,
+    accounts_and_holdings: dict,
 ) -> None:
     ctx = await build_financial_context(user.id, session)
     md = render_context_as_markdown(ctx)

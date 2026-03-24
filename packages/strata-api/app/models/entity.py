@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from app.models.investment_account import InvestmentAccount
     from app.models.user import User
 
+
 class EntityType(str, enum.Enum):
     personal = "personal"
     c_corp = "c_corp"
@@ -20,6 +21,7 @@ class EntityType(str, enum.Enum):
     llc = "llc"
     spv = "spv"
     trust = "trust"
+
 
 class LegalEntity(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "entities"
@@ -31,7 +33,7 @@ class LegalEntity(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     entity_type: Mapped[EntityType] = mapped_column(
         Enum(EntityType, values_callable=lambda e: [x.value for x in e]),
         default=EntityType.personal,
-        server_default="personal"
+        server_default="personal",
     )
 
     user: Mapped["User"] = relationship(back_populates="entities")

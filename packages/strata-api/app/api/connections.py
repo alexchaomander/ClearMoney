@@ -78,10 +78,13 @@ async def create_link_session(
     )
 
     session_token = secrets.token_urlsafe(32)
-    await store.set(session_token, {
-        "user_id": str(user.id),
-        "user_secret": link_session.user_secret,
-    })
+    await store.set(
+        session_token,
+        {
+            "user_id": str(user.id),
+            "user_secret": link_session.user_secret,
+        },
+    )
 
     return LinkSessionResponse(
         redirect_url=link_session.redirect_url,
@@ -189,15 +192,15 @@ async def delete_connection(
 
     # Get all investment accounts for this connection
     accounts_result = await session.execute(
-        select(InvestmentAccount).where(InvestmentAccount.connection_id == connection.id)
+        select(InvestmentAccount).where(
+            InvestmentAccount.connection_id == connection.id
+        )
     )
     accounts = accounts_result.scalars().all()
 
     # Delete holdings for each account, then delete the accounts
     for account in accounts:
-        await session.execute(
-            delete(Holding).where(Holding.account_id == account.id)
-        )
+        await session.execute(delete(Holding).where(Holding.account_id == account.id))
         await session.delete(account)
 
     # Finally delete the connection

@@ -25,7 +25,9 @@ class CryptoChain(str, enum.Enum):
 class CryptoWallet(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "crypto_wallets"
     __table_args__ = (
-        UniqueConstraint("user_id", "address", "chain", name="uq_crypto_wallet_user_address_chain"),
+        UniqueConstraint(
+            "user_id", "address", "chain", name="uq_crypto_wallet_user_address_chain"
+        ),
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(

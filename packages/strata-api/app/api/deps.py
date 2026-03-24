@@ -98,9 +98,7 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="Authentication required")
 
     # Get or create user by clerk_id
-    result = await session.execute(
-        select(User).where(User.clerk_id == clerk_user_id)
-    )
+    result = await session.execute(select(User).where(User.clerk_id == clerk_user_id))
     user = result.scalar_one_or_none()
 
     if user is None:
@@ -167,9 +165,7 @@ async def get_optional_user(
     if not clerk_user_id:
         return None
 
-    result = await session.execute(
-        select(User).where(User.clerk_id == clerk_user_id)
-    )
+    result = await session.execute(select(User).where(User.clerk_id == clerk_user_id))
     return result.scalar_one_or_none()
 
 

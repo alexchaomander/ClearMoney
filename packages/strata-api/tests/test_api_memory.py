@@ -116,12 +116,8 @@ async def test_update_memory_no_change_no_event(headers: dict) -> None:
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
-        await client.patch(
-            "/api/v1/memory", headers=headers, json={"age": 42}
-        )
-        await client.patch(
-            "/api/v1/memory", headers=headers, json={"age": 42}
-        )
+        await client.patch("/api/v1/memory", headers=headers, json={"age": 42})
+        await client.patch("/api/v1/memory", headers=headers, json={"age": 42})
         events_resp = await client.get("/api/v1/memory/events", headers=headers)
         events = events_resp.json()
         age_events = [e for e in events if e["field_name"] == "age"]
@@ -191,9 +187,7 @@ async def test_events_pagination(headers: dict) -> None:
     ) as client:
         # Create several events
         for age in range(25, 30):
-            await client.patch(
-                "/api/v1/memory", headers=headers, json={"age": age}
-            )
+            await client.patch("/api/v1/memory", headers=headers, json={"age": age})
         resp = await client.get(
             "/api/v1/memory/events", headers=headers, params={"limit": 2, "offset": 0}
         )
@@ -268,9 +262,7 @@ async def test_derive_memory_creates_event(
         await client.post("/api/v1/memory/derive", headers=headers)
         events_resp = await client.get("/api/v1/memory/events", headers=headers)
         events = events_resp.json()
-        derive_events = [
-            e for e in events if e["source"] == "account_sync"
-        ]
+        derive_events = [e for e in events if e["source"] == "account_sync"]
         assert len(derive_events) >= 1
 
 
@@ -311,9 +303,7 @@ async def test_delete_memory(headers: dict) -> None:
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
         # Create and populate
-        await client.patch(
-            "/api/v1/memory", headers=headers, json={"age": 40}
-        )
+        await client.patch("/api/v1/memory", headers=headers, json={"age": 40})
         # Delete
         resp = await client.delete("/api/v1/memory", headers=headers)
         assert resp.status_code == 200

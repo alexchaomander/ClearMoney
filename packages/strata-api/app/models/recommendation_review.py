@@ -42,7 +42,9 @@ class RecommendationReview(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         default=RecommendationReviewType.user_dispute,
     )
     status: Mapped[RecommendationReviewStatus] = mapped_column(
-        Enum(RecommendationReviewStatus, values_callable=lambda e: [x.value for x in e]),
+        Enum(
+            RecommendationReviewStatus, values_callable=lambda e: [x.value for x in e]
+        ),
         default=RecommendationReviewStatus.open,
         index=True,
     )
@@ -51,4 +53,6 @@ class RecommendationReview(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     resolution_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     applied_changes: Mapped[dict] = mapped_column(JSON, default=lambda: {})
     reviewer_label: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

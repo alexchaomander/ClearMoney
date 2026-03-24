@@ -47,7 +47,9 @@ class EquityGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # Cap Table Specific Fields
     valuation_cap: Mapped[Decimal | None] = mapped_column(Numeric(18, 2), default=None)
     discount_rate: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), default=None)
-    amount_invested: Mapped[Decimal | None] = mapped_column(Numeric(18, 2), default=None)
+    amount_invested: Mapped[Decimal | None] = mapped_column(
+        Numeric(18, 2), default=None
+    )
 
     # JSON-based vesting schedule
     # Format: [{"date": "2024-01-01", "quantity": 100}, ...]

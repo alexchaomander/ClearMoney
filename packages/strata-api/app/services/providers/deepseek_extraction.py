@@ -94,7 +94,9 @@ class DeepSeekExtractionProvider(ExtractionProvider):
                         {"type": "image_url", "image_url": {"url": data_url}},
                         {
                             "type": "text",
-                            "text": self.build_user_prompt(filename, document_type_hint),
+                            "text": self.build_user_prompt(
+                                filename, document_type_hint
+                            ),
                         },
                     ],
                 },

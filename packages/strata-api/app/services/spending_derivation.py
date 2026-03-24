@@ -109,7 +109,9 @@ async def update_memory_spending_categories(
         return False
 
     # Derive spending categories
-    spending = await derive_spending_categories_from_transactions(session, user_id, months)
+    spending = await derive_spending_categories_from_transactions(
+        session, user_id, months
+    )
 
     if not spending:
         logger.debug(f"No spending data found for user {user_id}")

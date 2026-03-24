@@ -29,7 +29,9 @@ async def list_transactions(
         select(Transaction)
         .join(InvestmentAccount, Transaction.account_id == InvestmentAccount.id)
         .where(InvestmentAccount.user_id == user.id)
-        .order_by(nulls_last(Transaction.trade_date.desc()), Transaction.created_at.desc())
+        .order_by(
+            nulls_last(Transaction.trade_date.desc()), Transaction.created_at.desc()
+        )
     )
 
     if account_id:

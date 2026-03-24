@@ -64,7 +64,7 @@ class MetalPriceService:
             "function": "CURRENCY_EXCHANGE_RATE",
             "from_currency": av_symbol,
             "to_currency": "USD",
-            "apikey": self._api_key
+            "apikey": self._api_key,
         }
 
         try:

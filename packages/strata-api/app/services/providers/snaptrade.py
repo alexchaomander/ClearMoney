@@ -6,8 +6,6 @@ from typing import Any
 
 from snaptrade_client import SnapTrade
 
-logger = logging.getLogger(__name__)
-
 from app.core.config import settings
 from app.models.connection import Connection
 from app.models.investment_account import InvestmentAccountType
@@ -22,6 +20,8 @@ from app.services.providers.base import (
     NormalizedSecurity,
     NormalizedTransaction,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _safe_getattr(obj: Any, *attrs: str, default: Any = None) -> Any:
@@ -85,15 +85,17 @@ class SnapTradeProvider(BaseProvider):
     }
 
     # Tax-advantaged account types
-    _TAX_ADVANTAGED_TYPES = frozenset({
-        InvestmentAccountType.ira,
-        InvestmentAccountType.roth_ira,
-        InvestmentAccountType.k401,
-        InvestmentAccountType.k403b,
-        InvestmentAccountType.hsa,
-        InvestmentAccountType.sep_ira,
-        InvestmentAccountType.simple_ira,
-    })
+    _TAX_ADVANTAGED_TYPES = frozenset(
+        {
+            InvestmentAccountType.ira,
+            InvestmentAccountType.roth_ira,
+            InvestmentAccountType.k401,
+            InvestmentAccountType.k403b,
+            InvestmentAccountType.hsa,
+            InvestmentAccountType.sep_ira,
+            InvestmentAccountType.simple_ira,
+        }
+    )
 
     def __init__(self) -> None:
         """Initialize SnapTrade client."""
@@ -154,7 +156,9 @@ class SnapTradeProvider(BaseProvider):
         """Map SnapTrade account type to our internal type."""
         if not snaptrade_type:
             return InvestmentAccountType.other
-        return self._ACCOUNT_TYPE_MAP.get(snaptrade_type.upper(), InvestmentAccountType.other)
+        return self._ACCOUNT_TYPE_MAP.get(
+            snaptrade_type.upper(), InvestmentAccountType.other
+        )
 
     def _map_security_type(self, snaptrade_type: str | None) -> SecurityType:
         """Map SnapTrade security type to our internal type."""
@@ -173,16 +177,26 @@ class SnapTradeProvider(BaseProvider):
 
         return snaptrade_user_id, user_secret
 
-    def _get_account_capabilities(self, account_type: InvestmentAccountType) -> list[ActionCapability]:
+    def _get_account_capabilities(
+        self, account_type: InvestmentAccountType
+    ) -> list[ActionCapability]:
         """Determine capabilities based on account type."""
         caps = [ActionCapability.READ_ONLY]
 
         # Any brokerage account can theoretically be rebalanced via SnapTrade
-        if account_type in {InvestmentAccountType.brokerage, InvestmentAccountType.ira, InvestmentAccountType.roth_ira}:
+        if account_type in {
+            InvestmentAccountType.brokerage,
+            InvestmentAccountType.ira,
+            InvestmentAccountType.roth_ira,
+        }:
             caps.append(ActionCapability.INTERNAL_REBALANCE)
 
         # IRAs are candidates for ACATS rollovers (Era 2 bridge)
-        if account_type in {InvestmentAccountType.ira, InvestmentAccountType.roth_ira, InvestmentAccountType.k401}:
+        if account_type in {
+            InvestmentAccountType.ira,
+            InvestmentAccountType.roth_ira,
+            InvestmentAccountType.k401,
+        }:
             caps.append(ActionCapability.ACATS_TRANSFER)
             caps.append(ActionCapability.PDF_GENERATION)
 
@@ -203,7 +217,11 @@ class SnapTradeProvider(BaseProvider):
         normalized_accounts = []
         for account in accounts_response:
             account_type = self._map_account_type(_safe_getattr(account, "type"))
-            balance = Decimal(str(_safe_getattr(account, "balance", "total", "amount", default=0) or 0))
+            balance = Decimal(
+                str(
+                    _safe_getattr(account, "balance", "total", "amount", default=0) or 0
+                )
+            )
             brokerage = _safe_getattr(account, "brokerage")
 
             normalized_accounts.append(
@@ -215,7 +233,9 @@ class SnapTradeProvider(BaseProvider):
                     currency=_safe_getattr(account, "currency", default="USD") or "USD",
                     is_tax_advantaged=account_type in self._TAX_ADVANTAGED_TYPES,
                     institution_name=_safe_getattr(brokerage, "name"),
-                    institution_id=str(brokerage.id) if brokerage and hasattr(brokerage, "id") else None,
+                    institution_id=str(brokerage.id)
+                    if brokerage and hasattr(brokerage, "id")
+                    else None,
                     capabilities=self._get_account_capabilities(account_type),
                 )
             )
@@ -250,15 +270,23 @@ class SnapTradeProvider(BaseProvider):
             # Extract security info
             ticker = _safe_getattr(symbol, "symbol")
             security_name = _safe_getattr(symbol, "description") or ticker or "Unknown"
-            security_type = self._map_security_type(self._extract_security_type_code(symbol))
-            close_price = Decimal(str(holding.price)) if _safe_getattr(holding, "price") is not None else None
+            security_type = self._map_security_type(
+                self._extract_security_type_code(symbol)
+            )
+            close_price = (
+                Decimal(str(holding.price))
+                if _safe_getattr(holding, "price") is not None
+                else None
+            )
 
             security = NormalizedSecurity(
                 ticker=ticker,
                 name=security_name,
                 security_type=security_type,
                 close_price=close_price,
-                provider_security_id=str(symbol.id) if symbol and hasattr(symbol, "id") else None,
+                provider_security_id=str(symbol.id)
+                if symbol and hasattr(symbol, "id")
+                else None,
             )
 
             # Extract holding values
@@ -268,9 +296,15 @@ class SnapTradeProvider(BaseProvider):
             normalized_holdings.append(
                 NormalizedHolding(
                     security=security,
-                    quantity=Decimal(str(_safe_getattr(holding, "units", default=0) or 0)),
-                    cost_basis=Decimal(str(book_value)) if book_value is not None else None,
-                    market_value=Decimal(str(market_value)) if market_value is not None else None,
+                    quantity=Decimal(
+                        str(_safe_getattr(holding, "units", default=0) or 0)
+                    ),
+                    cost_basis=Decimal(str(book_value))
+                    if book_value is not None
+                    else None,
+                    market_value=Decimal(str(market_value))
+                    if market_value is not None
+                    else None,
                     as_of=datetime.now(timezone.utc),
                 )
             )
@@ -280,7 +314,9 @@ class SnapTradeProvider(BaseProvider):
     def _map_transaction_type(self, snaptrade_type: str | None) -> TransactionType:
         if not snaptrade_type:
             return TransactionType.other
-        return self._TRANSACTION_TYPE_MAP.get(snaptrade_type.upper(), TransactionType.other)
+        return self._TRANSACTION_TYPE_MAP.get(
+            snaptrade_type.upper(), TransactionType.other
+        )
 
     def _normalize_transaction_amount(self, value: Any) -> Decimal | None:
         if value is None:
@@ -305,10 +341,12 @@ class SnapTradeProvider(BaseProvider):
         """Get transactions for a specific SnapTrade account."""
         snaptrade_user_id, user_secret = self._get_credentials(connection)
 
-        transactions_response = self.client.account_information.get_user_account_transactions(
-            user_id=snaptrade_user_id,
-            user_secret=user_secret,
-            account_id=provider_account_id,
+        transactions_response = (
+            self.client.account_information.get_user_account_transactions(
+                user_id=snaptrade_user_id,
+                user_secret=user_secret,
+                account_id=provider_account_id,
+            )
         )
 
         normalized_transactions: list[NormalizedTransaction] = []
@@ -316,7 +354,9 @@ class SnapTradeProvider(BaseProvider):
             symbol = _safe_getattr(transaction, "symbol")
             ticker = _safe_getattr(symbol, "symbol")
             security_name = _safe_getattr(symbol, "description") or ticker or "Unknown"
-            security_type = self._map_security_type(self._extract_security_type_code(symbol))
+            security_type = self._map_security_type(
+                self._extract_security_type_code(symbol)
+            )
 
             security = None
             if ticker:
@@ -339,22 +379,14 @@ class SnapTradeProvider(BaseProvider):
 
             normalized_transactions.append(
                 NormalizedTransaction(
-                    provider_transaction_id=str(txn_id)
-                    if txn_id is not None
-                    else None,
+                    provider_transaction_id=str(txn_id) if txn_id is not None else None,
                     transaction_type=self._map_transaction_type(
                         _safe_getattr(transaction, "type")
                     ),
                     quantity=(
-                        Decimal(str(txn_units))
-                        if txn_units is not None
-                        else None
+                        Decimal(str(txn_units)) if txn_units is not None else None
                     ),
-                    price=(
-                        Decimal(str(txn_price))
-                        if txn_price is not None
-                        else None
-                    ),
+                    price=(Decimal(str(txn_price)) if txn_price is not None else None),
                     amount=self._normalize_transaction_amount(
                         _safe_getattr(transaction, "amount")
                     ),
@@ -388,6 +420,4 @@ class SnapTradeProvider(BaseProvider):
             )
         except Exception as e:
             # Log but don't fail if we can't delete from SnapTrade
-            logger.warning(
-                f"Failed to delete SnapTrade user {snaptrade_user_id}: {e}"
-            )
+            logger.warning(f"Failed to delete SnapTrade user {snaptrade_user_id}: {e}")

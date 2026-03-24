@@ -18,6 +18,7 @@ def _safe_float(value: object, default: float) -> float:
     except (ValueError, TypeError):
         return default
 
+
 EXTRACTION_SYSTEM_PROMPT = """You are a tax document extraction assistant. Given an image or PDF of a tax document, extract all relevant fields into structured JSON.
 
 Return a JSON object with exactly these top-level keys:
@@ -71,12 +72,15 @@ class ExtractionProvider(ABC):
         """Extract only the basename and strip to alphanumeric, dots, hyphens, underscores."""
         import os
         import re
+
         base = os.path.basename(filename)
         # Keep only safe characters for a filename
         return re.sub(r"[^\w.\-]", "_", base)[:100]
 
     @classmethod
-    def build_user_prompt(cls, filename: str, document_type_hint: str | None = None) -> str:
+    def build_user_prompt(
+        cls, filename: str, document_type_hint: str | None = None
+    ) -> str:
         """Build the user-facing prompt text.
 
         Inputs are sanitized to mitigate prompt injection since filename

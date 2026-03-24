@@ -50,7 +50,9 @@ class InvestmentAccountResponse(BaseModel):
     is_tax_advantaged: bool
     is_business: bool
     entity_id: uuid.UUID | None = None
-    capabilities: list[ActionCapability] = Field(default_factory=lambda: [ActionCapability.READ_ONLY])
+    capabilities: list[ActionCapability] = Field(
+        default_factory=lambda: [ActionCapability.READ_ONLY]
+    )
     created_at: datetime
     updated_at: datetime
 

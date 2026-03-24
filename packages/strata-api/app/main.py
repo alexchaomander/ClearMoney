@@ -19,8 +19,8 @@ from app.api.banking import router as banking_router
 from app.api.calculators import router as calculators_router
 from app.api.cash_debt import router as cash_debt_router
 from app.api.connections import router as connections_router
-from app.api.corrections import router as corrections_router
 from app.api.consent import router as consent_router
+from app.api.corrections import router as corrections_router
 from app.api.credit_cards import router as credit_cards_router
 from app.api.crypto import router as crypto_router
 from app.api.data import router as data_router
@@ -87,7 +87,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await close_db()
 
 
-
 app = FastAPI(
     title=settings.app_name,
     version=settings.version,
@@ -112,7 +111,9 @@ app.add_middleware(RequestIdMiddleware)
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(connections_router, prefix="/api/v1")
 app.include_router(entities_router, prefix="/api/v1")
-app.include_router(credit_cards_router, prefix="/api/v1/credit-cards", tags=["Credit Cards"])
+app.include_router(
+    credit_cards_router, prefix="/api/v1/credit-cards", tags=["Credit Cards"]
+)
 app.include_router(accounts_router, prefix="/api/v1")
 app.include_router(cash_debt_router, prefix="/api/v1")
 app.include_router(consent_router, prefix="/api/v1")
@@ -124,7 +125,9 @@ app.include_router(transactions_router, prefix="/api/v1")
 app.include_router(memory_router, prefix="/api/v1")
 app.include_router(corrections_router, prefix="/api/v1")
 app.include_router(notifications_router, prefix="/api/v1")
-app.include_router(physical_assets_router, prefix="/api/v1/physical-assets", tags=["Physical Assets"])
+app.include_router(
+    physical_assets_router, prefix="/api/v1/physical-assets", tags=["Physical Assets"]
+)
 app.include_router(skills_router, prefix="/api/v1")
 app.include_router(advisor_router, prefix="/api/v1")
 app.include_router(share_reports_router, prefix="/api/v1")

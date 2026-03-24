@@ -58,9 +58,7 @@ async def mark_all_read(
     session: AsyncSession = Depends(get_async_session),
 ):
     await session.execute(
-        update(Notification)
-        .where(Notification.user_id == user.id)
-        .values(is_read=True)
+        update(Notification).where(Notification.user_id == user.id).values(is_read=True)
     )
     await session.commit()
     return {"status": "ok"}

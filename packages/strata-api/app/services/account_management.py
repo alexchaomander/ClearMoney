@@ -22,7 +22,9 @@ from app.services.providers.snaptrade import SnapTradeProvider
 logger = logging.getLogger(__name__)
 
 
-def _filter_user_visible_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _filter_user_visible_messages(
+    messages: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     """Filter advisor session messages to only user-visible content.
 
     Removes tool_use/tool_result content blocks that contain internal
@@ -34,14 +36,17 @@ def _filter_user_visible_messages(messages: list[dict[str, Any]]) -> list[dict[s
         if isinstance(content, list):
             # Filter out tool_result messages and extract text from content blocks
             text_blocks = [
-                b.get("text", "") for b in content
+                b.get("text", "")
+                for b in content
                 if isinstance(b, dict) and b.get("type") == "text"
             ]
             if text_blocks:
-                filtered.append({
-                    "role": msg["role"],
-                    "content": "\n".join(text_blocks),
-                })
+                filtered.append(
+                    {
+                        "role": msg["role"],
+                        "content": "\n".join(text_blocks),
+                    }
+                )
         elif isinstance(content, str):
             filtered.append({"role": msg["role"], "content": content})
     return filtered
@@ -162,9 +167,7 @@ async def delete_user_account(user_id: uuid.UUID, session: AsyncSession) -> None
     4. Commit the transaction.
     """
     # 1. Verify user exists
-    user_result = await session.execute(
-        select(User).where(User.id == user_id)
-    )
+    user_result = await session.execute(select(User).where(User.id == user_id))
     user = user_result.scalar_one_or_none()
     if user is None:
         raise ValueError(f"User {user_id} not found")
@@ -201,4 +204,6 @@ async def delete_user_account(user_id: uuid.UUID, session: AsyncSession) -> None
     # 4. Commit
     await session.commit()
 
-    logger.info("Deleted user account %s with %d connections revoked", user_id, len(connections))
+    logger.info(
+        "Deleted user account %s with %d connections revoked", user_id, len(connections)
+    )

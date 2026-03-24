@@ -242,7 +242,9 @@ class PhysicalAssetService:
         await self.session.refresh(asset)
         return asset
 
-    async def delete_vehicle_asset(self, asset_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+    async def delete_vehicle_asset(
+        self, asset_id: uuid.UUID, user_id: uuid.UUID
+    ) -> bool:
         result = await self.session.execute(
             delete(VehicleAsset).where(
                 VehicleAsset.id == asset_id, VehicleAsset.user_id == user_id
@@ -253,7 +255,9 @@ class PhysicalAssetService:
 
     # --- Collectibles ---
 
-    async def get_collectible_assets(self, user_id: uuid.UUID) -> List[CollectibleAsset]:
+    async def get_collectible_assets(
+        self, user_id: uuid.UUID
+    ) -> List[CollectibleAsset]:
         result = await self.session.execute(
             select(CollectibleAsset).where(CollectibleAsset.user_id == user_id)
         )
@@ -364,7 +368,9 @@ class PhysicalAssetService:
 
     # --- Alternative Assets ---
 
-    async def get_alternative_assets(self, user_id: uuid.UUID) -> List[AlternativeAsset]:
+    async def get_alternative_assets(
+        self, user_id: uuid.UUID
+    ) -> List[AlternativeAsset]:
         result = await self.session.execute(
             select(AlternativeAsset).where(AlternativeAsset.user_id == user_id)
         )
@@ -460,9 +466,7 @@ class PhysicalAssetService:
         elif make and model and year:
             val = Decimal("30000.00")
             return [
-                VehicleSearchResult(
-                    make=make, model=model, year=year, market_value=val
-                )
+                VehicleSearchResult(make=make, model=model, year=year, market_value=val)
             ]
 
         return []

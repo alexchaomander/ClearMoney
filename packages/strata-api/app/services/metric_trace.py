@@ -41,19 +41,31 @@ def _months(value: float) -> str:
 
 
 def _last_sync_as_iso(connections: list[Connection]) -> str | None:
-    timestamps = [connection.last_synced_at for connection in connections if connection.last_synced_at]
+    timestamps = [
+        connection.last_synced_at
+        for connection in connections
+        if connection.last_synced_at
+    ]
     if not timestamps:
         return None
     return max(timestamps).isoformat()
 
 
-async def _get_connections(user_id: uuid.UUID, session: AsyncSession) -> list[Connection]:
-    result = await session.execute(select(Connection).where(Connection.user_id == user_id))
+async def _get_connections(
+    user_id: uuid.UUID, session: AsyncSession
+) -> list[Connection]:
+    result = await session.execute(
+        select(Connection).where(Connection.user_id == user_id)
+    )
     return list(result.scalars().all())
 
 
-async def _get_memory(user_id: uuid.UUID, session: AsyncSession) -> FinancialMemory | None:
-    result = await session.execute(select(FinancialMemory).where(FinancialMemory.user_id == user_id))
+async def _get_memory(
+    user_id: uuid.UUID, session: AsyncSession
+) -> FinancialMemory | None:
+    result = await session.execute(
+        select(FinancialMemory).where(FinancialMemory.user_id == user_id)
+    )
     return result.scalar_one_or_none()
 
 
@@ -110,7 +122,11 @@ def _build_trace_response(
         description=definition.description,
         data_points=data_points,
         components=components,
-        confidence_score=round(sum(factor.value for factor in confidence_factors) / len(confidence_factors), 2),
+        confidence_score=round(
+            sum(factor.value for factor in confidence_factors)
+            / len(confidence_factors),
+            2,
+        ),
         confidence_factors=confidence_factors,
         determinism_class=definition.determinism_class,
         source_tier=definition.source_tier,
@@ -121,7 +137,9 @@ def _build_trace_response(
         as_of=as_of,
         warnings=warnings,
         policy_version=definition.policy_version,
-        correction_targets=[TraceCorrectionTarget(**target) for target in definition.correction_targets],
+        correction_targets=[
+            TraceCorrectionTarget(**target) for target in definition.correction_targets
+        ],
     )
 
 
@@ -186,7 +204,12 @@ async def build_metric_trace(
         ]
         confidence_factors = [
             *context_quality.confidence_factors,
-            ConfidenceFactor(label="Formula Stability", value=0.99, impact="positive", reason="Net worth comes from a deterministic registered formula."),
+            ConfidenceFactor(
+                label="Formula Stability",
+                value=0.99,
+                impact="positive",
+                reason="Net worth comes from a deterministic registered formula.",
+            ),
         ]
         return _build_trace_response(
             definition,
@@ -199,15 +222,71 @@ async def build_metric_trace(
 
     if metric_id == "totalAssets":
         components = [
-            TraceComponent(component_kind="input", label="Cash", raw_value=_round_money(total_cash), display_value=_currency(total_cash), source="Linked cash accounts", source_tier="verified_account", determinism_class="deterministic", as_of=last_sync, freshness_status=context_quality.continuity_status),
-            TraceComponent(component_kind="input", label="Investments", raw_value=_round_money(total_investment), display_value=_currency(total_investment), source="Linked brokerage and retirement accounts", source_tier="verified_account", determinism_class="deterministic", as_of=last_sync, freshness_status=context_quality.continuity_status),
-            TraceComponent(component_kind="input", label="Vested Equity", raw_value=_round_money(total_equity_vested), display_value=_currency(total_equity_vested), source="Equity grants with current valuation inputs", source_tier="derived_context", determinism_class="deterministic", as_of=last_sync, freshness_status=context_quality.continuity_status),
-            TraceComponent(component_kind="input", label="Physical Assets", raw_value=_round_money(total_physical), display_value=_currency(total_physical), source="Tracked real estate, vehicles, collectibles, metals, and alternatives", source_tier="user_declared", determinism_class="deterministic", as_of=last_sync, freshness_status=context_quality.continuity_status),
-            TraceComponent(component_kind="derived", label="Total Assets", raw_value=_round_money(total_assets), display_value=_currency(total_assets), source="Registered total-assets formula", source_tier="derived_context", determinism_class="deterministic", as_of=last_sync, freshness_status=context_quality.continuity_status, policy_reference=definition.policy_version),
+            TraceComponent(
+                component_kind="input",
+                label="Cash",
+                raw_value=_round_money(total_cash),
+                display_value=_currency(total_cash),
+                source="Linked cash accounts",
+                source_tier="verified_account",
+                determinism_class="deterministic",
+                as_of=last_sync,
+                freshness_status=context_quality.continuity_status,
+            ),
+            TraceComponent(
+                component_kind="input",
+                label="Investments",
+                raw_value=_round_money(total_investment),
+                display_value=_currency(total_investment),
+                source="Linked brokerage and retirement accounts",
+                source_tier="verified_account",
+                determinism_class="deterministic",
+                as_of=last_sync,
+                freshness_status=context_quality.continuity_status,
+            ),
+            TraceComponent(
+                component_kind="input",
+                label="Vested Equity",
+                raw_value=_round_money(total_equity_vested),
+                display_value=_currency(total_equity_vested),
+                source="Equity grants with current valuation inputs",
+                source_tier="derived_context",
+                determinism_class="deterministic",
+                as_of=last_sync,
+                freshness_status=context_quality.continuity_status,
+            ),
+            TraceComponent(
+                component_kind="input",
+                label="Physical Assets",
+                raw_value=_round_money(total_physical),
+                display_value=_currency(total_physical),
+                source="Tracked real estate, vehicles, collectibles, metals, and alternatives",
+                source_tier="user_declared",
+                determinism_class="deterministic",
+                as_of=last_sync,
+                freshness_status=context_quality.continuity_status,
+            ),
+            TraceComponent(
+                component_kind="derived",
+                label="Total Assets",
+                raw_value=_round_money(total_assets),
+                display_value=_currency(total_assets),
+                source="Registered total-assets formula",
+                source_tier="derived_context",
+                determinism_class="deterministic",
+                as_of=last_sync,
+                freshness_status=context_quality.continuity_status,
+                policy_reference=definition.policy_version,
+            ),
         ]
         confidence_factors = [
             *context_quality.confidence_factors,
-            ConfidenceFactor(label="Asset Coverage", value=0.95 if total_assets > 0 else 0.4, impact="positive" if total_assets > 0 else "negative", reason="Core asset classes are included in the current context."),
+            ConfidenceFactor(
+                label="Asset Coverage",
+                value=0.95 if total_assets > 0 else 0.4,
+                impact="positive" if total_assets > 0 else "negative",
+                reason="Core asset classes are included in the current context.",
+            ),
         ]
         return _build_trace_response(
             definition,
@@ -220,9 +299,15 @@ async def build_metric_trace(
 
     if metric_id == "savingsRate":
         monthly_income = float(profile.get("monthly_income") or 0.0)
-        observed_monthly_spend = float(await _get_observed_monthly_spend(user_id, session, months=3))
+        observed_monthly_spend = float(
+            await _get_observed_monthly_spend(user_id, session, months=3)
+        )
         fallback_monthly_spend = float(profile.get("average_monthly_expenses") or 0.0)
-        monthly_spend = observed_monthly_spend if observed_monthly_spend > 0 else fallback_monthly_spend
+        monthly_spend = (
+            observed_monthly_spend
+            if observed_monthly_spend > 0
+            else fallback_monthly_spend
+        )
         warnings = list(context_quality.warnings)
         spend_component_kind = "input"
         spend_source = "Observed debit transactions from the last 90 days"
@@ -236,30 +321,83 @@ async def build_metric_trace(
             spend_source_tier = "user_declared"
             spend_determinism = "fallback"
             spend_factor_value = 0.65
-            warnings.append("Monthly spend is using memory fallback, not observed transaction flow.")
+            warnings.append(
+                "Monthly spend is using memory fallback, not observed transaction flow."
+            )
         elif observed_monthly_spend <= 0:
             spend_component_kind = "fallback"
             spend_source = "No observed monthly spend was available"
             spend_source_tier = "derived_context"
             spend_determinism = "fallback"
             spend_factor_value = 0.3
-            warnings.append("Monthly spend is unavailable, so savings rate defaults to zero.")
+            warnings.append(
+                "Monthly spend is unavailable, so savings rate defaults to zero."
+            )
 
         income_factor_value = 0.92 if monthly_income > 0 else 0.35
         if monthly_income <= 0:
-            warnings.append("Monthly income is missing, so savings rate defaults to zero.")
+            warnings.append(
+                "Monthly income is missing, so savings rate defaults to zero."
+            )
 
-        savings_rate = ((monthly_income - monthly_spend) / monthly_income) if monthly_income > 0 else 0.0
+        savings_rate = (
+            ((monthly_income - monthly_spend) / monthly_income)
+            if monthly_income > 0
+            else 0.0
+        )
         savings_rate = max(0.0, savings_rate)
         components = [
-            TraceComponent(component_kind="input", label="Monthly Income", raw_value=_round_money(monthly_income), display_value=_currency(monthly_income), source="Financial profile memory", source_tier="user_declared", determinism_class="deterministic", as_of=last_sync, freshness_status=context_quality.continuity_status),
-            TraceComponent(component_kind=spend_component_kind, label="Monthly Spend", raw_value=_round_money(monthly_spend), display_value=_currency(monthly_spend), source=spend_source, source_tier=spend_source_tier, determinism_class=spend_determinism, as_of=last_sync, freshness_status=context_quality.continuity_status),
-            TraceComponent(component_kind="derived", label="Savings Rate", raw_value=round(savings_rate * 100, 1), display_value=_percent(savings_rate * 100), source="Registered savings-rate formula", source_tier="derived_context", determinism_class="deterministic", as_of=last_sync, freshness_status=context_quality.continuity_status, policy_reference=definition.policy_version),
+            TraceComponent(
+                component_kind="input",
+                label="Monthly Income",
+                raw_value=_round_money(monthly_income),
+                display_value=_currency(monthly_income),
+                source="Financial profile memory",
+                source_tier="user_declared",
+                determinism_class="deterministic",
+                as_of=last_sync,
+                freshness_status=context_quality.continuity_status,
+            ),
+            TraceComponent(
+                component_kind=spend_component_kind,
+                label="Monthly Spend",
+                raw_value=_round_money(monthly_spend),
+                display_value=_currency(monthly_spend),
+                source=spend_source,
+                source_tier=spend_source_tier,
+                determinism_class=spend_determinism,
+                as_of=last_sync,
+                freshness_status=context_quality.continuity_status,
+            ),
+            TraceComponent(
+                component_kind="derived",
+                label="Savings Rate",
+                raw_value=round(savings_rate * 100, 1),
+                display_value=_percent(savings_rate * 100),
+                source="Registered savings-rate formula",
+                source_tier="derived_context",
+                determinism_class="deterministic",
+                as_of=last_sync,
+                freshness_status=context_quality.continuity_status,
+                policy_reference=definition.policy_version,
+            ),
         ]
         confidence_factors = [
             *context_quality.confidence_factors,
-            ConfidenceFactor(label="Income Coverage", value=income_factor_value, impact="positive" if monthly_income > 0 else "negative", reason="Monthly income is present in memory." if monthly_income > 0 else "Monthly income is missing from memory."),
-            ConfidenceFactor(label="Spend Coverage", value=spend_factor_value, impact="positive" if observed_monthly_spend > 0 else "mixed", reason=spend_source),
+            ConfidenceFactor(
+                label="Income Coverage",
+                value=income_factor_value,
+                impact="positive" if monthly_income > 0 else "negative",
+                reason="Monthly income is present in memory."
+                if monthly_income > 0
+                else "Monthly income is missing from memory.",
+            ),
+            ConfidenceFactor(
+                label="Spend Coverage",
+                value=spend_factor_value,
+                impact="positive" if observed_monthly_spend > 0 else "mixed",
+                reason=spend_source,
+            ),
         ]
         return _build_trace_response(
             definition,
@@ -273,7 +411,9 @@ async def build_metric_trace(
     if metric_id == "personalRunway":
         runway_service = RunwayService(session)
         runway_metrics = await runway_service.get_runway_metrics(user_id)
-        observed_personal_burn = await runway_service._calculate_observed_burn(user_id, is_business=False)
+        observed_personal_burn = await runway_service._calculate_observed_burn(
+            user_id, is_business=False
+        )
         personal = runway_metrics["personal"]
         monthly_burn = float(personal["monthly_burn"])
         warnings = list(context_quality.warnings)
@@ -289,17 +429,60 @@ async def build_metric_trace(
             burn_source_tier = "user_declared"
             burn_determinism = "fallback"
             burn_factor_value = 0.7
-            warnings.append("Personal runway is using memory fallback because observed burn was unavailable.")
+            warnings.append(
+                "Personal runway is using memory fallback because observed burn was unavailable."
+            )
 
         components = [
-            TraceComponent(component_kind="input", label="Personal Liquid Cash", raw_value=_round_money(float(personal["liquid_cash"])), display_value=_currency(float(personal["liquid_cash"])), source="Personal cash accounts", source_tier="verified_account", determinism_class="deterministic", as_of=last_sync, freshness_status=context_quality.continuity_status),
-            TraceComponent(component_kind=burn_component_kind, label="Monthly Personal Burn", raw_value=_round_money(monthly_burn), display_value=_currency(monthly_burn), source=burn_source, source_tier=burn_source_tier, determinism_class=burn_determinism, as_of=last_sync, freshness_status=context_quality.continuity_status),
-            TraceComponent(component_kind="derived", label="Runway Months", raw_value=round(float(personal["runway_months"]), 1), display_value=_months(float(personal["runway_months"])), source="Registered personal-runway formula", source_tier="derived_context", determinism_class="deterministic", as_of=last_sync, freshness_status=context_quality.continuity_status, policy_reference=definition.policy_version),
+            TraceComponent(
+                component_kind="input",
+                label="Personal Liquid Cash",
+                raw_value=_round_money(float(personal["liquid_cash"])),
+                display_value=_currency(float(personal["liquid_cash"])),
+                source="Personal cash accounts",
+                source_tier="verified_account",
+                determinism_class="deterministic",
+                as_of=last_sync,
+                freshness_status=context_quality.continuity_status,
+            ),
+            TraceComponent(
+                component_kind=burn_component_kind,
+                label="Monthly Personal Burn",
+                raw_value=_round_money(monthly_burn),
+                display_value=_currency(monthly_burn),
+                source=burn_source,
+                source_tier=burn_source_tier,
+                determinism_class=burn_determinism,
+                as_of=last_sync,
+                freshness_status=context_quality.continuity_status,
+            ),
+            TraceComponent(
+                component_kind="derived",
+                label="Runway Months",
+                raw_value=round(float(personal["runway_months"]), 1),
+                display_value=_months(float(personal["runway_months"])),
+                source="Registered personal-runway formula",
+                source_tier="derived_context",
+                determinism_class="deterministic",
+                as_of=last_sync,
+                freshness_status=context_quality.continuity_status,
+                policy_reference=definition.policy_version,
+            ),
         ]
         confidence_factors = [
             *context_quality.confidence_factors,
-            ConfidenceFactor(label="Burn Coverage", value=burn_factor_value, impact="positive" if observed_personal_burn > 0 else "mixed", reason=burn_source),
-            ConfidenceFactor(label="Liquidity Coverage", value=0.95 if float(personal["liquid_cash"]) > 0 else 0.5, impact="positive" if float(personal["liquid_cash"]) > 0 else "mixed", reason="Personal cash accounts are included in runway math."),
+            ConfidenceFactor(
+                label="Burn Coverage",
+                value=burn_factor_value,
+                impact="positive" if observed_personal_burn > 0 else "mixed",
+                reason=burn_source,
+            ),
+            ConfidenceFactor(
+                label="Liquidity Coverage",
+                value=0.95 if float(personal["liquid_cash"]) > 0 else 0.5,
+                impact="positive" if float(personal["liquid_cash"]) > 0 else "mixed",
+                reason="Personal cash accounts are included in runway math.",
+            ),
         ]
         return _build_trace_response(
             definition,

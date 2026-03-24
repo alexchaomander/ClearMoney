@@ -66,14 +66,12 @@ async def search_vehicles(
     """Search for vehicles by VIN or specs."""
     service = PhysicalAssetService(db)
     return await service.search_vehicles(
-        vin=request.vin,
-        make=request.make,
-        model=request.model,
-        year=request.year
+        vin=request.vin, make=request.make, model=request.model, year=request.year
     )
 
 
 # --- Real Estate ---
+
 
 @router.get("/real-estate", response_model=List[RealEstateAsset])
 async def get_real_estate_assets(
@@ -142,6 +140,7 @@ async def refresh_real_estate_valuation(
 
 # --- Vehicles ---
 
+
 @router.get("/vehicles", response_model=List[VehicleAsset])
 async def get_vehicle_assets(
     db: AsyncSession = Depends(deps.get_db),
@@ -209,6 +208,7 @@ async def refresh_vehicle_valuation(
 
 # --- Collectibles ---
 
+
 @router.get("/collectibles", response_model=List[CollectibleAsset])
 async def get_collectible_assets(
     db: AsyncSession = Depends(deps.get_db),
@@ -255,7 +255,9 @@ async def delete_collectible_asset(
     return {"status": "success"}
 
 
-@router.post("/collectibles/{asset_id}/refresh", response_model=ValuationRefreshResponse)
+@router.post(
+    "/collectibles/{asset_id}/refresh", response_model=ValuationRefreshResponse
+)
 async def refresh_collectible_valuation(
     asset_id: uuid.UUID,
     db: AsyncSession = Depends(deps.get_db),
@@ -275,6 +277,7 @@ async def refresh_collectible_valuation(
 
 
 # --- Precious Metals ---
+
 
 @router.get("/precious-metals", response_model=List[PreciousMetalAsset])
 async def get_precious_metal_assets(
@@ -303,7 +306,9 @@ async def update_precious_metal_asset(
     current_user: User = Depends(deps.get_current_user),
 ) -> PreciousMetalAsset:
     service = PhysicalAssetService(db)
-    asset = await service.update_precious_metal_asset(asset_id, current_user.id, asset_in)
+    asset = await service.update_precious_metal_asset(
+        asset_id, current_user.id, asset_in
+    )
     if not asset:
         raise HTTPException(status_code=404, detail="Precious metal asset not found")
     return asset
@@ -345,6 +350,7 @@ async def refresh_precious_metal_valuation(
 
 
 # --- Alternative Assets ---
+
 
 @router.get("/alternative", response_model=List[AlternativeAsset])
 async def get_alternative_assets(
@@ -393,6 +399,7 @@ async def delete_alternative_asset(
 
 
 # --- History ---
+
 
 @router.get("/{asset_type}/{asset_id}/history", response_model=List[AssetValuation])
 async def get_asset_valuation_history(

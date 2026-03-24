@@ -25,7 +25,9 @@ MAX_JSON_PAYLOAD_BYTES = 102_400  # 100 KB
 MAX_EVENT_METADATA_BYTES = 4_096  # 4 KB
 
 
-def _check_json_size(value: dict[str, Any], max_bytes: int, field_name: str) -> dict[str, Any]:
+def _check_json_size(
+    value: dict[str, Any], max_bytes: int, field_name: str
+) -> dict[str, Any]:
     if len(json.dumps(value)) > max_bytes:
         raise ValueError(f"{field_name} exceeds maximum size of {max_bytes} bytes")
     return value

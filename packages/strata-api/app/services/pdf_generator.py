@@ -14,6 +14,7 @@ class Colors:
     EMERALD_600 = (5, 150, 105)
     AMBER_50 = (255, 251, 235)
 
+
 class PDFGenerator:
     """Service to generate manifest PDFs and specialized Switch Kits for Action Intents."""
 
@@ -85,16 +86,19 @@ class PDFGenerator:
             "target_institution",
             "target_account_number",
             "target_routing_number",
-            "amount"
+            "amount",
         ]
         sorted_keys = sorted(
             intent.payload.keys(),
-            key=lambda x: (preferred_order.index(x) if x in preferred_order else 999, x)
+            key=lambda x: (
+                preferred_order.index(x) if x in preferred_order else 999,
+                x,
+            ),
         )
 
         for key in sorted_keys:
             value = intent.payload[key]
-            label = key.replace('_', ' ').upper()
+            label = key.replace("_", " ").upper()
             pdf.set_font("helvetica", "B", 9)
             pdf.set_text_color(*Colors.SLATE_500)
             pdf.cell(60, 8, f"  {label}", 0, 0)
@@ -113,14 +117,22 @@ class PDFGenerator:
         pdf.ln(4)
 
         for key, value in intent.impact_summary.items():
-            label = key.replace('_', ' ').upper()
+            label = key.replace("_", " ").upper()
             pdf.set_font("helvetica", "B", 9)
             pdf.set_text_color(*Colors.SLATE_500)
             pdf.cell(60, 8, f"  {label}", 0, 0)
 
             pdf.set_text_color(*Colors.EMERALD_600)
             pdf.set_font("helvetica", "B", 11)
-            pdf.cell(0, 8, f"+ {value}" if isinstance(value, (int, float)) and value > 0 else str(value), 0, 1)
+            pdf.cell(
+                0,
+                8,
+                f"+ {value}"
+                if isinstance(value, (int, float)) and value > 0
+                else str(value),
+                0,
+                1,
+            )
             pdf.set_text_color(*Colors.NEUTRAL_900)
 
         # Ghost Navigation Verification
@@ -158,6 +170,10 @@ class PDFGenerator:
 
         pdf.set_font("helvetica", "I", 8)
         pdf.set_text_color(120, 120, 120)
-        pdf.multi_cell(0, 4, "LEGAL NOTICE: This document is a generated 'Switch Kit' manifest intended to assist the user in manual financial account portability. ClearMoney and the Strata Action Layer do not have direct custody of these funds. Final authorization and legal signature remain the sole responsibility of the account holder at the delivering and receiving institutions.")
+        pdf.multi_cell(
+            0,
+            4,
+            "LEGAL NOTICE: This document is a generated 'Switch Kit' manifest intended to assist the user in manual financial account portability. ClearMoney and the Strata Action Layer do not have direct custody of these funds. Final authorization and legal signature remain the sole responsibility of the account holder at the delivering and receiving institutions.",
+        )
 
         return bytes(pdf.output())

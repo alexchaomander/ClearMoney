@@ -151,7 +151,8 @@ async def upsert_bank_transactions(
         result = await session.execute(
             select(BankTransaction).where(
                 BankTransaction.cash_account_id == account.id,
-                BankTransaction.provider_transaction_id == normalized.provider_transaction_id,
+                BankTransaction.provider_transaction_id
+                == normalized.provider_transaction_id,
             )
         )
         txn = result.scalar_one_or_none()

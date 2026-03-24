@@ -124,6 +124,7 @@ class VehicleAsset(VehicleAssetBase):
 
 # Collectibles
 
+
 class CollectibleAssetBase(BaseModel):
     name: str
     item_type: CollectibleType = CollectibleType.other
@@ -162,6 +163,7 @@ class CollectibleAsset(CollectibleAssetBase):
 
 # Precious Metals
 
+
 class PreciousMetalAssetBase(BaseModel):
     name: str
     metal_type: MetalType
@@ -193,6 +195,7 @@ class PreciousMetalAsset(PreciousMetalAssetBase):
 
 
 # Alternative Assets
+
 
 class AlternativeAssetBase(BaseModel):
     name: str
@@ -239,7 +242,6 @@ class PhysicalAssetsSummary(BaseModel):
     total_value: Decimal
 
 
-
 class ValuationRefreshResponse(BaseModel):
     status: str  # updated | unchanged | failed | cooldown | not_found
     new_value: Optional[Decimal] = None
@@ -279,12 +281,16 @@ class VehicleSearchRequest(BaseModel):
     @field_validator("vin")
     @classmethod
     def validate_vin(cls, v: Optional[str]) -> Optional[str]:
-        if v is not None and not re.match(r'^[A-HJ-NPR-Z0-9]{17}$', v, re.IGNORECASE):
-            raise ValueError("Invalid VIN format: must be 17 alphanumeric characters (excluding I, O, Q)")
+        if v is not None and not re.match(r"^[A-HJ-NPR-Z0-9]{17}$", v, re.IGNORECASE):
+            raise ValueError(
+                "Invalid VIN format: must be 17 alphanumeric characters (excluding I, O, Q)"
+            )
         return v
 
     @model_validator(mode="after")
     def require_vin_or_specs(self) -> "VehicleSearchRequest":
         if not self.vin and not (self.make and self.model and self.year):
-            raise ValueError("Either 'vin' or all of 'make', 'model', and 'year' must be provided")
+            raise ValueError(
+                "Either 'vin' or all of 'make', 'model', and 'year' must be provided"
+            )
         return self

@@ -1,4 +1,3 @@
-
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +15,7 @@ async def test_user(session: AsyncSession) -> User:
     await session.refresh(user)
     return user
 
+
 @pytest.fixture
 async def client() -> AsyncClient:
     async with AsyncClient(
@@ -23,7 +23,10 @@ async def client() -> AsyncClient:
     ) as ac:
         yield ac
 
-async def test_create_and_fetch_action_intent_direct(session: AsyncSession, test_user: User):
+
+async def test_create_and_fetch_action_intent_direct(
+    session: AsyncSession, test_user: User
+):
     """Test directly creating an ActionIntent and ensuring manifest is generated."""
     from app.services.ghost_service import GhostService
 
@@ -32,14 +35,12 @@ async def test_create_and_fetch_action_intent_direct(session: AsyncSession, test
         "source_institution_slug": "fidelity",
         "source_account_name": "Fidelity Checking",
         "target_account_name": "Strata HYSA",
-        "target_account_number": "987654321"
+        "target_account_number": "987654321",
     }
 
     ghost_service = GhostService()
     manifest = ghost_service.generate_manifest(
-        ActionIntentType.ACH_TRANSFER,
-        "fidelity",
-        payload
+        ActionIntentType.ACH_TRANSFER, "fidelity", payload
     )
 
     intent = ActionIntent(
@@ -50,7 +51,7 @@ async def test_create_and_fetch_action_intent_direct(session: AsyncSession, test
         description="Optimize cash",
         payload=payload,
         impact_summary={"savings": 225.0},
-        execution_manifest=manifest
+        execution_manifest=manifest,
     )
 
     session.add(intent)
@@ -62,7 +63,10 @@ async def test_create_and_fetch_action_intent_direct(session: AsyncSession, test
     assert len(intent.execution_manifest["steps"]) == 3
     assert "fidelity" in intent.execution_manifest["steps"][0]["url"]
 
-async def test_api_intents_lifecycle(client: AsyncClient, test_user: User, session: AsyncSession):
+
+async def test_api_intents_lifecycle(
+    client: AsyncClient, test_user: User, session: AsyncSession
+):
     """Test creating and listing intents via the API."""
     # Mock auth headers
     headers = {"X-Clerk-User-Id": "test_user_intent"}
@@ -72,18 +76,19 @@ async def test_api_intents_lifecycle(client: AsyncClient, test_user: User, sessi
         "intent_type": ActionIntentType.ACH_TRANSFER,
         "title": "API Intent",
         "description": "Created via API",
-        "payload": {
-            "amount": 1000,
-            "source_institution_slug": "fidelity"
-        }
+        "payload": {"amount": 1000, "source_institution_slug": "fidelity"},
     }
 
-    response = await client.post("/api/v1/action-intents", json=create_payload, headers=headers)
+    response = await client.post(
+        "/api/v1/action-intents", json=create_payload, headers=headers
+    )
     assert response.status_code == 200
     created_data = response.json()
     assert created_data["title"] == "API Intent"
     assert "execution_manifest" in created_data
-    assert len(created_data["execution_manifest"]["steps"]) == 3 # Generated via GhostService
+    assert (
+        len(created_data["execution_manifest"]["steps"]) == 3
+    )  # Generated via GhostService
 
     intent_id = created_data["id"]
 
@@ -113,14 +118,15 @@ async def test_api_create_intent_non_numeric_amount_does_not_500(
         },
     }
 
-    response = await client.post("/api/v1/action-intents", json=create_payload, headers=headers)
+    response = await client.post(
+        "/api/v1/action-intents", json=create_payload, headers=headers
+    )
     assert response.status_code == 200
     created_data = response.json()
     assert "execution_manifest" in created_data
     snippets = created_data["execution_manifest"]["steps"][1]["snippets"]
     assert any(
-        s["label"] == "Transfer Amount" and s["value"] == "$0.00"
-        for s in snippets
+        s["label"] == "Transfer Amount" and s["value"] == "$0.00" for s in snippets
     )
 
 

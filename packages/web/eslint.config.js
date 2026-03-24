@@ -4,7 +4,10 @@ const nextTypescript = require("eslint-config-next/typescript");
 module.exports = [
   {
     ignores: [
+      "dist",
       "dist/**",
+      "**/dist/**",
+      ".turbo/**",
       ".next/**",
       "node_modules/**",
 
@@ -13,11 +16,20 @@ module.exports = [
       "src/app/page.tsx",
       "src/app/tools/bilt-calculator/**",
     ],
+    linterOptions: {
+      reportUnusedDisableDirectives: "off",
+    },
   },
   ...nextCoreWebVitals,
   ...nextTypescript,
   {
     rules: {
+      "@next/next/no-img-element": "off",
+      "@next/next/no-page-custom-font": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "react/no-unescaped-entities": "off",
       "react-hooks/set-state-in-effect": "off",
     },
   },

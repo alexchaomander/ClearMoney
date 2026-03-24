@@ -7,8 +7,8 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.cash_account import CashAccount
 from app.models.bank_transaction import BankTransaction
+from app.models.cash_account import CashAccount
 from app.models.decision_trace import DecisionTrace
 from app.models.financial_correction import (
     FinancialCorrection,
@@ -48,7 +48,9 @@ class CorrectionService:
             if trace is None:
                 raise HTTPException(status_code=404, detail="Decision trace not found")
 
-        original_value = await self._get_original_value(user_id, payload.target_field, payload.target_id)
+        original_value = await self._get_original_value(
+            user_id, payload.target_field, payload.target_id
+        )
         correction = FinancialCorrection(
             user_id=user_id,
             trace_id=trace.id if trace else None,
@@ -76,11 +78,17 @@ class CorrectionService:
         await self._session.refresh(correction)
         return correction
 
-    async def list_corrections(self, user_id: uuid.UUID, metric_id: str | None = None) -> list[FinancialCorrection]:
-        query = select(FinancialCorrection).where(FinancialCorrection.user_id == user_id)
+    async def list_corrections(
+        self, user_id: uuid.UUID, metric_id: str | None = None
+    ) -> list[FinancialCorrection]:
+        query = select(FinancialCorrection).where(
+            FinancialCorrection.user_id == user_id
+        )
         if metric_id:
             query = query.where(FinancialCorrection.metric_id == metric_id)
-        result = await self._session.execute(query.order_by(FinancialCorrection.created_at.desc()))
+        result = await self._session.execute(
+            query.order_by(FinancialCorrection.created_at.desc())
+        )
         return list(result.scalars().all())
 
     async def _get_or_create_memory(self, user_id: uuid.UUID) -> FinancialMemory:
@@ -94,30 +102,47 @@ class CorrectionService:
             await self._session.flush()
         return memory
 
-    async def _get_original_value(self, user_id: uuid.UUID, target_field: str, target_id: str | None) -> dict:
+    async def _get_original_value(
+        self, user_id: uuid.UUID, target_field: str, target_id: str | None
+    ) -> dict:
         if target_field in IMMEDIATE_MEMORY_FIELDS:
             memory = await self._get_or_create_memory(user_id)
             raw_value = getattr(memory, IMMEDIATE_MEMORY_FIELDS[target_field])
             return {"value": float(raw_value) if raw_value is not None else None}
         if target_field == "transaction_category":
             if not target_id:
-                raise HTTPException(status_code=400, detail="transaction_category corrections require target_id")
+                raise HTTPException(
+                    status_code=400,
+                    detail="transaction_category corrections require target_id",
+                )
             result = await self._session.execute(
                 select(BankTransaction)
                 .join(CashAccount, BankTransaction.cash_account_id == CashAccount.id)
-                .where(BankTransaction.id == uuid.UUID(target_id), CashAccount.user_id == user_id)
+                .where(
+                    BankTransaction.id == uuid.UUID(target_id),
+                    CashAccount.user_id == user_id,
+                )
             )
             tx = result.scalar_one_or_none()
             if tx is None:
-                raise HTTPException(status_code=404, detail="Bank transaction not found")
-            return {"primary_category": tx.primary_category, "detailed_category": tx.detailed_category}
+                raise HTTPException(
+                    status_code=404, detail="Bank transaction not found"
+                )
+            return {
+                "primary_category": tx.primary_category,
+                "detailed_category": tx.detailed_category,
+            }
         return {}
 
-    async def _apply_if_supported(self, user_id: uuid.UUID, correction: FinancialCorrection) -> dict | None:
+    async def _apply_if_supported(
+        self, user_id: uuid.UUID, correction: FinancialCorrection
+    ) -> dict | None:
         if correction.target_field in IMMEDIATE_MEMORY_FIELDS:
             value = correction.proposed_value.get("value")
             if value is None:
-                raise HTTPException(status_code=400, detail="proposed_value.value is required")
+                raise HTTPException(
+                    status_code=400, detail="proposed_value.value is required"
+                )
             memory = await self._get_or_create_memory(user_id)
             field_name = IMMEDIATE_MEMORY_FIELDS[correction.target_field]
             old_value = getattr(memory, field_name)
@@ -133,7 +158,11 @@ class CorrectionService:
                     context=f"Applied correction {correction.id}",
                 )
             )
-            impacted_metrics = ["savingsRate"] if field_name == "monthly_income" else ["savingsRate", "personalRunway"]
+            impacted_metrics = (
+                ["savingsRate"]
+                if field_name == "monthly_income"
+                else ["savingsRate", "personalRunway"]
+            )
             recomputed = {}
             for metric_id in impacted_metrics:
                 trace = await build_metric_trace(user_id, metric_id, self._session)
@@ -155,18 +184,30 @@ class CorrectionService:
                 raise HTTPException(status_code=400, detail="target_id is required")
             category = correction.proposed_value.get("primary_category")
             if not isinstance(category, str) or not category.strip():
-                raise HTTPException(status_code=400, detail="proposed_value.primary_category is required")
+                raise HTTPException(
+                    status_code=400,
+                    detail="proposed_value.primary_category is required",
+                )
             result = await self._session.execute(
                 select(BankTransaction)
                 .join(CashAccount, BankTransaction.cash_account_id == CashAccount.id)
-                .where(BankTransaction.id == uuid.UUID(target_id), CashAccount.user_id == user_id)
+                .where(
+                    BankTransaction.id == uuid.UUID(target_id),
+                    CashAccount.user_id == user_id,
+                )
             )
             tx = result.scalar_one_or_none()
             if tx is None:
-                raise HTTPException(status_code=404, detail="Bank transaction not found")
+                raise HTTPException(
+                    status_code=404, detail="Bank transaction not found"
+                )
             tx.primary_category = category.strip()
-            spending_categories_updated = await update_memory_spending_categories(self._session, user_id)
-            commingling_summary = await ComminglingDetectionEngine(self._session).scan_and_flag(user_id)
+            spending_categories_updated = await update_memory_spending_categories(
+                self._session, user_id
+            )
+            commingling_summary = await ComminglingDetectionEngine(
+                self._session
+            ).scan_and_flag(user_id)
             return {
                 "applied": True,
                 "target_field": "transaction_category",
@@ -177,7 +218,9 @@ class CorrectionService:
                 "commingling_summary": {
                     "total_count": commingling_summary["total_count"],
                     "commingled_count": commingling_summary["commingled_count"],
-                    "commingled_amount": float(commingling_summary["commingled_amount"]),
+                    "commingled_amount": float(
+                        commingling_summary["commingled_amount"]
+                    ),
                 },
                 "transaction_is_commingled": tx.is_commingled,
             }

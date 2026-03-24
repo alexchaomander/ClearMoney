@@ -38,7 +38,9 @@ class ObservationService:
         await self._check_burn_optimization(user_id, context)
         await self._check_tax_payment(user_id)
 
-    async def _check_emergency_fund(self, user_id: uuid.UUID, context: dict, memory: FinancialMemory):
+    async def _check_emergency_fund(
+        self, user_id: uuid.UUID, context: dict, memory: FinancialMemory
+    ):
         """Alert if liquid cash is below the user's stated emergency fund target."""
         target_months = memory.emergency_fund_target_months
         monthly_expenses = memory.average_monthly_expenses
@@ -47,7 +49,9 @@ class ObservationService:
             return
 
         target_amount = float(target_months) * float(monthly_expenses)
-        total_cash = float(context.get("portfolio_metrics", {}).get("total_cash_value", 0))
+        total_cash = float(
+            context.get("portfolio_metrics", {}).get("total_cash_value", 0)
+        )
 
         if total_cash < target_amount:
             # Check if we already have an unread notification for this
@@ -55,7 +59,7 @@ class ObservationService:
                 select(Notification).where(
                     Notification.user_id == user_id,
                     Notification.type == NotificationType.low_emergency_fund,
-                    Notification.is_read == False
+                    not Notification.is_read,
                 )
             )
             if not existing.scalars().first():
@@ -69,8 +73,8 @@ class ObservationService:
                     metadata_json={
                         "current_cash": total_cash,
                         "target_amount": target_amount,
-                        "target_months": target_months
-                    }
+                        "target_months": target_months,
+                    },
                 )
                 self._session.add(notification)
                 await self._session.commit()
@@ -85,7 +89,7 @@ class ObservationService:
                 select(Notification).where(
                     Notification.user_id == user_id,
                     Notification.type == NotificationType.data_stale,
-                    Notification.is_read == False
+                    not Notification.is_read,
                 )
             )
             if not existing.scalars().first():
@@ -98,8 +102,8 @@ class ObservationService:
                     action_url="/settings",
                     metadata_json={
                         "age_hours": freshness["age_hours"],
-                        "last_sync": freshness["last_sync"]
-                    }
+                        "last_sync": freshness["last_sync"],
+                    },
                 )
                 self._session.add(notification)
                 await self._session.commit()
@@ -121,7 +125,7 @@ class ObservationService:
                 select(Notification).where(
                     Notification.user_id == user_id,
                     Notification.type == NotificationType.policy_breach,
-                    Notification.is_read == False
+                    not Notification.is_read,
                 )
             )
             if not existing.scalars().first():
@@ -132,7 +136,7 @@ class ObservationService:
                     title="Corporate Veil Vulnerability",
                     message=f"Detected {report['commingled_count']} commingled transactions totalling ${report['commingled_amount']:,.2f}. This weakens your corporate veil.",
                     action_url="/dashboard/founder-operating-room",
-                    metadata_json=report
+                    metadata_json=report,
                 )
                 self._session.add(notification)
                 await self._session.commit()
@@ -147,12 +151,13 @@ class ObservationService:
         metrics = await service.get_tax_shield_metrics(user_id)
 
         if metrics["next_quarterly_payment"] > 1000 and not metrics["safe_harbor_met"]:
-             # Check for unread notification
+            # Check for unread notification
             existing = await self._session.execute(
                 select(Notification).where(
                     Notification.user_id == user_id,
-                    Notification.type == NotificationType.tax_loss_harvesting, # Reusing for tax-related for now
-                    Notification.is_read == False
+                    Notification.type
+                    == NotificationType.tax_loss_harvesting,  # Reusing for tax-related for now
+                    not Notification.is_read,
                 )
             )
             if not existing.scalars().first():
@@ -163,7 +168,7 @@ class ObservationService:
                     title="Estimated Tax Action",
                     message=f"Based on YTD biz income, we recommend an estimated tax payment of ${metrics['next_quarterly_payment']:,.2f}.",
                     action_url="/advisor?skill=tax_optimization",
-                    metadata_json=metrics
+                    metadata_json=metrics,
                 )
                 self._session.add(notification)
                 await self._session.commit()

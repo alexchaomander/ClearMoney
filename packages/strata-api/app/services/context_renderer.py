@@ -47,14 +47,25 @@ def render_context_as_markdown(context: dict) -> str:
             "emergency_fund_target_months": "Emergency Fund Target (months)",
         }
         currency_fields = {
-            "annual_income", "monthly_income", "current_retirement_savings",
-            "monthly_retirement_contribution", "expected_social_security",
-            "desired_retirement_income", "home_value", "mortgage_balance",
-            "monthly_rent", "monthly_savings_target", "average_monthly_expenses",
+            "annual_income",
+            "monthly_income",
+            "current_retirement_savings",
+            "monthly_retirement_contribution",
+            "expected_social_security",
+            "desired_retirement_income",
+            "home_value",
+            "mortgage_balance",
+            "monthly_rent",
+            "monthly_savings_target",
+            "average_monthly_expenses",
         }
         rate_fields = {
-            "income_growth_rate", "federal_tax_rate", "state_tax_rate",
-            "capital_gains_rate", "employer_match_pct", "mortgage_rate",
+            "income_growth_rate",
+            "federal_tax_rate",
+            "state_tax_rate",
+            "capital_gains_rate",
+            "employer_match_pct",
+            "mortgage_rate",
         }
 
         for field, label in field_labels.items():
@@ -75,7 +86,11 @@ def render_context_as_markdown(context: dict) -> str:
     account_lines = ["## Accounts"]
     has_accounts = False
 
-    for acct_type, label in [("investment", "Investment"), ("cash", "Cash"), ("debt", "Debt")]:
+    for acct_type, label in [
+        ("investment", "Investment"),
+        ("cash", "Cash"),
+        ("debt", "Debt"),
+    ]:
         accts = accounts.get(acct_type, [])
         if not accts:
             continue

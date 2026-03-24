@@ -45,8 +45,7 @@ class ClaudeExtractionProvider(ExtractionProvider):
         if model.startswith("claude"):
             return model
         logger.warning(
-            "extraction_model '%s' is not a Claude model; "
-            "falling back to '%s'",
+            "extraction_model '%s' is not a Claude model; falling back to '%s'",
             model,
             CLAUDE_DEFAULT_MODEL,
         )
@@ -94,7 +93,9 @@ class ClaudeExtractionProvider(ExtractionProvider):
                         content_block,
                         {
                             "type": "text",
-                            "text": self.build_user_prompt(filename, document_type_hint),
+                            "text": self.build_user_prompt(
+                                filename, document_type_hint
+                            ),
                         },
                     ],
                 }

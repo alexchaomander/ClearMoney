@@ -29,9 +29,7 @@ def _decimal_to_float(v: Decimal | None) -> float | None:
     return float(v) if v is not None else None
 
 
-async def build_financial_context(
-    user_id: uuid.UUID, session: AsyncSession
-) -> dict:
+async def build_financial_context(user_id: uuid.UUID, session: AsyncSession) -> dict:
     """Assemble complete financial context for agent consumption.
 
     Returns a structured dict with sections:
@@ -67,14 +65,24 @@ async def build_financial_context(
         select(EquityGrant).where(EquityGrant.user_id == user_id)
     )
     equity_grants = equity_result.scalars().all()
-    equity_summary = await equity_valuation_service.calculate_portfolio_summary(list(equity_grants))
+    equity_summary = await equity_valuation_service.calculate_portfolio_summary(
+        list(equity_grants)
+    )
 
     re_result, v_result, c_result, m_result, a_result = await asyncio.gather(
-        session.execute(select(RealEstateAsset).where(RealEstateAsset.user_id == user_id)),
+        session.execute(
+            select(RealEstateAsset).where(RealEstateAsset.user_id == user_id)
+        ),
         session.execute(select(VehicleAsset).where(VehicleAsset.user_id == user_id)),
-        session.execute(select(CollectibleAsset).where(CollectibleAsset.user_id == user_id)),
-        session.execute(select(PreciousMetalAsset).where(PreciousMetalAsset.user_id == user_id)),
-        session.execute(select(AlternativeAsset).where(AlternativeAsset.user_id == user_id)),
+        session.execute(
+            select(CollectibleAsset).where(CollectibleAsset.user_id == user_id)
+        ),
+        session.execute(
+            select(PreciousMetalAsset).where(PreciousMetalAsset.user_id == user_id)
+        ),
+        session.execute(
+            select(AlternativeAsset).where(AlternativeAsset.user_id == user_id)
+        ),
     )
     real_estate_assets = re_result.scalars().all()
     vehicle_assets = v_result.scalars().all()
@@ -112,16 +120,35 @@ async def build_financial_context(
     profile = {}
     if memory:
         for field in [
-            "age", "state", "filing_status", "num_dependents",
-            "annual_income", "monthly_income", "income_growth_rate",
-            "federal_tax_rate", "state_tax_rate", "capital_gains_rate",
-            "retirement_age", "current_retirement_savings",
-            "monthly_retirement_contribution", "employer_match_pct",
-            "expected_social_security", "desired_retirement_income",
-            "home_value", "mortgage_balance", "mortgage_rate", "monthly_rent",
-            "risk_tolerance", "investment_horizon_years",
-            "monthly_savings_target", "average_monthly_expenses", "emergency_fund_target_months",
-            "spending_categories_monthly", "debt_profile", "portfolio_summary", "equity_compensation",
+            "age",
+            "state",
+            "filing_status",
+            "num_dependents",
+            "annual_income",
+            "monthly_income",
+            "income_growth_rate",
+            "federal_tax_rate",
+            "state_tax_rate",
+            "capital_gains_rate",
+            "retirement_age",
+            "current_retirement_savings",
+            "monthly_retirement_contribution",
+            "employer_match_pct",
+            "expected_social_security",
+            "desired_retirement_income",
+            "home_value",
+            "mortgage_balance",
+            "mortgage_rate",
+            "monthly_rent",
+            "risk_tolerance",
+            "investment_horizon_years",
+            "monthly_savings_target",
+            "average_monthly_expenses",
+            "emergency_fund_target_months",
+            "spending_categories_monthly",
+            "debt_profile",
+            "portfolio_summary",
+            "equity_compensation",
         ]:
             val = getattr(memory, field)
             if val is not None:
@@ -211,39 +238,49 @@ async def build_financial_context(
     account_name_map = {a.id: a.name for a in investment_accounts}
     holdings_section = []
     for holding, security in holdings[:20]:
-        holdings_section.append({
-            "ticker": security.ticker,
-            "name": security.name,
-            "security_type": security.security_type.value,
-            "quantity": float(holding.quantity) if holding.quantity else 0,
-            "market_value": _decimal_to_float(holding.market_value),
-            "cost_basis": _decimal_to_float(holding.cost_basis),
-            "account": account_name_map.get(holding.account_id, "Unknown"),
-        })
+        holdings_section.append(
+            {
+                "ticker": security.ticker,
+                "name": security.name,
+                "security_type": security.security_type.value,
+                "quantity": float(holding.quantity) if holding.quantity else 0,
+                "market_value": _decimal_to_float(holding.market_value),
+                "cost_basis": _decimal_to_float(holding.cost_basis),
+                "account": account_name_map.get(holding.account_id, "Unknown"),
+            }
+        )
 
     # -- Portfolio metrics --
     total_investment = sum(
         (float(a.balance) for a in investment_accounts if a.balance), 0.0
     )
-    total_cash = sum(
-        (float(a.balance) for a in cash_accounts if a.balance), 0.0
-    )
-    total_debt = sum(
-        (float(a.balance) for a in debt_accounts if a.balance), 0.0
-    )
+    total_cash = sum((float(a.balance) for a in cash_accounts if a.balance), 0.0)
+    total_debt = sum((float(a.balance) for a in debt_accounts if a.balance), 0.0)
     total_equity_vested = float(equity_summary.total_vested_value)
     total_equity_unvested = float(equity_summary.total_unvested_value)
 
-    total_physical = sum((float(a.market_value) for a in real_estate_assets), 0.0) + \
-                     sum((float(a.market_value) for a in vehicle_assets), 0.0) + \
-                     sum((float(a.market_value) for a in collectible_assets), 0.0) + \
-                     sum((float(a.market_value) for a in precious_metal_assets), 0.0) + \
-                     sum((float(a.market_value) for a in alternative_assets), 0.0)
+    total_physical = (
+        sum((float(a.market_value) for a in real_estate_assets), 0.0)
+        + sum((float(a.market_value) for a in vehicle_assets), 0.0)
+        + sum((float(a.market_value) for a in collectible_assets), 0.0)
+        + sum((float(a.market_value) for a in precious_metal_assets), 0.0)
+        + sum((float(a.market_value) for a in alternative_assets), 0.0)
+    )
 
-    net_worth = total_investment + total_cash + total_equity_vested + total_physical - total_debt
+    net_worth = (
+        total_investment
+        + total_cash
+        + total_equity_vested
+        + total_physical
+        - total_debt
+    )
 
     tax_advantaged = sum(
-        (float(a.balance) for a in investment_accounts if a.is_tax_advantaged and a.balance),
+        (
+            float(a.balance)
+            for a in investment_accounts
+            if a.is_tax_advantaged and a.balance
+        ),
         0.0,
     )
     taxable = total_investment - tax_advantaged
@@ -271,7 +308,11 @@ async def build_financial_context(
             }
 
     runway_months = None
-    if memory and memory.average_monthly_expenses and memory.average_monthly_expenses > 0:
+    if (
+        memory
+        and memory.average_monthly_expenses
+        and memory.average_monthly_expenses > 0
+    ):
         runway_months = total_cash / float(memory.average_monthly_expenses)
 
     portfolio_metrics = {
@@ -300,7 +341,7 @@ async def build_financial_context(
     ]
 
     # -- Data freshness --
-    now = datetime.now(timezone.utc)
+    datetime.now(timezone.utc)
     last_sync = None
     for conn in connections:
         if conn.last_synced_at:
@@ -310,7 +351,9 @@ async def build_financial_context(
     data_freshness = {
         "last_sync": last_sync.isoformat() if last_sync else None,
         "profile_updated": memory.updated_at.isoformat() if memory else None,
-        "accounts_count": len(investment_accounts) + len(cash_accounts) + len(debt_accounts),
+        "accounts_count": len(investment_accounts)
+        + len(cash_accounts)
+        + len(debt_accounts),
         "connections_count": len(connections),
     }
 

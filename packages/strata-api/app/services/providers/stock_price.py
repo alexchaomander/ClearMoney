@@ -1,4 +1,5 @@
 import logging
+import time
 from decimal import Decimal
 
 import httpx
@@ -11,6 +12,15 @@ logger = logging.getLogger(__name__)
 
 class StockPriceService:
     """Service to fetch real-time stock prices using Alpha Vantage."""
+
+    _MOCK_CRYPTO_PRICES: dict[str, Decimal] = {
+        "ETH": Decimal("2300.00"),
+        "SOL": Decimal("100.00"),
+        "BTC": Decimal("65000.00"),
+        "USDC": Decimal("1.00"),
+        "USDT": Decimal("1.00"),
+        "MATIC": Decimal("1.00"),
+    }
 
     def __init__(self):
         self._api_key = settings.alpha_vantage_api_key
@@ -25,7 +35,6 @@ class StockPriceService:
         symbol = symbol.upper()
 
         # Check cache
-        import time
         now = time.time()
         if symbol in self._cache:
             price, timestamp = self._cache[symbol]
@@ -38,11 +47,7 @@ class StockPriceService:
             )
             return Decimal("150.00")  # Mock fallback
 
-        params = {
-            "function": "GLOBAL_QUOTE",
-            "symbol": symbol,
-            "apikey": self._api_key
-        }
+        params = {"function": "GLOBAL_QUOTE", "symbol": symbol, "apikey": self._api_key}
 
         try:
             async with httpx.AsyncClient() as client:
@@ -78,13 +83,12 @@ class StockPriceService:
             return Decimal("150.00")
 
     async def get_crypto_price(self, symbol: str, market: str = "USD") -> Decimal:
-        """Fetch the current price for a cryptocurrency in a target market (default USD)."""
+        """Fetch the current price for a cryptocurrency in a target market."""
         symbol = symbol.upper()
         market = market.upper()
         cache_key = f"CRYPTO_{symbol}_{market}"
 
         # Check cache
-        import time
         now = time.time()
         if cache_key in self._cache:
             price, timestamp = self._cache[cache_key]
@@ -95,14 +99,13 @@ class StockPriceService:
             logger.warning(
                 "Alpha Vantage API key not set, using mock price for %s", symbol
             )
-            mock_prices = {"ETH": Decimal("2300.00"), "SOL": Decimal("100.00"), "BTC": Decimal("65000.00")}
-            return mock_prices.get(symbol, Decimal("1.00"))
+            return self._MOCK_CRYPTO_PRICES.get(symbol, Decimal("1.00"))
 
         params = {
             "function": "CURRENCY_EXCHANGE_RATE",
             "from_currency": symbol,
             "to_currency": market,
-            "apikey": self._api_key
+            "apikey": self._api_key,
         }
 
         try:
@@ -129,13 +132,11 @@ class StockPriceService:
                 return self._cache[cache_key][0]
 
             # Fallback for common cryptos if service is down and no cache
-            mock_prices = {"ETH": Decimal("2300.00"), "SOL": Decimal("100.00"), "BTC": Decimal("65000.00")}
-            return mock_prices.get(symbol, Decimal("1.00"))
+            return self._MOCK_CRYPTO_PRICES.get(symbol, Decimal("1.00"))
 
         except Exception as e:
             logger.error("Error fetching crypto price for %s: %s", symbol, str(e))
-            mock_prices = {"ETH": Decimal("2300.00"), "SOL": Decimal("100.00"), "BTC": Decimal("65000.00")}
-            return mock_prices.get(symbol, Decimal("1.00"))
+            return self._MOCK_CRYPTO_PRICES.get(symbol, Decimal("1.00"))
 
 
 # Global instance

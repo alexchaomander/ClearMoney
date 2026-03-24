@@ -29,7 +29,9 @@ class TaxShieldService:
             select(BankTransaction)
             .join(CashAccount)
             .outerjoin(CashAccount.entity)
-            .options(joinedload(BankTransaction.cash_account).joinedload(CashAccount.entity))
+            .options(
+                joinedload(BankTransaction.cash_account).joinedload(CashAccount.entity)
+            )
             .where(
                 CashAccount.user_id == user_id,
                 BankTransaction.amount > 0,  # Credits
@@ -41,7 +43,11 @@ class TaxShieldService:
         biz_credits = []
         for tx in all_credits:
             acct = tx.cash_account
-            is_biz = (acct.entity.entity_type != EntityType.personal) if acct.entity else acct.is_business
+            is_biz = (
+                (acct.entity.entity_type != EntityType.personal)
+                if acct.entity
+                else acct.is_business
+            )
             if is_biz:
                 biz_credits.append(tx)
 
@@ -68,10 +74,12 @@ class TaxShieldService:
             "total_tax_liability_ytd": float(estimated_tax_ytd),
             "next_quarterly_payment": float(quarterly_estimate),
             "current_quarter": current_quarter,
-            "safe_harbor_met": False, # Placeholder for safe harbor logic
+            "safe_harbor_met": False,  # Placeholder for safe harbor logic
         }
 
-    async def generate_tax_withholding_intent(self, user_id: uuid.UUID) -> ActionIntent | None:
+    async def generate_tax_withholding_intent(
+        self, user_id: uuid.UUID
+    ) -> ActionIntent | None:
         """Generate an ActionIntent to move estimated tax to a withholding account."""
         metrics = await self.get_tax_shield_metrics(user_id)
         amount = metrics["next_quarterly_payment"]
@@ -84,10 +92,10 @@ class TaxShieldService:
         # 1. Create a Decision Trace for the reasoning
         trace = DecisionTrace(
             user_id=user_id,
-            trace_type=DecisionTraceType.rebalance, # We can reuse rebalance or similar
+            trace_type=DecisionTraceType.rebalance,  # We can reuse rebalance or similar
             title="Quarterly Tax Withholding",
-            reasoning=f"Based on YTD business income of ${metrics['ytd_business_income']:,.2f} and an estimated combined tax rate of {metrics['estimated_combined_tax_rate']*100:.1f}%, you should set aside ${amount:,.2f} for Q{quarter} estimated taxes.",
-            data_snapshot=metrics
+            reasoning=f"Based on YTD business income of ${metrics['ytd_business_income']:,.2f} and an estimated combined tax rate of {metrics['estimated_combined_tax_rate'] * 100:.1f}%, you should set aside ${amount:,.2f} for Q{quarter} estimated taxes.",
+            data_snapshot=metrics,
         )
         self._session.add(trace)
         await self._session.flush()
@@ -99,15 +107,12 @@ class TaxShieldService:
             intent_type=ActionIntentType.ACH_TRANSFER,
             title="Fund Tax Withholding Account",
             description=f"Transfer ${amount:,.2f} to your dedicated tax holding account.",
-            payload={
-                "amount": float(amount),
-                "memo": "Estimated Tax Withholding"
-            },
+            payload={"amount": float(amount), "memo": "Estimated Tax Withholding"},
             impact_summary={
                 "liability_covered": float(amount),
-                "safe_harbor_impact": f"Will meet Q{quarter} requirement"
+                "safe_harbor_impact": f"Will meet Q{quarter} requirement",
             },
-            status=ActionIntentStatus.DRAFT
+            status=ActionIntentStatus.DRAFT,
         )
         self._session.add(intent)
         await self._session.commit()

@@ -108,7 +108,9 @@ class DecisionTracePayload(BaseModel):
     freshness: FreshnessStatus
     context_quality: ContextQualityResponse
     warnings: list[str] = Field(default_factory=list)
-    remediation_actions: list[DecisionTraceRemediationAction] = Field(default_factory=list)
+    remediation_actions: list[DecisionTraceRemediationAction] = Field(
+        default_factory=list
+    )
     correction_targets: list[TraceCorrectionTarget] = Field(default_factory=list)
     review_summary: DecisionTraceReviewSummary | None = None
     deterministic: dict[str, Any] = Field(default_factory=dict)
@@ -165,8 +167,12 @@ class FinancialContextAccounts(BaseModel):
     real_estate: list[FinancialContextRealEstateAsset] = Field(default_factory=list)
     vehicles: list[FinancialContextVehicleAsset] = Field(default_factory=list)
     collectibles: list[FinancialContextCollectibleAsset] = Field(default_factory=list)
-    precious_metals: list[FinancialContextPreciousMetalAsset] = Field(default_factory=list)
-    alternative_assets: list[FinancialContextAlternativeAsset] = Field(default_factory=list)
+    precious_metals: list[FinancialContextPreciousMetalAsset] = Field(
+        default_factory=list
+    )
+    alternative_assets: list[FinancialContextAlternativeAsset] = Field(
+        default_factory=list
+    )
 
 
 class FinancialContextHolding(BaseModel):

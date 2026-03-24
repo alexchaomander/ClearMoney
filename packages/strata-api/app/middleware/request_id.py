@@ -6,7 +6,6 @@ backend logs can be correlated.  If the caller already supplies the header
 """
 
 import uuid
-from collections.abc import Callable
 
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 

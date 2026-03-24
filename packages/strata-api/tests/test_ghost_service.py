@@ -8,13 +8,11 @@ def test_generate_ach_manifest():
         "amount": 5000,
         "source_account_name": "Chase Checking",
         "target_account_name": "Strata HYSA",
-        "target_account_number": "987654321"
+        "target_account_number": "987654321",
     }
 
     manifest = service.generate_manifest(
-        ActionIntentType.ACH_TRANSFER,
-        "chase",
-        payload
+        ActionIntentType.ACH_TRANSFER, "chase", payload
     )
 
     assert "steps" in manifest
@@ -25,35 +23,37 @@ def test_generate_ach_manifest():
     # Verify snippets
     copy_step = manifest["steps"][1]
     assert copy_step["type"] == "COPY_DATA"
-    assert any(s["label"] == "Transfer Amount" and s["copy_value"] == "5000" for s in copy_step["snippets"])
+    assert any(
+        s["label"] == "Transfer Amount" and s["copy_value"] == "5000"
+        for s in copy_step["snippets"]
+    )
+
 
 def test_generate_acats_manifest():
     service = GhostService()
     payload = {
         "source_institution": "Fidelity",
         "source_account_number": "Z12345678",
-        "source_dtc": "0226"
+        "source_dtc": "0226",
     }
 
     manifest = service.generate_manifest(
-        ActionIntentType.ACATS_TRANSFER,
-        "fidelity",
-        payload
+        ActionIntentType.ACATS_TRANSFER, "fidelity", payload
     )
 
     assert len(manifest["steps"]) == 3
     assert "digital.fidelity.com" in manifest["steps"][0]["url"]
 
     copy_step = manifest["steps"][1]
-    assert any(s["label"] == "DTC Number" and s["copy_value"] == "0226" for s in copy_step["snippets"])
+    assert any(
+        s["label"] == "DTC Number" and s["copy_value"] == "0226"
+        for s in copy_step["snippets"]
+    )
+
 
 def test_fallback_manifest():
     service = GhostService()
-    manifest = service.generate_manifest(
-        ActionIntentType.CUSTOM,
-        "unknown_bank",
-        {}
-    )
+    manifest = service.generate_manifest(ActionIntentType.CUSTOM, "unknown_bank", {})
 
     assert len(manifest["steps"]) == 2
     assert manifest["steps"][0]["url"] == "https://google.com"
@@ -74,8 +74,7 @@ def test_generate_manifest_handles_non_numeric_amounts():
     )
     ach_snippets = ach_manifest["steps"][1]["snippets"]
     assert any(
-        s["label"] == "Transfer Amount" and s["value"] == "$0.00"
-        for s in ach_snippets
+        s["label"] == "Transfer Amount" and s["value"] == "$0.00" for s in ach_snippets
     )
 
     rebalance_manifest = service.generate_manifest(
@@ -87,10 +86,8 @@ def test_generate_manifest_handles_non_numeric_amounts():
     sell_snippets = rebalance_steps[1]["snippets"]
     buy_snippets = rebalance_steps[2]["snippets"]
     assert any(
-        s["label"] == "Sell Amount" and s["value"] == "$0.00"
-        for s in sell_snippets
+        s["label"] == "Sell Amount" and s["value"] == "$0.00" for s in sell_snippets
     )
     assert any(
-        s["label"] == "Buy Amount" and s["value"] == "$0.00"
-        for s in buy_snippets
+        s["label"] == "Buy Amount" and s["value"] == "$0.00" for s in buy_snippets
     )

@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 # --- Per-document-type field schemas ---
 
+
 class W2Fields(BaseModel):
     employer_name: str | None = None
     employer_ein: str | None = None
@@ -84,6 +85,7 @@ class ExtractionResult(BaseModel):
 
 
 # --- API request/response schemas ---
+
 
 class TaxDocumentResponse(BaseModel):
     id: uuid.UUID
