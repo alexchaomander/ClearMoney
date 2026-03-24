@@ -51,6 +51,14 @@ class EquityGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Numeric(18, 2), default=None
     )
 
+    # 83(b) and Tax Elections
+    is_83b_elected: Mapped[bool] = mapped_column(default=False)
+    election_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    # QSBS (Section 1202) Tracking
+    is_qsbs_eligible: Mapped[bool] = mapped_column(default=False)
+    qsbs_holding_start: Mapped[date | None] = mapped_column(Date, nullable=True)
+
     # JSON-based vesting schedule
     # Format: [{"date": "2024-01-01", "quantity": 100}, ...]
     vesting_schedule: Mapped[list[dict] | None] = mapped_column(JSON, nullable=True)

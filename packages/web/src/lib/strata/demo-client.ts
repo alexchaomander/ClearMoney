@@ -1300,14 +1300,53 @@ export class DemoStrataClient implements StrataClientInterface {
     return [];
   }
 
+  async getEquityGrants(): Promise<EquityGrant[]> {
+    await delay(300);
+    return [];
+  }
+
   async createEquityGrant(_data: EquityGrantCreate): Promise<EquityGrant> {
     await delay(300);
-    return { id: "g1", user_id: "u1", symbol: _data.symbol, grant_name: _data.grant_name, grant_type: _data.grant_type, quantity: _data.quantity, strike_price: _data.strike_price ?? null, grant_date: _data.grant_date, vesting_schedule: _data.vesting_schedule ?? null, notes: _data.notes ?? null, created_at: "", updated_at: "" };
+    return { 
+      id: "g1", 
+      user_id: "u1", 
+      symbol: _data.symbol, 
+      grant_name: _data.grant_name, 
+      grant_type: _data.grant_type, 
+      quantity: _data.quantity, 
+      strike_price: _data.strike_price ?? null, 
+      grant_date: _data.grant_date, 
+      is_83b_elected: _data.is_83b_elected ?? false,
+      election_date: _data.election_date ?? null,
+      is_qsbs_eligible: _data.is_qsbs_eligible ?? false,
+      qsbs_holding_start: _data.qsbs_holding_start ?? null,
+      vesting_schedule: _data.vesting_schedule ?? null, 
+      notes: _data.notes ?? null, 
+      created_at: "", 
+      updated_at: "" 
+    };
   }
 
   async updateEquityGrant(_id: string, _data: EquityGrantUpdate): Promise<EquityGrant> {
     await delay(300);
-    return { id: _id, user_id: "u1", symbol: _data.symbol ?? "", grant_name: _data.grant_name ?? "", grant_type: _data.grant_type ?? "rsu", quantity: _data.quantity ?? 0, strike_price: _data.strike_price ?? null, grant_date: _data.grant_date ?? "", vesting_schedule: _data.vesting_schedule ?? null, notes: _data.notes ?? null, created_at: "", updated_at: "" };
+    return { 
+      id: _id, 
+      user_id: "u1", 
+      symbol: _data.symbol ?? "", 
+      grant_name: _data.grant_name ?? "", 
+      grant_type: _data.grant_type ?? "rsu", 
+      quantity: _data.quantity ?? 0, 
+      strike_price: _data.strike_price ?? null, 
+      grant_date: _data.grant_date ?? "", 
+      is_83b_elected: _data.is_83b_elected ?? false,
+      election_date: _data.election_date ?? null,
+      is_qsbs_eligible: _data.is_qsbs_eligible ?? false,
+      qsbs_holding_start: _data.qsbs_holding_start ?? null,
+      vesting_schedule: _data.vesting_schedule ?? null, 
+      notes: _data.notes ?? null, 
+      created_at: "", 
+      updated_at: "" 
+    };
   }
 
   async deleteEquityGrant(_id: string): Promise<void> {

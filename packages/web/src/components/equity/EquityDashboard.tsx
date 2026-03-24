@@ -5,6 +5,7 @@ import { Plus, Info, ShieldCheck, Download, LineChart, PieChart, Landmark } from
 import { EquitySummaryCards } from "./EquitySummaryCards";
 import { EquityProjectionChart } from "./EquityProjectionChart";
 import { GrantTable } from "./GrantTable";
+import { FounderInsights } from "./FounderInsights";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { AddAccountModal } from "@/components/dashboard/AddAccountModal";
@@ -61,7 +62,7 @@ export function EquityDashboard() {
                 </div>
                 <EquityProjectionChart />
               </div>
-              
+
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-2">
                   <div className="flex items-center gap-2">
@@ -78,43 +79,10 @@ export function EquityDashboard() {
 
             {/* Right: Insights & Optimization */}
             <div className="space-y-6">
-              <div className="p-8 rounded-3xl border border-neutral-800 bg-neutral-900/40 backdrop-blur-sm space-y-6 relative overflow-hidden group">
-                <div className="absolute -right-4 -top-4 p-8 opacity-[0.03] group-hover:rotate-12 transition-transform duration-700">
-                  <Info className="w-32 h-32" />
-                </div>
-                
-                <div className="flex items-center gap-2 text-brand-400 relative z-10">
-                  <Info className="w-5 h-5" />
-                  <h4 className="font-bold uppercase tracking-widest text-xs">Advisor Insights</h4>
-                </div>
-                
-                <ul className="space-y-6 relative z-10">
-                  <li className="text-sm text-neutral-300 flex gap-4">
-                    <div className="w-1.5 h-1.5 rounded-full bg-brand-500 mt-1.5 flex-shrink-0" />
-                    <p className="leading-relaxed">
-                      Your <strong>concentration risk</strong> in NVDA is high (42% of liquid wealth). Consider a diversification strategy.
-                    </p>
-                  </li>
-                  <li className="text-sm text-neutral-300 flex gap-4">
-                    <div className="w-1.5 h-1.5 rounded-full bg-brand-500 mt-1.5 flex-shrink-0" />
-                    <p className="leading-relaxed">
-                      You have <strong>ISO options</strong> expiring in 90 days. Check your tax-optimized exercise plan.
-                    </p>
-                  </li>
-                  <li className="text-sm text-neutral-300 flex gap-4">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
-                    <p className="leading-relaxed">
-                      Estimated <strong>tax liability</strong> for your Q3 vest is $12,450. We've updated your tax shield projection.
-                    </p>
-                  </li>
-                </ul>
-                
-                <Button variant="link" className="text-brand-400 p-0 h-auto text-sm font-bold uppercase tracking-widest hover:text-brand-300 relative z-10">
-                  View all 5 insights
-                </Button>
-              </div>
+              <FounderInsights />
 
               <div className="p-8 rounded-3xl border border-brand-500/20 bg-brand-500/5 space-y-4 relative overflow-hidden">
+
                 <div className="flex items-center gap-2 text-brand-400">
                   <ShieldCheck className="w-5 h-5" />
                   <h4 className="font-bold text-white text-[10px] uppercase tracking-[0.25em]">Strata Verified</h4>
