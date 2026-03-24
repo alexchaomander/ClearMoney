@@ -44,24 +44,36 @@ class TaxOptimizerService:
             "summary": "Tax Optimization Report based on your extracted documents.",
             "current_strategy": f"You have ${wages} in wages and ${short_term} in short term gains.",
             "optimal_strategy": "Consider tax loss harvesting to offset short term gains.",
-            "dollar_amounts_saved": float(min(short_term, _MAX_CAPITAL_LOSS_DEDUCTION) * _SHORT_TERM_TAX_RATE) if short_term > 0 else 0,
+            "dollar_amounts_saved": float(
+                min(short_term, _MAX_CAPITAL_LOSS_DEDUCTION) * _SHORT_TERM_TAX_RATE
+            )
+            if short_term > 0
+            else 0,
             "yoy_comparison": "This is your first year tracking with ClearMoney.",
-            "recommendations": []
+            "recommendations": [],
         }
 
         if short_term > 0:
-            savings = float(min(short_term, _MAX_CAPITAL_LOSS_DEDUCTION) * _SHORT_TERM_TAX_RATE)
-            report["recommendations"].append({
-                "title": "Tax Loss Harvesting",
-                "description": f"You have ${short_term} in short term gains. You can offset this by selling losing positions.",
-                "potential_savings": savings
-            })
+            savings = float(
+                min(short_term, _MAX_CAPITAL_LOSS_DEDUCTION) * _SHORT_TERM_TAX_RATE
+            )
+            report["recommendations"].append(
+                {
+                    "title": "Tax Loss Harvesting",
+                    "description": f"You have ${short_term} in short term gains. You can offset this by selling losing positions.",
+                    "potential_savings": savings,
+                }
+            )
 
         if wages > _RETIREMENT_SUGGESTION_WAGE_THRESHOLD:
-            report["recommendations"].append({
-                "title": "Maximize Pre-Tax Retirement",
-                "description": "Ensure you are maxing out your 401(k) to reduce taxable wage income.",
-                "potential_savings": float(_IRS_401K_LIMIT * _RETIREMENT_MARGINAL_RATE)
-            })
+            report["recommendations"].append(
+                {
+                    "title": "Maximize Pre-Tax Retirement",
+                    "description": "Ensure you are maxing out your 401(k) to reduce taxable wage income.",
+                    "potential_savings": float(
+                        _IRS_401K_LIMIT * _RETIREMENT_MARGINAL_RATE
+                    ),
+                }
+            )
 
         return report

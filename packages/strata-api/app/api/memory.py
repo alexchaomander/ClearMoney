@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import select
@@ -9,12 +8,12 @@ from app.db.session import get_async_session
 from app.models.financial_memory import FinancialMemory
 from app.models.memory_event import MemoryEvent, MemoryEventSource
 from app.models.user import User
+from app.schemas.agent import FinancialContextPayload
 from app.schemas.memory import (
     FinancialMemoryResponse,
     FinancialMemoryUpdate,
     MemoryEventResponse,
 )
-from app.schemas.agent import FinancialContextPayload
 from app.services.context_renderer import render_context_as_markdown
 from app.services.financial_context import build_financial_context
 from app.services.memory_derivation import derive_memory_from_accounts
@@ -151,7 +150,11 @@ async def derive_memory(
 
 @router.get("/context", response_model=FinancialContextPayload)
 async def get_financial_context(
-    user: User = Depends(require_scopes(["memory:read", "accounts:read", "portfolio:read", "transactions:read"])),
+    user: User = Depends(
+        require_scopes(
+            ["memory:read", "accounts:read", "portfolio:read", "transactions:read"]
+        )
+    ),
     session: AsyncSession = Depends(get_async_session),
     format: str = Query("json", pattern="^(json|markdown)$"),
 ):

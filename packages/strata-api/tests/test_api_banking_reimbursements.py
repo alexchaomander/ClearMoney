@@ -56,8 +56,12 @@ async def bank_tx(session: AsyncSession, banking_user: User) -> BankTransaction:
 
 
 @pytest.mark.asyncio
-async def test_patch_reimbursement_sets_and_clears(headers: dict, bank_tx: BankTransaction) -> None:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+async def test_patch_reimbursement_sets_and_clears(
+    headers: dict, bank_tx: BankTransaction
+) -> None:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         mark = await client.patch(
             f"/api/v1/banking/transactions/{bank_tx.id}",
             headers=headers,
@@ -82,13 +86,17 @@ async def test_patch_reimbursement_sets_and_clears(headers: dict, bank_tx: BankT
 
 
 @pytest.mark.asyncio
-async def test_patch_reimbursement_requires_ownership(session: AsyncSession, bank_tx: BankTransaction) -> None:
+async def test_patch_reimbursement_requires_ownership(
+    session: AsyncSession, bank_tx: BankTransaction
+) -> None:
     other_user = User(clerk_id="banking_other", email="banking_other@example.com")
     session.add(other_user)
     await session.commit()
     await session.refresh(other_user)
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         resp = await client.patch(
             f"/api/v1/banking/transactions/{bank_tx.id}",
             headers={"x-clerk-user-id": other_user.clerk_id},

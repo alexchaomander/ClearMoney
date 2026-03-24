@@ -8,7 +8,9 @@ from app.services.agent_guardrails import evaluate_freshness
 
 
 def _is_revoked(connection: Connection) -> bool:
-    error_text = f"{connection.error_code or ''} {connection.error_message or ''}".lower()
+    error_text = (
+        f"{connection.error_code or ''} {connection.error_message or ''}".lower()
+    )
     return "revoked" in error_text or "consent" in error_text
 
 
@@ -20,8 +22,12 @@ def evaluate_context_quality(
     freshness = FreshnessStatus(**freshness_dict)
     accounts_count = int(context.get("data_freshness", {}).get("accounts_count") or 0)
     total_connections = len(connections)
-    active_connections = sum(1 for connection in connections if connection.status == ConnectionStatus.active)
-    errored_connections = sum(1 for connection in connections if connection.status == ConnectionStatus.error)
+    active_connections = sum(
+        1 for connection in connections if connection.status == ConnectionStatus.active
+    )
+    errored_connections = sum(
+        1 for connection in connections if connection.status == ConnectionStatus.error
+    )
 
     stale_connections = 0
     now = datetime.now(timezone.utc)
@@ -48,13 +54,19 @@ def evaluate_context_quality(
 
     if total_connections == 0 and accounts_count > 0:
         continuity_status = "manual_substitute"
-        warnings.append("Context is relying on manually maintained accounts without active connections.")
+        warnings.append(
+            "Context is relying on manually maintained accounts without active connections."
+        )
     elif any(_is_revoked(connection) for connection in connections):
         continuity_status = "revoked"
-        warnings.append("At least one connection was revoked and needs recovery before high-confidence guidance.")
+        warnings.append(
+            "At least one connection was revoked and needs recovery before high-confidence guidance."
+        )
     elif total_connections > 0 and active_connections == 0 and errored_connections > 0:
         continuity_status = "recovery_required"
-        warnings.append("All linked connections need recovery before action-ready guidance is safe.")
+        warnings.append(
+            "All linked connections need recovery before action-ready guidance is safe."
+        )
     elif errored_connections > 0:
         continuity_status = "degraded"
         warnings.append("One or more linked connections are degraded.")
@@ -68,7 +80,12 @@ def evaluate_context_quality(
     readiness = "ready"
     if continuity_status in {"revoked", "recovery_required"}:
         readiness = "blocked"
-    elif continuity_status in {"degraded", "stale", "partially_covered", "manual_substitute"}:
+    elif continuity_status in {
+        "degraded",
+        "stale",
+        "partially_covered",
+        "manual_substitute",
+    }:
         readiness = "cautious"
 
     confidence_factors = [
@@ -76,22 +93,34 @@ def evaluate_context_quality(
             label="Freshness",
             value=1.0 if freshness.is_fresh else 0.45,
             impact="positive" if freshness.is_fresh else "negative",
-            reason="Linked data is within freshness policy." if freshness.is_fresh else "Linked data is stale or missing sync metadata.",
+            reason="Linked data is within freshness policy."
+            if freshness.is_fresh
+            else "Linked data is stale or missing sync metadata.",
         ),
         ConfidenceFactor(
             label="Connection Coverage",
             value=coverage_ratio,
-            impact="positive" if coverage_ratio >= 0.8 else "mixed" if coverage_ratio >= 0.5 else "negative",
-            reason=f"{active_connections} of {total_connections} connection(s) are active." if total_connections else "No active linked connections.",
+            impact="positive"
+            if coverage_ratio >= 0.8
+            else "mixed"
+            if coverage_ratio >= 0.5
+            else "negative",
+            reason=f"{active_connections} of {total_connections} connection(s) are active."
+            if total_connections
+            else "No active linked connections.",
         ),
         ConfidenceFactor(
             label="Account Coverage",
             value=1.0 if accounts_count > 0 else 0.2,
             impact="positive" if accounts_count > 0 else "negative",
-            reason="Accounts are present in the context graph." if accounts_count > 0 else "No accounts are present in the current context.",
+            reason="Accounts are present in the context graph."
+            if accounts_count > 0
+            else "No accounts are present in the current context.",
         ),
     ]
-    confidence_score = round(sum(factor.value for factor in confidence_factors) / len(confidence_factors), 2)
+    confidence_score = round(
+        sum(factor.value for factor in confidence_factors) / len(confidence_factors), 2
+    )
 
     return ContextQualityResponse(
         continuity_status=continuity_status,

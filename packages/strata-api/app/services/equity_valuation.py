@@ -111,7 +111,7 @@ class EquityValuationService:
             total_vested_value=total_vested,
             total_unvested_value=total_unvested,
             total_value=total_vested + total_unvested,
-            grant_valuations=valuations
+            grant_valuations=valuations,
         )
 
     async def calculate_portfolio_projections(
@@ -131,10 +131,19 @@ class EquityValuationService:
         total_potential_value = Decimal("0.00")
         grant_data = []
         for grant in grants:
-            if grant.grant_type in {EquityGrantType.safe, EquityGrantType.convertible_note}:
+            if grant.grant_type in {
+                EquityGrantType.safe,
+                EquityGrantType.convertible_note,
+            }:
                 # Private instruments: project a flat value equal to amount_invested
                 total_potential_value += grant.amount_invested or Decimal("0.00")
-                grant_data.append({"grant": grant, "value_per_share": Decimal("0.00"), "flat_value": grant.amount_invested or Decimal("0.00")})
+                grant_data.append(
+                    {
+                        "grant": grant,
+                        "value_per_share": Decimal("0.00"),
+                        "flat_value": grant.amount_invested or Decimal("0.00"),
+                    }
+                )
                 continue
 
             if grant.grant_type == EquityGrantType.founder_stock and not grant.symbol:
@@ -149,10 +158,7 @@ class EquityValuationService:
                 value_per_share = max(Decimal("0.00"), current_price - strike)
 
             total_potential_value += grant.quantity * value_per_share
-            grant_data.append({
-                "grant": grant,
-                "value_per_share": value_per_share
-            })
+            grant_data.append({"grant": grant, "value_per_share": value_per_share})
 
         projections = []
         for i in range(25):  # Next 24 months + current month
@@ -182,11 +188,13 @@ class EquityValuationService:
 
                 liquid_value += vested_qty * value_per_share
 
-            projections.append(EquityProjection(
-                date=target_date,
-                total_value=total_potential_value,
-                liquid_value=liquid_value
-            ))
+            projections.append(
+                EquityProjection(
+                    date=target_date,
+                    total_value=total_potential_value,
+                    liquid_value=liquid_value,
+                )
+            )
 
         return projections
 

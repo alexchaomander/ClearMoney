@@ -28,11 +28,10 @@ from app.schemas.banking import (
 )
 from app.services.banking_sync import sync_banking_connection
 from app.services.providers.plaid import PlaidProvider
+from app.services.subscriptions import SubscriptionService
 from app.services.user_refresh import refresh_user_financials
 
 logger = logging.getLogger(__name__)
-
-from app.services.subscriptions import SubscriptionService
 
 router = APIRouter(prefix="/banking", tags=["banking"])
 
@@ -73,17 +72,23 @@ async def _sync_connection_with_error_handling(
     Updates connection status to active on success or error on failure.
     """
     try:
-        await sync_banking_connection(session, connection, provider, full_history=full_history)
+        await sync_banking_connection(
+            session, connection, provider, full_history=full_history
+        )
         connection.status = ConnectionStatus.active
         connection.last_synced_at = datetime.now(timezone.utc)
         connection.error_code = None
         connection.error_message = None
     except Exception as e:
-        logger.error(f"Failed to sync banking connection {connection.id}: {e}", exc_info=True)
+        logger.error(
+            f"Failed to sync banking connection {connection.id}: {e}", exc_info=True
+        )
         connection.status = ConnectionStatus.error
         connection.error_code = "SYNC_FAILED"
         # Use generic message to avoid exposing sensitive information
-        connection.error_message = "Failed to sync banking data. Please try again or reconnect."
+        connection.error_message = (
+            "Failed to sync banking data. Please try again or reconnect."
+        )
 
 
 @router.post("/link", response_model=PlaidLinkResponse)
@@ -180,9 +185,7 @@ async def list_bank_transactions(
     """List bank transactions with filtering and pagination."""
     # Base query joining to cash_accounts to verify ownership
     base_query = (
-        select(BankTransaction)
-        .join(CashAccount)
-        .where(CashAccount.user_id == user.id)
+        select(BankTransaction).join(CashAccount).where(CashAccount.user_id == user.id)
     )
 
     if account_id:
@@ -282,7 +285,9 @@ async def get_spending_summary(
             BankTransaction.amount < 0,  # Debits only
         )
         .group_by(BankTransaction.primary_category)
-        .order_by(func.sum(BankTransaction.amount))  # Most spending first (most negative)
+        .order_by(
+            func.sum(BankTransaction.amount)
+        )  # Most spending first (most negative)
     )
 
     result = await session.execute(category_query)
@@ -310,7 +315,9 @@ async def get_spending_summary(
             )
         )
 
-    monthly_average = total_spending / Decimal(str(months)) if months > 0 else Decimal("0")
+    monthly_average = (
+        total_spending / Decimal(str(months)) if months > 0 else Decimal("0")
+    )
 
     return SpendingSummaryResponse(
         total_spending=total_spending,

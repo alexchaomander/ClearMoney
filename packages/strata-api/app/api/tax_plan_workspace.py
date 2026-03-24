@@ -534,4 +534,3 @@ async def generate_optimization_report(
         return report
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-

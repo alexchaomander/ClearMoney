@@ -20,8 +20,16 @@ PERSONAL_SPEND_CATEGORIES = {
 }
 
 PERSONAL_MERCHANTS = [
-    "doordash", "uber eats", "equinox", "netflix", "hulu", "spotify",
-    "whole foods", "sweetgreen", "amc theatres", "peloton"
+    "doordash",
+    "uber eats",
+    "equinox",
+    "netflix",
+    "hulu",
+    "spotify",
+    "whole foods",
+    "sweetgreen",
+    "amc theatres",
+    "peloton",
 ]
 
 # Categories that are highly likely to be business when on a personal account
@@ -32,9 +40,23 @@ BUSINESS_SPEND_CATEGORIES = {
 }
 
 BUSINESS_MERCHANTS = [
-    "aws", "amazon web services", "stripe", "brex", "github", "plaid",
-    "notion", "quickbooks", "salesforce", "google cloud", "google workspace",
-    "adobe", "figma", "shopify", "openai", "delaware franchise tax", "gusto"
+    "aws",
+    "amazon web services",
+    "stripe",
+    "brex",
+    "github",
+    "plaid",
+    "notion",
+    "quickbooks",
+    "salesforce",
+    "google cloud",
+    "google workspace",
+    "adobe",
+    "figma",
+    "shopify",
+    "openai",
+    "delaware franchise tax",
+    "gusto",
 ]
 
 BATCH_SIZE = 500
@@ -62,7 +84,9 @@ class ComminglingDetectionEngine:
             .where(DebtAccount.user_id == user_id)
         )
 
-        all_accounts = list(cash_accounts.scalars().all()) + list(debt_accounts.scalars().all())
+        all_accounts = list(cash_accounts.scalars().all()) + list(
+            debt_accounts.scalars().all()
+        )
 
         biz_account_ids = set()
         pers_account_ids = set()
@@ -150,5 +174,9 @@ class ComminglingDetectionEngine:
             "commingled_count": commingled_count,
             "commingled_amount": float(commingled_amount),
             "total_analyzed": total_count,
-            "status": "critical" if risk_score < 40 else "warning" if risk_score < 80 else "good"
+            "status": "critical"
+            if risk_score < 40
+            else "warning"
+            if risk_score < 80
+            else "good",
         }

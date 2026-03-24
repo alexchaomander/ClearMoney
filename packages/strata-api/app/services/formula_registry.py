@@ -24,7 +24,12 @@ FORMULA_REGISTRY: dict[str, FormulaDefinition] = {
         formula="Total Assets - Total Liabilities",
         description="The total value of everything you own minus everything you owe.",
         correction_targets=[
-            {"field": "manual_review", "label": "Request manual review", "input_type": "text", "metric_ids": ["netWorth"]},
+            {
+                "field": "manual_review",
+                "label": "Request manual review",
+                "input_type": "text",
+                "metric_ids": ["netWorth"],
+            },
         ],
     ),
     "totalAssets": FormulaDefinition(
@@ -35,7 +40,12 @@ FORMULA_REGISTRY: dict[str, FormulaDefinition] = {
         formula="Cash + Investments + Vested Equity + Physical Assets",
         description="The sum of liquid, invested, and owned asset value currently tracked in ClearMoney.",
         correction_targets=[
-            {"field": "manual_review", "label": "Request manual review", "input_type": "text", "metric_ids": ["totalAssets"]},
+            {
+                "field": "manual_review",
+                "label": "Request manual review",
+                "input_type": "text",
+                "metric_ids": ["totalAssets"],
+            },
         ],
     ),
     "savingsRate": FormulaDefinition(
@@ -46,8 +56,18 @@ FORMULA_REGISTRY: dict[str, FormulaDefinition] = {
         formula="(Monthly Income - Monthly Spend) / Monthly Income",
         description="The percentage of monthly income left after current monthly spending.",
         correction_targets=[
-            {"field": "monthly_income", "label": "Monthly income", "input_type": "currency", "metric_ids": ["savingsRate"]},
-            {"field": "average_monthly_expenses", "label": "Monthly spend", "input_type": "currency", "metric_ids": ["savingsRate", "personalRunway"]},
+            {
+                "field": "monthly_income",
+                "label": "Monthly income",
+                "input_type": "currency",
+                "metric_ids": ["savingsRate"],
+            },
+            {
+                "field": "average_monthly_expenses",
+                "label": "Monthly spend",
+                "input_type": "currency",
+                "metric_ids": ["savingsRate", "personalRunway"],
+            },
         ],
     ),
     "personalRunway": FormulaDefinition(
@@ -58,7 +78,12 @@ FORMULA_REGISTRY: dict[str, FormulaDefinition] = {
         formula="Personal Liquid Cash / Monthly Personal Burn",
         description="How many months your personal cash can support current personal spending without new income.",
         correction_targets=[
-            {"field": "average_monthly_expenses", "label": "Monthly personal burn", "input_type": "currency", "metric_ids": ["personalRunway", "savingsRate"]},
+            {
+                "field": "average_monthly_expenses",
+                "label": "Monthly personal burn",
+                "input_type": "currency",
+                "metric_ids": ["personalRunway", "savingsRate"],
+            },
         ],
     ),
 }

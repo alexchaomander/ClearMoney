@@ -1,6 +1,6 @@
+import uuid
 from datetime import date
 from decimal import Decimal
-import uuid
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -79,7 +79,9 @@ async def test_create_memory_correction_applies_immediately(
             },
         )
 
-        memory_response = await client.get("/api/v1/memory", headers={"x-clerk-user-id": correction_user.clerk_id})
+        memory_response = await client.get(
+            "/api/v1/memory", headers={"x-clerk-user-id": correction_user.clerk_id}
+        )
 
     assert response.status_code == 201
     data = response.json()
@@ -169,7 +171,9 @@ async def test_create_transaction_category_correction(
     assert memory.spending_categories_monthly == {"GENERAL_SERVICES": 14.0}
 
     tx_result = await session.execute(
-        select(BankTransaction).where(BankTransaction.id == uuid.UUID(correction_data["transaction_id"]))
+        select(BankTransaction).where(
+            BankTransaction.id == uuid.UUID(correction_data["transaction_id"])
+        )
     )
     tx = tx_result.scalar_one()
     assert tx.primary_category == "GENERAL_SERVICES"

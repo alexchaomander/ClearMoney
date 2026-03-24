@@ -10,7 +10,10 @@ from app.models import AgentSession, DecisionTrace, Recommendation, User
 from app.models.agent_session import RecommendationStatus, SessionStatus
 from app.models.decision_trace import DecisionTraceType
 from app.models.financial_correction import FinancialCorrection
-from app.models.recommendation_review import RecommendationReview, RecommendationReviewStatus
+from app.models.recommendation_review import (
+    RecommendationReview,
+    RecommendationReviewStatus,
+)
 
 
 @pytest.fixture
@@ -129,7 +132,9 @@ async def test_create_and_list_recommendation_reviews(
     review_headers: dict[str, str],
     review_trace: dict[str, str],
 ) -> None:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         create_response = await client.post(
             "/api/v1/recommendation-reviews",
             headers=review_headers,
@@ -163,7 +168,9 @@ async def test_convert_recommendation_review_to_correction(
     review_headers: dict[str, str],
     review_trace: dict[str, str],
 ) -> None:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         create_response = await client.post(
             "/api/v1/recommendation-reviews",
             headers=review_headers,
@@ -200,7 +207,9 @@ async def test_convert_recommendation_review_to_correction(
     assert convert_data["applied_changes"]["correction_id"]
 
     review_result = await session.execute(
-        select(RecommendationReview).where(RecommendationReview.id == uuid.UUID(review_id))
+        select(RecommendationReview).where(
+            RecommendationReview.id == uuid.UUID(review_id)
+        )
     )
     review = review_result.scalar_one()
     assert review.status == RecommendationReviewStatus.converted_to_correction
@@ -215,7 +224,9 @@ async def test_decision_traces_include_review_summary(
     review_headers: dict[str, str],
     review_trace: dict[str, str],
 ) -> None:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         await client.post(
             "/api/v1/recommendation-reviews",
             headers=review_headers,
@@ -226,7 +237,9 @@ async def test_decision_traces_include_review_summary(
                 "opened_reason": "The transfer has already happened.",
             },
         )
-        response = await client.get("/api/v1/agent/decision-traces", headers=review_headers)
+        response = await client.get(
+            "/api/v1/agent/decision-traces", headers=review_headers
+        )
 
     assert response.status_code == 200
     data = response.json()
@@ -266,7 +279,9 @@ async def test_recommendation_review_rejects_action_trace(
     await session.commit()
     await session.refresh(action_trace)
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         response = await client.post(
             "/api/v1/recommendation-reviews",
             headers=review_headers,
@@ -285,7 +300,9 @@ async def test_convert_recommendation_review_only_once(
     review_headers: dict[str, str],
     review_trace: dict[str, str],
 ) -> None:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         create_response = await client.post(
             "/api/v1/recommendation-reviews",
             headers=review_headers,

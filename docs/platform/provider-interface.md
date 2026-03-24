@@ -1108,18 +1108,24 @@ class CryptoService:
 | `DELETE` | `/v1/crypto/wallets` | `portfolio:write` | Remove all wallets |
 | `GET` | `/v1/crypto/portfolio` | `portfolio:read` | Get aggregated crypto portfolio |
 
-### Planned External Providers
+### Current Provider Status
 
-The aggregation layer is designed to integrate with blockchain indexing services:
+The aggregation layer now uses a hybrid provider approach:
 
 | Provider | Use Case | Status |
 |----------|----------|--------|
 | **Moralis** | Multi-chain token balances, NFTs, DeFi positions | Planned |
 | **Zapper** | DeFi position aggregation (Aave, Uniswap, etc.) | Planned |
-| **Alchemy** | EVM chain token balances, NFT metadata | Planned |
+| **Alchemy** | EVM + Solana wallet balances and token metadata | Live |
+| **Blockchain.info** | Bitcoin address balance lookup | Live |
+| **Alpha Vantage** | USD spot pricing for tracked crypto symbols | Live |
 | **Helius** | Solana token balances and DeFi positions | Planned |
 
-Currently, the service uses simulated data for the high-fidelity prototype while the external provider integrations are built out.
+Current behavior:
+
+- Wallet aggregation is live for native balances and supported fungible token balances.
+- DeFi positions remain placeholder records until a dedicated DeFi indexer is integrated.
+- All crypto tracking is read-only and based on public wallet addresses. No signing keys or wallet credentials are stored.
 
 ---
 

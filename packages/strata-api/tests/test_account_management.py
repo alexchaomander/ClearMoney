@@ -15,7 +15,6 @@ from app.models import (
 )
 from app.models.notification import Notification, NotificationSeverity, NotificationType
 
-
 STEP_UP_TOKEN = os.environ["STRATA_AGENT_STEP_UP_TOKEN"]
 
 
@@ -126,9 +125,7 @@ async def test_delete_account_removes_user_and_cascades(
     from tests.conftest import TestSessionFactory
 
     async with TestSessionFactory() as fresh_session:
-        result = await fresh_session.execute(
-            select(User).where(User.id == user_id)
-        )
+        result = await fresh_session.execute(select(User).where(User.id == user_id))
         assert result.scalar_one_or_none() is None
 
 

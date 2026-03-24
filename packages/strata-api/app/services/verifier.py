@@ -24,8 +24,9 @@ class VerifierService:
 
         # 2. Extract metrics
         metrics = context.get("portfolio_metrics", {})
-        total_liquid = (metrics.get("total_investment_value") or 0) + \
-                       (metrics.get("total_cash_value") or 0)
+        total_liquid = (metrics.get("total_investment_value") or 0) + (
+            metrics.get("total_cash_value") or 0
+        )
 
         # 3. Check threshold
         is_verified = total_liquid >= threshold
@@ -47,18 +48,18 @@ class VerifierService:
             claim_type="THRESHOLD_PROOF_OF_FUNDS",
             statement=f"Total liquid assets are greater than or equal to ${threshold:,.2f} USD",
             verification_status="VERIFIED" if is_verified else "FAILED",
-            data_freshness_hours=freshness_hours
+            data_freshness_hours=freshness_hours,
         )
 
         attestation = SVPAttestation(
             expires_at=datetime.now(timezone.utc) + timedelta(days=1),
-            credential=credential
+            credential=credential,
         )
 
         # 6. Sign the Attestation
         attestation.signature = {
             "type": "HMAC-SHA256",
-            "proof_value": self._sign_attestation(attestation)
+            "proof_value": self._sign_attestation(attestation),
         }
 
         return attestation
@@ -68,12 +69,10 @@ class VerifierService:
         # Canonicalize the credential payload for hashing
         # Use explicit json.dumps with canonical separators and sorted keys
         data = attestation.credential.model_dump(mode="json", exclude_none=True)
-        payload = json.dumps(data, sort_keys=True, separators=(',', ':'))
+        payload = json.dumps(data, sort_keys=True, separators=(",", ":"))
 
         return hmac.new(
-            settings.secret_key.encode(),
-            payload.encode(),
-            hashlib.sha256
+            settings.secret_key.encode(), payload.encode(), hashlib.sha256
         ).hexdigest()
 
     def verify_attestation(self, attestation: SVPAttestation) -> bool:

@@ -30,14 +30,14 @@ class GhostService:
         },
         "wealthfront": {
             "ach_transfer": "https://www.wealthfront.com/transfers/new",
-        }
+        },
     }
 
     def generate_manifest(
         self,
         intent_type: ActionIntentType,
         institution_slug: str | None,
-        payload: dict[str, Any]
+        payload: dict[str, Any],
     ) -> dict[str, Any]:
         """Generate a step-by-step execution manifest for manual copilot assistance."""
 
@@ -45,8 +45,7 @@ class GhostService:
         url = "https://google.com"  # Ultimate fallback
         if institution_slug:
             url = self.DLR.get(institution_slug.lower(), {}).get(
-                intent_type.value,
-                self._get_base_url(institution_slug)
+                intent_type.value, self._get_base_url(institution_slug)
             )
 
         # Generate type-specific steps
@@ -68,7 +67,7 @@ class GhostService:
                     "instruction": (
                         f"Navigate to your account at "
                         f"{institution_slug or 'the institution'}."
-                    )
+                    ),
                 },
                 {
                     "order": 2,
@@ -77,8 +76,8 @@ class GhostService:
                     "instruction": (
                         "Once you have manually completed the action, "
                         "mark it as done here."
-                    )
-                }
+                    ),
+                },
             ]
         }
 
@@ -105,7 +104,7 @@ class GhostService:
                     "instruction": (
                         "Open your bank and navigate to the 'Transfer' "
                         "or 'Move Money' section."
-                    )
+                    ),
                 },
                 {
                     "order": 2,
@@ -116,19 +115,19 @@ class GhostService:
                         {
                             "label": "Transfer Amount",
                             "value": self._format_currency(payload.get("amount")),
-                            "copy_value": str(payload.get('amount', ''))
+                            "copy_value": str(payload.get("amount", "")),
                         },
                         {
                             "label": "Source Account",
-                            "value": payload.get('source_account_name', 'Checking'),
-                            "copy_value": payload.get('source_account_number', '')
+                            "value": payload.get("source_account_name", "Checking"),
+                            "copy_value": payload.get("source_account_number", ""),
                         },
                         {
                             "label": "Target Account",
-                            "value": payload.get('target_account_name', 'Savings'),
-                            "copy_value": payload.get('target_account_number', '')
-                        }
-                    ]
+                            "value": payload.get("target_account_name", "Savings"),
+                            "copy_value": payload.get("target_account_number", ""),
+                        },
+                    ],
                 },
                 {
                     "order": 3,
@@ -137,12 +136,14 @@ class GhostService:
                     "instruction": (
                         "Complete the transfer on the bank site. "
                         "Return here to mark as done so Strata can verify."
-                    )
-                }
+                    ),
+                },
             ]
         }
 
-    def _generate_acats_steps(self, url: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def _generate_acats_steps(
+        self, url: str, payload: dict[str, Any]
+    ) -> dict[str, Any]:
         return {
             "steps": [
                 {
@@ -153,7 +154,7 @@ class GhostService:
                     "instruction": (
                         "Navigate to the 'Transfer an Account' "
                         "or 'Rollover' section of your target brokerage."
-                    )
+                    ),
                 },
                 {
                     "order": 2,
@@ -166,20 +167,20 @@ class GhostService:
                     "snippets": [
                         {
                             "label": "Source Broker",
-                            "value": payload.get('source_institution', 'Fidelity'),
-                            "copy_value": payload.get('source_institution', '')
+                            "value": payload.get("source_institution", "Fidelity"),
+                            "copy_value": payload.get("source_institution", ""),
                         },
                         {
                             "label": "DTC Number",
-                            "value": payload.get('source_dtc', '0226'),
-                            "copy_value": payload.get('source_dtc', '0226')
+                            "value": payload.get("source_dtc", "0226"),
+                            "copy_value": payload.get("source_dtc", "0226"),
                         },
                         {
                             "label": "Account Number",
-                            "value": payload.get('source_account_number', '***'),
-                            "copy_value": payload.get('source_account_number', '')
-                        }
-                    ]
+                            "value": payload.get("source_account_number", "***"),
+                            "copy_value": payload.get("source_account_number", ""),
+                        },
+                    ],
                 },
                 {
                     "order": 3,
@@ -188,12 +189,14 @@ class GhostService:
                     "instruction": (
                         "Once the request is submitted, mark this intent "
                         "as 'Processing'. ACATS typically takes 5-7 business days."
-                    )
-                }
+                    ),
+                },
             ]
         }
 
-    def _generate_rebalance_steps(self, url: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def _generate_rebalance_steps(
+        self, url: str, payload: dict[str, Any]
+    ) -> dict[str, Any]:
         return {
             "steps": [
                 {
@@ -203,7 +206,7 @@ class GhostService:
                     "url": url,
                     "instruction": (
                         "Navigate to the 'Trade' or 'Portfolio Rebalance' section."
-                    )
+                    ),
                 },
                 {
                     "order": 2,
@@ -213,15 +216,15 @@ class GhostService:
                     "snippets": [
                         {
                             "label": "Sell Ticker",
-                            "value": payload.get('sell_ticker', 'VTI'),
-                            "copy_value": payload.get('sell_ticker', '')
+                            "value": payload.get("sell_ticker", "VTI"),
+                            "copy_value": payload.get("sell_ticker", ""),
                         },
                         {
                             "label": "Sell Amount",
                             "value": self._format_currency(payload.get("sell_amount")),
-                            "copy_value": str(payload.get('sell_amount', ''))
-                        }
-                    ]
+                            "copy_value": str(payload.get("sell_amount", "")),
+                        },
+                    ],
                 },
                 {
                     "order": 3,
@@ -231,16 +234,16 @@ class GhostService:
                     "snippets": [
                         {
                             "label": "Buy Ticker",
-                            "value": payload.get('buy_ticker', 'BND'),
-                            "copy_value": payload.get('buy_ticker', '')
+                            "value": payload.get("buy_ticker", "BND"),
+                            "copy_value": payload.get("buy_ticker", ""),
                         },
                         {
                             "label": "Buy Amount",
                             "value": self._format_currency(payload.get("buy_amount")),
-                            "copy_value": str(payload.get('buy_amount', ''))
-                        }
-                    ]
-                }
+                            "copy_value": str(payload.get("buy_amount", "")),
+                        },
+                    ],
+                },
             ]
         }
 

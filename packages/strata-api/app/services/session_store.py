@@ -23,7 +23,9 @@ DEFAULT_TTL_SECONDS = 900  # 15 minutes
 
 class SessionStore(ABC):
     @abstractmethod
-    async def set(self, key: str, value: dict[str, Any], ttl: int = DEFAULT_TTL_SECONDS) -> None: ...
+    async def set(
+        self, key: str, value: dict[str, Any], ttl: int = DEFAULT_TTL_SECONDS
+    ) -> None: ...
 
     @abstractmethod
     async def get(self, key: str) -> dict[str, Any] | None: ...
@@ -44,7 +46,9 @@ class InMemorySessionStore(SessionStore):
     def __init__(self) -> None:
         self._store: dict[str, tuple[dict[str, Any], float]] = {}
 
-    async def set(self, key: str, value: dict[str, Any], ttl: int = DEFAULT_TTL_SECONDS) -> None:
+    async def set(
+        self, key: str, value: dict[str, Any], ttl: int = DEFAULT_TTL_SECONDS
+    ) -> None:
         expires_at = datetime.now(timezone.utc).timestamp() + ttl
         self._store[key] = (value, expires_at)
 
@@ -73,10 +77,14 @@ class RedisSessionStore(SessionStore):
 
     def __init__(self, redis_url: str) -> None:
         if aioredis is None:
-            raise ImportError("redis package is required for RedisSessionStore: pip install redis[hiredis]")
+            raise ImportError(
+                "redis package is required for RedisSessionStore: pip install redis[hiredis]"
+            )
         self._redis = aioredis.from_url(redis_url, decode_responses=True)
 
-    async def set(self, key: str, value: dict[str, Any], ttl: int = DEFAULT_TTL_SECONDS) -> None:
+    async def set(
+        self, key: str, value: dict[str, Any], ttl: int = DEFAULT_TTL_SECONDS
+    ) -> None:
         await self._redis.set(f"session:{key}", json.dumps(value), ex=ttl)
 
     async def get(self, key: str) -> dict[str, Any] | None:

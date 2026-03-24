@@ -51,13 +51,19 @@ class CashAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Numeric(precision=14, scale=2), nullable=True
     )
     mask: Mapped[str | None] = mapped_column(String(10), nullable=True)
-    is_manual: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
-    is_business: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    is_manual: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true"
+    )
+    is_business: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
     capabilities: Mapped[list[str]] = mapped_column(JSON, default=lambda: ["read_only"])
 
     user: Mapped["User"] = relationship(back_populates="cash_accounts")
     entity: Mapped["LegalEntity | None"] = relationship(back_populates="cash_accounts")
-    connection: Mapped["Connection | None"] = relationship(back_populates="cash_accounts")
+    connection: Mapped["Connection | None"] = relationship(
+        back_populates="cash_accounts"
+    )
     transactions: Mapped[list["BankTransaction"]] = relationship(
         back_populates="cash_account", cascade="all, delete-orphan"
     )

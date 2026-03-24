@@ -35,16 +35,17 @@ def _is_banking_provider(provider: BaseProvider | BaseBankingProvider) -> bool:
 
 
 async def run_connection_sync() -> None:
-    cutoff = datetime.now(timezone.utc) - timedelta(
-        minutes=settings.sync_stale_minutes
-    )
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=settings.sync_stale_minutes)
 
     # Fetch stale connections in a read-only session
     async with async_session_factory() as session:
         result = await session.execute(
             select(Connection.id, Connection.provider).where(
                 Connection.status == ConnectionStatus.active,
-                or_(Connection.last_synced_at.is_(None), Connection.last_synced_at < cutoff),
+                or_(
+                    Connection.last_synced_at.is_(None),
+                    Connection.last_synced_at < cutoff,
+                ),
             )
         )
         stale = result.all()

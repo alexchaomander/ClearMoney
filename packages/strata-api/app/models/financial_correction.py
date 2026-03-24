@@ -37,7 +37,9 @@ class FinancialCorrection(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         nullable=True,
         index=True,
     )
-    metric_id: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    metric_id: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, index=True
+    )
     correction_type: Mapped[FinancialCorrectionType] = mapped_column(
         Enum(FinancialCorrectionType, values_callable=lambda e: [x.value for x in e]),
         index=True,

@@ -15,7 +15,7 @@ class MonteCarloService:
         expected_return_std: float = 0.15,
         inflation_mean: float = 0.025,
         inflation_std: float = 0.01,
-        iterations: int = 1000
+        iterations: int = 1000,
     ) -> Dict:
         """
         Run a Monte Carlo simulation for retirement success probability.
@@ -31,10 +31,12 @@ class MonteCarloService:
             # 1. Accumulation Phase
             for year in range(years_to_retirement):
                 # Annual return with volatility
-                annual_return = np.random.normal(expected_return_mean, expected_return_std)
+                annual_return = np.random.normal(
+                    expected_return_mean, expected_return_std
+                )
                 # Annual inflation
                 annual_inflation = np.random.normal(inflation_mean, inflation_std)
-                cumulative_inflation *= (1 + annual_inflation)
+                cumulative_inflation *= 1 + annual_inflation
 
                 # Update balance
                 balance = balance * (1 + annual_return) + (monthly_contribution * 12)
@@ -42,9 +44,11 @@ class MonteCarloService:
 
             # 2. Decumulation Phase
             for year in range(retirement_duration_years):
-                annual_return = np.random.normal(expected_return_mean * 0.8, expected_return_std * 0.5) # More conservative in retirement
+                annual_return = np.random.normal(
+                    expected_return_mean * 0.8, expected_return_std * 0.5
+                )  # More conservative in retirement
                 annual_inflation = np.random.normal(inflation_mean, inflation_std)
-                cumulative_inflation *= (1 + annual_inflation)
+                cumulative_inflation *= 1 + annual_inflation
 
                 # Adjust withdrawal for cumulative inflation
                 withdrawal = desired_annual_income * cumulative_inflation
@@ -56,11 +60,9 @@ class MonteCarloService:
                     success = False
                     break
 
-            results.append({
-                "success": success,
-                "final_balance": max(0, balance),
-                "path": path
-            })
+            results.append(
+                {"success": success, "final_balance": max(0, balance), "path": path}
+            )
 
         success_count = sum(1 for r in results if r["success"])
         success_rate = success_count / iterations
@@ -86,5 +88,5 @@ class MonteCarloService:
             "success_rate": success_rate,
             "iterations": iterations,
             "percentiles": percentiles,
-            "years": list(range(max_len))
+            "years": list(range(max_len)),
         }

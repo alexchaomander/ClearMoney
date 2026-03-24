@@ -31,10 +31,7 @@ class ZillowService:
             logger.error("Zillow API key not configured")
             return None
 
-        params = {
-            "zpid": zpid,
-            "access_token": self._api_key
-        }
+        params = {"zpid": zpid, "access_token": self._api_key}
 
         try:
             response = await self._client.get(self._base_url, params=params)
@@ -53,10 +50,14 @@ class ZillowService:
             elif e.response.status_code == 404:
                 logger.warning("Zillow ZPID %s not found", zpid)
             else:
-                logger.error("Zillow API error %d: %s", e.response.status_code, e.response.text)
+                logger.error(
+                    "Zillow API error %d: %s", e.response.status_code, e.response.text
+                )
             return None
         except Exception as e:
-            logger.error("Unexpected error fetching Zestimate for ZPID %s: %s", zpid, str(e))
+            logger.error(
+                "Unexpected error fetching Zestimate for ZPID %s: %s", zpid, str(e)
+            )
             return None
 
     async def search_by_address(self, address: str) -> List[PropertySearchResult]:
@@ -64,24 +65,23 @@ class ZillowService:
         if not self._api_key:
             if settings.debug:
                 logger.warning("Zillow API key not set, returning mock search result")
-                return [PropertySearchResult(
-                    zillow_zpid="12345678",
-                    address=address or "123 Main St",
-                    city="San Francisco",
-                    state="CA",
-                    zip_code="94105",
-                    market_value=Decimal("1250000.00")
-                )]
+                return [
+                    PropertySearchResult(
+                        zillow_zpid="12345678",
+                        address=address or "123 Main St",
+                        city="San Francisco",
+                        state="CA",
+                        zip_code="94105",
+                        market_value=Decimal("1250000.00"),
+                    )
+                ]
             logger.error("Zillow API key not configured")
             return []
 
         try:
             # Example search endpoint (Bridge API Search)
             search_url = "https://api.bridgeinteractive.com/api/v1/zestimate/search"
-            params = {
-                "address": address,
-                "access_token": self._api_key
-            }
+            params = {"address": address, "access_token": self._api_key}
             response = await self._client.get(search_url, params=params)
             response.raise_for_status()
             data = response.json()
@@ -89,20 +89,30 @@ class ZillowService:
             results = []
             if data.get("success") and "bundle" in data:
                 for item in data["bundle"]:
-                    results.append(PropertySearchResult(
-                        zillow_zpid=str(item.get("zpid")),
-                        address=item.get("address"),
-                        city=item.get("city"),
-                        state=item.get("state"),
-                        zip_code=item.get("zip"),
-                        market_value=Decimal(str(item.get("zestimate"))) if item.get("zestimate") else None
-                    ))
+                    results.append(
+                        PropertySearchResult(
+                            zillow_zpid=str(item.get("zpid")),
+                            address=item.get("address"),
+                            city=item.get("city"),
+                            state=item.get("state"),
+                            zip_code=item.get("zip"),
+                            market_value=Decimal(str(item.get("zestimate")))
+                            if item.get("zestimate")
+                            else None,
+                        )
+                    )
             return results
         except httpx.HTTPStatusError as e:
-            logger.error("Zillow Search API error %d for address %s", e.response.status_code, address)
+            logger.error(
+                "Zillow Search API error %d for address %s",
+                e.response.status_code,
+                address,
+            )
             return []
         except Exception as e:
-            logger.error("Unexpected error searching Zillow for address %s: %s", address, str(e))
+            logger.error(
+                "Unexpected error searching Zillow for address %s: %s", address, str(e)
+            )
             return []
 
 

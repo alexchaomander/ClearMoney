@@ -9,16 +9,19 @@ from app.services.monte_carlo import MonteCarloService
 
 router = APIRouter(prefix="/calculators", tags=["calculators"])
 
+
 class MonteCarloPercentiles(BaseModel):
     p10: List[float]
     p50: List[float]
     p90: List[float]
+
 
 class MonteCarloResponse(BaseModel):
     success_rate: float
     iterations: int
     percentiles: MonteCarloPercentiles
     years: List[int]
+
 
 @router.get("/retirement-monte-carlo", response_model=MonteCarloResponse)
 async def run_monte_carlo(

@@ -37,7 +37,9 @@ async def create_session(
 ) -> SessionResponse:
     """Start a new advisor session, optionally with a specific skill."""
     advisor = FinancialAdvisor(session)
-    agent_session = await advisor.start_session(user.id, data.skill_name, data.vanish_mode)
+    agent_session = await advisor.start_session(
+        user.id, data.skill_name, data.vanish_mode
+    )
     return SessionResponse.model_validate(agent_session)
 
 
@@ -97,9 +99,7 @@ async def send_message(
 
     async def generate():
         try:
-            async for chunk in advisor.send_message(
-                session_id, user.id, data.content
-            ):
+            async for chunk in advisor.send_message(session_id, user.id, data.content):
                 # SSE format
                 yield f"data: {chunk}\n\n"
             yield "data: [DONE]\n\n"

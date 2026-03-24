@@ -28,9 +28,7 @@ async def txn_user(session: AsyncSession) -> User:
 
 
 @pytest.fixture
-async def txn_data(
-    session: AsyncSession, txn_user: User
-) -> dict:
+async def txn_data(session: AsyncSession, txn_user: User) -> dict:
     institution = Institution(name="Fidelity", providers={})
     session.add(institution)
     await session.flush()

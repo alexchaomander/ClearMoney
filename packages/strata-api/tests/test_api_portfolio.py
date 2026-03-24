@@ -28,9 +28,7 @@ async def portfolio_user(session: AsyncSession) -> User:
 
 
 @pytest.fixture
-async def portfolio_data(
-    session: AsyncSession, portfolio_user: User
-) -> dict:
+async def portfolio_data(session: AsyncSession, portfolio_user: User) -> dict:
     institution = Institution(name="Fidelity", providers={})
     session.add(institution)
     await session.commit()
@@ -60,8 +58,12 @@ async def portfolio_data(
 
     # Create securities
     securities = [
-        Security(ticker="VTI", name="Vanguard Total Stock", security_type=SecurityType.etf),
-        Security(ticker="BND", name="Vanguard Total Bond", security_type=SecurityType.etf),
+        Security(
+            ticker="VTI", name="Vanguard Total Stock", security_type=SecurityType.etf
+        ),
+        Security(
+            ticker="BND", name="Vanguard Total Bond", security_type=SecurityType.etf
+        ),
         Security(ticker="AAPL", name="Apple Inc.", security_type=SecurityType.stock),
     ]
     for sec in securities:

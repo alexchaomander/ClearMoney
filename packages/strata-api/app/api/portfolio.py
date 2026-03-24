@@ -54,7 +54,9 @@ async def get_portfolio_summary(
         select(EquityGrant).where(EquityGrant.user_id == user.id)
     )
     equity_grants = equity_result.scalars().all()
-    equity_summary = await equity_valuation_service.calculate_portfolio_summary(list(equity_grants))
+    equity_summary = await equity_valuation_service.calculate_portfolio_summary(
+        list(equity_grants)
+    )
     total_equity_vested = equity_summary.total_vested_value
     total_equity_unvested = equity_summary.total_unvested_value
 
@@ -100,19 +102,27 @@ async def get_portfolio_summary(
             security_type = holding.security.security_type.value
             allocation_by_asset_type[security_type] += market_value
 
-            all_holdings.append(TopHolding(
-                ticker=holding.security.ticker,
-                name=holding.security.name,
-                security_type=security_type,
-                quantity=holding.quantity,
-                market_value=market_value,
-                cost_basis=holding.cost_basis,
-                account_name=account.name,
-            ))
+            all_holdings.append(
+                TopHolding(
+                    ticker=holding.security.ticker,
+                    name=holding.security.name,
+                    security_type=security_type,
+                    quantity=holding.quantity,
+                    market_value=market_value,
+                    cost_basis=holding.cost_basis,
+                    account_name=account.name,
+                )
+            )
 
     # Calculate net worth
     total_physical = await get_physical_asset_total(session, user.id)
-    net_worth = total_cash + total_investment + total_equity_vested + total_physical - total_debt
+    net_worth = (
+        total_cash
+        + total_investment
+        + total_equity_vested
+        + total_physical
+        - total_debt
+    )
 
     # Calculate allocation percentages
     total_assets = total_cash + total_investment + total_equity_vested + total_physical
@@ -127,7 +137,9 @@ async def get_portfolio_summary(
             AssetAllocation(
                 category=category,
                 value=value,
-                percentage=(value / total_assets * Decimal("100")).quantize(Decimal("0.01")),
+                percentage=(value / total_assets * Decimal("100")).quantize(
+                    Decimal("0.01")
+                ),
             )
             for category, value in sorted(
                 allocation_by_asset_type.items(),
@@ -141,7 +153,9 @@ async def get_portfolio_summary(
             AssetAllocation(
                 category=category,
                 value=value,
-                percentage=(value / total_investment * Decimal("100")).quantize(Decimal("0.01"))
+                percentage=(value / total_investment * Decimal("100")).quantize(
+                    Decimal("0.01")
+                )
                 if total_investment > 0
                 else Decimal("0.00"),
             )
@@ -167,15 +181,19 @@ async def get_portfolio_summary(
     concentration_alerts: list[ConcentrationAlert] = []
     if total_assets > 0:
         for holding in all_holdings:
-            percentage = (holding.market_value / total_assets * Decimal("100")).quantize(Decimal("0.01"))
+            percentage = (
+                holding.market_value / total_assets * Decimal("100")
+            ).quantize(Decimal("0.01"))
             if percentage >= CONCENTRATION_THRESHOLD:
                 display_pct = percentage.quantize(Decimal("0.1"))
-                concentration_alerts.append(ConcentrationAlert(
-                    ticker=holding.ticker,
-                    name=holding.name,
-                    percentage=percentage,
-                    message=f"{holding.ticker or holding.name} represents {display_pct}% of your portfolio",
-                ))
+                concentration_alerts.append(
+                    ConcentrationAlert(
+                        ticker=holding.ticker,
+                        name=holding.name,
+                        percentage=percentage,
+                        message=f"{holding.ticker or holding.name} represents {display_pct}% of your portfolio",
+                    )
+                )
 
     return PortfolioSummary(
         total_investment_value=total_investment,
@@ -215,26 +233,32 @@ async def get_all_holdings(
     all_holdings = []
     for account in accounts:
         for holding in account.holdings:
-            all_holdings.append({
-                "id": str(holding.id),
-                "account_id": str(account.id),
-                "account_name": account.name,
-                "account_type": account.account_type.value,
-                "is_tax_advantaged": account.is_tax_advantaged,
-                "security": {
-                    "id": str(holding.security.id),
-                    "ticker": holding.security.ticker,
-                    "name": holding.security.name,
-                    "security_type": holding.security.security_type.value,
-                    "close_price": float(holding.security.close_price)
-                    if holding.security.close_price
+            all_holdings.append(
+                {
+                    "id": str(holding.id),
+                    "account_id": str(account.id),
+                    "account_name": account.name,
+                    "account_type": account.account_type.value,
+                    "is_tax_advantaged": account.is_tax_advantaged,
+                    "security": {
+                        "id": str(holding.security.id),
+                        "ticker": holding.security.ticker,
+                        "name": holding.security.name,
+                        "security_type": holding.security.security_type.value,
+                        "close_price": float(holding.security.close_price)
+                        if holding.security.close_price
+                        else None,
+                    },
+                    "quantity": float(holding.quantity),
+                    "cost_basis": float(holding.cost_basis)
+                    if holding.cost_basis
                     else None,
-                },
-                "quantity": float(holding.quantity),
-                "cost_basis": float(holding.cost_basis) if holding.cost_basis else None,
-                "market_value": float(holding.market_value) if holding.market_value else None,
-                "as_of": holding.as_of.isoformat() if holding.as_of else None,
-            })
+                    "market_value": float(holding.market_value)
+                    if holding.market_value
+                    else None,
+                    "as_of": holding.as_of.isoformat() if holding.as_of else None,
+                }
+            )
 
     return sorted(
         all_holdings,

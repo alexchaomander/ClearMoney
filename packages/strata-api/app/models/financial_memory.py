@@ -38,12 +38,8 @@ class FinancialMemory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     num_dependents: Mapped[int | None] = mapped_column(default=None)
 
     # Income
-    annual_income: Mapped[Decimal | None] = mapped_column(
-        Numeric(14, 2), default=None
-    )
-    monthly_income: Mapped[Decimal | None] = mapped_column(
-        Numeric(14, 2), default=None
-    )
+    annual_income: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), default=None)
+    monthly_income: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), default=None)
     income_growth_rate: Mapped[Decimal | None] = mapped_column(
         Numeric(6, 4), default=None
     )
@@ -52,9 +48,7 @@ class FinancialMemory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     federal_tax_rate: Mapped[Decimal | None] = mapped_column(
         Numeric(6, 4), default=None
     )
-    state_tax_rate: Mapped[Decimal | None] = mapped_column(
-        Numeric(6, 4), default=None
-    )
+    state_tax_rate: Mapped[Decimal | None] = mapped_column(Numeric(6, 4), default=None)
     capital_gains_rate: Mapped[Decimal | None] = mapped_column(
         Numeric(6, 4), default=None
     )
@@ -78,18 +72,12 @@ class FinancialMemory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
     # Housing
-    home_value: Mapped[Decimal | None] = mapped_column(
-        Numeric(14, 2), default=None
-    )
+    home_value: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), default=None)
     mortgage_balance: Mapped[Decimal | None] = mapped_column(
         Numeric(14, 2), default=None
     )
-    mortgage_rate: Mapped[Decimal | None] = mapped_column(
-        Numeric(6, 4), default=None
-    )
-    monthly_rent: Mapped[Decimal | None] = mapped_column(
-        Numeric(14, 2), default=None
-    )
+    mortgage_rate: Mapped[Decimal | None] = mapped_column(Numeric(6, 4), default=None)
+    monthly_rent: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), default=None)
 
     # Goals & Preferences
     risk_tolerance: Mapped[RiskTolerance | None] = mapped_column(

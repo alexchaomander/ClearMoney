@@ -116,15 +116,20 @@ class TestSnapTradeProvider:
 
         mock_register_response = MagicMock()
         mock_register_response.user_secret = "test_secret"
-        mock_client.authentication.register_snap_trade_user.return_value = mock_register_response
+        mock_client.authentication.register_snap_trade_user.return_value = (
+            mock_register_response
+        )
 
         mock_login_response = MagicMock()
         mock_login_response.redirect_uri = "https://snaptrade.com/connect/abc123"
-        mock_client.authentication.login_snap_trade_user.return_value = mock_login_response
+        mock_client.authentication.login_snap_trade_user.return_value = (
+            mock_login_response
+        )
 
         # Test
         provider = SnapTradeProvider()
         import asyncio
+
         result = asyncio.get_event_loop().run_until_complete(
             provider.create_link_session("user_123", "https://app.com/callback")
         )
@@ -150,11 +155,14 @@ class TestSnapTradeProvider:
             MockAccount("acct_2", "Brokerage", "INDIVIDUAL", 50000.00, brokerage),
             MockAccount("acct_3", "Roth IRA", "ROTH_IRA", 25000.00, brokerage),
         ]
-        mock_client.account_information.get_user_account_details.return_value = mock_accounts
+        mock_client.account_information.get_user_account_details.return_value = (
+            mock_accounts
+        )
 
         # Test
         provider = SnapTradeProvider()
         import asyncio
+
         accounts = asyncio.get_event_loop().run_until_complete(
             provider.get_accounts(mock_connection)
         )
@@ -197,7 +205,9 @@ class TestSnapTradeProvider:
                 market_value=18550.0,
             ),
             MockHolding(
-                symbol=MockSymbol("sym_2", "VTI", "Vanguard Total Stock Market ETF", "ETF"),
+                symbol=MockSymbol(
+                    "sym_2", "VTI", "Vanguard Total Stock Market ETF", "ETF"
+                ),
                 units=50.0,
                 price=250.0,
                 book_value=10000.0,
@@ -215,6 +225,7 @@ class TestSnapTradeProvider:
         # Test
         provider = SnapTradeProvider()
         import asyncio
+
         holdings = asyncio.get_event_loop().run_until_complete(
             provider.get_holdings(mock_connection, "acct_1")
         )
@@ -251,6 +262,7 @@ class TestSnapTradeProvider:
         # Test
         provider = SnapTradeProvider()
         import asyncio
+
         asyncio.get_event_loop().run_until_complete(
             provider.delete_connection(mock_connection)
         )
@@ -280,6 +292,7 @@ class TestSnapTradeProvider:
         # Test - should not raise
         provider = SnapTradeProvider()
         import asyncio
+
         asyncio.get_event_loop().run_until_complete(provider.delete_connection(conn))
 
         # Verify - should not call delete since no credentials
@@ -295,7 +308,9 @@ class TestSnapTradeProvider:
         assert provider._map_account_type("ROTH_IRA") == InvestmentAccountType.roth_ira
         assert provider._map_account_type("ROTH IRA") == InvestmentAccountType.roth_ira
         assert provider._map_account_type("HSA") == InvestmentAccountType.hsa
-        assert provider._map_account_type("INDIVIDUAL") == InvestmentAccountType.brokerage
+        assert (
+            provider._map_account_type("INDIVIDUAL") == InvestmentAccountType.brokerage
+        )
         assert provider._map_account_type("UNKNOWN") == InvestmentAccountType.other
         assert provider._map_account_type(None) == InvestmentAccountType.other
 
@@ -353,6 +368,7 @@ class TestSnapTradeProvider:
 
         provider = SnapTradeProvider()
         import asyncio
+
         with pytest.raises(ValueError, match="Missing SnapTrade credentials"):
             asyncio.get_event_loop().run_until_complete(provider.get_accounts(conn))
 
@@ -364,6 +380,7 @@ class TestSnapTradeProvider:
 
         provider = SnapTradeProvider()
         import asyncio
+
         result = asyncio.get_event_loop().run_until_complete(
             provider.handle_callback(
                 user_id="user_123",

@@ -5,11 +5,11 @@ from typing import Any
 from app.schemas.agent import (
     ConfidenceFactor,
     ContextQualityResponse,
+    DecisionTraceInsight,
     DecisionTracePayload,
     DecisionTraceRemediationAction,
     DecisionTraceReviewSummary,
     DecisionTraceRuleCheck,
-    DecisionTraceInsight,
     FreshnessStatus,
     TraceCorrectionTarget,
 )
@@ -60,7 +60,9 @@ def build_trace_remediation_actions(
                 priority="high",
             )
         )
-    elif continuity in {"stale", "degraded"} or not freshness_status.get("is_fresh", True):
+    elif continuity in {"stale", "degraded"} or not freshness_status.get(
+        "is_fresh", True
+    ):
         actions.append(
             DecisionTraceRemediationAction(
                 action_id="resync_connections",
@@ -82,7 +84,9 @@ def build_trace_remediation_actions(
             )
         )
 
-    if profile.get("monthly_income") in {None, "", 0} or profile.get("average_monthly_expenses") in {None, "", 0}:
+    if profile.get("monthly_income") in {None, "", 0} or profile.get(
+        "average_monthly_expenses"
+    ) in {None, "", 0}:
         actions.append(
             DecisionTraceRemediationAction(
                 action_id="complete_cashflow_profile",
@@ -134,7 +138,9 @@ def build_decision_trace_payload(
     freshness = FreshnessStatus(**freshness_status)
     if review_summary is not None and isinstance(review_summary, dict):
         review_summary = DecisionTraceReviewSummary(**review_summary)
-    merged_warnings = list(dict.fromkeys([*(warnings or []), *context_quality.warnings]))
+    merged_warnings = list(
+        dict.fromkeys([*(warnings or []), *context_quality.warnings])
+    )
     if review_summary and review_summary.open_review_count > 0:
         merged_warnings.append(
             "There are open recommendation reviews tied to this guidance. Treat it as pending adjudication until those reviews are resolved."
@@ -158,8 +164,11 @@ def build_decision_trace_payload(
             for insight in insights
         ],
         assumptions=assumptions,
-        confidence_score=confidence_score if confidence_score is not None else context_quality.confidence_score,
-        confidence_factors=confidence_factors or list(context_quality.confidence_factors),
+        confidence_score=confidence_score
+        if confidence_score is not None
+        else context_quality.confidence_score,
+        confidence_factors=confidence_factors
+        or list(context_quality.confidence_factors),
         determinism_class="deterministic",
         source_tier="derived_context",
         continuity_status=context_quality.continuity_status,
