@@ -57,7 +57,7 @@ export function FounderInsights() {
               const isPast = diffDays < 0;
 
               return (
-                <div key={v.symbol} className="flex items-center justify-between p-3 rounded-xl bg-neutral-800/50 border border-neutral-700/50">
+                <div key={v.id} className="flex items-center justify-between p-3 rounded-xl bg-neutral-800/50 border border-neutral-700/50">
                   <div>
                     <p className="text-xs font-medium text-white">{v.symbol}</p>
                     <p className="text-[10px] text-neutral-500 uppercase tracking-tight">
@@ -103,7 +103,7 @@ export function FounderInsights() {
             <p className="text-sm text-neutral-500 italic">No QSBS eligible grants found.</p>
           ) : (
             qsbsGrants.map(v => (
-              <div key={v.symbol} className="space-y-2">
+              <div key={v.id} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-medium text-white">{v.symbol}</p>
                   <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">

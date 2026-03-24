@@ -328,6 +328,7 @@ What we've already built:
 - [x] Initial financial context assembly spanning memory, accounts, holdings, transactions, and freshness
 - [x] Initial decision trace system for recommendations and advisor analyses
 - [x] Founder Operating Room (runway, commingling, tax shields, subscription audit)
+- [x] Founder Equity Intelligence (83(b) deadlines, QSBS progress, vesting projections)
 - [x] AI Advisor with specialized financial skills (Claude-based)
 - [x] War Room with action intent lifecycle and switch kit generation
 - [x] Scenario Lab with Monte Carlo simulations

@@ -45,7 +45,7 @@ export function GrantTable() {
         </thead>
         <tbody className="divide-y divide-neutral-800">
           {grants.map((grant) => {
-            const valuation = summary?.grant_valuations.find(v => v.symbol === (grant.symbol || grant.company_name || "Private"));
+            const valuation = summary?.grant_valuations.find(v => v.id === grant.id);
             
             return (
               <tr key={grant.id} className="hover:bg-neutral-800/30 transition-colors">

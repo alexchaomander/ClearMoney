@@ -126,3 +126,67 @@ async def test_get_equity_projections(test_user: User, session: AsyncSession) ->
     data = response.json()
     assert len(data) == 25 # Current month + 24 months
     assert float(data[0]["total_value"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_update_equity_grant_boolean_persistence(test_user: User, session: AsyncSession) -> None:
+    # 1. Create a grant with boolean fields set to True
+    grant = EquityGrant(
+        user_id=test_user.id,
+        grant_name="Persistence Test",
+        grant_type=EquityGrantType.rsu,
+        symbol="GOOGL",
+        quantity=Decimal("100.00"),
+        grant_date=date(2024, 1, 1),
+        is_83b_elected=True,
+        is_qsbs_eligible=True,
+    )
+    session.add(grant)
+    await session.commit()
+    grant_id = str(grant.id)
+
+    # 2. Update ONLY the grant name
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.patch(
+            f"/api/v1/equity/grants/{grant_id}",
+            json={"grant_name": "Updated Name"},
+            headers={"x-clerk-user-id": test_user.clerk_id},
+        )
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["grant_name"] == "Updated Name"
+    # 3. VERIFY that booleans were NOT overwritten to False (the bug I fixed)
+    assert data["is_83b_elected"] is True
+    assert data["is_qsbs_eligible"] is True
+
+
+@pytest.mark.asyncio
+async def test_equity_valuation_includes_id(test_user: User, session: AsyncSession) -> None:
+    grant = EquityGrant(
+        user_id=test_user.id,
+        grant_name="ID Test",
+        grant_type=EquityGrantType.rsu,
+        symbol="META",
+        quantity=Decimal("100.00"),
+        grant_date=date(2024, 1, 1),
+    )
+    session.add(grant)
+    await session.commit()
+    grant_id = str(grant.id)
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get(
+            "/api/v1/equity/portfolio",
+            headers={"x-clerk-user-id": test_user.clerk_id},
+        )
+    
+    assert response.status_code == 200
+    data = response.json()
+    valuation = data["grant_valuations"][0]
+    assert valuation["id"] == grant_id
+    assert valuation["symbol"] == "META"
