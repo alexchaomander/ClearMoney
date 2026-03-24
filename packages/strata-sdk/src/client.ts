@@ -298,6 +298,7 @@ export interface StrataClientInterface {
   // Equity
   getEquityPortfolio(): Promise<EquityPortfolioSummary>;
   getEquityProjections(): Promise<EquityProjection[]>;
+  getEquityGrants(): Promise<EquityGrant[]>;
   createEquityGrant(data: EquityGrantCreate): Promise<EquityGrant>;
   updateEquityGrant(id: string, data: EquityGrantUpdate): Promise<EquityGrant>;
   deleteEquityGrant(id: string): Promise<void>;
@@ -1332,6 +1333,10 @@ export class StrataClient implements StrataClientInterface {
 
   async getEquityProjections(): Promise<EquityProjection[]> {
     return this.request<EquityProjection[]>('/api/v1/equity/projections');
+  }
+
+  async getEquityGrants(): Promise<EquityGrant[]> {
+    return this.request<EquityGrant[]>('/api/v1/equity/grants');
   }
 
   async createEquityGrant(data: EquityGrantCreate): Promise<EquityGrant> {

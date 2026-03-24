@@ -35,6 +35,12 @@ import type {
   PropertySearchResult,
   VehicleSearchRequest,
   VehicleSearchResult,
+  EquityGrant,
+  EquityGrantCreate,
+  EquityGrantUpdate,
+  EquityValuation,
+  EquityPortfolioSummary,
+  EquityProjection,
 } from "@clearmoney/strata-sdk";
 
 export const queryKeys = {
@@ -1435,7 +1441,7 @@ export function useEquityGrants(options?: { enabled?: boolean }) {
   const client = useClient();
   return useQuery({
     queryKey: queryKeys.equityGrants,
-    queryFn: () => client.getEquityPortfolio().then(p => p.grant_valuations),
+    queryFn: () => client.getEquityGrants(),
     enabled: options?.enabled ?? true,
   });
 }

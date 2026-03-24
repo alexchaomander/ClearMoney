@@ -24,6 +24,10 @@ async def test_create_equity_grant(test_user: User) -> None:
         "symbol": "NVDA",
         "quantity": "1000.00",
         "grant_date": "2024-01-01",
+        "is_83b_elected": True,
+        "election_date": "2024-01-15",
+        "is_qsbs_eligible": True,
+        "qsbs_holding_start": "2024-01-01",
         "vesting_schedule": [
             {"date": "2024-01-01", "quantity": "250.00"},
             {"date": "2025-01-01", "quantity": "250.00"},
@@ -45,6 +49,8 @@ async def test_create_equity_grant(test_user: User) -> None:
     data = response.json()
     assert data["grant_name"] == "Initial RSU Grant"
     assert data["symbol"] == "NVDA"
+    assert data["is_83b_elected"] is True
+    assert data["is_qsbs_eligible"] is True
     assert len(data["vesting_schedule"]) == 4
 
 @pytest.mark.asyncio
@@ -58,6 +64,10 @@ async def test_get_equity_portfolio(test_user: User, session: AsyncSession) -> N
         quantity=Decimal("500.00"),
         strike_price=Decimal("150.00"),
         grant_date=date(2023, 1, 1),
+        is_83b_elected=True,
+        election_date=date(2023, 1, 15),
+        is_qsbs_eligible=True,
+        qsbs_holding_start=date(2023, 1, 1),
         vesting_schedule=[
             {"date": "2024-01-01", "quantity": "125.00"},
             {"date": "2025-01-01", "quantity": "125.00"}
@@ -79,6 +89,10 @@ async def test_get_equity_portfolio(test_user: User, session: AsyncSession) -> N
     assert "total_value" in data
     assert len(data["grant_valuations"]) == 1
     assert data["grant_valuations"][0]["symbol"] == "AAPL"
+    assert data["grant_valuations"][0]["is_83b_elected"] is True
+    assert "election_deadline" in data["grant_valuations"][0]
+    assert data["grant_valuations"][0]["is_qsbs_eligible"] is True
+    assert "qsbs_progress_percent" in data["grant_valuations"][0]
 
 @pytest.mark.asyncio
 async def test_get_equity_projections(test_user: User, session: AsyncSession) -> None:
