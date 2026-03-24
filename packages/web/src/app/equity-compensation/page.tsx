@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { CategoryPage } from "@/components/shared/CategoryPage";
+import { EquityDashboard } from "@/components/equity/EquityDashboard";
 import { getCategoryById } from "@/lib/site-config";
 
 const category = getCategoryById("equity-compensation");
@@ -20,5 +22,15 @@ export default function EquityCompensationPage() {
   if (!category) {
     notFound();
   }
-  return <CategoryPage category={category} />;
+
+  return (
+    <>
+      <SignedIn>
+        <EquityDashboard />
+      </SignedIn>
+      <SignedOut>
+        <CategoryPage category={category} />
+      </SignedOut>
+    </>
+  );
 }
