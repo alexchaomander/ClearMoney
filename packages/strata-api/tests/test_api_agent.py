@@ -91,7 +91,9 @@ async def test_metric_trace_net_worth(agent_user: User, agent_trace_data: None) 
 
 
 @pytest.mark.asyncio
-async def test_metric_trace_savings_rate(agent_user: User, agent_trace_data: None) -> None:
+async def test_metric_trace_savings_rate(
+    agent_user: User, agent_trace_data: None
+) -> None:
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
@@ -108,7 +110,9 @@ async def test_metric_trace_savings_rate(agent_user: User, agent_trace_data: Non
     assert data["data_points"][1]["value"] == "$3,000.00"
     assert data["data_points"][2]["value"] == "75.0%"
     assert len(data["confidence_factors"]) >= 3
-    assert any(target["field"] == "monthly_income" for target in data["correction_targets"])
+    assert any(
+        target["field"] == "monthly_income" for target in data["correction_targets"]
+    )
 
 
 @pytest.mark.asyncio

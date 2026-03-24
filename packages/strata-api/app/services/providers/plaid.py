@@ -208,12 +208,18 @@ class PlaidProvider(BaseBankingProvider):
         normalized._account_id = txn.account_id  # type: ignore
         return normalized
 
-    def _get_account_capabilities(self, account_type: CashAccountType) -> list[ActionCapability]:
+    def _get_account_capabilities(
+        self, account_type: CashAccountType
+    ) -> list[ActionCapability]:
         """Determine capabilities based on bank account type."""
         caps = [ActionCapability.READ_ONLY]
 
         # Most depository accounts can do ACH
-        if account_type in {CashAccountType.checking, CashAccountType.savings, CashAccountType.money_market}:
+        if account_type in {
+            CashAccountType.checking,
+            CashAccountType.savings,
+            CashAccountType.money_market,
+        }:
             caps.append(ActionCapability.ACH_TRANSFER)
 
         # Depository accounts are also candidates for switch kits (Era 2 bridge)
@@ -262,14 +268,20 @@ class PlaidProvider(BaseBankingProvider):
                     provider_account_id=account.account_id,
                     name=account.name or "Unknown Account",
                     account_type=self._map_account_type(_safe_get(account, "subtype")),
-                    balance=Decimal(str(balance)) if balance is not None else Decimal("0"),
+                    balance=Decimal(str(balance))
+                    if balance is not None
+                    else Decimal("0"),
                     available_balance=(
                         Decimal(str(available)) if available is not None else None
                     ),
-                    currency=_safe_get(account, "balances", "iso_currency_code", default="USD"),
+                    currency=_safe_get(
+                        account, "balances", "iso_currency_code", default="USD"
+                    ),
                     institution_name=institution_name,
                     mask=_safe_get(account, "mask"),
-                    capabilities=self._get_account_capabilities(self._map_account_type(_safe_get(account, "subtype"))),
+                    capabilities=self._get_account_capabilities(
+                        self._map_account_type(_safe_get(account, "subtype"))
+                    ),
                 )
             )
 

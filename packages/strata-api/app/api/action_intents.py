@@ -22,7 +22,6 @@ pdf_service = PDFGenerator()
 ghost_service = GhostService()
 
 
-
 @router.post("/action-intents", response_model=ActionIntentResponse)
 async def create_action_intent(
     intent_in: ActionIntentCreate,
@@ -33,7 +32,7 @@ async def create_action_intent(
     if intent_in.decision_trace_id:
         trace_query = select(DecisionTrace).where(
             DecisionTrace.id == intent_in.decision_trace_id,
-            DecisionTrace.user_id == current_user.id
+            DecisionTrace.user_id == current_user.id,
         )
         trace_result = await db.execute(trace_query)
         if not trace_result.scalar_one_or_none():
@@ -51,7 +50,7 @@ async def create_action_intent(
     manifest = ghost_service.generate_manifest(
         intent_type=intent_in.intent_type,
         institution_slug=institution_slug,
-        payload=intent_in.payload
+        payload=intent_in.payload,
     )
 
     intent = ActionIntent(

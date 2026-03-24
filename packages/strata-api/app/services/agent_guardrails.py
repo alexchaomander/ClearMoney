@@ -35,9 +35,7 @@ def evaluate_freshness(context: dict, max_age_hours: float | None = None) -> dic
     is_fresh = age_hours <= max_age
     warning = None
     if not is_fresh:
-        warning = (
-            f"Data is {age_hours:.1f} hours old. Refresh your accounts to get safe, up-to-date guidance."
-        )
+        warning = f"Data is {age_hours:.1f} hours old. Refresh your accounts to get safe, up-to-date guidance."
 
     return {
         "is_fresh": is_fresh,

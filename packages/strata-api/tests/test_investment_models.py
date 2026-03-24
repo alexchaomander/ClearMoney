@@ -68,7 +68,9 @@ async def test_create_investment_account(session: AsyncSession) -> None:
 
 
 @pytest.mark.asyncio
-async def test_create_investment_account_with_institution(session: AsyncSession) -> None:
+async def test_create_investment_account_with_institution(
+    session: AsyncSession,
+) -> None:
     user = User(clerk_id="clerk_inv_002", email="inst_investor@example.com")
     institution = Institution(name="Schwab", providers={})
     session.add(user)
@@ -87,7 +89,9 @@ async def test_create_investment_account_with_institution(session: AsyncSession)
     await session.commit()
 
     result = await session.execute(
-        select(InvestmentAccount).where(InvestmentAccount.institution_id == institution.id)
+        select(InvestmentAccount).where(
+            InvestmentAccount.institution_id == institution.id
+        )
     )
     fetched = result.scalar_one()
     assert fetched.institution_id == institution.id
@@ -107,9 +111,7 @@ async def test_create_security(session: AsyncSession) -> None:
     session.add(security)
     await session.commit()
 
-    result = await session.execute(
-        select(Security).where(Security.ticker == "AAPL")
-    )
+    result = await session.execute(select(Security).where(Security.ticker == "AAPL"))
     fetched = result.scalar_one()
     assert fetched.name == "Apple Inc."
     assert fetched.security_type == SecurityType.stock
@@ -127,9 +129,7 @@ async def test_create_security_etf(session: AsyncSession) -> None:
     session.add(security)
     await session.commit()
 
-    result = await session.execute(
-        select(Security).where(Security.ticker == "VTI")
-    )
+    result = await session.execute(select(Security).where(Security.ticker == "VTI"))
     fetched = result.scalar_one()
     assert fetched.security_type == SecurityType.etf
 
@@ -283,7 +283,9 @@ async def test_investment_account_cascade_delete(session: AsyncSession) -> None:
         account_type=InvestmentAccountType.brokerage,
         balance=Decimal("5000.00"),
     )
-    security = Security(ticker="TEST", name="Test Security", security_type=SecurityType.stock)
+    security = Security(
+        ticker="TEST", name="Test Security", security_type=SecurityType.stock
+    )
     session.add(account)
     session.add(security)
     await session.commit()
@@ -306,9 +308,7 @@ async def test_investment_account_cascade_delete(session: AsyncSession) -> None:
     assert result.scalars().all() == []
 
     # Security should still exist
-    result = await session.execute(
-        select(Security).where(Security.ticker == "TEST")
-    )
+    result = await session.execute(select(Security).where(Security.ticker == "TEST"))
     assert result.scalar_one() is not None
 
 

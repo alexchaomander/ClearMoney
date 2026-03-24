@@ -65,9 +65,6 @@ const nextConfig: NextConfig = {
     unoptimized: isStaticExport,
   },
   transpilePackages: ["@clearmoney/strata-sdk"],
-  experimental: {
-    turbopackUseSystemTlsCerts: true,
-  },
   ...(isStaticExport
     ? {
         turbopack: {

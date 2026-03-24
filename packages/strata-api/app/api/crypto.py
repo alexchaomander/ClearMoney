@@ -16,10 +16,12 @@ from app.schemas.crypto import (
 )
 from app.services.crypto import CryptoService
 
-router = APIRouter(prefix="/v1/crypto", tags=["Crypto"])
+router = APIRouter(prefix="/crypto", tags=["Crypto"])
 
 
-@router.get("/wallets", response_model=list[CryptoWalletSchema])
+@router.get(
+    "/wallets", response_model=list[CryptoWalletSchema], name="list_crypto_wallets"
+)
 async def list_wallets(
     user: Annotated[User, Depends(require_scopes(["portfolio:read"]))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
@@ -29,7 +31,7 @@ async def list_wallets(
     return await service.list_wallets(user.id)
 
 
-@router.post("/wallets", response_model=CryptoWalletSchema)
+@router.post("/wallets", response_model=CryptoWalletSchema, name="add_crypto_wallet")
 async def add_wallet(
     user: Annotated[User, Depends(require_scopes(["portfolio:write"]))],
     wallet_in: CryptoWalletCreate,
@@ -43,7 +45,11 @@ async def add_wallet(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
-@router.delete("/wallets/{wallet_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/wallets/{wallet_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    name="delete_crypto_wallet",
+)
 async def delete_wallet(
     wallet_id: uuid.UUID,
     user: Annotated[User, Depends(require_scopes(["portfolio:write"]))],
@@ -56,7 +62,9 @@ async def delete_wallet(
         raise HTTPException(status_code=404, detail="Wallet not found")
 
 
-@router.delete("/wallets", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/wallets", status_code=status.HTTP_204_NO_CONTENT, name="delete_all_crypto_wallets"
+)
 async def delete_all_wallets(
     user: Annotated[User, Depends(require_scopes(["portfolio:write"]))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
@@ -66,7 +74,9 @@ async def delete_all_wallets(
     await service.delete_all_wallets(user.id)
 
 
-@router.get("/portfolio", response_model=CryptoPortfolioResponse)
+@router.get(
+    "/portfolio", response_model=CryptoPortfolioResponse, name="get_crypto_portfolio"
+)
 async def get_crypto_portfolio(
     user: Annotated[User, Depends(require_scopes(["portfolio:read"]))],
     session: Annotated[AsyncSession, Depends(get_async_session)],

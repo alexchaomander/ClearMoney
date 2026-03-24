@@ -80,8 +80,7 @@ class GeminiExtractionProvider(ExtractionProvider):
         if model.startswith("gemini"):
             return model
         logger.warning(
-            "extraction_model '%s' is not a Gemini model; "
-            "falling back to '%s'",
+            "extraction_model '%s' is not a Gemini model; falling back to '%s'",
             model,
             GEMINI_DEFAULT_MODEL,
         )

@@ -15,7 +15,9 @@ if TYPE_CHECKING:
 class PortfolioSnapshot(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "portfolio_snapshots"
     __table_args__ = (
-        UniqueConstraint("user_id", "snapshot_date", name="uq_portfolio_snapshot_user_date"),
+        UniqueConstraint(
+            "user_id", "snapshot_date", name="uq_portfolio_snapshot_user_date"
+        ),
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(

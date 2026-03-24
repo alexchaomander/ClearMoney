@@ -23,9 +23,7 @@ if TYPE_CHECKING:
 class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "users"
 
-    clerk_id: Mapped[str] = mapped_column(
-        String(255), unique=True, index=True
-    )
+    clerk_id: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     email: Mapped[str] = mapped_column(String(320))
     plan: Mapped[str] = mapped_column(String(50), default="free")
     subscription_status: Mapped[str] = mapped_column(String(50), default="active")

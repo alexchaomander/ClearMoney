@@ -14,13 +14,10 @@ async def test_list_credit_cards_empty() -> None:
     assert response.status_code == 200
     assert response.json() == []
 
+
 @pytest.mark.asyncio
 async def test_seed_and_retrieve_card(session: AsyncSession) -> None:
-    card = CreditCard(
-        name="Test Card",
-        issuer="Test Bank",
-        annual_fee=100.00
-    )
+    card = CreditCard(name="Test Card", issuer="Test Bank", annual_fee=100.00)
     session.add(card)
     await session.commit()
     await session.refresh(card)
@@ -42,27 +39,17 @@ async def test_seed_and_retrieve_card(session: AsyncSession) -> None:
     assert response.status_code == 200
     assert response.json()["id"] == card_id
 
+
 @pytest.mark.asyncio
 async def test_credit_card_relations(session: AsyncSession) -> None:
-    card = CreditCard(
-        name="Complex Card",
-        issuer="Bank of Tests",
-        annual_fee=500.00
-    )
+    card = CreditCard(name="Complex Card", issuer="Bank of Tests", annual_fee=500.00)
     session.add(card)
     await session.flush()
 
     credit = CardCredit(
-        card_id=card.id,
-        name="Travel Credit",
-        value=300.00,
-        period="annual"
+        card_id=card.id, name="Travel Credit", value=300.00, period="annual"
     )
-    benefit = CardBenefit(
-        card_id=card.id,
-        name="Lounge Access",
-        default_value=100.00
-    )
+    benefit = CardBenefit(card_id=card.id, name="Lounge Access", default_value=100.00)
     session.add(credit)
     session.add(benefit)
     await session.commit()

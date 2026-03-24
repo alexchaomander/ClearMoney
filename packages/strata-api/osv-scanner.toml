@@ -1,0 +1,7 @@
+[[IgnoredVulns]]
+id = "GHSA-79v4-65xg-pq4g"
+reason = "Unfixable due to snaptrade-python-sdk dependency constraint cryptography < 44.0.0. Cryptography 43.0.3 is the latest version supported."
+
+[[IgnoredVulns]]
+id = "GHSA-r6ph-v2qm-q3c2"
+reason = "Unfixable due to snaptrade-python-sdk dependency constraint cryptography < 44.0.0. Cryptography 43.0.3 is the latest version supported."

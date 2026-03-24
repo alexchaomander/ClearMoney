@@ -1,6 +1,6 @@
 # Strata API
 
-FastAPI-based backend for the ClearMoney financial platform. Provides investment account connectivity via SnapTrade, banking via Plaid, AI-powered financial advice, action intent lifecycle, and portfolio management.
+FastAPI-based backend for the ClearMoney financial platform. Provides investment account connectivity via SnapTrade, banking via Plaid, read-only crypto wallet aggregation, AI-powered financial advice, action intent lifecycle, and portfolio management.
 
 ## Quick Start
 
@@ -21,11 +21,11 @@ This starts PostgreSQL, Redis, and the API. The API runs at `http://localhost:80
 cd packages/strata-api
 
 # Create virtual environment
-uv venv --python 3.11
+uv venv --python 3.12
 source .venv/bin/activate
 
 # Install dependencies
-uv pip install -e ".[dev]"
+uv pip install --python .venv/bin/python -e ".[dev]"
 
 # Copy environment file and configure
 cp .env.example .env
@@ -73,7 +73,8 @@ docker run -p 8000:8000 --env-file .env strata-api
 | `STRATA_ANTHROPIC_API_KEY` | Anthropic API key for the AI advisor |
 | `STRATA_ZILLOW_API_KEY` | Zillow/Bridge Interactive API key (real estate valuations) |
 | `STRATA_KBB_API_KEY` | Marketcheck API key (vehicle valuations) |
-| `STRATA_ALPHA_VANTAGE_API_KEY` | Alpha Vantage API key (precious metal spot prices) |
+| `STRATA_ALPHA_VANTAGE_API_KEY` | Alpha Vantage API key (stock prices, crypto spot rates, precious metals) |
+| `STRATA_ALCHEMY_API_KEY` | Alchemy API key for EVM/Solana wallet balances and token discovery |
 
 ### Infrastructure (Optional)
 
@@ -152,6 +153,18 @@ All endpoints are prefixed with `/api/v1`. Full OpenAPI docs are available at `/
 | `GET` | `/portfolio/summary` | Portfolio summary with allocations |
 | `GET` | `/portfolio/holdings` | All holdings across accounts |
 | `GET` | `/portfolio/history` | Historical net worth from snapshots |
+
+### Crypto
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/crypto/wallets` | List tracked public wallet addresses |
+| `POST` | `/crypto/wallets` | Add a wallet address to aggregate |
+| `DELETE` | `/crypto/wallets/{wallet_id}` | Remove a tracked wallet |
+| `DELETE` | `/crypto/wallets` | Remove all tracked wallets |
+| `GET` | `/crypto/portfolio` | Aggregate native balances and supported token balances |
+
+Crypto aggregation is read-only. The current implementation supports live native and token balance lookups for Ethereum, Solana, Polygon, Arbitrum, Base, Optimism, and Bitcoin. DeFi protocol positions are still represented as placeholders until a dedicated DeFi indexer is wired in.
 
 ### Financial Memory
 

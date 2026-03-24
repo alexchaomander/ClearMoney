@@ -27,7 +27,11 @@ class TransactionType(str, enum.Enum):
 class Transaction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "transactions"
     __table_args__ = (
-        UniqueConstraint("account_id", "provider_transaction_id", name="uq_transaction_account_provider_id"),
+        UniqueConstraint(
+            "account_id",
+            "provider_transaction_id",
+            name="uq_transaction_account_provider_id",
+        ),
     )
 
     account_id: Mapped[uuid.UUID] = mapped_column(
@@ -36,7 +40,9 @@ class Transaction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     security_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("securities.id", ondelete="SET NULL"), index=True
     )
-    provider_transaction_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    provider_transaction_id: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )
     type: Mapped[TransactionType] = mapped_column(
         Enum(TransactionType, values_callable=lambda e: [x.value for x in e]),
         default=TransactionType.other,

@@ -1,4 +1,3 @@
-
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,7 +22,8 @@ async def sync_connection_accounts(
         result = await session.execute(
             select(InvestmentAccount).where(
                 InvestmentAccount.connection_id == connection.id,
-                InvestmentAccount.provider_account_id == normalized_account.provider_account_id,
+                InvestmentAccount.provider_account_id
+                == normalized_account.provider_account_id,
             )
         )
         account = result.scalar_one_or_none()
@@ -47,7 +47,9 @@ async def sync_connection_accounts(
             account.account_type = normalized_account.account_type
             account.is_tax_advantaged = normalized_account.is_tax_advantaged
             if normalized_account.capabilities:
-                account.capabilities = [c.value for c in normalized_account.capabilities]
+                account.capabilities = [
+                    c.value for c in normalized_account.capabilities
+                ]
 
         await session.flush()
 
@@ -56,9 +58,7 @@ async def sync_connection_accounts(
             normalized_account.provider_account_id,
         )
 
-        await session.execute(
-            delete(Holding).where(Holding.account_id == account.id)
-        )
+        await session.execute(delete(Holding).where(Holding.account_id == account.id))
 
         for normalized_holding in normalized_holdings:
             security = await get_or_create_security(
@@ -103,12 +103,9 @@ async def get_or_create_security(
                 if normalized_security.close_price_as_of
                 else None
             )
-            should_update = (
-                normalized_security.close_price is not None
-                and (
-                    security.close_price_as_of is None
-                    or (new_price_date and new_price_date > security.close_price_as_of)
-                )
+            should_update = normalized_security.close_price is not None and (
+                security.close_price_as_of is None
+                or (new_price_date and new_price_date > security.close_price_as_of)
             )
             if should_update:
                 security.close_price = normalized_security.close_price

@@ -67,8 +67,7 @@ class OpenAIExtractionProvider(ExtractionProvider):
         if re.match(r"^(gpt|o\d)", model):
             return model
         logger.warning(
-            "extraction_model '%s' is not an OpenAI model; "
-            "falling back to '%s'",
+            "extraction_model '%s' is not an OpenAI model; falling back to '%s'",
             model,
             OPENAI_DEFAULT_MODEL,
         )

@@ -59,9 +59,7 @@ async def get_popular_institutions(
 
     # Try to find these institutions, fall back to all if none found
     result = await session.execute(
-        select(Institution)
-        .where(Institution.name.in_(popular_names))
-        .limit(limit)
+        select(Institution).where(Institution.name.in_(popular_names)).limit(limit)
     )
     institutions = result.scalars().all()
 

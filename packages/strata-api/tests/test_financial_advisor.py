@@ -8,7 +8,14 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.main import app
-from app.models import AgentSession, DecisionTrace, FinancialMemory, Recommendation, RecommendationReview, User
+from app.models import (
+    AgentSession,
+    DecisionTrace,
+    FinancialMemory,
+    Recommendation,
+    RecommendationReview,
+    User,
+)
 from app.models.agent_session import RecommendationStatus, SessionStatus
 from app.models.recommendation_review import RecommendationReviewType
 from app.services.financial_advisor import FinancialAdvisor
@@ -150,16 +157,12 @@ async def test_get_session_not_found(headers: dict) -> None:
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
-        resp = await client.get(
-            f"/api/v1/advisor/sessions/{fake_id}", headers=headers
-        )
+        resp = await client.get(f"/api/v1/advisor/sessions/{fake_id}", headers=headers)
         assert resp.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_get_session_wrong_user(
-    session: AsyncSession, test_user: User
-) -> None:
+async def test_get_session_wrong_user(session: AsyncSession, test_user: User) -> None:
     """A user should not be able to access another user's session."""
     other_user = User(clerk_id="other_advisor_user", email="other@example.com")
     session.add(other_user)
@@ -195,9 +198,7 @@ async def test_list_recommendations_empty(headers: dict) -> None:
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
-        resp = await client.get(
-            "/api/v1/advisor/recommendations", headers=headers
-        )
+        resp = await client.get("/api/v1/advisor/recommendations", headers=headers)
         assert resp.status_code == 200
         assert resp.json() == []
 
@@ -232,9 +233,7 @@ async def test_list_recommendations(
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
-        resp = await client.get(
-            "/api/v1/advisor/recommendations", headers=headers
-        )
+        resp = await client.get("/api/v1/advisor/recommendations", headers=headers)
         assert resp.status_code == 200
         data = resp.json()
         assert len(data) == 1
@@ -247,9 +246,7 @@ async def test_list_recommendations(
 
 
 @pytest.mark.asyncio
-async def test_advisor_start_session(
-    session: AsyncSession, test_user: User
-) -> None:
+async def test_advisor_start_session(session: AsyncSession, test_user: User) -> None:
     advisor = FinancialAdvisor(session)
     agent_session = await advisor.start_session(test_user.id, "tax_optimization")
     assert agent_session.user_id == test_user.id

@@ -50,9 +50,7 @@ async def _derive_retirement_savings(
     tax_advantaged_accounts = result.scalars().all()
 
     if tax_advantaged_accounts:
-        total = sum(
-            (a.balance for a in tax_advantaged_accounts), Decimal("0.00")
-        )
+        total = sum((a.balance for a in tax_advantaged_accounts), Decimal("0.00"))
         old_value = (
             str(memory.current_retirement_savings)
             if memory.current_retirement_savings is not None
@@ -91,9 +89,7 @@ async def _derive_debt_profile(
         return updated_fields
 
     total_balance = sum((a.balance for a in debt_accounts), Decimal("0.00"))
-    total_min_payment = sum(
-        (a.minimum_payment for a in debt_accounts), Decimal("0.00")
-    )
+    total_min_payment = sum((a.minimum_payment for a in debt_accounts), Decimal("0.00"))
 
     weighted_rate_sum = Decimal("0.00")
     balance_with_rates = Decimal("0.00")
@@ -103,9 +99,7 @@ async def _derive_debt_profile(
             balance_with_rates += account.balance
 
     weighted_rate = (
-        (weighted_rate_sum / balance_with_rates)
-        if balance_with_rates > 0
-        else None
+        (weighted_rate_sum / balance_with_rates) if balance_with_rates > 0 else None
     )
 
     by_type: dict[str, dict] = {}
@@ -131,26 +125,30 @@ async def _derive_debt_profile(
         balance = bucket["balance"]
         rate_balance = bucket["rate_balance"]
         weighted_rate = (
-            bucket["rate_weighted_sum"] / rate_balance
-            if rate_balance > 0
-            else None
+            bucket["rate_weighted_sum"] / rate_balance if rate_balance > 0 else None
         )
         by_type_serialized[key] = {
             "count": bucket["count"],
             "balance": float(balance),
             "minimum_payment": float(bucket["minimum_payment"]),
-            "weighted_interest_rate": float(weighted_rate) if weighted_rate is not None else None,
+            "weighted_interest_rate": float(weighted_rate)
+            if weighted_rate is not None
+            else None,
         }
 
     profile = {
         "total_balance": float(total_balance),
         "total_minimum_payment": float(total_min_payment),
-        "weighted_interest_rate": float(weighted_rate) if weighted_rate is not None else None,
+        "weighted_interest_rate": float(weighted_rate)
+        if weighted_rate is not None
+        else None,
         "by_type": by_type_serialized,
     }
 
     if memory.debt_profile != profile:
-        old_value = json.dumps(memory.debt_profile) if memory.debt_profile is not None else None
+        old_value = (
+            json.dumps(memory.debt_profile) if memory.debt_profile is not None else None
+        )
         memory.debt_profile = profile
         updated_fields.append("debt_profile")
         session.add(
@@ -203,12 +201,8 @@ async def _derive_portfolio_summary(
     total_investment = sum(
         (a.balance for a in investment_accounts if a.balance), Decimal("0.00")
     )
-    total_cash = sum(
-        (a.balance for a in cash_accounts if a.balance), Decimal("0.00")
-    )
-    total_debt = sum(
-        (a.balance for a in debt_accounts if a.balance), Decimal("0.00")
-    )
+    total_cash = sum((a.balance for a in cash_accounts if a.balance), Decimal("0.00"))
+    total_debt = sum((a.balance for a in debt_accounts if a.balance), Decimal("0.00"))
     net_worth = total_investment + total_cash - total_debt
 
     allocation: dict[str, dict] = {}
@@ -243,7 +237,9 @@ async def _derive_portfolio_summary(
                 "ticker": security.ticker,
                 "name": security.name,
                 "security_type": security.security_type.value,
-                "market_value": float(holding.market_value) if holding.market_value is not None else None,
+                "market_value": float(holding.market_value)
+                if holding.market_value is not None
+                else None,
             }
         )
 
@@ -297,9 +293,7 @@ async def _derive_mortgage_details(
     # If we have multiple mortgages, we sum balances and average rates (weighted?)
     # For MVP, we'll just take the primary (largest balance) one or sum balances.
     if mortgage_accounts:
-        total_balance = sum(
-            (a.balance for a in mortgage_accounts), Decimal("0.00")
-        )
+        total_balance = sum((a.balance for a in mortgage_accounts), Decimal("0.00"))
 
         # Weighted average interest rate
         weighted_rate_sum = Decimal("0.00")
@@ -338,13 +332,13 @@ async def _derive_mortgage_details(
 
         # Update Rate (only if we calculated one)
         if avg_rate is not None:
-             old_rate = (
-                str(memory.mortgage_rate)
-                if memory.mortgage_rate is not None
-                else None
+            old_rate = (
+                str(memory.mortgage_rate) if memory.mortgage_rate is not None else None
             )
-             # Fuzzy float comparison
-             if memory.mortgage_rate is None or abs(memory.mortgage_rate - avg_rate) > Decimal("0.001"):
+            # Fuzzy float comparison
+            if memory.mortgage_rate is None or abs(
+                memory.mortgage_rate - avg_rate
+            ) > Decimal("0.001"):
                 memory.mortgage_rate = avg_rate
                 updated_fields.append("mortgage_rate")
                 session.add(

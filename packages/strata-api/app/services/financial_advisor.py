@@ -71,14 +71,31 @@ _UPDATABLE_MEMORY_FIELDS = {
 }
 
 # Type mapping for coercing string values from the LLM into correct Python types.
-_INT_FIELDS = {"age", "num_dependents", "retirement_age", "investment_horizon_years", "emergency_fund_target_months"}
+_INT_FIELDS = {
+    "age",
+    "num_dependents",
+    "retirement_age",
+    "investment_horizon_years",
+    "emergency_fund_target_months",
+}
 _DECIMAL_FIELDS = {
-    "annual_income", "monthly_income", "income_growth_rate",
-    "federal_tax_rate", "state_tax_rate", "capital_gains_rate",
-    "current_retirement_savings", "monthly_retirement_contribution",
-    "employer_match_pct", "expected_social_security", "desired_retirement_income",
-    "home_value", "mortgage_balance", "mortgage_rate", "monthly_rent",
-    "monthly_savings_target", "average_monthly_expenses",
+    "annual_income",
+    "monthly_income",
+    "income_growth_rate",
+    "federal_tax_rate",
+    "state_tax_rate",
+    "capital_gains_rate",
+    "current_retirement_savings",
+    "monthly_retirement_contribution",
+    "employer_match_pct",
+    "expected_social_security",
+    "desired_retirement_income",
+    "home_value",
+    "mortgage_balance",
+    "mortgage_rate",
+    "monthly_rent",
+    "monthly_savings_target",
+    "average_monthly_expenses",
 }
 _ENUM_FIELDS: dict[str, type] = {
     "filing_status": FilingStatus,
@@ -92,6 +109,7 @@ def _coerce_memory_value(field_name: str, value: str) -> object:
         return int(value)
     if field_name in _DECIMAL_FIELDS:
         from decimal import Decimal
+
         return Decimal(value)
     if field_name in _ENUM_FIELDS:
         return _ENUM_FIELDS[field_name](value)
@@ -254,7 +272,14 @@ ADVISOR_TOOLS = [
             "properties": {
                 "intent_type": {
                     "type": "string",
-                    "enum": ["ach_transfer", "acats_transfer", "rebalance", "tax_loss_harvest", "open_account", "custom"],
+                    "enum": [
+                        "ach_transfer",
+                        "acats_transfer",
+                        "rebalance",
+                        "tax_loss_harvest",
+                        "open_account",
+                        "custom",
+                    ],
                     "description": "The type of action being proposed.",
                 },
                 "title": {
@@ -290,6 +315,7 @@ class FinancialAdvisor:
         if self._client is None:
             try:
                 import anthropic
+
                 self._client = anthropic.AsyncAnthropic(
                     api_key=settings.anthropic_api_key
                 )
@@ -298,9 +324,7 @@ class FinancialAdvisor:
                     "anthropic package not installed. Run: uv pip install anthropic"
                 )
             if not settings.anthropic_api_key:
-                raise RuntimeError(
-                    "STRATA_ANTHROPIC_API_KEY not configured"
-                )
+                raise RuntimeError("STRATA_ANTHROPIC_API_KEY not configured")
         return self._client
 
     async def start_session(
@@ -346,7 +370,9 @@ class FinancialAdvisor:
 
         # Build system prompt
         self._runtime.ensure_runtime_allowed()
-        system_prompt = await self._build_system_prompt(user_id, agent_session.skill_name)
+        system_prompt = await self._build_system_prompt(
+            user_id, agent_session.skill_name
+        )
 
         # Append user message
         messages = list(agent_session.messages)
@@ -376,20 +402,24 @@ class FinancialAdvisor:
             for block in response["content"]:
                 if block["type"] == "text":
                     full_response += block["text"]
-                    assistant_content.append({
-                        "type": "text",
-                        "text": block["text"],
-                    })
+                    assistant_content.append(
+                        {
+                            "type": "text",
+                            "text": block["text"],
+                        }
+                    )
                     yield block["text"]
 
                 elif block["type"] == "tool_use":
                     has_tool_use = True
-                    assistant_content.append({
-                        "type": "tool_use",
-                        "id": block["id"],
-                        "name": block["name"],
-                        "input": block["input"],
-                    })
+                    assistant_content.append(
+                        {
+                            "type": "tool_use",
+                            "id": block["id"],
+                            "name": block["name"],
+                            "input": block["input"],
+                        }
+                    )
 
                     # Handle tool call
                     tool_result = await self._handle_tool_call(
@@ -403,14 +433,18 @@ class FinancialAdvisor:
 
                     # Add assistant message with tool use and tool result
                     messages.append({"role": "assistant", "content": assistant_content})
-                    messages.append({
-                        "role": "user",
-                        "content": [{
-                            "type": "tool_result",
-                            "tool_use_id": block["id"],
-                            "content": json.dumps(tool_result),
-                        }],
-                    })
+                    messages.append(
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "tool_result",
+                                    "tool_use_id": block["id"],
+                                    "content": json.dumps(tool_result),
+                                }
+                            ],
+                        }
+                    )
                     assistant_content = []
                     break
 
@@ -431,7 +465,11 @@ class FinancialAdvisor:
                 agent_session.status = SessionStatus.active
             # No commit for messages
 
-        if not agent_session.vanish_mode and not created_recommendation and full_response.strip():
+        if (
+            not agent_session.vanish_mode
+            and not created_recommendation
+            and full_response.strip()
+        ):
             context = await build_financial_context(user_id, self._session)
             freshness_status = evaluate_freshness(context)
             connection_result = await self._session.execute(
@@ -443,8 +481,13 @@ class FinancialAdvisor:
             )
             warning = freshness_status.get("warning")
             deterministic = run_deterministic_checks(context)
-            rule_checks = self._build_rule_checks(context, freshness_status) + deterministic["rules_applied"]
-            assumptions = self._build_assumptions(context) + deterministic["assumptions"]
+            rule_checks = (
+                self._build_rule_checks(context, freshness_status)
+                + deterministic["rules_applied"]
+            )
+            assumptions = (
+                self._build_assumptions(context) + deterministic["assumptions"]
+            )
             trace_warnings = list(context_quality.warnings)
             if warning and warning not in trace_warnings:
                 trace_warnings.append(warning)
@@ -464,7 +507,10 @@ class FinancialAdvisor:
                 session_id=session_id,
                 recommendation_id=None,
                 trace_type=DecisionTraceType.analysis,
-                input_data={"user_message": user_message, "profile": context.get("profile", {})},
+                input_data={
+                    "user_message": user_message,
+                    "profile": context.get("profile", {}),
+                },
                 reasoning_steps=[],
                 outputs={
                     "assistant_response": full_response,
@@ -542,9 +588,7 @@ class FinancialAdvisor:
             return context
 
         elif tool_name == "update_memory":
-            return await self._handle_update_memory(
-                user_id, tool_input
-            )
+            return await self._handle_update_memory(user_id, tool_input)
 
         elif tool_name == "create_recommendation":
             return await self._handle_create_recommendation(
@@ -567,9 +611,7 @@ class FinancialAdvisor:
 
         return {"error": f"Unknown tool: {tool_name}"}
 
-    async def _handle_update_memory(
-        self, user_id: uuid.UUID, tool_input: dict
-    ) -> dict:
+    async def _handle_update_memory(self, user_id: uuid.UUID, tool_input: dict) -> dict:
         field_name = tool_input.get("field_name", "")
         value = tool_input.get("value", "")
         reason = tool_input.get("reason", "")
@@ -628,7 +670,10 @@ class FinancialAdvisor:
             list(connection_result.scalars().all()),
         )
         deterministic = run_deterministic_checks(context)
-        rule_checks = self._build_rule_checks(context, freshness_status) + deterministic["rules_applied"]
+        rule_checks = (
+            self._build_rule_checks(context, freshness_status)
+            + deterministic["rules_applied"]
+        )
         assumptions = self._build_assumptions(context) + deterministic["assumptions"]
         review_service = RecommendationReviewService(self._session)
         open_review_count = await review_service.open_review_count(user_id)
@@ -653,7 +698,12 @@ class FinancialAdvisor:
         supersedes_id = uuid.UUID(supersedes_id_str) if supersedes_id_str else None
 
         # Lineage-aware continuity checks
-        if proposed_title and await review_service.has_open_review_for_recommendation_title(user_id, proposed_title):
+        if (
+            proposed_title
+            and await review_service.has_open_review_for_recommendation_title(
+                user_id, proposed_title
+            )
+        ):
             return {
                 "error": "A matching recommendation title already has an open review. Resolve that review before creating a replacement recommendation.",
                 "open_review_count": open_review_count,
@@ -661,7 +711,9 @@ class FinancialAdvisor:
 
         # Check for semantic overlap
         skill_name = agent_session.skill_name or "general"
-        if not supersedes_id and await review_service.has_overlapping_open_review(user_id, skill_name, details):
+        if not supersedes_id and await review_service.has_overlapping_open_review(
+            user_id, skill_name, details
+        ):
             return {
                 "error": f"Guidance in the '{skill_name}' domain already has active reviews. Resolve the existing reviews or explicitly supersede the related guidance to proceed.",
                 "open_review_count": open_review_count,
@@ -694,7 +746,7 @@ class FinancialAdvisor:
             superseded_recommendation_id=supersedes_id,
         )
         self._session.add(rec)
-        await self._session.flush() # Get rec.id
+        await self._session.flush()  # Get rec.id
 
         # If superseding, update the old recommendation
         if supersedes_id:
@@ -745,7 +797,9 @@ class FinancialAdvisor:
 
         # Check for superseded status in continuity
         if supersedes_id:
-            warnings.append(f"This recommendation replaces prior guidance (ID: {supersedes_id_str}).")
+            warnings.append(
+                f"This recommendation replaces prior guidance (ID: {supersedes_id_str})."
+            )
 
         tool_trace = tool_input.get("trace") or {}
         trace_payload = build_decision_trace_payload(
@@ -811,7 +865,9 @@ class FinancialAdvisor:
                 allocation[asset_type] = allocation.get(asset_type, 0) + float(
                     h.get("market_value", 0)
                 )
-            allocation = {k: round(v / total_value * 100, 1) for k, v in allocation.items()}
+            allocation = {
+                k: round(v / total_value * 100, 1) for k, v in allocation.items()
+            }
 
         return {
             "net_worth": metrics.get("net_worth"),
@@ -830,28 +886,34 @@ class FinancialAdvisor:
 
         total_debt = metrics.get("total_debt_value")
         if total_debt is not None:
-            rules.append({
-                "name": "No revolving debt balance",
-                "passed": total_debt <= 0,
-                "value": total_debt,
-            })
+            rules.append(
+                {
+                    "name": "No revolving debt balance",
+                    "passed": total_debt <= 0,
+                    "value": total_debt,
+                }
+            )
 
         total_investment = metrics.get("total_investment_value") or 0
         tax_advantaged = metrics.get("tax_advantaged_value")
         if tax_advantaged is not None and total_investment:
             ratio = tax_advantaged / total_investment if total_investment else 0
-            rules.append({
-                "name": "Tax-advantaged share >= 40%",
-                "passed": ratio >= 0.4,
-                "value": round(ratio, 2),
-            })
+            rules.append(
+                {
+                    "name": "Tax-advantaged share >= 40%",
+                    "passed": ratio >= 0.4,
+                    "value": round(ratio, 2),
+                }
+            )
 
         if freshness_status.get("warning"):
-            rules.append({
-                "name": "Data freshness within policy",
-                "passed": bool(freshness_status.get("is_fresh")),
-                "value": freshness_status.get("age_hours"),
-            })
+            rules.append(
+                {
+                    "name": "Data freshness within policy",
+                    "passed": bool(freshness_status.get("is_fresh")),
+                    "value": freshness_status.get("age_hours"),
+                }
+            )
 
         return rules
 
@@ -860,13 +922,21 @@ class FinancialAdvisor:
         profile = context.get("profile", {}) or {}
         assumptions = []
         if not profile.get("average_monthly_expenses"):
-            assumptions.append("Monthly expenses missing; runway uses available cash only.")
+            assumptions.append(
+                "Monthly expenses missing; runway uses available cash only."
+            )
         if not profile.get("annual_income") and not profile.get("monthly_income"):
-            assumptions.append("Income not provided; contribution guidance may be incomplete.")
+            assumptions.append(
+                "Income not provided; contribution guidance may be incomplete."
+            )
         if not profile.get("risk_tolerance"):
-            assumptions.append("Risk tolerance not set; recommendations default to moderate risk.")
+            assumptions.append(
+                "Risk tolerance not set; recommendations default to moderate risk."
+            )
         if not context.get("accounts", {}).get("investment"):
-            assumptions.append("No investment accounts connected; allocations may be incomplete.")
+            assumptions.append(
+                "No investment accounts connected; allocations may be incomplete."
+            )
         return assumptions
 
     @staticmethod
@@ -906,8 +976,10 @@ class FinancialAdvisor:
                 if monthly_rate == 0:
                     payment = principal / months
                 else:
-                    payment = principal * (monthly_rate * (1 + monthly_rate) ** months) / (
-                        (1 + monthly_rate) ** months - 1
+                    payment = (
+                        principal
+                        * (monthly_rate * (1 + monthly_rate) ** months)
+                        / ((1 + monthly_rate) ** months - 1)
                     )
 
                 total_paid = payment * months
@@ -923,7 +995,9 @@ class FinancialAdvisor:
                 monthly_contribution = float(inputs.get("monthly_contribution", 0))
                 years_to_retirement = int(inputs.get("years_to_retirement", 30))
                 annual_return = float(inputs.get("annual_return", 7)) / 100
-                desired_annual_income = float(inputs.get("desired_annual_income", 60000))
+                desired_annual_income = float(
+                    inputs.get("desired_annual_income", 60000)
+                )
                 withdrawal_rate = float(inputs.get("withdrawal_rate", 4)) / 100
 
                 monthly_rate = annual_return / 12
@@ -932,7 +1006,11 @@ class FinancialAdvisor:
                 for _ in range(months):
                     balance = balance * (1 + monthly_rate) + monthly_contribution
 
-                needed = desired_annual_income / withdrawal_rate if withdrawal_rate > 0 else 0
+                needed = (
+                    desired_annual_income / withdrawal_rate
+                    if withdrawal_rate > 0
+                    else 0
+                )
                 gap = needed - balance
 
                 return {
@@ -950,7 +1028,11 @@ class FinancialAdvisor:
                 annual_rate = float(inputs.get("annual_rate", 5)) / 100
 
                 if monthly <= 0:
-                    return {"calculator": "savings_goal", "months": -1, "error": "Monthly contribution must be positive"}
+                    return {
+                        "calculator": "savings_goal",
+                        "months": -1,
+                        "error": "Monthly contribution must be positive",
+                    }
 
                 monthly_rate = annual_rate / 12
                 balance = current
@@ -970,7 +1052,9 @@ class FinancialAdvisor:
                 }
 
             else:
-                return {"error": f"Unknown calculator: {calculator}. Supported: compound_growth, loan_payment, retirement_gap, savings_goal"}
+                return {
+                    "error": f"Unknown calculator: {calculator}. Supported: compound_growth, loan_payment, retirement_gap, savings_goal"
+                }
 
         except (ValueError, TypeError, ZeroDivisionError) as e:
             return {"error": f"Calculation error: {e}"}
@@ -1040,5 +1124,5 @@ class FinancialAdvisor:
             "intent_id": str(intent.id),
             "title": intent.title,
             "type": intent.intent_type,
-            "message": f"Action intent '{intent.title}' has been drafted and is available in the Action Lab for review."
+            "message": f"Action intent '{intent.title}' has been drafted and is available in the Action Lab for review.",
         }

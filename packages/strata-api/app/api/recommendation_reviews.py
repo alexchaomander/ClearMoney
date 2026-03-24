@@ -52,7 +52,9 @@ async def resolve_recommendation_review(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> RecommendationReviewResponse:
-    review = await RecommendationReviewService(session).resolve_review(user.id, review_id, payload)
+    review = await RecommendationReviewService(session).resolve_review(
+        user.id, review_id, payload
+    )
     return RecommendationReviewResponse.model_validate(review)
 
 
@@ -63,16 +65,22 @@ async def reopen_recommendation_review(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> RecommendationReviewResponse:
-    review = await RecommendationReviewService(session).reopen_review(user.id, review_id, notes)
+    review = await RecommendationReviewService(session).reopen_review(
+        user.id, review_id, notes
+    )
     return RecommendationReviewResponse.model_validate(review)
 
 
-@router.post("/{review_id}/convert-to-correction", response_model=RecommendationReviewResponse)
+@router.post(
+    "/{review_id}/convert-to-correction", response_model=RecommendationReviewResponse
+)
 async def convert_recommendation_review_to_correction(
     review_id: uuid.UUID,
     payload: RecommendationReviewConvertToCorrection,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> RecommendationReviewResponse:
-    review = await RecommendationReviewService(session).convert_to_correction(user.id, review_id, payload)
+    review = await RecommendationReviewService(session).convert_to_correction(
+        user.id, review_id, payload
+    )
     return RecommendationReviewResponse.model_validate(review)

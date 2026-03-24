@@ -30,12 +30,14 @@ async def _create_message(payload: dict[str, Any]) -> dict:
         if block.type == "text":
             content.append({"type": "text", "text": block.text})
         elif block.type == "tool_use":
-            content.append({
-                "type": "tool_use",
-                "id": block.id,
-                "name": block.name,
-                "input": block.input,
-            })
+            content.append(
+                {
+                    "type": "tool_use",
+                    "id": block.id,
+                    "name": block.name,
+                    "input": block.input,
+                }
+            )
     return {"content": content, "stop_reason": response.stop_reason}
 
 

@@ -102,10 +102,12 @@ async def test_alternative_asset_crud_and_summary(
 
         # 3. Verify history for update
         result = await session.execute(
-            select(AssetValuation).where(
+            select(AssetValuation)
+            .where(
                 AssetValuation.asset_id == uuid.UUID(asset_id),
                 AssetValuation.asset_type == AssetType.alternative,
-            ).order_by(AssetValuation.valuation_date.asc())
+            )
+            .order_by(AssetValuation.valuation_date.asc())
         )
         history = result.scalars().all()
         assert len(history) == 2

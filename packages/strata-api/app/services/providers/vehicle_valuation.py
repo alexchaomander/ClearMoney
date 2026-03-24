@@ -27,7 +27,9 @@ class VehicleValuationService:
         """Fetch median market price for a vehicle."""
         if not self._api_key:
             if settings.debug:
-                logger.warning("Vehicle valuation API key not set, returning mock valuation")
+                logger.warning(
+                    "Vehicle valuation API key not set, returning mock valuation"
+                )
                 return Decimal("35000.00")
             logger.error("Vehicle valuation API key not configured")
             return None
@@ -51,7 +53,9 @@ class VehicleValuationService:
 
             return None
         except httpx.HTTPStatusError as e:
-            logger.error("Marketcheck API error %d: %s", e.response.status_code, e.response.text)
+            logger.error(
+                "Marketcheck API error %d: %s", e.response.status_code, e.response.text
+            )
             return None
         except Exception as e:
             logger.error("Unexpected error fetching vehicle valuation: %s", str(e))
@@ -61,13 +65,15 @@ class VehicleValuationService:
         """Fetch vehicle specs and market value from VIN."""
         if not self._api_key:
             if settings.debug:
-                logger.warning("Vehicle valuation API key not set, returning mock VIN search")
+                logger.warning(
+                    "Vehicle valuation API key not set, returning mock VIN search"
+                )
                 return VehicleSearchResult(
                     vin=vin,
                     make="Tesla",
                     model="Model 3",
                     year=2022,
-                    market_value=Decimal("38500.00")
+                    market_value=Decimal("38500.00"),
                 )
             logger.error("Vehicle valuation API key not configured")
             return None
@@ -84,14 +90,14 @@ class VehicleValuationService:
                 val = await self.get_market_value(
                     make=data.get("make"),
                     model=data.get("model"),
-                    year=data.get("year")
+                    year=data.get("year"),
                 )
                 return VehicleSearchResult(
                     vin=vin,
                     make=data.get("make"),
                     model=data.get("model"),
                     year=int(data.get("year")),
-                    market_value=val
+                    market_value=val,
                 )
             return None
         except httpx.HTTPStatusError as e:
@@ -101,7 +107,9 @@ class VehicleValuationService:
                 logger.error("Marketcheck VIN API error %d", e.response.status_code)
             return None
         except Exception as e:
-            logger.error("Unexpected error searching vehicle by VIN %s: %s", vin, str(e))
+            logger.error(
+                "Unexpected error searching vehicle by VIN %s: %s", vin, str(e)
+            )
             return None
 
 

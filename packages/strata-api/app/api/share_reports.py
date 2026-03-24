@@ -85,7 +85,10 @@ async def get_share_report(
                 ShareReport.revoked_at.is_(None),
                 or_(ShareReport.expires_at.is_(None), ShareReport.expires_at > now),
                 ShareReport.token_hash == token_hash,
-                or_(ShareReport.max_views.is_(None), ShareReport.view_count < ShareReport.max_views),
+                or_(
+                    ShareReport.max_views.is_(None),
+                    ShareReport.view_count < ShareReport.max_views,
+                ),
             )
             .values(
                 view_count=func.coalesce(ShareReport.view_count, 0) + 1,
@@ -129,7 +132,11 @@ async def list_share_reports(
     tool_id: str | None = Query(None),
     limit: int = Query(50, ge=1, le=200),
 ) -> list[ShareReportListItem]:
-    stmt = select(ShareReport).where(ShareReport.user_id == user.id).order_by(ShareReport.created_at.desc())
+    stmt = (
+        select(ShareReport)
+        .where(ShareReport.user_id == user.id)
+        .order_by(ShareReport.created_at.desc())
+    )
     if tool_id:
         stmt = stmt.where(ShareReport.tool_id == tool_id)
     stmt = stmt.limit(limit)
@@ -154,7 +161,9 @@ async def rotate_share_report_token(
     token_hash = _hash_token(token)
 
     result = await session.execute(
-        select(ShareReport).where(ShareReport.id == report_id, ShareReport.user_id == user.id)
+        select(ShareReport).where(
+            ShareReport.id == report_id, ShareReport.user_id == user.id
+        )
     )
     report = result.scalar_one_or_none()
     if not report:
@@ -190,7 +199,9 @@ async def revoke_share_report(
     session: AsyncSession = Depends(get_async_session),
 ) -> dict:
     result = await session.execute(
-        select(ShareReport).where(ShareReport.id == report_id, ShareReport.user_id == user.id)
+        select(ShareReport).where(
+            ShareReport.id == report_id, ShareReport.user_id == user.id
+        )
     )
     report = result.scalar_one_or_none()
     if not report:

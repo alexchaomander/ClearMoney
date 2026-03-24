@@ -32,6 +32,4 @@ class BrokerageExecutionService:
         self, user_id: uuid.UUID, account_id: str, target_allocations: dict
     ) -> list[dict]:
         """Trigger a suite of trades to reach target allocation."""
-        raise NotImplementedError(
-            "Portfolio rebalancing is not yet available."
-        )
+        raise NotImplementedError("Portfolio rebalancing is not yet available.")

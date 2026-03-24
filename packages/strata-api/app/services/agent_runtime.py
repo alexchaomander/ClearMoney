@@ -60,23 +60,33 @@ class AgentRuntime:
             if settings.advisor_provider == "openrouter":
                 try:
                     import openai
+
                     self._client = openai.AsyncOpenAI(
                         base_url=settings.advisor_base_url,
                         api_key=settings.openai_api_key or settings.anthropic_api_key,
                     )
                 except ImportError:
-                    raise RuntimeError("openai package not installed. Run: uv pip install openai")
+                    raise RuntimeError(
+                        "openai package not installed. Run: uv pip install openai"
+                    )
             else:
                 try:
                     import anthropic
-                    self._client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+
+                    self._client = anthropic.AsyncAnthropic(
+                        api_key=settings.anthropic_api_key
+                    )
                 except ImportError:
-                    raise RuntimeError("anthropic package not installed. Run: uv pip install anthropic")
+                    raise RuntimeError(
+                        "anthropic package not installed. Run: uv pip install anthropic"
+                    )
 
             # Check for API key in either case
             key = settings.openai_api_key or settings.anthropic_api_key
             if not key:
-                raise RuntimeError(f"API key for {settings.advisor_provider} not configured")
+                raise RuntimeError(
+                    f"API key for {settings.advisor_provider} not configured"
+                )
         return self._client
 
     async def _create_message_in_process(
@@ -95,11 +105,10 @@ class AgentRuntime:
             # (OpenRouter also supports Anthropic format, but OpenAI is the standard)
             response = await client.chat.completions.create(
                 model=model or settings.advisor_model,
-                messages=[
-                    {"role": "system", "content": system},
-                    *messages
-                ],
-                tools=[{"type": "function", "function": t} for t in tools] if tools else None,
+                messages=[{"role": "system", "content": system}, *messages],
+                tools=[{"type": "function", "function": t} for t in tools]
+                if tools
+                else None,
                 max_tokens=max_tokens,
             )
             return self._normalize_openai_response(response)
@@ -122,16 +131,20 @@ class AgentRuntime:
 
         if choice.message.tool_calls:
             for tc in choice.message.tool_calls:
-                content.append({
-                    "type": "tool_use",
-                    "id": tc.id,
-                    "name": tc.function.name,
-                    "input": json.loads(tc.function.arguments),
-                })
+                content.append(
+                    {
+                        "type": "tool_use",
+                        "id": tc.id,
+                        "name": tc.function.name,
+                        "input": json.loads(tc.function.arguments),
+                    }
+                )
 
         return {
             "content": content,
-            "stop_reason": "end_turn" if choice.finish_reason == "stop" else choice.finish_reason,
+            "stop_reason": "end_turn"
+            if choice.finish_reason == "stop"
+            else choice.finish_reason,
         }
 
     async def _create_message_sandbox(
@@ -242,12 +255,14 @@ class AgentRuntime:
             if block.type == "text":
                 content.append({"type": "text", "text": block.text})
             elif block.type == "tool_use":
-                content.append({
-                    "type": "tool_use",
-                    "id": block.id,
-                    "name": block.name,
-                    "input": block.input,
-                })
+                content.append(
+                    {
+                        "type": "tool_use",
+                        "id": block.id,
+                        "name": block.name,
+                        "input": block.input,
+                    }
+                )
         return {
             "content": content,
             "stop_reason": response.stop_reason,

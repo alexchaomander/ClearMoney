@@ -22,7 +22,9 @@ from app.services.providers.base import (
 class MockProvider:
     provider_name = "snaptrade"
 
-    async def create_link_session(self, user_id: str, redirect_uri: str | None = None) -> LinkSession:
+    async def create_link_session(
+        self, user_id: str, redirect_uri: str | None = None
+    ) -> LinkSession:
         return LinkSession(
             redirect_url="https://snaptrade.test/connect",
             user_secret="secret_123",
@@ -52,7 +54,9 @@ class MockProvider:
             )
         ]
 
-    async def get_holdings(self, connection: Connection, provider_account_id: str) -> list[NormalizedHolding]:
+    async def get_holdings(
+        self, connection: Connection, provider_account_id: str
+    ) -> list[NormalizedHolding]:
         return [
             NormalizedHolding(
                 security=NormalizedSecurity(
@@ -140,10 +144,13 @@ async def test_connection_callback_success(
 ) -> None:
     session_token = "session_token_123"
     store = _get_session_store()
-    await store.set(session_token, {
-        "user_id": str(connection_user.id),
-        "user_secret": "secret_123",
-    })
+    await store.set(
+        session_token,
+        {
+            "user_id": str(connection_user.id),
+            "user_secret": "secret_123",
+        },
+    )
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
@@ -189,10 +196,13 @@ async def test_connection_callback_session_user_mismatch(
 
     session_token = "session_token_mismatch"
     store = _get_session_store()
-    await store.set(session_token, {
-        "user_id": str(other_user.id),
-        "user_secret": "secret_123",
-    })
+    await store.set(
+        session_token,
+        {
+            "user_id": str(other_user.id),
+            "user_secret": "secret_123",
+        },
+    )
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"

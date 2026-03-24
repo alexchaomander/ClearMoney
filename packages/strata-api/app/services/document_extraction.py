@@ -45,33 +45,36 @@ class DocumentExtractionService:
             from app.services.providers.claude_extraction import (
                 ClaudeExtractionProvider,
             )
+
             return ClaudeExtractionProvider()
         elif provider_name == "gemini":
             from app.services.providers.gemini_extraction import (
                 GeminiExtractionProvider,
             )
+
             return GeminiExtractionProvider()
         elif provider_name == "openai":
             from app.services.providers.openai_extraction import (
                 OpenAIExtractionProvider,
             )
+
             return OpenAIExtractionProvider()
         elif provider_name == "deepseek":
             from app.services.providers.deepseek_extraction import (
                 DeepSeekExtractionProvider,
             )
+
             return DeepSeekExtractionProvider()
         elif provider_name == "tesseract":
             from app.services.providers.tesseract_extraction import (
                 TesseractExtractionProvider,
             )
+
             return TesseractExtractionProvider()
         else:
             raise ValueError(f"Unknown extraction provider: {provider_name}")
 
-    def validate_extraction(
-        self, result: ExtractionResult
-    ) -> list[ValidationIssue]:
+    def validate_extraction(self, result: ExtractionResult) -> list[ValidationIssue]:
         """Validate extracted fields against per-document-type schemas."""
         issues: list[ValidationIssue] = []
 
@@ -129,7 +132,9 @@ class DocumentExtractionService:
         """Process a document upload: validate, extract, store."""
         # Validate file
         if len(file_bytes) > MAX_FILE_SIZE:
-            raise ValueError(f"File too large: {len(file_bytes)} bytes (max {MAX_FILE_SIZE})")
+            raise ValueError(
+                f"File too large: {len(file_bytes)} bytes (max {MAX_FILE_SIZE})"
+            )
         if mime_type not in ALLOWED_MIME_TYPES:
             raise ValueError(f"Unsupported file type: {mime_type}")
 
@@ -155,7 +160,9 @@ class DocumentExtractionService:
         try:
             # Extract
             result = await provider.extract(
-                file_bytes, mime_type, filename,
+                file_bytes,
+                mime_type,
+                filename,
                 document_type_hint=document_type_hint,
             )
 
@@ -224,35 +231,51 @@ class DocumentExtractionService:
 
             if doc_type == "w2":
                 if "wages_tips_compensation" in data:
-                    inputs["wagesIncome"] = inputs.get("wagesIncome", 0) + (data["wages_tips_compensation"] or 0)
+                    inputs["wagesIncome"] = inputs.get("wagesIncome", 0) + (
+                        data["wages_tips_compensation"] or 0
+                    )
                     fields_populated.append("wagesIncome")
                 if "federal_income_tax_withheld" in data:
-                    inputs["currentWithholding"] = inputs.get("currentWithholding", 0) + (data["federal_income_tax_withheld"] or 0)
+                    inputs["currentWithholding"] = inputs.get(
+                        "currentWithholding", 0
+                    ) + (data["federal_income_tax_withheld"] or 0)
                     fields_populated.append("currentWithholding")
 
             elif doc_type == "1099-b":
                 if "short_term_gain_loss" in data:
-                    inputs["shortTermGains"] = inputs.get("shortTermGains", 0) + (data["short_term_gain_loss"] or 0)
+                    inputs["shortTermGains"] = inputs.get("shortTermGains", 0) + (
+                        data["short_term_gain_loss"] or 0
+                    )
                     fields_populated.append("shortTermGains")
                 if "long_term_gain_loss" in data:
-                    inputs["longTermGains"] = inputs.get("longTermGains", 0) + (data["long_term_gain_loss"] or 0)
+                    inputs["longTermGains"] = inputs.get("longTermGains", 0) + (
+                        data["long_term_gain_loss"] or 0
+                    )
                     fields_populated.append("longTermGains")
 
             elif doc_type == "1099-int":
                 if "interest_income" in data:
-                    inputs["otherOrdinaryIncome"] = inputs.get("otherOrdinaryIncome", 0) + (data["interest_income"] or 0)
+                    inputs["otherOrdinaryIncome"] = inputs.get(
+                        "otherOrdinaryIncome", 0
+                    ) + (data["interest_income"] or 0)
                     fields_populated.append("otherOrdinaryIncome")
 
             elif doc_type == "1099-div":
                 if "total_ordinary_dividends" in data:
-                    inputs["otherOrdinaryIncome"] = inputs.get("otherOrdinaryIncome", 0) + (data["total_ordinary_dividends"] or 0)
+                    inputs["otherOrdinaryIncome"] = inputs.get(
+                        "otherOrdinaryIncome", 0
+                    ) + (data["total_ordinary_dividends"] or 0)
                     fields_populated.append("otherOrdinaryIncome")
                 if "total_capital_gain" in data:
-                    inputs["longTermGains"] = inputs.get("longTermGains", 0) + (data["total_capital_gain"] or 0)
+                    inputs["longTermGains"] = inputs.get("longTermGains", 0) + (
+                        data["total_capital_gain"] or 0
+                    )
                     fields_populated.append("longTermGains")
 
             if doc.confidence_score and doc.confidence_score < 0.7:
-                warnings.append(f"{doc.original_filename}: low confidence ({doc.confidence_score:.0%})")
+                warnings.append(
+                    f"{doc.original_filename}: low confidence ({doc.confidence_score:.0%})"
+                )
 
         # Create version
         version = TaxPlanVersion(

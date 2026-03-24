@@ -10,11 +10,6 @@ from app.schemas.agent import (
     FreshnessStatus,
     MetricTraceResponse,
 )
-from app.schemas.correction import (
-    FinancialCorrectionCreate,
-    FinancialCorrectionResponse,
-    FinancialCorrectionUpdate,
-)
 from app.schemas.cash_account import (
     CashAccountCreate,
     CashAccountResponse,
@@ -29,6 +24,11 @@ from app.schemas.connection import (
     LinkSessionResponse,
 )
 from app.schemas.consent import ConsentCreateRequest, ConsentResponse
+from app.schemas.correction import (
+    FinancialCorrectionCreate,
+    FinancialCorrectionResponse,
+    FinancialCorrectionUpdate,
+)
 from app.schemas.data import (
     DataHealthResponse,
     TransparencyCorrectionRow,

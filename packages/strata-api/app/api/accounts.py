@@ -83,7 +83,9 @@ async def list_investment_accounts(
     return [InvestmentAccountResponse.model_validate(a) for a in accounts]
 
 
-@router.get("/investment/{account_id}", response_model=InvestmentAccountWithHoldingsResponse)
+@router.get(
+    "/investment/{account_id}", response_model=InvestmentAccountWithHoldingsResponse
+)
 async def get_investment_account(
     account_id: uuid.UUID,
     user: User = Depends(require_scopes(["accounts:read"])),
@@ -156,9 +158,7 @@ async def create_investment_account(
     return InvestmentAccountResponse.model_validate(account)
 
 
-@router.put(
-    "/investment/{account_id}", response_model=InvestmentAccountResponse
-)
+@router.put("/investment/{account_id}", response_model=InvestmentAccountResponse)
 async def update_investment_account(
     account_id: uuid.UUID,
     data: InvestmentAccountUpdate,

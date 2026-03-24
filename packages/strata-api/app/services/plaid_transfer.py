@@ -30,6 +30,4 @@ class PlaidTransferService:
 
     async def get_transfer_status(self, transfer_id: str) -> str:
         """Fetch the latest status of a Plaid transfer."""
-        raise NotImplementedError(
-            "Transfer status checks are not yet available."
-        )
+        raise NotImplementedError("Transfer status checks are not yet available.")

@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 class SVPCredential(BaseModel):
     """The specific financial claim being verified."""
+
     claim_type: str
     statement: str
     verification_status: str = "VERIFIED"

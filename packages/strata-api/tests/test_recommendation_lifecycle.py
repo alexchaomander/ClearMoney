@@ -1,4 +1,5 @@
 import uuid
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
@@ -8,7 +9,6 @@ from app.main import app
 from app.models import AgentSession, DecisionTrace, Recommendation, User
 from app.models.agent_session import RecommendationStatus, SessionStatus
 from app.models.decision_trace import DecisionTraceType
-from app.models.recommendation_review import RecommendationReview, RecommendationReviewStatus
 from app.services.financial_advisor import FinancialAdvisor
 
 
@@ -27,7 +27,9 @@ def lifecycle_headers(lifecycle_user: User) -> dict[str, str]:
 
 
 @pytest.fixture
-async def lifecycle_trace(session: AsyncSession, lifecycle_user: User) -> dict[str, str]:
+async def lifecycle_trace(
+    session: AsyncSession, lifecycle_user: User
+) -> dict[str, str]:
     agent_session = AgentSession(
         user_id=lifecycle_user.id,
         skill_name="general",
@@ -99,7 +101,9 @@ async def test_resolve_review_as_superseded(
     lifecycle_headers: dict[str, str],
     lifecycle_trace: dict[str, str],
 ) -> None:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         # Create review
         review_resp = await client.post(
             "/api/v1/recommendation-reviews",
@@ -126,10 +130,12 @@ async def test_resolve_review_as_superseded(
         )
 
     assert resolve_resp.status_code == 200
-    
+
     # Check recommendation status
     rec_result = await session.execute(
-        select(Recommendation).where(Recommendation.id == uuid.UUID(lifecycle_trace["recommendation_id"]))
+        select(Recommendation).where(
+            Recommendation.id == uuid.UUID(lifecycle_trace["recommendation_id"])
+        )
     )
     recommendation = rec_result.scalar_one()
     assert recommendation.status == RecommendationStatus.superseded
@@ -142,7 +148,9 @@ async def test_reopen_review(
     lifecycle_headers: dict[str, str],
     lifecycle_trace: dict[str, str],
 ) -> None:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         # Create and resolve review
         review_resp = await client.post(
             "/api/v1/recommendation-reviews",
@@ -176,7 +184,9 @@ async def test_reopen_review(
 
     # Check recommendation status
     rec_result = await session.execute(
-        select(Recommendation).where(Recommendation.id == uuid.UUID(lifecycle_trace["recommendation_id"]))
+        select(Recommendation).where(
+            Recommendation.id == uuid.UUID(lifecycle_trace["recommendation_id"])
+        )
     )
     recommendation = rec_result.scalar_one()
     assert recommendation.status == RecommendationStatus.needs_review
@@ -189,7 +199,7 @@ async def test_create_recommendation_with_supersession(
     lifecycle_trace: dict[str, str],
 ) -> None:
     advisor = FinancialAdvisor(session)
-    
+
     # Create new recommendation that supersedes the original
     result = await advisor._handle_create_recommendation(
         user_id=lifecycle_user.id,
@@ -206,7 +216,9 @@ async def test_create_recommendation_with_supersession(
 
     # Check original recommendation
     old_rec_result = await session.execute(
-        select(Recommendation).where(Recommendation.id == uuid.UUID(lifecycle_trace["recommendation_id"]))
+        select(Recommendation).where(
+            Recommendation.id == uuid.UUID(lifecycle_trace["recommendation_id"])
+        )
     )
     old_rec = old_rec_result.scalar_one()
     assert old_rec.status == RecommendationStatus.superseded
@@ -226,17 +238,23 @@ async def test_decision_trace_serialization_updates_status(
     lifecycle_headers: dict[str, str],
     lifecycle_trace: dict[str, str],
 ) -> None:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         # Update recommendation status manually to simulated resolution
         rec_result = await session.execute(
-            select(Recommendation).where(Recommendation.id == uuid.UUID(lifecycle_trace["recommendation_id"]))
+            select(Recommendation).where(
+                Recommendation.id == uuid.UUID(lifecycle_trace["recommendation_id"])
+            )
         )
         recommendation = rec_result.scalar_one()
         recommendation.status = RecommendationStatus.resolved
         await session.commit()
 
         # Get traces
-        response = await client.get("/api/v1/agent/decision-traces", headers=lifecycle_headers)
+        response = await client.get(
+            "/api/v1/agent/decision-traces", headers=lifecycle_headers
+        )
 
     assert response.status_code == 200
     traces = response.json()

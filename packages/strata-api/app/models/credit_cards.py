@@ -23,22 +23,28 @@ class CreditCard(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="card", cascade="all, delete-orphan", lazy="selectin"
     )
 
+
 class CardCredit(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "card_credits"
 
-    card_id: Mapped[UUID] = mapped_column(ForeignKey("credit_cards.id", ondelete="CASCADE"), index=True)
+    card_id: Mapped[UUID] = mapped_column(
+        ForeignKey("credit_cards.id", ondelete="CASCADE"), index=True
+    )
     name: Mapped[str] = mapped_column(String(255))
     value: Mapped[Decimal] = mapped_column(Numeric(10, 2))
-    period: Mapped[str] = mapped_column(String(50)) # annual, monthly
+    period: Mapped[str] = mapped_column(String(50))  # annual, monthly
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     category: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     card: Mapped["CreditCard"] = relationship(back_populates="credits")
 
+
 class CardBenefit(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "card_benefits"
 
-    card_id: Mapped[UUID] = mapped_column(ForeignKey("credit_cards.id", ondelete="CASCADE"), index=True)
+    card_id: Mapped[UUID] = mapped_column(
+        ForeignKey("credit_cards.id", ondelete="CASCADE"), index=True
+    )
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     valuation_method: Mapped[str | None] = mapped_column(String(50), nullable=True)

@@ -31,7 +31,11 @@ class RecommendationReviewService:
         payload: RecommendationReviewCreate,
     ) -> RecommendationReview:
         trace = await self._get_trace(user_id, payload.decision_trace_id)
-        trace_type = trace.trace_type.value if hasattr(trace.trace_type, "value") else str(trace.trace_type)
+        trace_type = (
+            trace.trace_type.value
+            if hasattr(trace.trace_type, "value")
+            else str(trace.trace_type)
+        )
         if trace_type == "action":
             raise HTTPException(
                 status_code=400,
@@ -62,19 +66,29 @@ class RecommendationReviewService:
         recommendation_id: uuid.UUID | None = None,
         decision_trace_id: uuid.UUID | None = None,
     ) -> list[RecommendationReview]:
-        query = select(RecommendationReview).where(RecommendationReview.user_id == user_id)
+        query = select(RecommendationReview).where(
+            RecommendationReview.user_id == user_id
+        )
         if status is not None:
             query = query.where(RecommendationReview.status == status)
         if recommendation_id is not None:
-            query = query.where(RecommendationReview.recommendation_id == recommendation_id)
+            query = query.where(
+                RecommendationReview.recommendation_id == recommendation_id
+            )
         if decision_trace_id is not None:
-            query = query.where(RecommendationReview.decision_trace_id == decision_trace_id)
-        result = await self._session.execute(query.order_by(RecommendationReview.created_at.desc()))
+            query = query.where(
+                RecommendationReview.decision_trace_id == decision_trace_id
+            )
+        result = await self._session.execute(
+            query.order_by(RecommendationReview.created_at.desc())
+        )
         return list(result.scalars().all())
 
     async def open_review_count(self, user_id: uuid.UUID) -> int:
         result = await self._session.execute(
-            select(func.count()).select_from(RecommendationReview).where(
+            select(func.count())
+            .select_from(RecommendationReview)
+            .where(
                 RecommendationReview.user_id == user_id,
                 RecommendationReview.status == RecommendationReviewStatus.open,
             )
@@ -134,12 +148,16 @@ class RecommendationReviewService:
 
         # If details are provided, check for intent/metric overlap
         if details:
-            proposed_intent = details.get("intent_type") or details.get("action", {}).get("type")
+            proposed_intent = details.get("intent_type") or details.get(
+                "action", {}
+            ).get("type")
             proposed_metric = details.get("affected_metric")
 
             for rec in open_recommendations:
                 rec_details = rec.details or {}
-                rec_intent = rec_details.get("intent_type") or rec_details.get("action", {}).get("type")
+                rec_intent = rec_details.get("intent_type") or rec_details.get(
+                    "action", {}
+                ).get("type")
                 rec_metric = rec_details.get("affected_metric")
 
                 if proposed_intent and rec_intent == proposed_intent:
@@ -148,7 +166,9 @@ class RecommendationReviewService:
                     return True
 
         # Fallback to skill match if no specific overlap found but many open reviews for same skill
-        return len(open_recommendations) >= 3 # Arbitrary threshold for "high overlap" if no specific intent match
+        return (
+            len(open_recommendations) >= 3
+        )  # Arbitrary threshold for "high overlap" if no specific intent match
 
     async def resolve_review(
         self,
@@ -158,7 +178,10 @@ class RecommendationReviewService:
     ) -> RecommendationReview:
         review = await self._get_review(user_id, review_id)
         if review.status != RecommendationReviewStatus.open:
-            raise HTTPException(status_code=409, detail="Only open recommendation reviews can be resolved")
+            raise HTTPException(
+                status_code=409,
+                detail="Only open recommendation reviews can be resolved",
+            )
         review.status = payload.status
         review.resolution = payload.resolution
         review.resolution_notes = payload.resolution_notes
@@ -169,18 +192,25 @@ class RecommendationReviewService:
         # Update underlying recommendation status if present
         if review.recommendation_id:
             from app.models.agent_session import RecommendationStatus
-            recommendation = await self._get_recommendation(user_id, review.recommendation_id)
+
+            recommendation = await self._get_recommendation(
+                user_id, review.recommendation_id
+            )
 
             if payload.status == RecommendationReviewStatus.resolved:
                 recommendation.status = RecommendationStatus.resolved
             elif payload.status == RecommendationReviewStatus.dismissed:
-                recommendation.status = RecommendationStatus.accepted # Back to accepted if dismissal means the recommendation was actually fine
+                recommendation.status = RecommendationStatus.accepted  # Back to accepted if dismissal means the recommendation was actually fine
             elif payload.status == RecommendationReviewStatus.superseded:
                 recommendation.status = RecommendationStatus.superseded
                 # If a superseding recommendation ID is provided in applied_changes, link it
-                superseded_by = payload.applied_changes.get("superseded_by_recommendation_id")
+                superseded_by = payload.applied_changes.get(
+                    "superseded_by_recommendation_id"
+                )
                 if superseded_by:
-                    recommendation.superseded_by_recommendation_id = uuid.UUID(superseded_by)
+                    recommendation.superseded_by_recommendation_id = uuid.UUID(
+                        superseded_by
+                    )
             elif payload.status == RecommendationReviewStatus.blocked:
                 recommendation.status = RecommendationStatus.blocked
 
@@ -198,13 +228,20 @@ class RecommendationReviewService:
         review.status = RecommendationReviewStatus.open
         review.resolution = None
         if notes:
-            review.resolution_notes = (review.resolution_notes + "\n\n" + notes) if review.resolution_notes else notes
+            review.resolution_notes = (
+                (review.resolution_notes + "\n\n" + notes)
+                if review.resolution_notes
+                else notes
+            )
         review.resolved_at = None
 
         # If there's a recommendation, we might want to move it back to pending or needs_review
         if review.recommendation_id:
             from app.models.agent_session import RecommendationStatus
-            recommendation = await self._get_recommendation(user_id, review.recommendation_id)
+
+            recommendation = await self._get_recommendation(
+                user_id, review.recommendation_id
+            )
             recommendation.status = RecommendationStatus.needs_review
 
         await self._session.commit()
@@ -219,21 +256,31 @@ class RecommendationReviewService:
     ) -> RecommendationReview:
         review = await self._get_review(user_id, review_id)
         if review.status != RecommendationReviewStatus.open:
-            raise HTTPException(status_code=409, detail="Only open recommendation reviews can be converted")
+            raise HTTPException(
+                status_code=409,
+                detail="Only open recommendation reviews can be converted",
+            )
         correction_payload = payload.correction.model_copy(deep=True)
         if correction_payload.trace_id is None:
             correction_payload.trace_id = review.decision_trace_id
-        if correction_payload.metric_id is None and review.recommendation_id is not None:
+        if (
+            correction_payload.metric_id is None
+            and review.recommendation_id is not None
+        ):
             correction_payload.metric_id = "recommendationReview"
 
-        correction = await CorrectionService(self._session).create_correction(user_id, correction_payload)
+        correction = await CorrectionService(self._session).create_correction(
+            user_id, correction_payload
+        )
         review.status = RecommendationReviewStatus.converted_to_correction
         review.resolution = "converted_to_correction"
         review.resolution_notes = payload.resolution_notes
         review.reviewer_label = payload.reviewer_label
         review.applied_changes = {
             "correction_id": str(correction.id),
-            "correction_status": correction.status.value if hasattr(correction.status, "value") else str(correction.status),
+            "correction_status": correction.status.value
+            if hasattr(correction.status, "value")
+            else str(correction.status),
         }
         review.resolved_at = datetime.now(timezone.utc)
         await self._session.commit()
@@ -263,18 +310,37 @@ class RecommendationReviewService:
         summaries: dict[uuid.UUID, dict] = {}
         for trace_id, items in grouped.items():
             latest = items[0]
-            open_count = sum(1 for item in items if item.status == RecommendationReviewStatus.open)
-            latest_resolution_item = next((item for item in items if item.status != RecommendationReviewStatus.open), None)
+            open_count = sum(
+                1 for item in items if item.status == RecommendationReviewStatus.open
+            )
+            latest_resolution_item = next(
+                (
+                    item
+                    for item in items
+                    if item.status != RecommendationReviewStatus.open
+                ),
+                None,
+            )
             summaries[trace_id] = {
-                "review_status": RecommendationReviewStatus.open.value if open_count > 0 else latest.status.value,
+                "review_status": RecommendationReviewStatus.open.value
+                if open_count > 0
+                else latest.status.value,
                 "open_review_count": open_count,
-                "latest_resolution": latest_resolution_item.resolution if latest_resolution_item else None,
-                "latest_resolution_notes": latest_resolution_item.resolution_notes if latest_resolution_item else None,
-                "reviewer_label": latest_resolution_item.reviewer_label if latest_resolution_item else None,
+                "latest_resolution": latest_resolution_item.resolution
+                if latest_resolution_item
+                else None,
+                "latest_resolution_notes": latest_resolution_item.resolution_notes
+                if latest_resolution_item
+                else None,
+                "reviewer_label": latest_resolution_item.reviewer_label
+                if latest_resolution_item
+                else None,
             }
         return summaries
 
-    async def _get_trace(self, user_id: uuid.UUID, trace_id: uuid.UUID) -> DecisionTrace:
+    async def _get_trace(
+        self, user_id: uuid.UUID, trace_id: uuid.UUID
+    ) -> DecisionTrace:
         result = await self._session.execute(
             select(DecisionTrace).where(
                 DecisionTrace.id == trace_id,
@@ -286,7 +352,9 @@ class RecommendationReviewService:
             raise HTTPException(status_code=404, detail="Decision trace not found")
         return trace
 
-    async def _get_recommendation(self, user_id: uuid.UUID, recommendation_id: uuid.UUID) -> Recommendation:
+    async def _get_recommendation(
+        self, user_id: uuid.UUID, recommendation_id: uuid.UUID
+    ) -> Recommendation:
         result = await self._session.execute(
             select(Recommendation).where(
                 Recommendation.id == recommendation_id,
@@ -298,7 +366,9 @@ class RecommendationReviewService:
             raise HTTPException(status_code=404, detail="Recommendation not found")
         return recommendation
 
-    async def _get_review(self, user_id: uuid.UUID, review_id: uuid.UUID) -> RecommendationReview:
+    async def _get_review(
+        self, user_id: uuid.UUID, review_id: uuid.UUID
+    ) -> RecommendationReview:
         result = await self._session.execute(
             select(RecommendationReview).where(
                 RecommendationReview.id == review_id,
@@ -307,5 +377,7 @@ class RecommendationReviewService:
         )
         review = result.scalar_one_or_none()
         if review is None:
-            raise HTTPException(status_code=404, detail="Recommendation review not found")
+            raise HTTPException(
+                status_code=404, detail="Recommendation review not found"
+            )
         return review

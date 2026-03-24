@@ -29,8 +29,8 @@ class PortabilityService:
         claims = {
             "financial_summary": {
                 "net_worth": metrics.get("net_worth"),
-                "total_assets": (metrics.get("total_investment_value") or 0) +
-                               (metrics.get("total_cash_value") or 0),
+                "total_assets": (metrics.get("total_investment_value") or 0)
+                + (metrics.get("total_cash_value") or 0),
                 "total_debt": metrics.get("total_debt_value"),
             },
             "asset_allocation": metrics.get("allocation_by_asset_type", {}),
@@ -40,7 +40,7 @@ class PortabilityService:
             "metadata": {
                 "data_freshness": context.get("data_freshness", {}),
                 "export_engine": "strata_sal_v1",
-            }
+            },
         }
 
         passport = FinancialPassport(claims=claims)
@@ -55,12 +55,12 @@ class PortabilityService:
         """Generate a cryptographic signature for the claims payload."""
         # Standardize the JSON representation for consistent hashing
         # Use separators and exclude_none for stability
-        serialized = json.dumps(claims, sort_keys=True, default=str, separators=(',', ':'))
+        serialized = json.dumps(
+            claims, sort_keys=True, default=str, separators=(",", ":")
+        )
 
         return hmac.new(
-            settings.secret_key.encode(),
-            serialized.encode(),
-            hashlib.sha256
+            settings.secret_key.encode(), serialized.encode(), hashlib.sha256
         ).hexdigest()
 
     def verify_passport(self, passport: FinancialPassport) -> bool:
