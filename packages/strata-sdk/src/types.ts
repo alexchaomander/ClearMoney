@@ -1988,6 +1988,7 @@ export interface EquityGrantUpdate {
 }
 
 export interface EquityValuation {
+  id: string;
   symbol: string;
   current_price: number;
   vested_quantity: number;

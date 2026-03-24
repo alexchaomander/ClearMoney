@@ -95,6 +95,7 @@ class EquityValuationService:
             qsbs_progress = min(100.0, max(0.0, (elapsed_days / total_days) * 100))
 
         return EquityValuation(
+            id=grant.id,
             symbol=grant.symbol or grant.company_name or "Private",
             current_price=current_price,
             vested_quantity=vested_quantity,
