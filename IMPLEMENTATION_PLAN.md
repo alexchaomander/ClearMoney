@@ -1,6 +1,6 @@
 # Implementation Plan: Strata Platform + ClearMoney (AI-Native Mint)
 
-*Last updated: March 12, 2026*
+*Last updated: March 25, 2026*
 
 This document outlines the strategic engineering execution plan to build **Strata** (the multi-tenant Action-Layer platform) and **ClearMoney** (the flagship AI-native successor to Mint).
 
@@ -52,6 +52,13 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
     - Added context-quality evaluation and API surface with continuity states and recommendation readiness.
 - [x] **Advisor Trace Upgrade v1**:
     - Added context-quality metadata and readiness gating to advisor-created traces and recommendation generation.
+- [x] **Real-World Billing Integration**:
+    - Connected Stripe Checkout and Invoice data to Settings.
+    - Implemented tiered plan enforcement (3-account limit for Free tier).
+- [x] **Canonical Context Graph Expansion (Profile)**:
+    - Expanded `FinancialMemory` with Employer, Insurance, and Estate planning nodes.
+    - Implemented automated derivation of profile fields from transaction history.
+    - Added Deep-Linking and Context Quality UX to the Dashboard.
 
 ### Next Build Slice: Recommendation-Trace Convergence (Completed)
 

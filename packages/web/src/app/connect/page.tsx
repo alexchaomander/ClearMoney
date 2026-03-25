@@ -21,6 +21,7 @@ import {
   useAccounts,
   useConsentStatus,
 } from "@/lib/strata/hooks";
+import { useToast } from "@/components/shared/toast";
 import { ConsentGate } from "@/components/shared/ConsentGate";
 
 export default function ConnectPage() {
@@ -30,6 +31,7 @@ export default function ConnectPage() {
   const router = useRouter();
 
   const client = useStrataClient();
+  const { pushToast } = useToast();
   const { hasConsent: hasConnectionConsent } = useConsentStatus([
     "connections:read",
     "connections:write",
@@ -88,7 +90,9 @@ export default function ConnectPage() {
         institution_id: institutionId,
       });
       window.location.assign(redirect_url);
-    } catch {
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || "Failed to start connection session";
+      pushToast({ title: "Connection Error", message, variant: "error" });
       setConnectingId(null);
     }
   };
@@ -149,7 +153,9 @@ export default function ConnectPage() {
               <h2 className="font-serif text-xl text-emerald-100 mb-3">
                 Bank Accounts
               </h2>
-              <PlaidLinkButton />
+              <PlaidLinkButton 
+                onError={(err) => pushToast({ title: "Connection Error", message: err, variant: "error" })} 
+              />
             </motion.div>
 
             {/* Divider */}

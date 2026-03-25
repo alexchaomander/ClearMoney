@@ -375,7 +375,9 @@ async def _derive_income_metrics(
         .join(CashAccount)
         .where(
             CashAccount.user_id == user_id,
-            BankTransaction.transaction_date >= three_months_ago
+            BankTransaction.transaction_date >= three_months_ago,
+            BankTransaction.primary_category.not_in(["Transfer", "Payment"]),
+            BankTransaction.detailed_category.not_in(["TRANSFER_IN", "TRANSFER_OUT", "LOAN_PAYMENT", "CREDIT_CARD_PAYMENT"])
         )
     )
     transactions = tx_result.scalars().all()

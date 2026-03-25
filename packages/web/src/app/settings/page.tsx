@@ -265,7 +265,7 @@ function BillingSettings() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-slate-900 dark:text-white">
-                    ${(inv.amount / 100).toFixed(2)}
+                    ${inv.amount.toFixed(2)}
                   </p>
                   {inv.pdf_url && (
                     <a 
