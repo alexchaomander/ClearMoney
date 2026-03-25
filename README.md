@@ -39,11 +39,12 @@ The foundation for autonomous personal finance:
 *   **Switch Kit Generation**: Auto-generated ACATS/ACH transfer documents as PDFs.
 *   **Action Lab**: An interactive preview of the autonomous agentic economy.
 
-### 7. Privacy-Preserving Proofs (SVP)
-Securely prove your financial standing without revealing sensitive data:
-*   **Proof of Funds**: Generate a cryptographically signed attestation that your liquid assets exceed a specific threshold.
-*   **Verification Portal**: A public gateway for landlords and lenders to verify Strata-signed claims instantly.
-*   **Data Minimization**: Share only the "Green Checkmark," never your account numbers or history.
+### 8. Recommendation Governance & Lineage
+Continuity-aware advisory system that prevents duplicate or conflicting advice:
+*   **Recommendation Lifecycle**: Track advice from `pending` through `superseded` or `blocked`.
+*   **Lineage Links**: Bidirectional links between old guidance and its modern replacement.
+*   **Semantic Overlap Protection**: Advisor automatically detects and blocks redundant guidance within specific skill domains or metric targets.
+*   **Audit-Ready Traces**: Decision traces dynamically reflect the current adjudication status of any given recommendation.
 
 ---
 

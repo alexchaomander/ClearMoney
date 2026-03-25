@@ -711,13 +711,23 @@ class FinancialAdvisor:
 
         # Check for semantic overlap
         skill_name = agent_session.skill_name or "general"
-        if not supersedes_id and await review_service.has_overlapping_open_review(
-            user_id, skill_name, details
-        ):
-            return {
-                "error": f"Guidance in the '{skill_name}' domain already has active reviews. Resolve the existing reviews or explicitly supersede the related guidance to proceed.",
-                "open_review_count": open_review_count,
-            }
+        if not supersedes_id:
+            if await review_service.has_overlapping_open_review(
+                user_id, skill_name, details
+            ):
+                return {
+                    "error": f"Guidance in the '{skill_name}' domain already has active reviews. Resolve the existing reviews or explicitly supersede the related guidance to proceed.",
+                    "open_review_count": open_review_count,
+                }
+            
+            # Also check for non-review pending guidance to avoid spam
+            if await review_service.has_overlapping_pending_guidance(
+                user_id, skill_name, details
+            ):
+                return {
+                    "error": f"Pending guidance in the '{skill_name}' domain already exists. Execute or dismiss existing recommendations before creating new ones for this domain.",
+                    "open_review_count": open_review_count,
+                }
 
         action = details.get("action") if isinstance(details, dict) else None
         if action and isinstance(action, dict):
