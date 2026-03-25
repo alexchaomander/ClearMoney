@@ -59,6 +59,10 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
     - Expanded `FinancialMemory` with Employer, Insurance, and Estate planning nodes.
     - Implemented automated derivation of profile fields from transaction history.
     - Added Deep-Linking and Context Quality UX to the Dashboard.
+- [x] **Quarterly Tax Estimator (Deterministic Core)**:
+    - Split transaction ingestion to intelligently categorize income into W2 vs 1099 streams based on entity logic.
+    - Transitioned to progressive 2026 tax brackets and standard deductions instead of flat-rate estimates, including 15.3% Self-Employment (FICA) logic.
+    - Added `TaxShieldMetrics` to the strata-sdk and built `TaxShieldCard` with beautiful visualizations on the main Dashboard.
 
 ### Next Build Slice: Recommendation-Trace Convergence (Completed)
 
@@ -112,12 +116,12 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 - [ ] **Computation Boundary Spec**:
     - Define which outputs are deterministic, inferred, speculative, or explanatory.
     - Require every metric and recommendation payload to declare that boundary.
-- [ ] **Deterministic Services v1**:
-    - Taxes and estimated payments
-    - Runway and burn
-    - Debt prioritization
-    - Portfolio concentration and drift
-    - Savings-rate and liquidity calculations
+- [x] **Deterministic Services v1**:
+    - [x] Taxes and estimated payments
+    - [ ] Runway and burn
+    - [ ] Debt prioritization
+    - [ ] Portfolio concentration and drift
+    - [ ] Savings-rate and liquidity calculations
 - [ ] **Trace Labeling**:
     - Extend traces to show deterministic vs inferred components in API and UI.
 
