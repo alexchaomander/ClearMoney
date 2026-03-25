@@ -1,7 +1,7 @@
 """Add investment models
 
 Revision ID: 4f0a49fb54ba
-Revises: 
+Revises:
 Create Date: 2026-01-28 11:45:23.704748
 
 """

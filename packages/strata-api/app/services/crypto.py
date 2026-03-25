@@ -292,3 +292,27 @@ class CryptoService:
 
     def _get_token_logo(self, symbol: str) -> str | None:
         return self._TOKEN_LOGOS.get(symbol)
+
+    async def sync_wallet(self, wallet: CryptoWallet) -> None:
+        """Fetch latest balances for a wallet and update its last_balance_usd."""
+        assets = await self._fetch_wallet_assets(wallet)
+        if not assets:
+            wallet.last_balance_usd = Decimal("0.0")
+            await self.session.commit()
+            return
+
+        asset_map = {}
+        for entry in assets:
+            key = (entry["symbol"], entry["chain"])
+            if key not in asset_map:
+                asset_map[key] = {
+                    "balance": Decimal("0.0"),
+                    "name": entry["name"],
+                    "logo_url": entry.get("logo_url"),
+                    "contract_address": entry.get("contract_address"),
+                }
+            asset_map[key]["balance"] += entry["balance"]
+
+        priced_assets = await self._build_assets(asset_map)
+        wallet.last_balance_usd = sum((a.balance_usd for a in priced_assets), Decimal("0.0"))
+        await self.session.commit()

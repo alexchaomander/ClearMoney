@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     enable_background_jobs: bool = True
     sync_interval_seconds: int = 3600
     sync_stale_minutes: int = 60
+    crypto_sync_interval_seconds: int = 300  # 5 minutes
+    crypto_sync_stale_minutes: int = 5
     snapshot_interval_seconds: int = 86400
 
     # Clerk JWT validation (optional — if set, validates Bearer tokens)
