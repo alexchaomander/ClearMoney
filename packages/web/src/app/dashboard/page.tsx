@@ -70,6 +70,7 @@ import { PhysicalAssetsCard } from "@/components/dashboard/PhysicalAssetsCard";
 import { EquityCard } from "@/components/dashboard/EquityCard";
 import { CashDebtSection } from "@/components/dashboard/CashDebtSection";
 import { TaxDocumentsCard } from "@/components/dashboard/TaxDocumentsCard";
+import { TaxShieldCard } from "@/components/dashboard/TaxShieldCard";
 import { AccountsList } from "@/components/dashboard/AccountsList";
 import { DecisionTracePanel } from "@/components/dashboard/DecisionTracePanel";
 import { ConcentrationAlert } from "@/components/dashboard/ConcentrationAlert";
@@ -713,6 +714,7 @@ export default function DashboardPage() {
               onDeleteDebtAccount={(id) => debtMutations.remove.mutate(id)}
             />
 
+            <TaxShieldCard />
             <TaxDocumentsCard />
 
             <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
