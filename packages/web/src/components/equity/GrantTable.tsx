@@ -45,7 +45,7 @@ export function GrantTable() {
         </thead>
         <tbody className="divide-y divide-neutral-800">
           {grants.map((grant) => {
-            const valuation = summary?.grant_valuations.find(v => v.symbol === (grant.symbol || grant.company_name || "Private"));
+            const valuation = summary?.grant_valuations.find(v => v.id === grant.id);
             
             return (
               <tr key={grant.id} className="hover:bg-neutral-800/30 transition-colors">
@@ -56,9 +56,23 @@ export function GrantTable() {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <Badge variant="outline" className="uppercase text-[10px] bg-neutral-800">
-                    {grant.grant_type}
-                  </Badge>
+                  <div className="flex flex-col gap-1.5">
+                    <Badge variant="outline" className="uppercase text-[10px] bg-neutral-800 w-fit">
+                      {grant.grant_type.replace(/_/g, ' ')}
+                    </Badge>
+                    <div className="flex gap-1">
+                      {grant.is_83b_elected && (
+                        <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-[8px] uppercase px-1 py-0">
+                          83(b)
+                        </Badge>
+                      )}
+                      {grant.is_qsbs_eligible && (
+                        <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[8px] uppercase px-1 py-0">
+                          QSBS
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-neutral-300">
                   {Number(grant.quantity).toLocaleString()}

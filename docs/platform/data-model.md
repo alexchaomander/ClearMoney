@@ -67,6 +67,7 @@ erDiagram
     users ||--o{ vehicle_assets : "owns"
     users ||--o{ collectible_assets : "owns"
     users ||--o{ precious_metal_assets : "owns"
+    users ||--o{ equity_grants : "owns"
     users ||--o{ portfolio_snapshots : "tracked for"
     users ||--o{ decision_traces : "generates"
 
@@ -171,6 +172,29 @@ erDiagram
         valuation_type valuation_type
         numeric market_value
         timestamptz last_valuation_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    equity_grants {
+        uuid id PK
+        uuid user_id FK
+        text grant_name
+        text symbol
+        text company_name
+        equity_grant_type grant_type
+        numeric quantity
+        numeric strike_price
+        date grant_date
+        numeric valuation_cap
+        numeric discount_rate
+        numeric amount_invested
+        boolean is_83b_elected
+        date election_date
+        boolean is_qsbs_eligible
+        date qsbs_holding_start
+        jsonb vesting_schedule
+        text notes
         timestamptz created_at
         timestamptz updated_at
     }
@@ -775,6 +799,28 @@ Precious metal holdings tracked by weight. Auto-valued by default using Alpha Va
 | `market_value` | NUMERIC(14,2) | Current market value (spot price x weight) |
 | `last_valuation_at` | TIMESTAMPTZ | Last successful valuation refresh |
 
+#### `equity_grants`
+Equity compensation grants (RSUs, Options, etc.) and founder stock.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `user_id` | UUID | FK to users (CASCADE on delete) |
+| `grant_name` | TEXT | Friendly name (e.g., "New Hire Grant") |
+| `symbol` | TEXT | Public ticker (NULL for private companies) |
+| `company_name` | TEXT | Private company name |
+| `grant_type` | equity_grant_type | RSU, ISO, NSO, SAFE, etc. |
+| `quantity` | NUMERIC | Total shares granted |
+| `strike_price` | NUMERIC | Exercise price (NULL for RSUs) |
+| `grant_date` | DATE | Date grant was issued |
+| `is_83b_elected` | BOOLEAN | True if 83(b) was filed with IRS |
+| `election_date` | DATE | Date of 83(b) filing |
+| `is_qsbs_eligible` | BOOLEAN | True if eligible for Section 1202 |
+| `qsbs_holding_start` | DATE | Start date for 5-year capital gains clock |
+| `vesting_schedule` | JSONB | Array of {date, quantity} events |
+| `valuation_cap` | NUMERIC | For SAFEs and Convertible Notes |
+| `discount_rate` | NUMERIC | For SAFEs and Convertible Notes |
+
 #### `financial_memories`
 User-specific financial profile and goals, serving as the "long-term memory" for the AI Advisor. Can be updated by the user or derived from connected accounts.
 
@@ -958,6 +1004,11 @@ Encrypted storage for provider OAuth tokens. Access restricted to token service.
 ### `metal_type`
 ```sql
 'gold' | 'silver' | 'platinum' | 'palladium'
+```
+
+### `equity_grant_type`
+```sql
+'rsu' | 'iso' | 'nso' | 'founder_stock' | 'safe' | 'convertible_note'
 ```
 
 ### `sync_status`

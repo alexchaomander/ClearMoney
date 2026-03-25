@@ -24,6 +24,10 @@ async def test_create_equity_grant(test_user: User) -> None:
         "symbol": "NVDA",
         "quantity": "1000.00",
         "grant_date": "2024-01-01",
+        "is_83b_elected": True,
+        "election_date": "2024-01-15",
+        "is_qsbs_eligible": True,
+        "qsbs_holding_start": "2024-01-01",
         "vesting_schedule": [
             {"date": "2024-01-01", "quantity": "250.00"},
             {"date": "2025-01-01", "quantity": "250.00"},
@@ -45,6 +49,8 @@ async def test_create_equity_grant(test_user: User) -> None:
     data = response.json()
     assert data["grant_name"] == "Initial RSU Grant"
     assert data["symbol"] == "NVDA"
+    assert data["is_83b_elected"] is True
+    assert data["is_qsbs_eligible"] is True
     assert len(data["vesting_schedule"]) == 4
 
 @pytest.mark.asyncio
@@ -58,6 +64,10 @@ async def test_get_equity_portfolio(test_user: User, session: AsyncSession) -> N
         quantity=Decimal("500.00"),
         strike_price=Decimal("150.00"),
         grant_date=date(2023, 1, 1),
+        is_83b_elected=True,
+        election_date=date(2023, 1, 15),
+        is_qsbs_eligible=True,
+        qsbs_holding_start=date(2023, 1, 1),
         vesting_schedule=[
             {"date": "2024-01-01", "quantity": "125.00"},
             {"date": "2025-01-01", "quantity": "125.00"}
@@ -79,6 +89,10 @@ async def test_get_equity_portfolio(test_user: User, session: AsyncSession) -> N
     assert "total_value" in data
     assert len(data["grant_valuations"]) == 1
     assert data["grant_valuations"][0]["symbol"] == "AAPL"
+    assert data["grant_valuations"][0]["is_83b_elected"] is True
+    assert "election_deadline" in data["grant_valuations"][0]
+    assert data["grant_valuations"][0]["is_qsbs_eligible"] is True
+    assert "qsbs_progress_percent" in data["grant_valuations"][0]
 
 @pytest.mark.asyncio
 async def test_get_equity_projections(test_user: User, session: AsyncSession) -> None:
@@ -112,3 +126,67 @@ async def test_get_equity_projections(test_user: User, session: AsyncSession) ->
     data = response.json()
     assert len(data) == 25 # Current month + 24 months
     assert float(data[0]["total_value"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_update_equity_grant_boolean_persistence(test_user: User, session: AsyncSession) -> None:
+    # 1. Create a grant with boolean fields set to True
+    grant = EquityGrant(
+        user_id=test_user.id,
+        grant_name="Persistence Test",
+        grant_type=EquityGrantType.rsu,
+        symbol="GOOGL",
+        quantity=Decimal("100.00"),
+        grant_date=date(2024, 1, 1),
+        is_83b_elected=True,
+        is_qsbs_eligible=True,
+    )
+    session.add(grant)
+    await session.commit()
+    grant_id = str(grant.id)
+
+    # 2. Update ONLY the grant name
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.patch(
+            f"/api/v1/equity/grants/{grant_id}",
+            json={"grant_name": "Updated Name"},
+            headers={"x-clerk-user-id": test_user.clerk_id},
+        )
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["grant_name"] == "Updated Name"
+    # 3. VERIFY that booleans were NOT overwritten to False (the bug I fixed)
+    assert data["is_83b_elected"] is True
+    assert data["is_qsbs_eligible"] is True
+
+
+@pytest.mark.asyncio
+async def test_equity_valuation_includes_id(test_user: User, session: AsyncSession) -> None:
+    grant = EquityGrant(
+        user_id=test_user.id,
+        grant_name="ID Test",
+        grant_type=EquityGrantType.rsu,
+        symbol="META",
+        quantity=Decimal("100.00"),
+        grant_date=date(2024, 1, 1),
+    )
+    session.add(grant)
+    await session.commit()
+    grant_id = str(grant.id)
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get(
+            "/api/v1/equity/portfolio",
+            headers={"x-clerk-user-id": test_user.clerk_id},
+        )
+    
+    assert response.status_code == 200
+    data = response.json()
+    valuation = data["grant_valuations"][0]
+    assert valuation["id"] == grant_id
+    assert valuation["symbol"] == "META"

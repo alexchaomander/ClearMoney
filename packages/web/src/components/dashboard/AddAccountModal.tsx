@@ -256,7 +256,10 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
   const [equityValuationCap, setEquityValuationCap] = useState("");
   const [equityDiscountRate, setEquityDiscountRate] = useState("");
   const [equityAmountInvested, setEquityAmountInvested] = useState("");
-
+  const [equityIs83bElected, setEquityIs83bElected] = useState(false);
+  const [equityElectionDate, setEquityElectionDate] = useState("");
+  const [equityIsQsbsEligible, setEquityIsQsbsEligible] = useState(false);
+  const [equityQsbsHoldingStart, setEquityQsbsHoldingStart] = useState("");
   // Crypto form
   const [cryptoAddress, setCryptoAddress] = useState("");
   const [cryptoChain, setCryptoChain] = useState<CryptoChain>("ethereum");
@@ -355,8 +358,13 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
     setEquityValuationCap("");
     setEquityDiscountRate("");
     setEquityAmountInvested("");
+    setEquityIs83bElected(false);
+    setEquityElectionDate("");
+    setEquityIsQsbsEligible(false);
+    setEquityQsbsHoldingStart("");
 
     setCryptoAddress("");
+
     setCryptoChain("ethereum");
     setCryptoLabel("");
     setAddressError(null);
@@ -436,6 +444,10 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
         valuation_cap: equityValuationCap ? parseFloat(equityValuationCap) : null,
         discount_rate: equityDiscountRate ? parseFloat(equityDiscountRate) / 100 : null,
         amount_invested: equityAmountInvested ? parseFloat(equityAmountInvested) : null,
+        is_83b_elected: equityIs83bElected,
+        election_date: equityElectionDate || null,
+        is_qsbs_eligible: equityIsQsbsEligible,
+        qsbs_holding_start: equityQsbsHoldingStart || null,
       });
     } else if (tab === "crypto") {
       if (!validateAddress(cryptoAddress, cryptoChain)) return;
@@ -722,6 +734,48 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                             </div>
                           </div>
                         )}
+
+                        <div className="pt-2 space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-4">
+                              <label className="flex items-center gap-3 cursor-pointer group">
+                                <div className="relative flex items-center justify-center">
+                                  <input type="checkbox" checked={equityIs83bElected} onChange={(e) => setEquityIs83bElected(e.target.checked)} className="peer appearance-none w-5 h-5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-emerald-500 checked:border-emerald-500 transition-all cursor-pointer" />
+                                  <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                                <span className="text-sm text-slate-600 dark:text-slate-300 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">83(b) Elected</span>
+                              </label>
+
+                              {equityIs83bElected && (
+                                <div className="animate-in fade-in slide-in-from-top-1">
+                                  <label className={labelClass}>Election Date</label>
+                                  <input className={inputClass} type="date" value={equityElectionDate} onChange={(e) => setEquityElectionDate(e.target.value)} />
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="space-y-4">
+                              <label className="flex items-center gap-3 cursor-pointer group">
+                                <div className="relative flex items-center justify-center">
+                                  <input type="checkbox" checked={equityIsQsbsEligible} onChange={(e) => setEquityIsQsbsEligible(e.target.checked)} className="peer appearance-none w-5 h-5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-emerald-500 checked:border-emerald-500 transition-all cursor-pointer" />
+                                  <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                                <span className="text-sm text-slate-600 dark:text-slate-300 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors">QSBS Eligible</span>
+                              </label>
+
+                              {equityIsQsbsEligible && (
+                                <div className="animate-in fade-in slide-in-from-top-1">
+                                  <label className={labelClass}>Holding Start</label>
+                                  <input className={inputClass} type="date" value={equityQsbsHoldingStart} onChange={(e) => setEquityQsbsHoldingStart(e.target.value)} />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </>
                     )}
 
