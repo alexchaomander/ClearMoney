@@ -12,6 +12,18 @@ export interface DataHealthResponse {
   details: Record<string, string> | null;
 }
 
+export interface Invoice {
+  id: string;
+  amount: number;
+  status: string;
+  date: number;
+  pdf_url: string | null;
+}
+
+export interface UpgradeResponse {
+  checkout_url: string;
+}
+
 export interface UserResponse {
   id: string;
   clerk_id: string;
@@ -835,6 +847,23 @@ export interface FinancialMemory {
   notes: Record<string, unknown> | null;
   preferences?: Record<string, unknown> | null;
 
+  // Employer Data
+  employer_name: string | null;
+  employer_industry: string | null;
+
+  // Insurance Details
+  life_insurance_benefit: number | null;
+  disability_insurance_benefit: number | null;
+  umbrella_policy_limit: number | null;
+
+  // Estate Planning
+  has_will: boolean | null;
+  has_trust: boolean | null;
+  has_poa: boolean | null;
+
+  // Entity Structure
+  entity_type: string | null;
+
   created_at: string;
   updated_at: string;
 }
@@ -884,6 +913,23 @@ export interface FinancialMemoryUpdate {
   // Freeform
   notes?: Record<string, unknown> | null;
   preferences?: Record<string, unknown> | null;
+
+  // Employer Data
+  employer_name?: string | null;
+  employer_industry?: string | null;
+
+  // Insurance Details
+  life_insurance_benefit?: number | null;
+  disability_insurance_benefit?: number | null;
+  umbrella_policy_limit?: number | null;
+
+  // Estate Planning
+  has_will?: boolean | null;
+  has_trust?: boolean | null;
+  has_poa?: boolean | null;
+
+  // Entity Structure
+  entity_type?: string | null;
 
   // Source tracking
   source?: MemoryEventSource;

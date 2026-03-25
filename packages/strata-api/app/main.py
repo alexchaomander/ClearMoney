@@ -39,6 +39,7 @@ from app.api.skills import router as skills_router
 from app.api.tax_documents import router as tax_documents_router
 from app.api.tax_plan_workspace import router as tax_plan_workspace_router
 from app.api.transactions import router as transactions_router
+from app.api.webhooks import router as webhooks_router
 from app.api.waitlist import router as waitlist_router
 from app.core.config import settings
 from app.core.rate_limit import limiter
@@ -143,4 +144,5 @@ app.include_router(data_router, prefix="/api/v1")
 app.include_router(equity_router, prefix="/api/v1")
 app.include_router(crypto_router, prefix="/api/v1")
 app.include_router(account_router, prefix="/api/v1")
+app.include_router(webhooks_router, prefix="/api/v1")
 app.include_router(waitlist_router, prefix="/api/v1/waitlist", tags=["Waitlist"])

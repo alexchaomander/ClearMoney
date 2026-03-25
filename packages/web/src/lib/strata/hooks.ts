@@ -116,6 +116,7 @@ export const queryKeys = {
   cryptoWallets: ["crypto", "wallets"] as const,
   cryptoPortfolio: ["crypto", "portfolio"] as const,
   user: ["account", "me"] as const,
+  invoices: ["account", "invoices"] as const,
 };
 
 function useClient() {
@@ -134,12 +135,22 @@ export function useMe(options?: { enabled?: boolean }) {
 
 export function useUpgradeAccount() {
   const client = useClient();
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => client.upgradeAccount(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.user });
+    onSuccess: (data) => {
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      }
     },
+  });
+}
+
+export function useInvoices(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.invoices,
+    queryFn: () => client.getInvoices(),
+    enabled: options?.enabled ?? true,
   });
 }
 

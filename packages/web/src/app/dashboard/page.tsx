@@ -14,7 +14,13 @@ import {
   BarChart3,
   ShieldCheck,
   Coins,
-  RefreshCw
+  RefreshCw,
+  TrendingUp,
+  User,
+  Shield,
+  Clock,
+  Briefcase,
+  Gavel
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
@@ -41,6 +47,7 @@ import {
   useDebtAccountMutations,
   useConsentStatus,
   useVulnerabilityReport,
+  useFinancialMemory,
 } from "@/lib/strata/hooks";
 import type { 
   PhysicalAssetsSummary, 
@@ -85,6 +92,61 @@ import {
   mapHoldings,
 } from "./_shared/preview-data";
 import { getPreviewPhysicalAssets } from "./_shared/preview-data";
+import type { FinancialMemory } from "@clearmoney/strata-sdk";
+
+function ProfileProgressCard({ memory }: { memory?: FinancialMemory }) {
+  const completeness = useMemo(() => {
+    if (!memory) return 0;
+    const fields = [
+      'age', 'annual_income', 'risk_tolerance', 'retirement_age',
+      'employer_name', 'employer_industry', 'life_insurance_benefit',
+      'disability_insurance_benefit', 'umbrella_policy_limit',
+      'has_will', 'has_trust', 'has_poa', 'entity_type'
+    ];
+    const completed = fields.filter((f) => (memory as any)[f] != null).length;
+    return Math.round((completed / fields.length) * 100);
+  }, [memory]);
+
+  if (completeness === 100) return null;
+
+  const incompleteFields = [
+    { id: 'profile-employment', label: 'Employment', done: memory?.employer_name != null, icon: Briefcase },
+    { id: 'profile-insurance', label: 'Insurance', done: memory?.life_insurance_benefit != null, icon: Shield },
+    { id: 'profile-estate', label: 'Estate & Legal', done: memory?.has_will != null, icon: Gavel },
+  ].filter(f => !f.done);
+
+  return (
+    <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+      <div className="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.05] pointer-events-none group-hover:rotate-12 transition-transform duration-700">
+        <Sparkles className="w-16 h-16" />
+      </div>
+      
+      <div className="flex items-center justify-between mb-4 relative z-10">
+        <h3 className="font-serif text-xl text-slate-800 dark:text-slate-100">Context Clarity</h3>
+        <span className="text-xs font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">{completeness}%</span>
+      </div>
+
+      <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 mb-6 overflow-hidden">
+        <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${completeness}%` }} />
+      </div>
+
+      <div className="space-y-1 relative z-10">
+        {incompleteFields.map(f => (
+          <Link key={f.id} href={`/profile#${f.id}`} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 group/item transition-colors">
+            <div className="flex items-center gap-2">
+              <f.icon className="w-3.5 h-3.5 text-slate-400 group-hover/item:text-emerald-500 transition-colors" />
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover/item:text-slate-900 dark:group-hover/item:text-white transition-colors">{f.label}</span>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 opacity-0 group-hover/item:opacity-100 transition-opacity">Setup →</span>
+          </Link>
+        ))}
+        {incompleteFields.length === 0 && (
+          <p className="text-xs text-slate-500 text-center py-2">All context layers active</p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const [showAddDropdown, setShowAddDropdown] = useState(false);
@@ -258,6 +320,8 @@ export default function DashboardPage() {
     if (Array.isArray(accounts)) return accounts;
     return allAccountsData?.investment_accounts ?? [];
   }, [accounts, allAccountsData]);
+  
+  const { data: memory } = useFinancialMemory();
 
   const effectiveAllAccounts = allAccountsData ?? getPreviewAccounts();
   const effectiveHoldingsRows = useMemo(() => mapHoldings(holdingsData ?? getPreviewHoldings()), [holdingsData]);
@@ -295,6 +359,12 @@ export default function DashboardPage() {
       icon: CheckCircle2,
       label: "Command Center",
       description: "One place to reconcile readiness signals and prioritize action.",
+    },
+    {
+      href: "/profile",
+      icon: User,
+      label: "Profile Setup",
+      description: "Complete your advisor context to unlock higher-order skills.",
     },
   ];
 
@@ -493,6 +563,8 @@ export default function DashboardPage() {
 
           {/* Right column */}
           <div className="space-y-6">
+            <ProfileProgressCard memory={memory} />
+
             <AllocationChart
               allocations={effectivePortfolio.allocation_by_asset_type}
               title="Asset Allocation"

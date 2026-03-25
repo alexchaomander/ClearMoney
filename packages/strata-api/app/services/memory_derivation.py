@@ -29,6 +29,8 @@ async def derive_memory_from_accounts(
     updated_fields.extend(await _derive_mortgage_details(user_id, memory, session))
     updated_fields.extend(await _derive_debt_profile(user_id, memory, session))
     updated_fields.extend(await _derive_portfolio_summary(user_id, memory, session))
+    updated_fields.extend(await _derive_income_metrics(user_id, memory, session))
+    updated_fields.extend(await _derive_employer_details(user_id, memory, session))
 
     return updated_fields
 
@@ -352,4 +354,113 @@ async def _derive_mortgage_details(
                     )
                 )
 
+    return updated_fields
+
+
+async def _derive_income_metrics(
+    user_id: uuid.UUID,
+    memory: FinancialMemory,
+    session: AsyncSession,
+) -> list[str]:
+    updated_fields = []
+    
+    # Estimate monthly income and expenses from the last 3 months of transactions
+    from app.models.bank_transaction import BankTransaction
+    from datetime import date, timedelta
+    
+    three_months_ago = date.today() - timedelta(days=90)
+    
+    tx_result = await session.execute(
+        select(BankTransaction)
+        .join(CashAccount)
+        .where(
+            CashAccount.user_id == user_id,
+            BankTransaction.transaction_date >= three_months_ago
+        )
+    )
+    transactions = tx_result.scalars().all()
+    
+    if not transactions:
+        return updated_fields
+        
+    income = sum((t.amount for t in transactions if t.amount > 0), Decimal("0.00"))
+    expenses = sum((abs(t.amount) for t in transactions if t.amount < 0), Decimal("0.00"))
+    
+    avg_monthly_income = (income / Decimal("3")).quantize(Decimal("0.01"))
+    avg_monthly_expenses = (expenses / Decimal("3")).quantize(Decimal("0.01"))
+    
+    if avg_monthly_income > 0 and (memory.monthly_income is None or abs(memory.monthly_income - avg_monthly_income) > Decimal("100")):
+        old_val = str(memory.monthly_income) if memory.monthly_income else None
+        memory.monthly_income = avg_monthly_income
+        updated_fields.append("monthly_income")
+        session.add(MemoryEvent(
+            user_id=user_id,
+            field_name="monthly_income",
+            old_value=old_val,
+            new_value=str(avg_monthly_income),
+            source=MemoryEventSource.account_sync,
+            context="Derived from last 3 months of bank transactions"
+        ))
+        
+    if avg_monthly_expenses > 0 and (memory.average_monthly_expenses is None or abs(memory.average_monthly_expenses - avg_monthly_expenses) > Decimal("100")):
+        old_val = str(memory.average_monthly_expenses) if memory.average_monthly_expenses else None
+        memory.average_monthly_expenses = avg_monthly_expenses
+        updated_fields.append("average_monthly_expenses")
+        session.add(MemoryEvent(
+            user_id=user_id,
+            field_name="average_monthly_expenses",
+            old_value=old_val,
+            new_value=str(avg_monthly_expenses),
+            source=MemoryEventSource.account_sync,
+            context="Derived from last 3 months of bank transactions"
+        ))
+        
+    return updated_fields
+
+
+async def _derive_employer_details(
+    user_id: uuid.UUID,
+    memory: FinancialMemory,
+    session: AsyncSession,
+) -> list[str]:
+    updated_fields = []
+    
+    # Try to find employer name from payroll deposits in last 90 days
+    from app.models.bank_transaction import BankTransaction
+    from datetime import date, timedelta
+    
+    three_months_ago = date.today() - timedelta(days=90)
+    
+    tx_result = await session.execute(
+        select(BankTransaction)
+        .join(CashAccount)
+        .where(
+            CashAccount.user_id == user_id,
+            BankTransaction.transaction_date >= three_months_ago,
+            BankTransaction.amount > 500
+        )
+    )
+    transactions = tx_result.scalars().all()
+    
+    payroll_keywords = ["PAYROLL", "DIRECT DEP", "DI DEP", "ADP", "GUSTO", "WAGE", "TREAS 310"]
+    payroll_txs = [t for t in transactions if any(keyword in (t.name or "").upper() for keyword in payroll_keywords)]
+    
+    if payroll_txs and not memory.employer_name:
+        # Take the merchant_name if available, otherwise name
+        employer = payroll_txs[0].merchant_name or payroll_txs[0].name
+        if employer:
+            # Clean up common payroll suffixes
+            employer = employer.split(" PAYROLL")[0].split(" DIR DEP")[0].split(" PPD ")[0].strip()
+            
+            memory.employer_name = employer
+            updated_fields.append("employer_name")
+            session.add(MemoryEvent(
+                user_id=user_id,
+                field_name="employer_name",
+                old_value=None,
+                new_value=employer,
+                source=MemoryEventSource.account_sync,
+                context="Detected from payroll transactions"
+            ))
+            
     return updated_fields
