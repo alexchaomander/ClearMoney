@@ -67,6 +67,7 @@ erDiagram
     users ||--o{ vehicle_assets : "owns"
     users ||--o{ collectible_assets : "owns"
     users ||--o{ precious_metal_assets : "owns"
+    users ||--o{ alternative_assets : "owns"
     users ||--o{ equity_grants : "owns"
     users ||--o{ portfolio_snapshots : "tracked for"
     users ||--o{ decision_traces : "generates"
@@ -171,6 +172,22 @@ erDiagram
         numeric weight_oz
         valuation_type valuation_type
         numeric market_value
+        timestamptz last_valuation_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    alternative_assets {
+        uuid id PK
+        uuid user_id FK
+        text name
+        alternative_asset_type asset_type
+        text description
+        numeric market_value
+        numeric cost_basis
+        date purchase_date
+        numeric estimated_annual_growth_rate
+        jsonb metadata_json
         timestamptz last_valuation_at
         timestamptz created_at
         timestamptz updated_at
@@ -799,6 +816,25 @@ Precious metal holdings tracked by weight. Auto-valued by default using Alpha Va
 | `market_value` | NUMERIC(14,2) | Current market value (spot price x weight) |
 | `last_valuation_at` | TIMESTAMPTZ | Last successful valuation refresh |
 
+#### `alternative_assets`
+Alternative investments (private equity, venture capital, hedge funds, angel investments, etc.) tracked for a user.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `user_id` | UUID | FK to users (CASCADE on delete) |
+| `name` | VARCHAR(255) | Display name (e.g., "SpaceX Series B") |
+| `asset_type` | alternative_asset_type | Alternative asset category enum |
+| `description` | TEXT | Optional description of the asset |
+| `market_value` | NUMERIC(14,2) | Current estimated market value |
+| `cost_basis` | NUMERIC(14,2) | Original cost basis or investment amount |
+| `purchase_date` | DATE | Date of investment |
+| `estimated_annual_growth_rate` | NUMERIC(6,4) | Expected annual growth (optional) |
+| `metadata_json` | JSONB | Additional asset-specific metadata |
+| `last_valuation_at` | TIMESTAMPTZ | Last successful valuation refresh |
+| `created_at` | TIMESTAMPTZ | Creation timestamp |
+| `updated_at` | TIMESTAMPTZ | Last update timestamp |
+
 #### `equity_grants`
 Equity compensation grants (RSUs, Options, etc.) and founder stock.
 
@@ -1004,6 +1040,11 @@ Encrypted storage for provider OAuth tokens. Access restricted to token service.
 ### `metal_type`
 ```sql
 'gold' | 'silver' | 'platinum' | 'palladium'
+```
+
+### `alternative_asset_type`
+```sql
+'private_equity' | 'angel_investment' | 'venture_capital' | 'hedge_fund' | 'limited_partnership' | 'other'
 ```
 
 ### `equity_grant_type`
