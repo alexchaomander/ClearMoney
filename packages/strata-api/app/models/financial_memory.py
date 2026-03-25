@@ -93,6 +93,23 @@ class FinancialMemory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     emergency_fund_target_months: Mapped[int | None] = mapped_column(default=None)
 
+    # Employer Data
+    employer_name: Mapped[str | None] = mapped_column(String(255), default=None)
+    employer_industry: Mapped[str | None] = mapped_column(String(255), default=None)
+
+    # Insurance Details
+    life_insurance_benefit: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), default=None)
+    disability_insurance_benefit: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), default=None)
+    umbrella_policy_limit: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), default=None)
+
+    # Estate Planning
+    has_will: Mapped[bool | None] = mapped_column(default=None)
+    has_trust: Mapped[bool | None] = mapped_column(default=None)
+    has_poa: Mapped[bool | None] = mapped_column(default=None)
+
+    # Entity Structure
+    entity_type: Mapped[str | None] = mapped_column(String(50), default=None)
+
     # Derived summaries & category inputs (JSON)
     spending_categories_monthly: Mapped[dict | None] = mapped_column(
         JSON, nullable=True, default=None

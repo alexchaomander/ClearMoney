@@ -95,12 +95,23 @@ async def _sync_connection_with_error_handling(
 async def create_plaid_link_token(
     request: PlaidLinkRequest,
     user: User = Depends(require_scopes(["connections:write"])),
+    db: AsyncSession = Depends(get_async_session),
     provider: PlaidProvider = Depends(get_plaid_provider),
 ) -> PlaidLinkResponse:
     """Create a Plaid Link token for initializing Plaid Link.
-
-    Returns a link_token that the client should use to initialize Plaid Link.
+    
+    Enforces the 3 connected accounts limit for Free tier users.
     """
+    if user.plan == "free":
+        count_result = await db.execute(
+            select(func.count(Connection.id)).where(Connection.user_id == user.id)
+        )
+        count = count_result.scalar() or 0
+        if count >= 3:
+            raise HTTPException(
+                status_code=403,
+                detail="Free tier is limited to 3 connected accounts. Please upgrade to Premium for unlimited access."
+            )
     link_session = await provider.create_link_token(
         user_id=str(user.id),
         redirect_uri=request.redirect_uri,

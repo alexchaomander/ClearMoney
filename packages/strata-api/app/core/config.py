@@ -83,6 +83,11 @@ class Settings(BaseSettings):
     data_dir: str = ""
     auto_consent_on_missing: bool = False
 
+    # Stripe configuration
+    stripe_api_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_premium_price_id: str = ""
+
     # Rate limiting
     rate_limit_default: str = "60/minute"
 
