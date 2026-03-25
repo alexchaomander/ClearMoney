@@ -315,10 +315,14 @@ export class DemoStrataClient implements StrataClientInterface {
   async getTaxShieldMetrics(): Promise<TaxShieldMetrics> {
     await delay(150);
     return {
-      ytd_business_income: 184000,
-      estimated_combined_tax_rate: 0.32,
-      estimated_tax_ytd: 58880,
-      next_quarterly_payment: 14600,
+      ytd_1099_income: 184000,
+      ytd_w2_income: 120000,
+      estimated_federal_tax: 42000,
+      estimated_state_tax: 15000,
+      estimated_self_employment_tax: 25000,
+      total_tax_liability_ytd: 82000,
+      next_quarterly_payment: 20500,
+      current_quarter: 2,
       safe_harbor_met: false,
     };
   }
@@ -549,6 +553,15 @@ export class DemoStrataClient implements StrataClientInterface {
       portfolio_summary: null,
       equity_compensation: null,
       notes: {},
+      employer_name: "Demo Employer INC",
+      employer_industry: "Technology",
+      life_insurance_benefit: 1000000,
+      disability_insurance_benefit: 7000,
+      umbrella_policy_limit: null,
+      has_will: true,
+      has_trust: false,
+      has_poa: true,
+      entity_type: "s_corp",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
