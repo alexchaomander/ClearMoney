@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.cash_account import CashAccount
 from app.models.connection import Connection
+from app.models.crypto_wallet import CryptoWallet
 from app.models.debt_account import DebtAccount
 from app.models.equity_grant import EquityGrant
 from app.models.financial_memory import FinancialMemory
@@ -69,7 +70,7 @@ async def build_financial_context(user_id: uuid.UUID, session: AsyncSession) -> 
         list(equity_grants)
     )
 
-    re_result, v_result, c_result, m_result, a_result = await asyncio.gather(
+    re_result, v_result, c_result, m_result, a_result, crypto_result = await asyncio.gather(
         session.execute(
             select(RealEstateAsset).where(RealEstateAsset.user_id == user_id)
         ),
@@ -83,12 +84,16 @@ async def build_financial_context(user_id: uuid.UUID, session: AsyncSession) -> 
         session.execute(
             select(AlternativeAsset).where(AlternativeAsset.user_id == user_id)
         ),
+        session.execute(
+            select(CryptoWallet).where(CryptoWallet.user_id == user_id)
+        ),
     )
     real_estate_assets = re_result.scalars().all()
     vehicle_assets = v_result.scalars().all()
     collectible_assets = c_result.scalars().all()
     precious_metal_assets = m_result.scalars().all()
     alternative_assets = a_result.scalars().all()
+    crypto_wallets = crypto_result.scalars().all()
 
     conn_result = await session.execute(
         select(Connection).where(Connection.user_id == user_id)
@@ -232,6 +237,15 @@ async def build_financial_context(user_id: uuid.UUID, session: AsyncSession) -> 
             }
             for a in alternative_assets
         ],
+        "crypto_wallets": [
+            {
+                "label": w.label,
+                "address": w.address,
+                "chain": w.chain.value,
+                "balance_usd": _decimal_to_float(w.last_balance_usd),
+            }
+            for w in crypto_wallets
+        ],
     }
 
     # -- Build holdings section (top 20) --
@@ -258,13 +272,14 @@ async def build_financial_context(user_id: uuid.UUID, session: AsyncSession) -> 
     total_debt = sum((float(a.balance) for a in debt_accounts if a.balance), 0.0)
     total_equity_vested = float(equity_summary.total_vested_value)
     total_equity_unvested = float(equity_summary.total_unvested_value)
+    total_crypto = sum((float(w.last_balance_usd) for w in crypto_wallets if w.last_balance_usd), 0.0)
 
     total_physical = (
-        sum((float(a.market_value) for a in real_estate_assets), 0.0)
-        + sum((float(a.market_value) for a in vehicle_assets), 0.0)
-        + sum((float(a.market_value) for a in collectible_assets), 0.0)
-        + sum((float(a.market_value) for a in precious_metal_assets), 0.0)
-        + sum((float(a.market_value) for a in alternative_assets), 0.0)
+        sum((float(a.market_value) for a in real_estate_assets if a.market_value), 0.0)
+        + sum((float(a.market_value) for a in vehicle_assets if a.market_value), 0.0)
+        + sum((float(a.market_value) for a in collectible_assets if a.market_value), 0.0)
+        + sum((float(a.market_value) for a in precious_metal_assets if a.market_value), 0.0)
+        + sum((float(a.market_value) for a in alternative_assets if a.market_value), 0.0)
     )
 
     net_worth = (
@@ -272,6 +287,7 @@ async def build_financial_context(user_id: uuid.UUID, session: AsyncSession) -> 
         + total_cash
         + total_equity_vested
         + total_physical
+        + total_crypto
         - total_debt
     )
 
@@ -300,12 +316,15 @@ async def build_financial_context(user_id: uuid.UUID, session: AsyncSession) -> 
             if asset_type and val:
                 allocation_by_asset_type[asset_type.value] = float(val)
 
-        # Convert to percentages
-        if total_investment > 0:
-            allocation_by_asset_type = {
-                k: round(v / total_investment * 100, 1)
-                for k, v in allocation_by_asset_type.items()
-            }
+    if total_crypto > 0:
+        allocation_by_asset_type["crypto"] = allocation_by_asset_type.get("crypto", 0.0) + total_crypto
+
+    total_allocable = sum(allocation_by_asset_type.values())
+    if total_allocable > 0:
+        allocation_by_asset_type = {
+            k: round(v / total_allocable * 100, 1)
+            for k, v in allocation_by_asset_type.items()
+        }
 
     runway_months = None
     if (
@@ -321,6 +340,7 @@ async def build_financial_context(user_id: uuid.UUID, session: AsyncSession) -> 
         "total_cash_value": round(total_cash, 2),
         "total_debt_value": round(total_debt, 2),
         "total_physical_asset_value": round(total_physical, 2),
+        "total_crypto_value": round(total_crypto, 2),
         "total_equity_vested_value": round(total_equity_vested, 2),
         "total_equity_unvested_value": round(total_equity_unvested, 2),
         "tax_advantaged_value": round(tax_advantaged, 2),

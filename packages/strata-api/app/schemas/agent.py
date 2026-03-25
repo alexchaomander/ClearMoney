@@ -160,6 +160,13 @@ class FinancialContextAlternativeAsset(BaseModel):
     market_value: float | None = None
 
 
+class FinancialContextCryptoWallet(BaseModel):
+    label: str | None = None
+    address: str
+    chain: str
+    balance_usd: float | None = None
+
+
 class FinancialContextAccounts(BaseModel):
     investment: list[FinancialContextAccount] = Field(default_factory=list)
     cash: list[FinancialContextAccount] = Field(default_factory=list)
@@ -173,6 +180,7 @@ class FinancialContextAccounts(BaseModel):
     alternative_assets: list[FinancialContextAlternativeAsset] = Field(
         default_factory=list
     )
+    crypto_wallets: list[FinancialContextCryptoWallet] = Field(default_factory=list)
 
 
 class FinancialContextHolding(BaseModel):
@@ -198,6 +206,7 @@ class PortfolioMetrics(BaseModel):
     total_cash_value: float | None = None
     total_debt_value: float | None = None
     total_physical_asset_value: float | None = None
+    total_crypto_value: float | None = None
     total_equity_vested_value: float | None = None
     total_equity_unvested_value: float | None = None
     tax_advantaged_value: float | None = None
