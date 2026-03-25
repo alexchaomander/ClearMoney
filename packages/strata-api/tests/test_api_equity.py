@@ -1,12 +1,14 @@
-import pytest
 from datetime import date
 from decimal import Decimal
+
+import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.main import app
-from app.models.user import User
 from app.models.equity_grant import EquityGrant, EquityGrantType
+from app.models.user import User
+
 
 @pytest.fixture
 async def test_user(session: AsyncSession) -> User:
@@ -35,7 +37,7 @@ async def test_create_equity_grant(test_user: User) -> None:
             {"date": "2027-01-01", "quantity": "250.00"}
         ]
     }
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
@@ -44,7 +46,7 @@ async def test_create_equity_grant(test_user: User) -> None:
             json=grant_data,
             headers={"x-clerk-user-id": test_user.clerk_id},
         )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert data["grant_name"] == "Initial RSU Grant"
@@ -83,7 +85,7 @@ async def test_get_equity_portfolio(test_user: User, session: AsyncSession) -> N
             "/api/v1/equity/portfolio",
             headers={"x-clerk-user-id": test_user.clerk_id},
         )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert "total_value" in data
@@ -121,7 +123,7 @@ async def test_get_equity_projections(test_user: User, session: AsyncSession) ->
             "/api/v1/equity/projections",
             headers={"x-clerk-user-id": test_user.clerk_id},
         )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 25 # Current month + 24 months
@@ -154,7 +156,7 @@ async def test_update_equity_grant_boolean_persistence(test_user: User, session:
             json={"grant_name": "Updated Name"},
             headers={"x-clerk-user-id": test_user.clerk_id},
         )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert data["grant_name"] == "Updated Name"
@@ -184,7 +186,7 @@ async def test_equity_valuation_includes_id(test_user: User, session: AsyncSessi
             "/api/v1/equity/portfolio",
             headers={"x-clerk-user-id": test_user.clerk_id},
         )
-    
+
     assert response.status_code == 200
     data = response.json()
     valuation = data["grant_valuations"][0]

@@ -128,6 +128,15 @@ const METAL_TYPES: { value: MetalType; label: string }[] = [
   { value: "palladium", label: "Palladium" },
 ];
 
+const ALTERNATIVE_TYPES: { value: AlternativeAssetType; label: string }[] = [
+  { value: "private_equity", label: "Private Equity" },
+  { value: "angel_investment", label: "Angel Investment" },
+  { value: "venture_capital", label: "Venture Capital" },
+  { value: "hedge_fund", label: "Hedge Fund" },
+  { value: "limited_partnership", label: "Limited Partnership" },
+  { value: "other", label: "Other" },
+];
+
 const inputClass =
   "w-full rounded-xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 focus:outline-none transition-all";
 const selectClass =
@@ -302,6 +311,12 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
   const [mValue, setMValue] = useState("");
   const [mValuationType, setMValuationType] = useState<"manual" | "auto">("auto");
 
+  // Alternative form
+  const [altName, setAltName] = useState("");
+  const [altType, setAltType] = useState<AlternativeAssetType>("private_equity");
+  const [altValue, setAltValue] = useState("");
+  const [altCostBasis, setAltCostBasis] = useState("");
+
   // Common
   const [isBusiness, setIsBusiness] = useState(false);
 
@@ -400,6 +415,11 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
     setMWeight("");
     setMValue("");
     setMValuationType("auto");
+
+    setAltName("");
+    setAltType("private_equity");
+    setAltValue("");
+    setAltCostBasis("");
   }
 
   function handleClose() {
@@ -496,6 +516,13 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
         market_value: mValue ? parseFloat(mValue) : 0,
         valuation_type: mValuationType,
       });
+    } else if (tab === "alternative") {
+      await alternativeMutations.add.mutateAsync({
+        name: altName,
+        asset_type: altType,
+        market_value: altValue ? parseFloat(altValue) : 0,
+        cost_basis: altCostBasis ? parseFloat(altCostBasis) : null,
+      });
     }
     handleClose();
   }
@@ -509,7 +536,8 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
     realEstateMutations.add.isPending ||
     vehicleMutations.add.isPending ||
     collectibleMutations.add.isPending ||
-    metalMutations.add.isPending;
+    metalMutations.add.isPending ||
+    alternativeMutations.add.isPending;
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -1203,6 +1231,37 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                               <span className="font-black uppercase mr-1">Spot Price Integration:</span>
                               We fetch real-time market data for gold, silver, platinum, and palladium to keep your metal holdings current.
                             </p>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {tab === "alternative" && (
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="col-span-2">
+                            <label className={labelClass}>Asset Name</label>
+                            <input className={inputClass} value={altName} onChange={(e) => setAltName(e.target.value)} placeholder="e.g. SpaceX Series B" required />
+                          </div>
+                          <div>
+                            <label className={labelClass}>Asset Type</label>
+                            <select className={selectClass} value={altType} onChange={(e) => setAltType(e.target.value as AlternativeAssetType)}>
+                              {ALTERNATIVE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className={labelClass}>Market Value</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                              <input className={cn(inputClass, "pl-7")} type="number" step="0.01" value={altValue} onChange={(e) => setAltValue(e.target.value)} placeholder="0.00" required />
+                            </div>
+                          </div>
+                          <div className="col-span-2">
+                            <label className={labelClass}>Cost Basis (Optional)</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                              <input className={cn(inputClass, "pl-7")} type="number" step="0.01" value={altCostBasis} onChange={(e) => setAltCostBasis(e.target.value)} placeholder="0.00" />
+                            </div>
                           </div>
                         </div>
                       </>
