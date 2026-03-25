@@ -31,6 +31,7 @@ from app.services.portfolio_metrics import (
 )
 from app.services.runway import RunwayService
 from app.services.tax_shield import TaxShieldService
+from app.schemas.portfolio import TaxShieldMetrics
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 
@@ -340,11 +341,12 @@ async def get_runway_metrics(
     return await service.get_runway_metrics(user.id)
 
 
-@router.get("/tax-shield")
+@router.get("/tax-shield", response_model=TaxShieldMetrics)
 async def get_tax_shield_metrics(
     user: User = Depends(require_scopes(["portfolio:read"])),
     session: AsyncSession = Depends(get_async_session),
-) -> dict:
+) -> TaxShieldMetrics:
     """Get tax shield metrics for founders."""
     service = TaxShieldService(session)
-    return await service.get_tax_shield_metrics(user.id)
+    data = await service.get_tax_shield_metrics(user.id)
+    return TaxShieldMetrics(**data)

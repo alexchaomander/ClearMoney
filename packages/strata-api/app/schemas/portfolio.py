@@ -55,3 +55,16 @@ class PortfolioHistoryPoint(BaseModel):
 
     date: str
     value: Decimal
+
+class TaxShieldMetrics(BaseModel):
+    """Estimated tax obligations and income breakdown."""
+
+    ytd_1099_income: float
+    ytd_w2_income: float
+    estimated_federal_tax: float
+    estimated_state_tax: float
+    estimated_self_employment_tax: float
+    total_tax_liability_ytd: float
+    next_quarterly_payment: float
+    current_quarter: int
+    safe_harbor_met: bool
