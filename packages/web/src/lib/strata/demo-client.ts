@@ -1480,7 +1480,29 @@ export class DemoStrataClient implements StrataClientInterface {
 
   async getCryptoPortfolio(): Promise<CryptoPortfolioResponse> {
     await delay(600);
-    return { wallets: this.cryptoWallets, total_value_usd: 0, assets: [], defi_positions: [] };
+    return {
+      wallets: [
+        { id: "wallet-1", user_id: "demo-user", address: "0x1234...abcd", chain: "ethereum", label: "Main ETH Wallet", last_balance_usd: 15420.5, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+        { id: "wallet-2", user_id: "demo-user", address: "5Kabc...xyz", chain: "solana", label: "Solana Degen", last_balance_usd: 8500.0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+      ],
+      total_value_usd: 28920.5,
+      assets: [
+        { symbol: "ETH", name: "Ethereum", balance: 4.5, balance_usd: 13500.0, current_price: 3000.0, chain: "ethereum", contract_address: null, logo_url: "https://assets.coingecko.com/coins/images/279/small/ethereum.png" },
+        { symbol: "USDC", name: "USD Coin", balance: 1920.5, balance_usd: 1920.5, current_price: 1.0, chain: "ethereum", contract_address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", logo_url: "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png" },
+        { symbol: "SOL", name: "Solana", balance: 56.6, balance_usd: 8500.0, current_price: 150.0, chain: "solana", contract_address: null, logo_url: "https://assets.coingecko.com/coins/images/4128/small/solana.png" }
+      ],
+      defi_positions: [
+        {
+          protocol_name: "Aave V3",
+          protocol_logo: "https://assets.coingecko.com/markets/images/698/small/aave.png",
+          position_type: "lending",
+          value_usd: 5000.0,
+          assets: [
+            { symbol: "USDC", name: "USD Coin", balance: 5000.0, balance_usd: 5000.0, current_price: 1.0, chain: "ethereum", contract_address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", logo_url: "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png" }
+          ]
+        }
+      ]
+    };
   }
 
   // === Physical Assets ===
