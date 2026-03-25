@@ -13,6 +13,7 @@ import type {
   VehicleType,
   CollectibleType,
   MetalType,
+  AlternativeAssetType,
   PropertySearchResult,
   VehicleSearchResult,
 } from "@clearmoney/strata-sdk";
@@ -27,12 +28,13 @@ import {
   useVehicleAssetMutations,
   useCollectibleAssetMutations,
   usePreciousMetalAssetMutations,
+  useAlternativeAssetMutations,
   useSearchProperties,
   useSearchVehicles,
 } from "@/lib/strata/hooks";
 import { cn } from "@/lib/utils";
 
-type TabKey = "cash" | "debt" | "investment" | "equity" | "crypto" | "real_estate" | "vehicle" | "collectible" | "metal";
+type TabKey = "cash" | "debt" | "investment" | "equity" | "crypto" | "real_estate" | "vehicle" | "collectible" | "metal" | "alternative";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "cash", label: "Cash" },
@@ -44,6 +46,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "vehicle", label: "Vehicle" },
   { key: "collectible", label: "Luxury" },
   { key: "metal", label: "Metal" },
+  { key: "alternative", label: "Alternative" },
 ];
 
 const CASH_TYPES: { value: CashAccountType; label: string }[] = [
@@ -147,6 +150,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
   const vehicleMutations = useVehicleAssetMutations();
   const collectibleMutations = useCollectibleAssetMutations();
   const metalMutations = usePreciousMetalAssetMutations();
+  const alternativeMutations = useAlternativeAssetMutations();
 
   const searchProperties = useSearchProperties();
   const searchVehicles = useSearchVehicles();
