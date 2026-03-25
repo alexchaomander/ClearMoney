@@ -2150,10 +2150,14 @@ export interface VulnerabilityReport {
 }
 
 export interface TaxShieldMetrics {
-  ytd_business_income: number;
-  estimated_combined_tax_rate: number;
-  estimated_tax_ytd: number;
+  ytd_1099_income: number;
+  ytd_w2_income: number;
+  estimated_federal_tax: number;
+  estimated_state_tax: number;
+  estimated_self_employment_tax: number;
+  total_tax_liability_ytd: number;
   next_quarterly_payment: number;
+  current_quarter: number;
   safe_harbor_met: boolean;
 }
 
