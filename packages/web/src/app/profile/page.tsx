@@ -13,9 +13,16 @@ import {
   Check,
   History,
   TrendingUp,
+  Briefcase,
+  ShieldCheck,
+  FileText,
+  Boxes,
+  AlertCircle,
 } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
 import {
   useFinancialMemory,
   useUpdateMemory,
@@ -187,6 +194,50 @@ function SelectField({
   );
 }
 
+function TextField({
+  label,
+  memoryKey,
+  memory,
+  onSave,
+  placeholder,
+}: {
+  label: string;
+  memoryKey: keyof FinancialMemory;
+  memory: FinancialMemory;
+  onSave: (data: FinancialMemoryUpdate) => void;
+  placeholder?: string;
+}) {
+  const rawValue = memory[memoryKey];
+  const [localValue, setLocalValue] = useState(
+    rawValue != null ? String(rawValue) : ""
+  );
+  const [dirty, setDirty] = useState(false);
+
+  const handleBlur = useCallback(() => {
+    if (!dirty) return;
+    onSave({ [memoryKey]: localValue || null } as unknown as FinancialMemoryUpdate);
+    setDirty(false);
+  }, [dirty, localValue, memoryKey, onSave]);
+
+  return (
+    <div>
+      <label className="block text-sm text-slate-500 dark:text-slate-400 mb-1">{label}</label>
+      <input
+        type="text"
+        value={localValue}
+        placeholder={placeholder}
+        onChange={(e) => {
+          setLocalValue(e.target.value);
+          setDirty(true);
+        }}
+        onBlur={handleBlur}
+        onKeyDown={(e) => e.key === "Enter" && handleBlur()}
+        className="w-full rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+      />
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -211,6 +262,14 @@ const US_STATES = [
   "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC",
   "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC",
 ].map((s) => ({ value: s, label: s }));
+
+const ENTITY_TYPE_OPTIONS = [
+  { value: "c_corp", label: "C-Corp" },
+  { value: "s_corp", label: "S-Corp" },
+  { value: "llc", label: "LLC" },
+  { value: "sole_prop", label: "Sole Proprietorship" },
+  { value: "none", label: "N/A" },
+];
 
 // ---------------------------------------------------------------------------
 // Main page
@@ -317,6 +376,50 @@ export default function ProfilePage() {
               </button>
             </div>
           </div>
+        </motion.div>
+
+        {/* Profile Health Meter */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-sky-500/10 border border-emerald-500/20 shadow-sm"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-lg">
+                <Target className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Profile Health</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Complete your profile for better advisor accuracy</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
+                {(() => {
+                  const coreFields: (keyof FinancialMemory)[] = [
+                    "age", "state", "filing_status", "annual_income", "monthly_income",
+                    "average_monthly_expenses", "federal_tax_rate", "state_tax_rate",
+                    "retirement_age", "risk_tolerance", "employer_name", "has_will"
+                  ];
+                  const filledCount = coreFields.filter(f => memory[f] != null).length;
+                  return Math.round((filledCount / coreFields.length) * 100);
+                })()}%
+              </span>
+            </div>
+          </div>
+          <Progress 
+            value={(() => {
+              const coreFields: (keyof FinancialMemory)[] = [
+                "age", "state", "filing_status", "annual_income", "monthly_income",
+                "average_monthly_expenses", "federal_tax_rate", "state_tax_rate",
+                "retirement_age", "risk_tolerance", "employer_name", "has_will"
+              ];
+              const filledCount = coreFields.filter(f => memory[f] != null).length;
+              return (filledCount / coreFields.length) * 100;
+            })()} 
+            className="h-2 bg-slate-200 dark:bg-slate-800"
+          />
         </motion.div>
 
         {updateMemory.isSuccess && (
@@ -427,6 +530,42 @@ export default function ProfilePage() {
                 step={0.01}
                 min={0}
                 max={1}
+              />
+            </div>
+          </motion.div>
+
+          {/* Employer & Entity */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.18 }}
+            className={sectionClass}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Briefcase className="w-5 h-5 text-emerald-500" />
+              <h2 className="font-serif text-xl text-slate-900 dark:text-slate-100">Employment & Entity</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <TextField
+                label="Employer Name"
+                memoryKey="employer_name"
+                memory={memory}
+                onSave={onSave}
+                placeholder="Google, Acme Corp, etc."
+              />
+              <TextField
+                label="Industry"
+                memoryKey="employer_industry"
+                memory={memory}
+                onSave={onSave}
+                placeholder="Tech, Finance, Healthcare, etc."
+              />
+              <SelectField
+                label="Entity Type (for Founders)"
+                memoryKey="entity_type"
+                memory={memory}
+                onSave={onSave}
+                options={ENTITY_TYPE_OPTIONS}
               />
             </div>
           </motion.div>
@@ -603,6 +742,84 @@ export default function ProfilePage() {
                 min={0}
                 step={50}
               />
+            </div>
+          </motion.div>
+
+          {/* Insurance */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.32 }}
+            className={sectionClass}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <ShieldCheck className="w-5 h-5 text-emerald-500" />
+              <h2 className="font-serif text-xl text-slate-900 dark:text-slate-100">Insurance Coverage</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <NumberField
+                label="Life Insurance"
+                memoryKey="life_insurance_benefit"
+                memory={memory}
+                onSave={onSave}
+                prefix="$"
+                min={0}
+                step={100000}
+              />
+              <NumberField
+                label="Disability (Monthly)"
+                memoryKey="disability_insurance_benefit"
+                memory={memory}
+                onSave={onSave}
+                prefix="$"
+                min={0}
+                step={1000}
+              />
+              <NumberField
+                label="Umbrella Policy"
+                memoryKey="umbrella_policy_limit"
+                memory={memory}
+                onSave={onSave}
+                prefix="$"
+                min={0}
+                step={1000000}
+              />
+            </div>
+          </motion.div>
+
+          {/* Estate Planning */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.33 }}
+            className={sectionClass}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="w-5 h-5 text-emerald-500" />
+              <h2 className="font-serif text-xl text-slate-900 dark:text-slate-100">Estate Planning</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Will</span>
+                <Switch
+                  checked={!!memory.has_will}
+                  onCheckedChange={(checked) => onSave({ has_will: checked } as any)}
+                />
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Trust</span>
+                <Switch
+                  checked={!!memory.has_trust}
+                  onCheckedChange={(checked) => onSave({ has_trust: checked } as any)}
+                />
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Power of Attorney</span>
+                <Switch
+                  checked={!!memory.has_poa}
+                  onCheckedChange={(checked) => onSave({ has_poa: checked } as any)}
+                />
+              </div>
             </div>
           </motion.div>
 

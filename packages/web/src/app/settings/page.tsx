@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Trash2, RefreshCw, Wifi, Landmark, CreditCard, Info, Check, Shield, Lock, AlertCircle, TrendingUp, History, Plus } from "lucide-react";
+import { Trash2, RefreshCw, Wifi, Landmark, CreditCard, Info, Check, Shield, Lock, AlertCircle, TrendingUp, History, Plus, FileText } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import {
   useConnections,
@@ -22,6 +22,7 @@ import {
   useUpsertActionPolicy,
   useMe,
   useUpgradeAccount,
+  useInvoices,
 } from "@/lib/strata/hooks";
 import { formatTitleCase, getInitials } from "@/lib/shared/formatters";
 import type { Institution, FinancialMemoryUpdate, ActionPolicyRequest } from "@clearmoney/strata-sdk";
@@ -126,6 +127,7 @@ function BillingSettings() {
   const { data: connections } = useConnections();
   const { data: user, isLoading: userLoading } = useMe();
   const upgrade = useUpgradeAccount();
+  const { data: invoices, isLoading: invoicesLoading } = useInvoices();
   const { pushToast } = useToast();
 
   const handleUpgrade = () => {
@@ -235,8 +237,56 @@ function BillingSettings() {
         <SectionHeader 
           icon={History} 
           title="Billing History" 
-          description="No invoices found."
+          description={(!invoices || invoices.length === 0) ? "No invoices found." : "Your recent billing records and receipts."}
         />
+
+        {invoicesLoading ? (
+          <div className="space-y-2">
+            {[1, 2].map((i) => (
+              <div key={i} className="h-12 rounded-lg bg-slate-100 dark:bg-slate-800 animate-pulse" />
+            ))}
+          </div>
+        ) : invoices && invoices.length > 0 ? (
+          <div className="space-y-2">
+            {invoices.map((inv) => (
+              <div key={inv.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 transition-hover hover:border-emerald-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      ClearMoney Premium
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {new Date(inv.date * 1000).toLocaleDateString()} &middot; {inv.status.toUpperCase()}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                    ${inv.amount.toFixed(2)}
+                  </p>
+                  {inv.pdf_url && (
+                    <a 
+                      href={inv.pdf_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-[10px] font-bold text-emerald-500 hover:text-emerald-400 uppercase tracking-wider"
+                    >
+                      Download Receipt
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+            <History className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
+            <p className="text-sm text-slate-500">No transactions found yet</p>
+          </div>
+        )}
       </motion.div>
     </div>
   );

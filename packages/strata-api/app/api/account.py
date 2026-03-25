@@ -22,16 +22,35 @@ async def get_me(
     return UserResponse.model_validate(current_user)
 
 
-@router.post("/upgrade", response_model=UserResponse)
+from app.services.billing import BillingService
+
+@router.post("/upgrade")
 async def upgrade_account(
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> UserResponse:
-    """Simulate upgrading the user's account to the Premium tier."""
-    current_user.plan = "premium"
-    await db.commit()
-    await db.refresh(current_user)
-    return UserResponse.model_validate(current_user)
+) -> dict:
+    """Create a Stripe checkout session for upgrading to Premium."""
+    billing_service = BillingService(db)
+    
+    # In a real app, these would come from environment variables or be dynamic
+    success_url = str(request.base_url).rstrip("/") + "/settings?tab=billing&session_id={CHECKOUT_SESSION_ID}"
+    cancel_url = str(request.base_url).rstrip("/") + "/settings?tab=billing"
+    
+    checkout_url = await billing_service.create_checkout_session(
+        current_user, success_url, cancel_url
+    )
+    return {"checkout_url": checkout_url}
+
+
+@router.get("/invoices")
+async def get_invoices(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list:
+    """Get the user's billing history from Stripe."""
+    billing_service = BillingService(db)
+    return await billing_service.get_invoices(current_user)
 
 
 @router.get("/export")

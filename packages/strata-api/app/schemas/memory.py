@@ -60,6 +60,23 @@ class FinancialMemoryUpdate(BaseModel):
     # User preferences & overrides
     preferences: dict | None = None
 
+    # Employer Data
+    employer_name: str | None = None
+    employer_industry: str | None = None
+
+    # Insurance Details
+    life_insurance_benefit: Decimal | None = None
+    disability_insurance_benefit: Decimal | None = None
+    umbrella_policy_limit: Decimal | None = None
+
+    # Estate Planning
+    has_will: bool | None = None
+    has_trust: bool | None = None
+    has_poa: bool | None = None
+
+    # Entity Structure
+    entity_type: str | None = None
+
     # Source tracking (not stored on memory itself, used for event logging)
     source: MemoryEventSource = MemoryEventSource.user_input
     source_context: str | None = None
@@ -113,6 +130,23 @@ class FinancialMemoryResponse(BaseModel):
     # Freeform
     notes: dict | None
     preferences: dict | None
+
+    # Employer Data
+    employer_name: str | None
+    employer_industry: str | None
+
+    # Insurance Details
+    life_insurance_benefit: Decimal | None
+    disability_insurance_benefit: Decimal | None
+    umbrella_policy_limit: Decimal | None
+
+    # Estate Planning
+    has_will: bool | None
+    has_trust: bool | None
+    has_poa: bool | None
+
+    # Entity Structure
+    entity_type: str | None
 
     created_at: datetime
     updated_at: datetime

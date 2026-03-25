@@ -174,7 +174,8 @@ export interface StrataClientInterface {
   getFinancialContext(format?: 'json' | 'markdown'): Promise<FinancialContext | string>;
   // Account
   getMe(): Promise<UserResponse>;
-  upgradeAccount(): Promise<UserResponse>;
+  upgradeAccount(): Promise<UpgradeResponse>;
+  getInvoices(): Promise<Invoice[]>;
   exportAccountData(): Promise<any>;
   deleteAccount(): Promise<void>;
   // Notifications
@@ -733,10 +734,14 @@ export class StrataClient implements StrataClientInterface {
     return this.request<UserResponse>('/api/v1/account/me');
   }
 
-  async upgradeAccount(): Promise<UserResponse> {
-    return this.request<UserResponse>('/api/v1/account/upgrade', {
+  async upgradeAccount(): Promise<UpgradeResponse> {
+    return this.request<UpgradeResponse>('/api/v1/account/upgrade', {
       method: 'POST',
     });
+  }
+
+  async getInvoices(): Promise<Invoice[]> {
+    return this.request<Invoice[]>('/api/v1/account/invoices');
   }
 
   async exportAccountData(): Promise<any> {

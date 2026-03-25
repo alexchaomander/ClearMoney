@@ -15,6 +15,7 @@ class UserResponse(BaseModel):
     email: str
     plan: str
     subscription_status: str
+    stripe_customer_id: str | None = None
     created_at: datetime
     updated_at: datetime
 

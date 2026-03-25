@@ -63,15 +63,25 @@ async def _get_user_connection(
 async def create_link_session(
     request: LinkSessionRequest,
     user: User = Depends(require_scopes(["connections:write"])),
+    db: AsyncSession = Depends(get_async_session),
     provider: SnapTradeProvider = Depends(get_provider),
     store: SessionStore = Depends(get_session_store),
 ) -> LinkSessionResponse:
     """Create a link session to connect a new investment account.
-
-    Returns a redirect URL that the client should navigate to for the user
-    to authenticate with their brokerage. The session_token should be passed
-    back in the callback to retrieve the stored credentials.
+    
+    Enforces the 3 connected accounts limit for Free tier users.
     """
+    if user.plan == "free":
+        from sqlalchemy import func
+        count_result = await db.execute(
+            select(func.count(Connection.id)).where(Connection.user_id == user.id)
+        )
+        count = count_result.scalar() or 0
+        if count >= 3:
+            raise HTTPException(
+                status_code=403,
+                detail="Free tier is limited to 3 connected accounts. Please upgrade to Premium for unlimited access."
+            )
     link_session = await provider.create_link_session(
         user_id=str(user.id),
         redirect_uri=request.redirect_uri,
