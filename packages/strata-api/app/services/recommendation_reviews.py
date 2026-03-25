@@ -203,14 +203,19 @@ class RecommendationReviewService:
                 recommendation.status = RecommendationStatus.accepted  # Back to accepted if dismissal means the recommendation was actually fine
             elif payload.status == RecommendationReviewStatus.superseded:
                 recommendation.status = RecommendationStatus.superseded
-                # If a superseding recommendation ID is provided in applied_changes, link it
+                # Link the superseding recommendation if provided in applied_changes
                 superseded_by = payload.applied_changes.get(
                     "superseded_by_recommendation_id"
                 )
                 if superseded_by:
-                    recommendation.superseded_by_recommendation_id = uuid.UUID(
-                        superseded_by
-                    )
+                    superseded_by_id = uuid.UUID(str(superseded_by))
+                    recommendation.superseded_by_recommendation_id = superseded_by_id
+
+                    # Also update the new recommendation to point back to this one
+                    new_rec = await self._get_recommendation(user_id, superseded_by_id)
+                    if new_rec:
+                        new_rec.superseded_recommendation_id = recommendation.id
+
             elif payload.status == RecommendationReviewStatus.blocked:
                 recommendation.status = RecommendationStatus.blocked
 

@@ -419,13 +419,38 @@ export default function DecisionNarrativePage() {
                           <span className="rounded-full border border-slate-300 px-2 py-1 text-slate-600 dark:border-slate-700 dark:text-slate-300">
                             {activePayload.continuity_status}
                           </span>
-                          {activePayload.review_summary?.open_review_count ? (
+                      {activePayload.review_summary?.open_review_count ? (
                             <span className="rounded-full border border-amber-300 px-2 py-1 text-amber-700 dark:border-amber-900 dark:text-amber-300">
                               {activePayload.review_summary.open_review_count} open review{activePayload.review_summary.open_review_count === 1 ? "" : "s"}
                             </span>
                           ) : null}
+                          {activePayload.recommendation_status === "superseded" && (
+                            <span className="rounded-full border border-purple-300 px-2 py-1 text-purple-700 dark:border-purple-900 dark:text-purple-300">
+                              Superseded
+                            </span>
+                          )}
                         </div>
                       ) : null}
+                      {activePayload?.superseded_by_trace_id && (
+                        <div className="mt-4 rounded-xl border border-purple-100 bg-purple-50 p-4 dark:border-purple-900/50 dark:bg-purple-950/20">
+                          <p className="text-xs font-bold uppercase tracking-[0.12em] text-purple-700 dark:text-purple-300">
+                            Superseded Guidance
+                          </p>
+                          <p className="mt-2 text-sm text-purple-900 dark:text-purple-100">
+                            This recommendation has been retired and replaced by a newer decision trace.
+                          </p>
+                          <button
+                            onClick={() => {
+                              const targetTrace = source.find(t => t.id === activePayload.superseded_by_trace_id);
+                              if (targetTrace) setActiveTrace(targetTrace);
+                            }}
+                            className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-purple-700 underline underline-offset-4 hover:text-purple-900 dark:text-purple-300 dark:hover:text-purple-100"
+                          >
+                            View replacement trace ({activePayload.superseded_by_trace_id.slice(0, 8)})
+                            <ChevronRight className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
                       {active && active.trace_type !== "action" ? (
                         <div className="mt-4 flex flex-wrap items-center gap-3">
                           <RecommendationReviewDialog

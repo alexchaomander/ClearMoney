@@ -28,11 +28,13 @@ function ReviewCard({
   busy,
 }: {
   review: RecommendationReview;
-  onResolve: (review: RecommendationReview, status: RecommendationReviewStatus) => Promise<void>;
+  onResolve: (review: RecommendationReview, status: RecommendationReviewStatus, supersededById?: string) => Promise<void>;
   onConvert: (review: RecommendationReview) => Promise<void>;
   onReopen: (review: RecommendationReview) => Promise<void>;
   busy: boolean;
 }) {
+  const [supersededById, setSupersededById] = useState("");
+  const [showSupersedeInput, setShowSupersedeInput] = useState(false);
   const isOpen = review.status === "open";
 
   const statusColors = {
@@ -101,12 +103,19 @@ function ReviewCard({
               Block
             </button>
             <button
-              onClick={() => void onResolve(review, "superseded")}
+              onClick={() => {
+                if (showSupersedeInput && supersededById) {
+                  void onResolve(review, "superseded", supersededById);
+                  setShowSupersedeInput(false);
+                } else {
+                  setShowSupersedeInput(!showSupersedeInput);
+                }
+              }}
               disabled={busy}
               className="inline-flex items-center gap-2 rounded-2xl border border-purple-200 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-purple-700 disabled:opacity-50 dark:border-purple-900 dark:text-purple-300"
             >
               <FastForward className="h-3.5 w-3.5" />
-              Supersede
+              {showSupersedeInput ? "Confirm Supersede" : "Supersede"}
             </button>
             <button
               onClick={() => void onConvert(review)}
@@ -128,6 +137,22 @@ function ReviewCard({
           </button>
         )}
       </div>
+      {showSupersedeInput && (
+        <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
+          <label className="block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500">
+              Superseding Recommendation ID
+            </span>
+            <input
+              type="text"
+              value={supersededById}
+              onChange={(e) => setSupersededById(e.target.value)}
+              placeholder="Paste the newer recommendation UUID here"
+              className="w-full rounded-xl border border-purple-200 bg-white px-3 py-2 text-xs text-slate-900 dark:border-purple-900 dark:bg-slate-950 dark:text-white"
+            />
+          </label>
+        </div>
+      )}
     </div>
   );
 }
@@ -147,16 +172,24 @@ export default function RecommendationReviewsPage() {
   const reviews = useMemo(() => data ?? [], [data]);
   const openCount = reviews.filter((review) => review.status === "open").length;
 
-  async function handleResolve(review: RecommendationReview, status: RecommendationReviewStatus) {
+  async function handleResolve(
+    review: RecommendationReview,
+    status: RecommendationReviewStatus,
+    supersededById?: string
+  ) {
     try {
       await resolveReview.mutateAsync({
         reviewId: review.id,
         data: {
           status,
           resolution: status === "resolved" ? "review_resolved" : status,
-          resolution_notes: `Marked as ${status} from the recommendation review console.`,
+          resolution_notes: supersededById
+            ? `Superseded by recommendation ${supersededById}.`
+            : `Marked as ${status} from the recommendation review console.`,
           reviewer_label: "user_console",
-          applied_changes: {},
+          applied_changes: supersededById
+            ? { superseded_by_recommendation_id: supersededById }
+            : {},
         },
       });
       pushToast({ title: `Review marked as ${status}`, variant: "success" });
