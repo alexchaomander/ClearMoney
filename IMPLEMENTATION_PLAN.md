@@ -195,9 +195,9 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
     - Implement "Appraisal History" to track value over time.
 
 ### 1.8 The Unified Context Graph (Mapping)
-- [ ] **Schema Normalization**: Ensure that data from Plaid (Banks), SnapTrade (Brokerages), and Alchemy (Crypto) all map to the unified `Strata` graph model.
-- [ ] **Data Freshness Engine**: Implement a background worker to sync different providers at different cadences (e.g., Crypto: 5m, Banks: 6h).
-- [ ] **Normalization Logic**: Map fragmented merchant strings from Plaid into clean, categorized entities using an LLM-based categorization service.
+- [x] **Schema Normalization**: Ensure that data from Plaid (Banks), SnapTrade (Brokerages), and Alchemy (Crypto) all map to the unified `Strata` graph model.
+- [x] **Data Freshness Engine**: Implement a background worker to sync different providers at different cadences (e.g., Crypto: 5m, Banks: 6h).
+- [x] **Normalization Logic**: Map fragmented merchant strings from Plaid into clean, categorized entities using an LLM-based categorization service.
 
 ---
 
