@@ -1,14 +1,17 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 from sqlalchemy import or_, select
 
 from app.core.config import settings
 from app.db.session import async_session_factory
 from app.models.connection import Connection, ConnectionStatus
+from app.models.crypto_wallet import CryptoWallet
 from app.services.banking_sync import sync_banking_connection
 from app.services.connection_sync import sync_connection_accounts
+from app.services.crypto import CryptoService
 from app.services.portfolio_snapshots import create_daily_snapshots
 from app.services.providers.base import BaseProvider
 from app.services.providers.base_banking import BaseBankingProvider
@@ -82,6 +85,35 @@ async def run_daily_snapshots() -> None:
         logger.info("Created %s portfolio snapshots", created)
 
 
+async def run_crypto_sync() -> None:
+    cutoff = datetime.now(timezone.utc) - timedelta(
+        minutes=settings.crypto_sync_stale_minutes
+    )
+
+    async with async_session_factory() as session:
+        result = await session.execute(
+            select(CryptoWallet.id).where(
+                or_(
+                    CryptoWallet.updated_at < cutoff,
+                    CryptoWallet.last_balance_usd == Decimal("0.0"),
+                )
+            )
+        )
+        stale_wallet_ids = result.scalars().all()
+
+    for wallet_id in stale_wallet_ids:
+        async with async_session_factory() as session:
+            wallet = await session.get(CryptoWallet, wallet_id)
+            if not wallet:
+                continue
+            try:
+                crypto_service = CryptoService(session)
+                await crypto_service.sync_wallet(wallet)
+                logger.info("Synced crypto wallet %s", wallet_id)
+            except Exception as exc:
+                logger.warning("Failed to sync crypto wallet %s: %s", wallet_id, exc)
+
+
 async def _run_periodic_task(
     name: str,
     interval_seconds: int,
@@ -108,6 +140,14 @@ async def start_background_tasks() -> tuple[asyncio.Event, list[asyncio.Task]]:
                 "connection_sync",
                 settings.sync_interval_seconds,
                 run_connection_sync,
+                stop_event,
+            )
+        ),
+        asyncio.create_task(
+            _run_periodic_task(
+                "crypto_sync",
+                settings.crypto_sync_interval_seconds,
+                run_crypto_sync,
                 stop_event,
             )
         ),
