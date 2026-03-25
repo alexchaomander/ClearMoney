@@ -85,7 +85,7 @@ class EquityValuationService:
 
         # Calculate Insights
         election_deadline = grant.grant_date + relativedelta(days=30) if grant.grant_date else None
-        
+
         qsbs_progress = None
         if grant.is_qsbs_eligible and grant.qsbs_holding_start:
             # 5 years required for QSBS
