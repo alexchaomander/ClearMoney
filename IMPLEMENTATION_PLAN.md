@@ -181,10 +181,11 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 ### 1.7 The "Beyond Mint" Data Connectors (DIY)
 Instead of waiting for aggregators, we build lightweight, high-value connectors for modern assets.
 
-- [ ] **Equity Comp (RSUs/Options)**:
-    - Implement Grant/Vest model in `app/models/financial_memory.py`.
-    - Integrate **Alpha Vantage** or **Polygon.io** for real-time stock price lookups.
-    - Build the "Vest Projection" logic (e.g., "You have $15k vesting in 30 days").
+- [x] **Equity Comp (RSUs/Options/Founder Stock)**:
+    - Implemented Equity Grant/Valuation schema and models.
+    - Built comprehensive 83(b) election tracking and 30-day deadline countdowns.
+    - Built QSBS (Section 1202) eligibility tracking and 5-year holding period clock.
+    - Added UI for Founder Insights and "Vest Projection" logic in the Equity Dashboard.
 - [ ] **Public Crypto (DeFi)**:
     - Integrate **Alchemy** or **Moralis** SDKs.
     - Allow users to add public wallet addresses (ETH/SOL).

@@ -25,3 +25,19 @@ export function formatPercent(value: number): string {
     maximumFractionDigits: 1,
   }).format(value);
 }
+
+export function formatDate(date: string | Date, formatStr: string = "MMM d, yyyy"): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  
+  // Basic implementation of MMM yyyy or MMM d, yyyy
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = months[d.getUTCMonth()];
+  const year = d.getUTCFullYear();
+  const day = d.getUTCDate();
+
+  if (formatStr === "MMM yyyy") {
+    return `${month} ${year}`;
+  }
+  
+  return `${month} ${day}, ${year}`;
+}

@@ -1292,22 +1292,153 @@ export class DemoStrataClient implements StrataClientInterface {
 
   async getEquityPortfolio(): Promise<EquityPortfolioSummary> {
     await delay(300);
-    return { total_vested_value: 0, total_unvested_value: 0, total_value: 0, grant_valuations: [] };
+    const now = new Date();
+    const deadline1 = new Date(now);
+    deadline1.setDate(deadline1.getDate() + 15); // 15 days left
+    
+    const deadline2 = new Date(now);
+    deadline2.setDate(deadline2.getDate() - 5); // Missed
+    
+    return {
+      total_vested_value: 1250000,
+      total_unvested_value: 3500000,
+      total_value: 4750000,
+      grant_valuations: [
+        {
+          id: "demo-grant-1",
+          symbol: "STRT",
+          current_price: 15.50,
+          vested_quantity: 50000,
+          unvested_quantity: 150000,
+          vested_value: 775000,
+          unvested_value: 2325000,
+          total_value: 3100000,
+          next_vest_date: "2026-04-15",
+          next_vest_quantity: 5000,
+          is_83b_elected: false,
+          election_deadline: deadline1.toISOString().split('T')[0],
+          is_qsbs_eligible: true,
+          qsbs_progress_percent: 45.5,
+        },
+        {
+          id: "demo-grant-2",
+          symbol: "NVDA",
+          current_price: 850.25,
+          vested_quantity: 500,
+          unvested_quantity: 1500,
+          vested_value: 425125,
+          unvested_value: 1275375,
+          total_value: 1700500,
+          next_vest_date: "2026-05-01",
+          next_vest_quantity: 100,
+          is_83b_elected: true,
+          election_deadline: deadline2.toISOString().split('T')[0],
+          is_qsbs_eligible: false,
+          qsbs_progress_percent: null,
+        }
+      ]
+    };
   }
 
   async getEquityProjections(): Promise<EquityProjection[]> {
     await delay(300);
-    return [];
+    const projections: EquityProjection[] = [];
+    const now = new Date();
+    for (let i = 0; i < 24; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      projections.push({
+        date: date.toISOString().split('T')[0],
+        total_value: (4750000 + (i * 150000)).toString(),
+        liquid_value: (1250000 + (i * 80000)).toString(),
+      });
+    }
+    return projections;
+  }
+
+  async getEquityGrants(): Promise<EquityGrant[]> {
+    await delay(300);
+    return [
+      {
+        id: "demo-grant-1",
+        user_id: "demo-user-001",
+        grant_name: "Founder Stock",
+        symbol: "STRT",
+        grant_type: "founder_stock",
+        quantity: 200000,
+        strike_price: 0.0001,
+        grant_date: "2024-01-01",
+        is_83b_elected: false,
+        election_date: null,
+        is_qsbs_eligible: true,
+        qsbs_holding_start: "2024-01-01",
+        vesting_schedule: null,
+        notes: "Initial founder grant",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "demo-grant-2",
+        user_id: "demo-user-001",
+        grant_name: "Side Hustle Options",
+        symbol: "NVDA",
+        grant_type: "iso",
+        quantity: 2000,
+        strike_price: 150.00,
+        grant_date: "2023-06-15",
+        is_83b_elected: true,
+        election_date: "2023-07-01",
+        is_qsbs_eligible: false,
+        qsbs_holding_start: null,
+        vesting_schedule: null,
+        notes: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+    ];
   }
 
   async createEquityGrant(_data: EquityGrantCreate): Promise<EquityGrant> {
     await delay(300);
-    return { id: "g1", user_id: "u1", symbol: _data.symbol, grant_name: _data.grant_name, grant_type: _data.grant_type, quantity: _data.quantity, strike_price: _data.strike_price ?? null, grant_date: _data.grant_date, vesting_schedule: _data.vesting_schedule ?? null, notes: _data.notes ?? null, created_at: "", updated_at: "" };
+    return { 
+      id: "g1", 
+      user_id: "u1", 
+      symbol: _data.symbol, 
+      grant_name: _data.grant_name, 
+      grant_type: _data.grant_type, 
+      quantity: _data.quantity, 
+      strike_price: _data.strike_price ?? null, 
+      grant_date: _data.grant_date, 
+      is_83b_elected: _data.is_83b_elected ?? false,
+      election_date: _data.election_date ?? null,
+      is_qsbs_eligible: _data.is_qsbs_eligible ?? false,
+      qsbs_holding_start: _data.qsbs_holding_start ?? null,
+      vesting_schedule: _data.vesting_schedule ?? null, 
+      notes: _data.notes ?? null, 
+      created_at: "", 
+      updated_at: "" 
+    };
   }
 
   async updateEquityGrant(_id: string, _data: EquityGrantUpdate): Promise<EquityGrant> {
     await delay(300);
-    return { id: _id, user_id: "u1", symbol: _data.symbol ?? "", grant_name: _data.grant_name ?? "", grant_type: _data.grant_type ?? "rsu", quantity: _data.quantity ?? 0, strike_price: _data.strike_price ?? null, grant_date: _data.grant_date ?? "", vesting_schedule: _data.vesting_schedule ?? null, notes: _data.notes ?? null, created_at: "", updated_at: "" };
+    return { 
+      id: _id, 
+      user_id: "u1", 
+      symbol: _data.symbol ?? "", 
+      grant_name: _data.grant_name ?? "", 
+      grant_type: _data.grant_type ?? "rsu", 
+      quantity: _data.quantity ?? 0, 
+      strike_price: _data.strike_price ?? null, 
+      grant_date: _data.grant_date ?? "", 
+      is_83b_elected: _data.is_83b_elected ?? false,
+      election_date: _data.election_date ?? null,
+      is_qsbs_eligible: _data.is_qsbs_eligible ?? false,
+      qsbs_holding_start: _data.qsbs_holding_start ?? null,
+      vesting_schedule: _data.vesting_schedule ?? null, 
+      notes: _data.notes ?? null, 
+      created_at: "", 
+      updated_at: "" 
+    };
   }
 
   async deleteEquityGrant(_id: string): Promise<void> {

@@ -83,7 +83,19 @@ class EquityValuationService:
             vested_value = vested_quantity * intrinsic_value_per_share
             unvested_value = unvested_quantity * intrinsic_value_per_share
 
+        # Calculate Insights
+        election_deadline = grant.grant_date + relativedelta(days=30) if grant.grant_date else None
+        
+        qsbs_progress = None
+        if grant.is_qsbs_eligible and grant.qsbs_holding_start:
+            # 5 years required for QSBS
+            five_years_later = grant.qsbs_holding_start + relativedelta(years=5)
+            total_days = (five_years_later - grant.qsbs_holding_start).days
+            elapsed_days = (today - grant.qsbs_holding_start).days
+            qsbs_progress = min(100.0, max(0.0, (elapsed_days / total_days) * 100))
+
         return EquityValuation(
+            id=grant.id,
             symbol=grant.symbol or grant.company_name or "Private",
             current_price=current_price,
             vested_quantity=vested_quantity,
@@ -93,6 +105,10 @@ class EquityValuationService:
             total_value=vested_value + unvested_value,
             next_vest_date=next_vest_date,
             next_vest_quantity=next_vest_quantity,
+            is_83b_elected=grant.is_83b_elected,
+            election_deadline=election_deadline,
+            is_qsbs_eligible=grant.is_qsbs_eligible,
+            qsbs_progress_percent=qsbs_progress,
         )
 
     async def calculate_portfolio_summary(

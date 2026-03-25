@@ -23,6 +23,10 @@ class EquityGrantBase(BaseModel):
     valuation_cap: Decimal | None = None
     discount_rate: Decimal | None = None
     amount_invested: Decimal | None = None
+    is_83b_elected: bool = False
+    election_date: date | None = None
+    is_qsbs_eligible: bool = False
+    qsbs_holding_start: date | None = None
     vesting_schedule: list[VestingEvent] | None = None
     notes: str | None = None
 
@@ -42,6 +46,10 @@ class EquityGrantUpdate(BaseModel):
     valuation_cap: Decimal | None = None
     discount_rate: Decimal | None = None
     amount_invested: Decimal | None = None
+    is_83b_elected: bool | None = None
+    election_date: date | None = None
+    is_qsbs_eligible: bool | None = None
+    qsbs_holding_start: date | None = None
     vesting_schedule: list[VestingEvent] | None = None
     notes: str | None = None
 
@@ -54,6 +62,7 @@ class EquityGrant(EquityGrantBase):
 
 
 class EquityValuation(BaseModel):
+    id: uuid.UUID
     symbol: str
     current_price: Decimal
     vested_quantity: Decimal
@@ -63,6 +72,12 @@ class EquityValuation(BaseModel):
     total_value: Decimal
     next_vest_date: date | None = None
     next_vest_quantity: Decimal | None = None
+    
+    # Insights
+    is_83b_elected: bool = False
+    election_deadline: date | None = None
+    is_qsbs_eligible: bool = False
+    qsbs_progress_percent: float | None = None
 
 
 class EquityPortfolioSummary(BaseModel):

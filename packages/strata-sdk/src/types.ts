@@ -1939,6 +1939,10 @@ export interface EquityGrant {
   valuation_cap?: number | null;
   discount_rate?: number | null;
   amount_invested?: number | null;
+  is_83b_elected: boolean;
+  election_date: string | null;
+  is_qsbs_eligible: boolean;
+  qsbs_holding_start: string | null;
   vesting_schedule: VestingEvent[] | null;
   notes: string | null;
   created_at: string;
@@ -1956,6 +1960,10 @@ export interface EquityGrantCreate {
   valuation_cap?: number | null;
   discount_rate?: number | null;
   amount_invested?: number | null;
+  is_83b_elected?: boolean;
+  election_date?: string | null;
+  is_qsbs_eligible?: boolean;
+  qsbs_holding_start?: string | null;
   vesting_schedule?: VestingEvent[] | null;
   notes?: string | null;
 }
@@ -1971,11 +1979,16 @@ export interface EquityGrantUpdate {
   valuation_cap?: number | null;
   discount_rate?: number | null;
   amount_invested?: number | null;
+  is_83b_elected?: boolean;
+  election_date?: string | null;
+  is_qsbs_eligible?: boolean;
+  qsbs_holding_start?: string | null;
   vesting_schedule?: VestingEvent[] | null;
   notes?: string | null;
 }
 
 export interface EquityValuation {
+  id: string;
   symbol: string;
   current_price: number;
   vested_quantity: number;
@@ -1985,6 +1998,10 @@ export interface EquityValuation {
   total_value: number;
   next_vest_date: string | null;
   next_vest_quantity: number | null;
+  is_83b_elected: boolean;
+  election_deadline: string | null;
+  is_qsbs_eligible: boolean;
+  qsbs_progress_percent: number | null;
 }
 
 export interface EquityPortfolioSummary {
