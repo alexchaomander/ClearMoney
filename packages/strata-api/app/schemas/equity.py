@@ -72,7 +72,7 @@ class EquityValuation(BaseModel):
     total_value: Decimal
     next_vest_date: date | None = None
     next_vest_quantity: Decimal | None = None
-    
+
     # Insights
     is_83b_elected: bool = False
     election_deadline: date | None = None
