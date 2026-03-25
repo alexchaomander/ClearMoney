@@ -170,6 +170,50 @@ class RecommendationReviewService:
             len(open_recommendations) >= 3
         )  # Arbitrary threshold for "high overlap" if no specific intent match
 
+    async def has_overlapping_pending_guidance(
+        self,
+        user_id: uuid.UUID,
+        skill_name: str,
+        details: dict | None = None,
+    ) -> bool:
+        """Check for pending recommendations that overlap semantically with the proposed one."""
+        from app.models.agent_session import RecommendationStatus
+        
+        query = (
+            select(Recommendation)
+            .where(
+                Recommendation.user_id == user_id,
+                Recommendation.status == RecommendationStatus.pending,
+                Recommendation.skill_name == skill_name,
+            )
+        )
+        result = await self._session.execute(query)
+        pending_recommendations = result.scalars().all()
+
+        if not pending_recommendations:
+            return False
+
+        # If details are provided, check for intent/metric overlap
+        if details:
+            proposed_intent = details.get("intent_type") or details.get(
+                "action", {}
+            ).get("type")
+            proposed_metric = details.get("affected_metric")
+
+            for rec in pending_recommendations:
+                rec_details = rec.details or {}
+                rec_intent = rec_details.get("intent_type") or rec_details.get(
+                    "action", {}
+                ).get("type")
+                rec_metric = rec_details.get("affected_metric")
+
+                if proposed_intent and rec_intent == proposed_intent:
+                    return True
+                if proposed_metric and rec_metric == proposed_metric:
+                    return True
+
+        return len(pending_recommendations) >= 5  # Higher threshold for generic pending vs reviews
+
     async def resolve_review(
         self,
         user_id: uuid.UUID,
@@ -203,14 +247,19 @@ class RecommendationReviewService:
                 recommendation.status = RecommendationStatus.accepted  # Back to accepted if dismissal means the recommendation was actually fine
             elif payload.status == RecommendationReviewStatus.superseded:
                 recommendation.status = RecommendationStatus.superseded
-                # If a superseding recommendation ID is provided in applied_changes, link it
+                # Link the superseding recommendation if provided in applied_changes
                 superseded_by = payload.applied_changes.get(
                     "superseded_by_recommendation_id"
                 )
                 if superseded_by:
-                    recommendation.superseded_by_recommendation_id = uuid.UUID(
-                        superseded_by
-                    )
+                    superseded_by_id = uuid.UUID(str(superseded_by))
+                    recommendation.superseded_by_recommendation_id = superseded_by_id
+
+                    # Also update the new recommendation to point back to this one
+                    new_rec = await self._get_recommendation(user_id, superseded_by_id)
+                    if new_rec:
+                        new_rec.superseded_recommendation_id = recommendation.id
+
             elif payload.status == RecommendationReviewStatus.blocked:
                 recommendation.status = RecommendationStatus.blocked
 
