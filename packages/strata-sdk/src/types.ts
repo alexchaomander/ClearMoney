@@ -946,6 +946,13 @@ export interface FinancialContextAlternativeAsset {
   market_value: number | null;
 }
 
+export interface FinancialContextCryptoWallet {
+  label: string | null;
+  address: string;
+  chain: string;
+  balance_usd: number | null;
+}
+
 export interface FinancialContextHolding {
   ticker: string | null;
   name: string;
@@ -962,6 +969,7 @@ export interface PortfolioMetrics {
   total_cash_value: number | null;
   total_debt_value: number | null;
   total_physical_asset_value?: number | null;
+  total_crypto_value?: number | null;
   total_equity_vested_value?: number | null;
   total_equity_unvested_value?: number | null;
   tax_advantaged_value: number | null;
@@ -1065,6 +1073,7 @@ export interface FinancialContext {
     collectibles: FinancialContextCollectibleAsset[];
     precious_metals: FinancialContextPreciousMetalAsset[];
     alternative_assets: FinancialContextAlternativeAsset[];
+    crypto_wallets: FinancialContextCryptoWallet[];
   };
   holdings: FinancialContextHolding[];
   equity: Record<string, unknown>;

@@ -591,6 +591,7 @@ export class DemoStrataClient implements StrataClientInterface {
         collectibles: [],
         precious_metals: [],
         alternative_assets: [],
+        crypto_wallets: [],
       },
       holdings: [],
       equity: {},
