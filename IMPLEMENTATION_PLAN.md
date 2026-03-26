@@ -98,10 +98,11 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 - [x] **Backward Compatibility**:
     - Existing traces should still render via fallback parsing while new traces emit the typed v2 shape.
 
-**Delivered**
+**Completed**
 - Shared `DecisionTracePayload` is now live across advisor traces, API serialization, SDK types, and dashboard rendering.
 - Recommendation traces now carry remediation actions, correction targets, and review summaries.
 - User-facing review entry points and a recommendation review queue are implemented.
+- **Multi-LLM Math-to-Narrative Pipeline**: Integrated OpenAI, Anthropic, Gemini, OpenRouter, NVIDIA, and Ollama for automated financial briefings.
 
 **Execution Sequence**
 1. Add `DecisionTracePayload` and response parsing in the API/schema layer.
