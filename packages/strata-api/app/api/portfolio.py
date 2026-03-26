@@ -28,6 +28,7 @@ from app.services.commingling import ComminglingDetectionEngine
 from app.services.debt import DebtPrioritizationService
 from app.models.equity_grant import EquityGrant
 from app.services.equity_valuation import equity_valuation_service
+from app.services.portfolio import PortfolioService
 from app.services.portfolio_analysis import PortfolioAnalysisService
 from app.services.runway import RunwayService
 from app.services.savings import SavingsService
@@ -48,174 +49,10 @@ async def get_portfolio_summary(
 
     Includes net worth calculation, asset allocation, and concentration alerts.
     """
-    # total_cash, total_debt = await get_cash_and_debt_totals(session, user.id) # Removed
-    # Replaced with PortfolioService
     portfolio_service = PortfolioService(session, user.id)
-    total_cash, total_debt = await portfolio_service.get_cash_and_debt_totals()
+    summary_data = await portfolio_service.get_portfolio_summary_data()
 
-    # Get equity grants and calculate valuation
-    equity_result = await session.execute(
-        select(EquityGrant).where(EquityGrant.user_id == user.id)
-    )
-    equity_grants = equity_result.scalars().all()
-    equity_summary = await equity_valuation_service.calculate_portfolio_summary(
-        list(equity_grants)
-    )
-    total_equity_vested = equity_summary.total_vested_value
-    total_equity_unvested = equity_summary.total_unvested_value
-
-    # Get investment accounts with holdings
-    investment_result = await session.execute(
-        select(InvestmentAccount)
-        .options(
-            selectinload(InvestmentAccount.holdings).selectinload(Holding.security)
-        )
-        .where(InvestmentAccount.user_id == user.id)
-    )
-    investment_accounts = investment_result.scalars().all()
-
-    # Calculate investment totals
-    total_investment = Decimal("0.00")
-    tax_advantaged_value = Decimal("0.00")
-    taxable_value = Decimal("0.00")
-
-    # Track allocations
-    allocation_by_asset_type: dict[str, Decimal] = defaultdict(Decimal)
-    allocation_by_account_type: dict[str, Decimal] = defaultdict(Decimal)
-
-    # Track holdings for top holdings and concentration
-    all_holdings: list[dict] = [] # Changed from TopHolding to dict for flexibility
-
-    for account in investment_accounts:
-        account_value = account.balance
-        total_investment += account_value
-
-        if account.is_tax_advantaged:
-            tax_advantaged_value += account_value
-        else:
-            taxable_value += account_value
-
-        # Track by account type
-        allocation_by_account_type[account.account_type.value] += account_value
-
-        # Process holdings
-        for holding in account.holdings:
-            market_value = holding.market_value or Decimal("0.00")
-
-            # Track by security type
-            security_type = holding.security.security_type.value
-            allocation_by_asset_type[security_type] += market_value
-
-            all_holdings.append(
-                { # Changed from TopHolding to dict
-                    "ticker": holding.security.ticker,
-                    "name": holding.security.name,
-                    "security_type": security_type,
-                    "quantity": holding.quantity,
-                    "market_value": market_value,
-                    "cost_basis": holding.cost_basis,
-                    "account_name": account.name,
-                }
-            )
-
-    # Calculate net worth
-    # total_physical = await get_physical_asset_total(session, user.id) # Removed
-    # Replaced with PortfolioService
-    total_physical = await portfolio_service.get_physical_asset_total()
-    net_worth = (
-        total_cash
-        + total_investment
-        + total_equity_vested
-        + total_physical
-        - total_debt
-    )
-
-    # Calculate allocation percentages
-    total_assets = total_cash + total_investment + total_equity_vested + total_physical
-    if total_assets > 0:
-        # Add cash and equity to asset allocation
-        allocation_by_asset_type["cash"] += total_cash
-        allocation_by_asset_type["equity"] += total_equity_vested
-        if total_physical > 0:
-            allocation_by_asset_type["physical_assets"] += total_physical
-
-        asset_type_allocations = [
-            { # Changed from AssetAllocation to dict
-                "category": category,
-                "value": value,
-                "percentage": (value / total_assets * Decimal("100")).quantize(
-                    Decimal("0.01")
-                ),
-            }
-            for category, value in sorted(
-                allocation_by_asset_type.items(),
-                key=lambda x: x[1],
-                reverse=True,
-            )
-            if value > 0
-        ]
-
-        account_type_allocations = [
-            { # Changed from AssetAllocation to dict
-                "category": category,
-                "value": value,
-                "percentage": (value / total_investment * Decimal("100")).quantize(
-                    Decimal("0.01")
-                )
-                if total_investment > 0
-                else Decimal("0.00"),
-            }
-            for category, value in sorted(
-                allocation_by_account_type.items(),
-                key=lambda x: x[1],
-                reverse=True,
-            )
-            if value > 0
-        ]
-    else:
-        asset_type_allocations = []
-        account_type_allocations = []
-
-    # Get top holdings by market value
-    top_holdings = sorted(
-        all_holdings,
-        key=lambda x: x["market_value"], # Access dict key
-        reverse=True,
-    )[:10]
-
-    # Calculate concentration alerts
-    concentration_alerts: list[ConcentrationAlert] = []
-    if total_assets > 0:
-        for holding in all_holdings:
-            percentage = (
-                holding["market_value"] / total_assets * Decimal("100") # Access dict key
-            ).quantize(Decimal("0.01"))
-            if percentage >= CONCENTRATION_THRESHOLD:
-                display_pct = percentage.quantize(Decimal("0.1"))
-                concentration_alerts.append(
-                    ConcentrationAlert(
-                        ticker=holding["ticker"], # Access dict key
-                        name=holding["name"], # Access dict key
-                        percentage=percentage,
-                        message=f"{holding['ticker'] or holding['name']} represents {display_pct}% of your portfolio",
-                    )
-                )
-
-    return PortfolioSummary(
-        total_investment_value=total_investment,
-        total_cash_value=total_cash,
-        total_debt_value=total_debt,
-        total_physical_asset_value=total_physical,
-        total_equity_vested_value=total_equity_vested,
-        total_equity_unvested_value=total_equity_unvested,
-        net_worth=net_worth,
-        tax_advantaged_value=tax_advantaged_value,
-        taxable_value=taxable_value,
-        allocation_by_asset_type=asset_type_allocations,
-        allocation_by_account_type=account_type_allocations,
-        top_holdings=top_holdings,
-        concentration_alerts=concentration_alerts,
-    )
+    return PortfolioSummary(**summary_data)
 
 
 @router.get("/holdings", response_model=list[dict])
@@ -306,9 +143,6 @@ async def get_portfolio_history(
     snapshots = result.scalars().all()
 
     if not snapshots:
-        # total_cash, total_debt = await get_cash_and_debt_totals(session, user.id) # Removed
-        # total_investment = await get_investment_total(session, user.id) # Removed
-        # Replaced with PortfolioService
         portfolio_service = PortfolioService(session, user.id)
         total_cash, total_debt = await portfolio_service.get_cash_and_debt_totals()
         total_investment = await portfolio_service.get_investment_total()

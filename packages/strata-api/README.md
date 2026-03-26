@@ -265,7 +265,7 @@ Crypto aggregation is read-only. The current implementation supports live native
 ```bash
 source .venv/bin/activate
 
-# Run all tests (155 tests)
+# Run all tests (226 tests)
 python -m pytest tests/ -v
 
 # Run with coverage
