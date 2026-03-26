@@ -24,6 +24,7 @@ from app.schemas.portfolio import (
     RunwayMetrics,
     DebtMetrics,
     SavingsMetrics,
+    PortfolioAnalysisMetrics,
 )
 from app.services.commingling import ComminglingDetectionEngine
 from app.services.crypto import CryptoService
@@ -33,6 +34,7 @@ from app.services.runway import RunwayService
 from app.services.tax_shield import TaxShieldService
 from app.services.debt import DebtPrioritizationService
 from app.services.savings import SavingsService
+from app.services.portfolio_analysis import PortfolioAnalysisService
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 
@@ -384,3 +386,13 @@ async def get_tax_shield_metrics(
     service = TaxShieldService(session)
     data = await service.get_tax_shield_metrics(user.id)
     return TaxShieldMetrics(**data)
+
+@router.get("/analysis", response_model=PortfolioAnalysisMetrics)
+async def get_portfolio_analysis(
+    user: User = Depends(require_scopes(["portfolio:read"])),
+    session: AsyncSession = Depends(get_async_session),
+) -> PortfolioAnalysisMetrics:
+    """Get deterministic portfolio concentration, tax drag, and cash drag analysis."""
+    service = PortfolioAnalysisService(session)
+    data = await service.get_portfolio_analysis(user.id)
+    return PortfolioAnalysisMetrics(**data)

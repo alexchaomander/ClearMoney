@@ -35,6 +35,15 @@ test("prefill prefers saved snapshot in memory notes", () => {
     debt_profile: null,
     portfolio_summary: null,
     equity_compensation: null,
+    employer_name: null,
+    employer_industry: null,
+    life_insurance_benefit: null,
+    disability_insurance_benefit: null,
+    umbrella_policy_limit: null,
+    has_will: null,
+    has_trust: null,
+    has_poa: null,
+    entity_type: null,
     notes: {
       founderCoveragePlanner: {
         version: 1,

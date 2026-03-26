@@ -74,6 +74,7 @@ import { TaxShieldCard } from "@/components/dashboard/TaxShieldCard";
 import { AccountsList } from "@/components/dashboard/AccountsList";
 import { DecisionTracePanel } from "@/components/dashboard/DecisionTracePanel";
 import { ConcentrationAlert } from "@/components/dashboard/ConcentrationAlert";
+import { AdvisorBriefing } from "@/components/dashboard/AdvisorBriefing";
 import { DataSourceStatusStrip, type DataSourceStatusItem } from "@/components/dashboard/DataSourceStatusStrip";
 import { PhysicalAssetsDemoBanner } from "@/components/dashboard/PhysicalAssetsDemoBanner";
 import { AssumptionControl } from "@/components/dashboard/AssumptionControl";
@@ -578,6 +579,7 @@ export default function DashboardPage() {
 
           {/* Right column */}
           <div className="space-y-6">
+            <AdvisorBriefing />
             <ProfileProgressCard memory={memory} />
 
             <AllocationChart
