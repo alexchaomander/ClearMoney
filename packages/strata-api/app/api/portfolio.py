@@ -28,6 +28,7 @@ from app.services.commingling import ComminglingDetectionEngine
 from app.services.debt import DebtPrioritizationService
 from app.models.equity_grant import EquityGrant
 from app.services.equity_valuation import equity_valuation_service
+from app.services.portfolio import PortfolioService
 from app.services.portfolio_analysis import PortfolioAnalysisService
 from app.services.runway import RunwayService
 from app.services.savings import SavingsService
@@ -306,9 +307,6 @@ async def get_portfolio_history(
     snapshots = result.scalars().all()
 
     if not snapshots:
-        # total_cash, total_debt = await get_cash_and_debt_totals(session, user.id) # Removed
-        # total_investment = await get_investment_total(session, user.id) # Removed
-        # Replaced with PortfolioService
         portfolio_service = PortfolioService(session, user.id)
         total_cash, total_debt = await portfolio_service.get_cash_and_debt_totals()
         total_investment = await portfolio_service.get_investment_total()

@@ -289,6 +289,142 @@ describe('StrataClient', () => {
       expect(body).toBe('{}');
     });
   });
+
+  // ── Portfolio & Metrics ─────────────────────────────────────────────────
+
+  describe('Portfolio & Metrics', () => {
+    it('getPortfolioSummary() should GET /api/v1/portfolio/summary', async () => {
+      globalThis.fetch = mockFetchResponse({});
+      await client.getPortfolioSummary();
+      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/v1/portfolio/summary'), expect.any(Object));
+    });
+
+    it('getVulnerabilityReport() should GET /api/v1/portfolio/vulnerability-report', async () => {
+      globalThis.fetch = mockFetchResponse({});
+      await client.getVulnerabilityReport();
+      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/v1/portfolio/vulnerability-report'), expect.any(Object));
+    });
+
+    it('getRunwayMetrics() should GET /api/v1/portfolio/runway', async () => {
+      globalThis.fetch = mockFetchResponse({});
+      await client.getRunwayMetrics();
+      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/v1/portfolio/runway'), expect.any(Object));
+    });
+
+    it('getTaxShieldMetrics() should GET /api/v1/portfolio/tax-shield', async () => {
+      globalThis.fetch = mockFetchResponse({});
+      await client.getTaxShieldMetrics();
+      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/v1/portfolio/tax-shield'), expect.any(Object));
+    });
+
+    it('getPortfolioHistory() should GET /api/v1/portfolio/history with range', async () => {
+      globalThis.fetch = mockFetchResponse([]);
+      await client.getPortfolioHistory('1y');
+      const url = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+      expect(url).toContain('range=1y');
+    });
+  });
+
+  // ── Physical Assets CRUD ───────────────────────────────────────────────
+
+  describe('Physical Assets', () => {
+    it('getPhysicalAssetsSummary() should GET /api/v1/physical-assets/summary', async () => {
+      globalThis.fetch = mockFetchResponse({});
+      await client.getPhysicalAssetsSummary();
+      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/v1/physical-assets/summary'), expect.any(Object));
+    });
+
+    it('createRealEstateAsset() should POST /api/v1/physical-assets/real-estate', async () => {
+      const data = { name: 'Home', address: '123 Main St' };
+      globalThis.fetch = mockFetchResponse({ id: 're_1', ...data });
+      await client.createRealEstateAsset(data as any);
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/physical-assets/real-estate'),
+        expect.objectContaining({ method: 'POST', body: JSON.stringify(data) })
+      );
+    });
+
+    it('refreshRealEstateValuation() should POST /api/v1/physical-assets/real-estate/:id/refresh', async () => {
+      globalThis.fetch = mockFetchResponse({ status: 'updated' });
+      await client.refreshRealEstateValuation('re_1');
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/physical-assets/real-estate/re_1/refresh'),
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+  });
+
+  // ── Financial Memory ───────────────────────────────────────────────────
+
+  describe('Financial Memory', () => {
+    it('getFinancialMemory() should GET /api/v1/memory', async () => {
+      globalThis.fetch = mockFetchResponse({});
+      await client.getFinancialMemory();
+      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/v1/memory'), expect.any(Object));
+    });
+
+    it('updateFinancialMemory() should PATCH /api/v1/memory', async () => {
+      const data = { filing_status: 'single' };
+      globalThis.fetch = mockFetchResponse({ ...data });
+      await client.updateFinancialMemory(data as any);
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/memory'),
+        expect.objectContaining({ method: 'PATCH', body: JSON.stringify(data) })
+      );
+    });
+  });
+
+  // ── Account CRUD (Investment & Debt) ───────────────────────────────────
+
+  describe('Account CRUD', () => {
+    it('createInvestmentAccount() should POST /api/v1/accounts/investment', async () => {
+      const data = { name: 'IRA', account_type: 'ira' };
+      globalThis.fetch = mockFetchResponse({ id: 'inv_1', ...data });
+      await client.createInvestmentAccount(data as any);
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/accounts/investment'),
+        expect.objectContaining({ method: 'POST', body: JSON.stringify(data) })
+      );
+    });
+
+    it('createDebtAccount() should POST /api/v1/accounts/debt', async () => {
+      const data = { name: 'Loan', debt_type: 'personal_loan', interest_rate: 5 };
+      globalThis.fetch = mockFetchResponse({ id: 'debt_1', ...data });
+      await client.createDebtAccount(data as any);
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/accounts/debt'),
+        expect.objectContaining({ method: 'POST', body: JSON.stringify(data) })
+      );
+    });
+
+    it('deleteDebtAccount() should DELETE /api/v1/accounts/debt/:id', async () => {
+      globalThis.fetch = mockFetch204();
+      await client.deleteDebtAccount('debt_1');
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/accounts/debt/debt_1'),
+        expect.objectContaining({ method: 'DELETE' })
+      );
+    });
+  });
+
+  // ── Notifications ─────────────────────────────────────────────────────
+
+  describe('Notifications', () => {
+    it('listNotifications() should GET /api/v1/notifications', async () => {
+      globalThis.fetch = mockFetchResponse([]);
+      await client.listNotifications();
+      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/v1/notifications'), expect.any(Object));
+    });
+
+    it('markAllNotificationsRead() should POST /api/v1/notifications/mark-all-read', async () => {
+      globalThis.fetch = mockFetchResponse({ status: 'ok' });
+      await client.markAllNotificationsRead();
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/notifications/mark-all-read'),
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+  });
 });
 
 // ─── isValidVIN ─────────────────────────────────────────────────────────────
