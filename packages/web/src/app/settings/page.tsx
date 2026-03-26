@@ -414,8 +414,9 @@ function ActionPolicySettings() {
 }
 
 function ProfileSettings() {
-  const { data: user, isLoading } = useMe();
+  const { data: user, isLoading, isError } = useMe();
   if (isLoading) return <div className="h-48 rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse" />;
+  if (isError) return <div className="p-4 text-rose-500">Failed to load profile information.</div>;
   
   return (
     <div className="space-y-6">

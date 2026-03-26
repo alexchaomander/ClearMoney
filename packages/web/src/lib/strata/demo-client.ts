@@ -131,6 +131,9 @@ import type {
   PropertySearchResult,
   VehicleSearchRequest,
   VehicleSearchResult,
+  Invoice,
+  UpgradeResponse,
+  BriefingSummary,
 } from "@clearmoney/strata-sdk";
 
 import {
@@ -641,7 +644,7 @@ export class DemoStrataClient implements StrataClientInterface {
     };
   }
 
-  async upgradeAccount(): Promise<import('@clearmoney/strata-sdk').UpgradeResponse> {
+  async upgradeAccount(): Promise<UpgradeResponse> {
     await delay(1000);
     return { checkout_url: "https://checkout.stripe.com/pay/cs_test_mock" };
   }
@@ -750,7 +753,7 @@ export class DemoStrataClient implements StrataClientInterface {
     return [];
   }
 
-  async getInvoices(): Promise<import('@clearmoney/strata-sdk').Invoice[]> {
+  async getInvoices(): Promise<Invoice[]> {
     await delay(300);
     return [
       {
@@ -763,7 +766,7 @@ export class DemoStrataClient implements StrataClientInterface {
     ];
   }
 
-  async getAdvisorBriefing(): Promise<import('@clearmoney/strata-sdk').BriefingSummary> {
+  async getAdvisorBriefing(): Promise<BriefingSummary> {
     await delay(300);
     return {
       last_login: new Date().toISOString(),
