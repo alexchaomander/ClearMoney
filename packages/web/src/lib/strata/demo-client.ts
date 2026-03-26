@@ -641,10 +641,9 @@ export class DemoStrataClient implements StrataClientInterface {
     };
   }
 
-  async upgradeAccount(): Promise<UserResponse> {
+  async upgradeAccount(): Promise<import('@clearmoney/strata-sdk').UpgradeResponse> {
     await delay(1000);
-    const me = await this.getMe();
-    return { ...me, plan: "premium" };
+    return { checkout_url: "https://checkout.stripe.com/pay/cs_test_mock" };
   }
 
   async exportAccountData(): Promise<any> {
@@ -751,9 +750,17 @@ export class DemoStrataClient implements StrataClientInterface {
     return [];
   }
 
-  async getInvoices(): Promise<any[]> {
+  async getInvoices(): Promise<import('@clearmoney/strata-sdk').Invoice[]> {
     await delay(300);
-    return [];
+    return [
+      {
+        id: "in_demo1",
+        amount: 29.00,
+        status: "paid",
+        date: Math.floor(Date.now() / 1000) - 86400 * 30,
+        pdf_url: "#",
+      }
+    ];
   }
 
   async getAdvisorBriefing(): Promise<import('@clearmoney/strata-sdk').BriefingSummary> {

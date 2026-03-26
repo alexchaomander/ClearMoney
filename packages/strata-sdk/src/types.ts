@@ -91,6 +91,18 @@ export interface BriefingSummary {
   items: BriefingItem[];
 }
 
+export interface UpgradeResponse {
+  checkout_url: string;
+}
+
+export interface Invoice {
+  id: string;
+  amount: number;
+  status: string;
+  date: number;
+  pdf_url: string | null;
+}
+
 export interface NotificationResponse {
   id: string;
   type: string;
