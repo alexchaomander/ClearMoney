@@ -134,6 +134,7 @@ import type {
   Invoice,
   UpgradeResponse,
   BriefingSummary,
+  NarrativeResponse,
 } from "@clearmoney/strata-sdk";
 
 import {
@@ -764,6 +765,15 @@ export class DemoStrataClient implements StrataClientInterface {
         pdf_url: "#",
       }
     ];
+  }
+
+  async getBriefingNarrative(): Promise<NarrativeResponse> {
+    await delay(1200);
+    return {
+      text: "Your organic savings rate remains strong at 18%, putting you right on track for your runway goals. However, your Cash Drag is increasing. Consider moving $12,000 from Chase Checking to your Wealthfront HYSA to capture an additional $540 in risk-free yield this year.",
+      provider: "openrouter",
+      model: "claude-3-5-sonnet-20241022"
+    };
   }
 
   async getAdvisorBriefing(): Promise<BriefingSummary> {

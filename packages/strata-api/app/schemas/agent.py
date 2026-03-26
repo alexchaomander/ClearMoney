@@ -22,6 +22,12 @@ class BriefingSummary(BaseModel):
     items: list[BriefingItem]
 
 
+class BriefingNarrativeResponse(BaseModel):
+    text: str
+    provider: str
+    model: str
+
+
 class ConfidenceFactor(BaseModel):
     label: str
     value: float
