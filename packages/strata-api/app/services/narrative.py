@@ -3,14 +3,13 @@ import json
 from datetime import datetime
 from typing import Dict, Any
 
-from app.models.financial_context import FinancialContext
 from app.services.llm_provider import ProviderFactory
 
 logger = logging.getLogger(__name__)
 
 class NarrativeService:
     @staticmethod
-    async def generate_briefing_narrative(context: FinancialContext, analysis_metrics: Dict[str, Any]) -> str:
+    async def generate_briefing_narrative(context: Dict[str, Any], analysis_metrics: Dict[str, Any]) -> str:
         provider = ProviderFactory.get_provider()
         
         system_prompt = (
@@ -21,11 +20,12 @@ class NarrativeService:
         )
         
         # Serialize only the vital numeric facts to prevent token bloat
+        metrics = context.get("portfolio_metrics", {})
         context_summary = {
-            "net_worth": getattr(context, "net_worth", None),
-            "liquid_assets": getattr(context, "liquid_assets", None),
-            "total_debt": getattr(context, "total_debt", None),
-            "savings_rate_90d": getattr(context, "savings_rate_90d", None)
+            "net_worth": metrics.get("net_worth"),
+            "total_cash": metrics.get("total_cash_value"),
+            "total_debt": metrics.get("total_debt_value"),
+            "runway_months": metrics.get("runway_months")
         }
         
         user_prompt = f"""

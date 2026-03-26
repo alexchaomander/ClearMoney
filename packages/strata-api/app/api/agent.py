@@ -13,6 +13,7 @@ from app.models.decision_trace import DecisionTrace, DecisionTraceType
 from app.models.user import User
 from app.schemas.agent import (
     AgentContextResponse,
+    BriefingNarrativeResponse,
     BriefingSummary,
     ContextQualityResponse,
     DecisionTracePayload,
@@ -30,8 +31,11 @@ from app.services.context_quality import evaluate_context_quality
 from app.services.deep_links import DeepLinkService
 from app.services.financial_context import build_financial_context
 from app.services.metric_trace import build_metric_trace
+from app.services.narrative import NarrativeService
 from app.services.plaid_transfer import PlaidTransferService
+from app.services.portfolio_analysis import PortfolioAnalysisService
 from app.services.recommendation_reviews import RecommendationReviewService
+from app.core.config import settings
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 AUDIT_SCOPES = ["decision_traces:read"]
@@ -145,26 +149,21 @@ async def get_advisor_briefing(
     return BriefingSummary(**data)
 
 
-@router.get("/briefing-narrative")
+@router.get("/briefing-narrative", response_model=BriefingNarrativeResponse)
 async def get_briefing_narrative(
     user: User = Depends(require_scopes(["agent:read", "portfolio:read"])),
     session: AsyncSession = Depends(get_async_session),
-):
+) -> BriefingNarrativeResponse:
     """Generate an AI-driven briefing narrative based on recent portfolio metrics."""
     context = await build_financial_context(user.id, session)
-    
-    from app.services.portfolio_analysis import PortfolioAnalysisService
     analysis_metrics = await PortfolioAnalysisService.analyze(session, user.id)
-    
-    from app.services.narrative import NarrativeService
-    narrative = await NarrativeService.generate_briefing_narrative(context, analysis_metrics)
-    
-    from app.core.config import settings
-    return {
-        "text": narrative,
-        "provider": settings.advisor_provider,
-        "model": settings.advisor_model
-    }
+    narrative = await NarrativeService.generate_briefing_narrative(
+        context, analysis_metrics
+    )
+
+    return BriefingNarrativeResponse(
+        text=narrative, provider=settings.advisor_provider, model=settings.advisor_model
+    )
 
 
 @router.get("/decision-traces", response_model=list[DecisionTraceResponse])
