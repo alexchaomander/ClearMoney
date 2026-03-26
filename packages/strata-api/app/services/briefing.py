@@ -6,11 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.connection import Connection
 from app.models.portfolio_snapshot import PortfolioSnapshot
-from app.services.portfolio import PortfolioService
+from app.services.portfolio_metrics import get_cash_and_debt_totals, get_investment_total, get_physical_asset_total
+
 
 class AdvisorBriefingService:
     """Generates continuity briefings for what changed since last login."""
-    
+
     def __init__(self, session: AsyncSession):
         self.session = session
 
@@ -31,13 +32,12 @@ class AdvisorBriefingService:
                 })
 
         # 2. Net worth changes
-        portfolio_service = PortfolioService(self.session, user_id)
-        current_cash, current_debt = await portfolio_service.get_cash_and_debt_totals()
-        current_inv = await portfolio_service.get_investment_total()
-        current_physical = await portfolio_service.get_physical_asset_total()
-        
+        current_cash, current_debt = await get_cash_and_debt_totals(self.session, user_id)
+        current_inv = await get_investment_total(self.session, user_id)
+        current_physical = await get_physical_asset_total(self.session, user_id)
+
         current_nw = current_cash + current_inv + current_physical - current_debt
-        
+
         history_result = await self.session.execute(
             select(PortfolioSnapshot)
             .where(PortfolioSnapshot.user_id == user_id)
@@ -45,7 +45,7 @@ class AdvisorBriefingService:
             .limit(7)
         )
         history = list(history_result.scalars().all())
-        
+
         if len(history) >= 2:
             oldest = history[-1]
             diff = float(current_nw) - float(oldest.net_worth)

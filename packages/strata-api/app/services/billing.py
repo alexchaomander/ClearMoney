@@ -1,8 +1,10 @@
 import logging
+
 import stripe
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import settings
 from app.models.user import User
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +28,7 @@ class BillingService:
 
     async def create_checkout_session(self, user: User, success_url: str, cancel_url: str) -> str:
         customer_id = await self.get_or_create_customer(user)
-        
+
         session = stripe.checkout.Session.create(
             customer=customer_id,
             payment_method_types=["card"],
@@ -48,7 +50,7 @@ class BillingService:
     async def get_invoices(self, user: User):
         if not user.stripe_customer_id:
             return []
-        
+
         invoices = stripe.Invoice.list(customer=user.stripe_customer_id, limit=10)
         return [
             {
@@ -78,6 +80,7 @@ class BillingService:
             user_id = session_obj.metadata.get("user_id")
             if user_id:
                 from sqlalchemy import update
+
                 from app.models.user import User
                 await self.db.execute(
                     update(User)
@@ -85,10 +88,11 @@ class BillingService:
                     .values(plan="premium", subscription_status="active", stripe_subscription_id=session_obj.subscription)
                 )
                 await self.db.commit()
-        
+
         elif event.type == "customer.subscription.deleted":
             subscription = event.data.object
             from sqlalchemy import update
+
             from app.models.user import User
             await self.db.execute(
                 update(User)
@@ -96,5 +100,5 @@ class BillingService:
                 .values(plan="free", subscription_status="canceled")
             )
             await self.db.commit()
-        
+
         return {"status": "success"}

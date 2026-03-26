@@ -68,7 +68,7 @@ async def create_link_session(
     store: SessionStore = Depends(get_session_store),
 ) -> LinkSessionResponse:
     """Create a link session to connect a new investment account.
-    
+
     Enforces the 3 connected accounts limit for Free tier users.
     """
     if user.plan == "free":

@@ -13,6 +13,7 @@ from app.models.decision_trace import DecisionTrace, DecisionTraceType
 from app.models.user import User
 from app.schemas.agent import (
     AgentContextResponse,
+    BriefingSummary,
     ContextQualityResponse,
     DecisionTracePayload,
     DecisionTraceResponse,
@@ -20,16 +21,15 @@ from app.schemas.agent import (
     ExecuteRecommendationResponse,
     FreshnessStatus,
     MetricTraceResponse,
-    BriefingSummary,
 )
 from app.services.action_policy import ActionPolicyService
 from app.services.agent_guardrails import evaluate_freshness
+from app.services.briefing import AdvisorBriefingService
 from app.services.brokerage_execution import BrokerageExecutionService
 from app.services.context_quality import evaluate_context_quality
 from app.services.deep_links import DeepLinkService
 from app.services.financial_context import build_financial_context
 from app.services.metric_trace import build_metric_trace
-from app.services.briefing import AdvisorBriefingService
 from app.services.plaid_transfer import PlaidTransferService
 from app.services.recommendation_reviews import RecommendationReviewService
 

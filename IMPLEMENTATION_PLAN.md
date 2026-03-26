@@ -120,7 +120,7 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
     - [x] Taxes and estimated payments
     - [x] Runway and burn
     - [x] Debt prioritization
-    - [ ] Portfolio concentration and drift
+    - [x] Portfolio concentration and drift
     - [x] Savings-rate and liquidity calculations
 - [ ] **Trace Labeling**:
     - Extend traces to show deterministic vs inferred components in API and UI.
@@ -398,7 +398,7 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
 
 - [ ] **Persistent Advisory State**:
     - Open questions, pending recommendations, recent context changes, blocked actions, and active goals.
-- [ ] **Briefing Engine**:
+- [x] **Briefing Engine**:
     - Daily and weekly "what changed / what matters now" summaries.
 - [ ] **Cross-Channel Continuity**:
     - SMS, voice, email, and dashboard should reflect one current advisory state.

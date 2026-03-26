@@ -13,6 +13,7 @@ from app.models.decision_trace import DecisionTrace
 from app.models.financial_correction import (
     FinancialCorrection,
     FinancialCorrectionStatus,
+    FinancialCorrectionType,
 )
 from app.models.financial_memory import FinancialMemory
 from app.models.memory_event import MemoryEvent, MemoryEventSource
@@ -154,7 +155,7 @@ class CorrectionService:
             if not debt:
                 raise HTTPException(status_code=404, detail="Debt account not found")
             return {"balance": float(debt.balance)}
-            
+
         if target_field == "asset_allocation":
             if not target_id:
                 raise HTTPException(status_code=400, detail="asset_allocation requires target_id")
@@ -272,7 +273,7 @@ class CorrectionService:
             debt = result.scalar_one_or_none()
             if not debt:
                 raise HTTPException(status_code=404, detail="Debt account not found")
-            
+
             debt.balance = Decimal(str(new_balance))
             # Optional: recompute metrics
             trace = await build_metric_trace(user_id, "netWorth", self._session)
@@ -287,7 +288,7 @@ class CorrectionService:
                     }
                 }
             }
-            
+
         if correction.target_field == "asset_allocation":
             target_id = correction.target_id
             new_type = correction.proposed_value.get("security_type")
@@ -300,12 +301,12 @@ class CorrectionService:
             security = result.scalar_one_or_none()
             if not security:
                 raise HTTPException(status_code=404, detail="Security not found")
-            
+
             try:
                 security.security_type = SecurityType(new_type)
             except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid security type")
-                
+
             return {
                 "applied": True,
                 "target_field": "asset_allocation",

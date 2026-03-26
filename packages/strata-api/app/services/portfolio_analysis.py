@@ -1,5 +1,4 @@
 import uuid
-from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import select
@@ -8,8 +7,9 @@ from sqlalchemy.orm import selectinload
 
 from app.models.holding import Holding
 from app.models.investment_account import InvestmentAccount
-from app.services.portfolio import PortfolioService
+from app.services.portfolio_metrics import get_cash_and_debt_totals, get_investment_total
 from app.services.runway import RunwayService
+
 
 class PortfolioAnalysisService:
     def __init__(self, session: AsyncSession):
@@ -20,10 +20,9 @@ class PortfolioAnalysisService:
         Calculates Cash Drag, Tax Drag, and Concentration Risk.
         Returns a dict conforming to PortfolioAnalysisMetrics schema.
         """
-        portfolio_service = PortfolioService(self.session, user_id)
-        total_cash_decimal, _ = await portfolio_service.get_cash_and_debt_totals()
-        total_investment_decimal = await portfolio_service.get_investment_total()
-        
+        total_cash_decimal, _ = await get_cash_and_debt_totals(self.session, user_id)
+        total_investment_decimal = await get_investment_total(self.session, user_id)
+
         total_cash = float(total_cash_decimal)
         total_investment = float(total_investment_decimal)
         total_portfolio = total_cash + total_investment
@@ -32,13 +31,13 @@ class PortfolioAnalysisService:
         runway_service = RunwayService(self.session)
         runway_metrics = await runway_service.get_runway_metrics(user_id)
         monthly_burn = runway_metrics["personal"]["monthly_burn"]
-        
+
         target_cash = monthly_burn * 2
         excess_cash = max(0.0, total_cash - target_cash)
         current_cash_yield = 0.01  # Assuming 1% default
         target_cash_yield = 0.045  # Assuming 4.5% HYSA availability
         missed_annual_yield = excess_cash * (target_cash_yield - current_cash_yield)
-        
+
         cash_drag = {
             "excess_cash": excess_cash,
             "current_cash_yield": current_cash_yield,
@@ -83,7 +82,7 @@ class PortfolioAnalysisService:
                         "value": h["value"],
                         "is_warning": True
                     })
-        
+
         # Sort concentration by highest percentage
         concentration_risks.sort(key=lambda x: x["percentage_of_portfolio"], reverse=True)
 
@@ -103,7 +102,7 @@ class PortfolioAnalysisService:
                         taxable_fixed_income += val
 
         tax_drag_value = taxable_fixed_income * 0.04 * 0.35  # Assuming average 4% yield, 35% tax rate
-        
+
         tax_drag = {
             "taxable_yield_value": taxable_fixed_income,
             "tax_advantaged_yield_value": tax_advantaged_fixed_income,

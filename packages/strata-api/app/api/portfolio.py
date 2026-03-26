@@ -10,31 +10,28 @@ from sqlalchemy.orm import selectinload
 
 from app.api.deps import require_scopes
 from app.db.session import get_async_session
-from app.models.equity_grant import EquityGrant
 from app.models.holding import Holding
 from app.models.investment_account import InvestmentAccount
 from app.models.portfolio_snapshot import PortfolioSnapshot
 from app.models.user import User
 from app.schemas.portfolio import (
     ConcentrationAlert,
-    PortfolioHistoryPoint,
-    PortfolioHistoryRange,
-    PortfolioSummary,
-    TaxShieldMetrics,
-    RunwayMetrics,
     DebtMetrics,
-    SavingsMetrics,
     PortfolioAnalysisMetrics,
+    PortfolioHistoryPoint,
+    PortfolioSummary,
+    RunwayMetrics,
+    SavingsMetrics,
+    TaxShieldMetrics,
 )
 from app.services.commingling import ComminglingDetectionEngine
-from app.services.crypto import CryptoService
-from app.services.equity import EquityService
-from app.services.portfolio import PortfolioService
-from app.services.runway import RunwayService
-from app.services.tax_shield import TaxShieldService
 from app.services.debt import DebtPrioritizationService
-from app.services.savings import SavingsService
+from app.models.equity_grant import EquityGrant
+from app.services.equity_valuation import equity_valuation_service
 from app.services.portfolio_analysis import PortfolioAnalysisService
+from app.services.runway import RunwayService
+from app.services.savings import SavingsService
+from app.services.tax_shield import TaxShieldService
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 
@@ -57,16 +54,13 @@ async def get_portfolio_summary(
     total_cash, total_debt = await portfolio_service.get_cash_and_debt_totals()
 
     # Get equity grants and calculate valuation
-    # equity_result = await session.execute( # Removed
-    #     select(EquityGrant).where(EquityGrant.user_id == user.id)
-    # )
-    # equity_grants = equity_result.scalars().all()
-    # equity_summary = await equity_valuation_service.calculate_portfolio_summary( # Removed
-    #     list(equity_grants)
-    # )
-    # Replaced with EquityService
-    equity_service = EquityService(session, user.id)
-    equity_summary = await equity_service.get_equity_portfolio_summary()
+    equity_result = await session.execute(
+        select(EquityGrant).where(EquityGrant.user_id == user.id)
+    )
+    equity_grants = equity_result.scalars().all()
+    equity_summary = await equity_valuation_service.calculate_portfolio_summary(
+        list(equity_grants)
+    )
     total_equity_vested = equity_summary.total_vested_value
     total_equity_unvested = equity_summary.total_unvested_value
 
