@@ -132,7 +132,16 @@ function BillingSettings() {
 
   const handleUpgrade = () => {
     upgrade.mutate(undefined, {
-      onSuccess: () => pushToast({ title: "Welcome to Premium!", variant: "success" }),
+      onSuccess: (data) => {
+        if (data && data.checkout_url) {
+          window.location.assign(data.checkout_url);
+        } else {
+          pushToast({ title: "Welcome to Premium!", variant: "success" });
+        }
+      },
+      onError: () => {
+        pushToast({ title: "Checkout failed", variant: "error" });
+      }
     });
   };
 
@@ -404,6 +413,34 @@ function ActionPolicySettings() {
   );
 }
 
+function ProfileSettings() {
+  const { data: user, isLoading, isError } = useMe();
+  if (isLoading) return <div className="h-48 rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse" />;
+  if (isError) return <div className="p-4 text-rose-500">Failed to load profile information.</div>;
+  
+  return (
+    <div className="space-y-6">
+      <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <h2 className="text-xl font-serif text-slate-900 dark:text-white mb-4">Profile Information</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-500">Email Address</label>
+            <p className="mt-1 text-slate-900 dark:text-white font-medium">{user?.email}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-500">User ID</label>
+            <p className="mt-1 text-xs font-mono text-slate-500 bg-slate-100 dark:bg-slate-800 p-2 rounded-md inline-block">{user?.id}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-500">Account Created</label>
+            <p className="mt-1 text-slate-900 dark:text-white">{user?.created_at ? new Date(user.created_at).toLocaleDateString() : "Unknown"}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -483,8 +520,13 @@ export default function SettingsPage() {
         <Tabs value={activeTab} onValueChange={setTab} className="space-y-8">
           <TabsList className="mb-4">
             <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="billing">Billing & Plan</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="profile" className="outline-none">
+            <ProfileSettings />
+          </TabsContent>
 
           <TabsContent value="general" className="space-y-8 outline-none">
             <ConsentGate

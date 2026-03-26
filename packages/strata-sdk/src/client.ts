@@ -128,6 +128,8 @@ import type {
   PropertySearchResult,
   VehicleSearchRequest,
   VehicleSearchResult,
+  Invoice,
+  UpgradeResponse,
 } from './types';
 
 export interface StrataClientInterface {
