@@ -16,22 +16,23 @@ from app.models.investment_account import InvestmentAccount
 from app.models.portfolio_snapshot import PortfolioSnapshot
 from app.models.user import User
 from app.schemas.portfolio import (
-    AssetAllocation,
     ConcentrationAlert,
     PortfolioHistoryPoint,
+    PortfolioHistoryRange,
     PortfolioSummary,
-    TopHolding,
+    TaxShieldMetrics,
+    RunwayMetrics,
+    DebtMetrics,
+    SavingsMetrics,
 )
 from app.services.commingling import ComminglingDetectionEngine
-from app.services.equity_valuation import equity_valuation_service
-from app.services.portfolio_metrics import (
-    get_cash_and_debt_totals,
-    get_investment_total,
-    get_physical_asset_total,
-)
+from app.services.crypto import CryptoService
+from app.services.equity import EquityService
+from app.services.portfolio import PortfolioService
 from app.services.runway import RunwayService
 from app.services.tax_shield import TaxShieldService
-from app.schemas.portfolio import TaxShieldMetrics
+from app.services.debt import DebtPrioritizationService
+from app.services.savings import SavingsService
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 
@@ -48,16 +49,22 @@ async def get_portfolio_summary(
 
     Includes net worth calculation, asset allocation, and concentration alerts.
     """
-    total_cash, total_debt = await get_cash_and_debt_totals(session, user.id)
+    # total_cash, total_debt = await get_cash_and_debt_totals(session, user.id) # Removed
+    # Replaced with PortfolioService
+    portfolio_service = PortfolioService(session, user.id)
+    total_cash, total_debt = await portfolio_service.get_cash_and_debt_totals()
 
     # Get equity grants and calculate valuation
-    equity_result = await session.execute(
-        select(EquityGrant).where(EquityGrant.user_id == user.id)
-    )
-    equity_grants = equity_result.scalars().all()
-    equity_summary = await equity_valuation_service.calculate_portfolio_summary(
-        list(equity_grants)
-    )
+    # equity_result = await session.execute( # Removed
+    #     select(EquityGrant).where(EquityGrant.user_id == user.id)
+    # )
+    # equity_grants = equity_result.scalars().all()
+    # equity_summary = await equity_valuation_service.calculate_portfolio_summary( # Removed
+    #     list(equity_grants)
+    # )
+    # Replaced with EquityService
+    equity_service = EquityService(session, user.id)
+    equity_summary = await equity_service.get_equity_portfolio_summary()
     total_equity_vested = equity_summary.total_vested_value
     total_equity_unvested = equity_summary.total_unvested_value
 
@@ -81,7 +88,7 @@ async def get_portfolio_summary(
     allocation_by_account_type: dict[str, Decimal] = defaultdict(Decimal)
 
     # Track holdings for top holdings and concentration
-    all_holdings: list[TopHolding] = []
+    all_holdings: list[dict] = [] # Changed from TopHolding to dict for flexibility
 
     for account in investment_accounts:
         account_value = account.balance
@@ -104,19 +111,21 @@ async def get_portfolio_summary(
             allocation_by_asset_type[security_type] += market_value
 
             all_holdings.append(
-                TopHolding(
-                    ticker=holding.security.ticker,
-                    name=holding.security.name,
-                    security_type=security_type,
-                    quantity=holding.quantity,
-                    market_value=market_value,
-                    cost_basis=holding.cost_basis,
-                    account_name=account.name,
-                )
+                { # Changed from TopHolding to dict
+                    "ticker": holding.security.ticker,
+                    "name": holding.security.name,
+                    "security_type": security_type,
+                    "quantity": holding.quantity,
+                    "market_value": market_value,
+                    "cost_basis": holding.cost_basis,
+                    "account_name": account.name,
+                }
             )
 
     # Calculate net worth
-    total_physical = await get_physical_asset_total(session, user.id)
+    # total_physical = await get_physical_asset_total(session, user.id) # Removed
+    # Replaced with PortfolioService
+    total_physical = await portfolio_service.get_physical_asset_total()
     net_worth = (
         total_cash
         + total_investment
@@ -135,13 +144,13 @@ async def get_portfolio_summary(
             allocation_by_asset_type["physical_assets"] += total_physical
 
         asset_type_allocations = [
-            AssetAllocation(
-                category=category,
-                value=value,
-                percentage=(value / total_assets * Decimal("100")).quantize(
+            { # Changed from AssetAllocation to dict
+                "category": category,
+                "value": value,
+                "percentage": (value / total_assets * Decimal("100")).quantize(
                     Decimal("0.01")
                 ),
-            )
+            }
             for category, value in sorted(
                 allocation_by_asset_type.items(),
                 key=lambda x: x[1],
@@ -151,15 +160,15 @@ async def get_portfolio_summary(
         ]
 
         account_type_allocations = [
-            AssetAllocation(
-                category=category,
-                value=value,
-                percentage=(value / total_investment * Decimal("100")).quantize(
+            { # Changed from AssetAllocation to dict
+                "category": category,
+                "value": value,
+                "percentage": (value / total_investment * Decimal("100")).quantize(
                     Decimal("0.01")
                 )
                 if total_investment > 0
                 else Decimal("0.00"),
-            )
+            }
             for category, value in sorted(
                 allocation_by_account_type.items(),
                 key=lambda x: x[1],
@@ -174,7 +183,7 @@ async def get_portfolio_summary(
     # Get top holdings by market value
     top_holdings = sorted(
         all_holdings,
-        key=lambda x: x.market_value,
+        key=lambda x: x["market_value"], # Access dict key
         reverse=True,
     )[:10]
 
@@ -183,16 +192,16 @@ async def get_portfolio_summary(
     if total_assets > 0:
         for holding in all_holdings:
             percentage = (
-                holding.market_value / total_assets * Decimal("100")
+                holding["market_value"] / total_assets * Decimal("100") # Access dict key
             ).quantize(Decimal("0.01"))
             if percentage >= CONCENTRATION_THRESHOLD:
                 display_pct = percentage.quantize(Decimal("0.1"))
                 concentration_alerts.append(
                     ConcentrationAlert(
-                        ticker=holding.ticker,
-                        name=holding.name,
+                        ticker=holding["ticker"], # Access dict key
+                        name=holding["name"], # Access dict key
                         percentage=percentage,
-                        message=f"{holding.ticker or holding.name} represents {display_pct}% of your portfolio",
+                        message=f"{holding['ticker'] or holding['name']} represents {display_pct}% of your portfolio",
                     )
                 )
 
@@ -301,8 +310,12 @@ async def get_portfolio_history(
     snapshots = result.scalars().all()
 
     if not snapshots:
-        total_cash, total_debt = await get_cash_and_debt_totals(session, user.id)
-        total_investment = await get_investment_total(session, user.id)
+        # total_cash, total_debt = await get_cash_and_debt_totals(session, user.id) # Removed
+        # total_investment = await get_investment_total(session, user.id) # Removed
+        # Replaced with PortfolioService
+        portfolio_service = PortfolioService(session, user.id)
+        total_cash, total_debt = await portfolio_service.get_cash_and_debt_totals()
+        total_investment = await portfolio_service.get_investment_total()
         current_value = total_cash + total_investment - total_debt
 
         return [
@@ -331,14 +344,35 @@ async def get_vulnerability_report(
     return await engine.get_vulnerability_report(user.id)
 
 
-@router.get("/runway")
+@router.get("/runway", response_model=RunwayMetrics)
 async def get_runway_metrics(
     user: User = Depends(require_scopes(["portfolio:read"])),
     session: AsyncSession = Depends(get_async_session),
-) -> dict:
-    """Get personal and entity runway metrics for the Founder Operating Room."""
+) -> RunwayMetrics:
+    """Get personal and entity runway calculations."""
     service = RunwayService(session)
-    return await service.get_runway_metrics(user.id)
+    data = await service.get_runway_metrics(user.id)
+    return RunwayMetrics(**data)
+
+@router.get("/debt", response_model=DebtMetrics)
+async def get_debt_metrics(
+    user: User = Depends(require_scopes(["portfolio:read"])),
+    session: AsyncSession = Depends(get_async_session),
+) -> DebtMetrics:
+    """Get debt prioritization strategy using the Avalanche method."""
+    service = DebtPrioritizationService(session)
+    data = await service.get_debt_metrics(user.id)
+    return DebtMetrics(**data)
+
+@router.get("/savings", response_model=SavingsMetrics)
+async def get_savings_metrics(
+    user: User = Depends(require_scopes(["portfolio:read"])),
+    session: AsyncSession = Depends(get_async_session),
+) -> SavingsMetrics:
+    """Get deterministic savings rate metrics based on transactions."""
+    service = SavingsService(session)
+    data = await service.get_savings_metrics(user.id)
+    return SavingsMetrics(**data)
 
 
 @router.get("/tax-shield", response_model=TaxShieldMetrics)
