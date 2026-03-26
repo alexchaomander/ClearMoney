@@ -128,19 +128,33 @@ The app is gated behind an invite code. Set `NEXT_PUBLIC_BETA_CODES` in the web 
 
 ## Testing
 
+### Backend
 ```bash
-# Backend (155 tests)
+# Backend (226 tests)
 cd packages/strata-api
 source .venv/bin/activate
 python -m pytest tests/ -v
-
-# Frontend lint
-cd packages/web
-pnpm lint
-
-# Frontend build
-pnpm build
 ```
+
+### Frontend (Vitest)
+```bash
+# Frontend Unit Tests (53 tests)
+# Covers 11 core calculators: Debt Destroyer, FIRE, Emergency Fund, RSU Tax, 
+# Roth vs Traditional, Total Comp, TPG Transparency, and more.
+cd packages/web
+# Note: Use local TMPDIR on macOS to avoid permission issues
+mkdir -p .tmp && TMPDIR=$(pwd)/.tmp npm run test:run -- --coverage
+```
+
+### SDK
+```bash
+# SDK Unit Tests (46 tests)
+cd packages/strata-sdk
+# Note: Use local TMPDIR on macOS to avoid permission issues
+mkdir -p .tmp && TMPDIR=$(pwd)/.tmp npm run test -- --coverage
+```
+
+---
 
 ## CI/CD
 
@@ -148,8 +162,9 @@ GitHub Actions runs on every push and PR:
 
 | Job | What it does |
 |-----|-------------|
-| `web` | ESLint, TypeScript type-check, Next.js build |
-| `api` | pytest (155 tests) |
+| `web` | Vitest (53 tests), ESLint, Next.js build |
+| `api` | pytest (226 tests) |
+| `sdk` | Vitest (46 tests), SDK build |
 | `deploy-api` | Deploy to Railway (main branch only) |
 | `deploy-web` | Deploy to Vercel (main branch only) |
 

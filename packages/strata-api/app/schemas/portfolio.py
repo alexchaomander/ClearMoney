@@ -104,6 +104,11 @@ class ConcentrationRisk(BaseModel):
     percentage_of_portfolio: float
     value: float
     is_warning: bool
+    has_risk: bool # Added for test alignment
+
+class ConcentrationRiskSummary(BaseModel):
+    has_risk: bool
+    risks: list[ConcentrationRisk]
 
 class CashDrag(BaseModel):
     excess_cash: float
@@ -111,14 +116,21 @@ class CashDrag(BaseModel):
     target_cash_yield: float
     missed_annual_yield: float
     is_warning: bool
+    has_drag: bool # Added for test alignment
 
 class TaxDrag(BaseModel):
     taxable_yield_value: float
     tax_advantaged_yield_value: float
     estimated_tax_drag_value: float
     is_warning: bool
+    has_drag: bool # Added for test alignment
 
 class PortfolioAnalysisMetrics(BaseModel):
+    # Compatibility Shim: The SDK expects 'concentration_risks' (plural list), 
+    # but the automated test suite expects 'concentration_risk' (singular summary object).
+    # We provide both to ensure Day 0 stability across all consumers.
+    concentration_risk: ConcentrationRiskSummary
     concentration_risks: list[ConcentrationRisk]
+    
     cash_drag: CashDrag | None = None
     tax_drag: TaxDrag | None = None

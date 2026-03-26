@@ -43,7 +43,8 @@ class PortfolioAnalysisService:
             "current_cash_yield": current_cash_yield,
             "target_cash_yield": target_cash_yield,
             "missed_annual_yield": missed_annual_yield,
-            "is_warning": excess_cash > 5000 and missed_annual_yield > 100
+            "is_warning": excess_cash > 5000 and missed_annual_yield > 100,
+            "has_drag": excess_cash > 0
         }
 
         # 2. Concentration Risk
@@ -80,11 +81,17 @@ class PortfolioAnalysisService:
                         "ticker": h["ticker"],
                         "percentage_of_portfolio": pct,
                         "value": h["value"],
-                        "is_warning": True
+                        "is_warning": True,
+                        "has_risk": True
                     })
 
         # Sort concentration by highest percentage
         concentration_risks.sort(key=lambda x: x["percentage_of_portfolio"], reverse=True)
+
+        concentration_risk_summary = {
+            "has_risk": len(concentration_risks) > 0,
+            "risks": concentration_risks
+        }
 
         # 3. Tax Drag: Calculate ratio of high-yield fixed income in taxable
         # Simplification for MVP: Just map taxable vs tax-advantaged fixed income
@@ -107,10 +114,12 @@ class PortfolioAnalysisService:
             "taxable_yield_value": taxable_fixed_income,
             "tax_advantaged_yield_value": tax_advantaged_fixed_income,
             "estimated_tax_drag_value": tax_drag_value,
-            "is_warning": tax_drag_value > 500
+            "is_warning": tax_drag_value > 500,
+            "has_drag": tax_drag_value > 0
         }
 
         return {
+            "concentration_risk": concentration_risk_summary,
             "concentration_risks": concentration_risks,
             "cash_drag": cash_drag,
             "tax_drag": tax_drag
