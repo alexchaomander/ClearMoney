@@ -139,6 +139,8 @@ python -m pytest tests/ -v
 ### Frontend (Vitest)
 ```bash
 # Frontend Unit Tests (53 tests)
+# Covers 11 core calculators: Debt Destroyer, FIRE, Emergency Fund, RSU Tax, 
+# Roth vs Traditional, Total Comp, TPG Transparency, and more.
 cd packages/web
 # Note: Use local TMPDIR on macOS to avoid permission issues
 mkdir -p .tmp && TMPDIR=$(pwd)/.tmp npm run test:run -- --coverage

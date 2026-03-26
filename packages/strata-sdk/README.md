@@ -507,4 +507,17 @@ function useTransactions(accountId?: string) {
     queryFn: () => client.getTransactions({ accountId }),
   });
 }
+
+## Testing
+
+```bash
+# Run unit tests (46 tests)
+npm run test
+
+# Run with coverage
+npm run test -- --coverage
 ```
+
+## License
+
+Internal Use Only.
