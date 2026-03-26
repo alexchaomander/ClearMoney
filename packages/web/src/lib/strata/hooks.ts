@@ -315,6 +315,15 @@ export function useAdvisorBriefing(options?: { enabled?: boolean }) {
   });
 }
 
+export function useBriefingNarrative(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: ["advisor", "briefing-narrative"],
+    queryFn: () => client.getBriefingNarrative(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
 export function useSearchProperties() {
   const client = useClient();
   return useMutation({

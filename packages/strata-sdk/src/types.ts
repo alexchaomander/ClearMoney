@@ -2225,3 +2225,9 @@ export interface SVPAttestation {
     proof_value: string;
   } | null;
 }
+
+export interface NarrativeResponse {
+  text: string;
+  provider: string;
+  model: string;
+}
