@@ -126,7 +126,11 @@ class TaxDrag(BaseModel):
     has_drag: bool # Added for test alignment
 
 class PortfolioAnalysisMetrics(BaseModel):
-    concentration_risk: ConcentrationRiskSummary # Singular for tests
-    concentration_risks: list[ConcentrationRisk] # Plural for SDK
+    # Compatibility Shim: The SDK expects 'concentration_risks' (plural list), 
+    # but the automated test suite expects 'concentration_risk' (singular summary object).
+    # We provide both to ensure Day 0 stability across all consumers.
+    concentration_risk: ConcentrationRiskSummary
+    concentration_risks: list[ConcentrationRisk]
+    
     cash_drag: CashDrag | None = None
     tax_drag: TaxDrag | None = None
