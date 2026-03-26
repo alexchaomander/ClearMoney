@@ -225,6 +225,7 @@ export interface StrataClientInterface {
     reviewId: string,
     data: RecommendationReviewConvertToCorrection
   ): Promise<RecommendationReview>;
+  getAdvisorBriefing(): Promise<import('./types').BriefingSummary>;
   // Consent
   listConsents(): Promise<ConsentResponse[]>;
   createConsent(data: ConsentCreateRequest): Promise<ConsentResponse>;
@@ -950,6 +951,10 @@ export class StrataClient implements StrataClientInterface {
         body: JSON.stringify(data),
       }
     );
+  }
+
+  async getAdvisorBriefing(): Promise<import('./types').BriefingSummary> {
+    return this.request<import('./types').BriefingSummary>('/api/v1/agent/briefing');
   }
 
   // === Consent ===

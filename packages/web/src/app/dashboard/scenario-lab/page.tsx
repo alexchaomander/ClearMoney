@@ -29,7 +29,7 @@ export default function ScenarioLabPage() {
 
   // Estimate monthly revenue from YTD business income.
   // Cap at 60% of burn so net burn stays meaningful in the scenario simulation.
-  const grossMonthlyRevenue = taxShield ? Math.round(taxShield.ytd_business_income / DEMO_YTD_MONTHS) : 0;
+  const grossMonthlyRevenue = taxShield ? Math.round(taxShield.ytd_1099_income / DEMO_YTD_MONTHS) : 0;
   const baseRevenue = Math.min(grossMonthlyRevenue, Math.round(baseMonthlyBurn * 0.6));
 
   return (

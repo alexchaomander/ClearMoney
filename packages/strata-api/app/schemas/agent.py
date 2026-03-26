@@ -12,6 +12,15 @@ class FreshnessStatus(BaseModel):
     last_sync: str | None = None
     warning: str | None = None
 
+class BriefingItem(BaseModel):
+    category: str
+    message: str
+    impact: str
+
+class BriefingSummary(BaseModel):
+    last_login: str
+    items: list[BriefingItem]
+
 
 class ConfidenceFactor(BaseModel):
     label: str

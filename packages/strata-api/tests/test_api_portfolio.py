@@ -261,3 +261,35 @@ async def test_portfolio_history_uses_snapshots(
         assert len(data) == 2
         assert data[0]["date"] == (today - timedelta(days=10)).isoformat()
         assert float(data[0]["value"]) == 1000.0
+
+
+@pytest.mark.asyncio
+async def test_portfolio_analysis_unauthorized() -> None:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get("/api/v1/portfolio/analysis")
+        assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_portfolio_analysis(
+    portfolio_user: User,
+    portfolio_data: dict,
+) -> None:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get(
+            "/api/v1/portfolio/analysis",
+            headers={"x-clerk-user-id": portfolio_user.clerk_id},
+        )
+        assert response.status_code == 200
+        data = response.json()
+
+        assert "concentration_risk" in data
+        assert "cash_drag" in data
+        assert "tax_drag" in data
+        assert isinstance(data["concentration_risk"]["has_risk"], bool)
+        assert isinstance(data["cash_drag"]["has_drag"], bool)
+        assert isinstance(data["tax_drag"]["has_drag"], bool)

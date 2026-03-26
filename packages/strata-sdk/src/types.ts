@@ -72,12 +72,23 @@ export interface ExecuteRecommendationRequest {
 }
 
 export interface ExecuteRecommendationResponse {
-  recommendation_id: string;
+  recommendation_id: string; // UUID
   action: string;
   status: string;
-  result: Record<string, unknown>;
-  trace_id: string;
-  updated_at: string;
+  result: Record<string, any>;
+  trace_id: string; // UUID
+  updated_at: string; // ISO datetime
+}
+
+export interface BriefingItem {
+  category: string;
+  message: string;
+  impact: 'positive' | 'negative' | 'neutral' | 'warning' | string;
+}
+
+export interface BriefingSummary {
+  last_login: string;
+  items: BriefingItem[];
 }
 
 export interface NotificationResponse {
@@ -2140,6 +2151,35 @@ export interface RunwayMetrics {
     monthly_burn: number;
     runway_months: number;
   };
+}
+
+export interface ConcentrationRisk {
+  holding_name: string;
+  ticker: string | null;
+  percentage_of_portfolio: number;
+  value: number;
+  is_warning: boolean;
+}
+
+export interface CashDrag {
+  excess_cash: number;
+  current_cash_yield: number;
+  target_cash_yield: number;
+  missed_annual_yield: number;
+  is_warning: boolean;
+}
+
+export interface TaxDrag {
+  taxable_yield_value: number;
+  tax_advantaged_yield_value: number;
+  estimated_tax_drag_value: number;
+  is_warning: boolean;
+}
+
+export interface PortfolioAnalysisMetrics {
+  concentration_risks: ConcentrationRisk[];
+  cash_drag: CashDrag | null;
+  tax_drag: TaxDrag | null;
 }
 
 export interface VulnerabilityReport {

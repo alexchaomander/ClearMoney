@@ -13,6 +13,7 @@ from app.models.decision_trace import DecisionTrace
 from app.models.financial_correction import (
     FinancialCorrection,
     FinancialCorrectionStatus,
+    FinancialCorrectionType,
 )
 from app.models.financial_memory import FinancialMemory
 from app.models.memory_event import MemoryEvent, MemoryEventSource
@@ -91,6 +92,17 @@ class CorrectionService:
         )
         return list(result.scalars().all())
 
+    async def get_blocked_recommendation_intents(self, user_id: uuid.UUID) -> list[str]:
+        """Returns a list of blocked recommendation intents (stored as target_field) for the user."""
+        result = await self._session.execute(
+            select(FinancialCorrection.target_field).where(
+                FinancialCorrection.user_id == user_id,
+                FinancialCorrection.correction_type == FinancialCorrectionType.wrong_recommendation,
+                FinancialCorrection.status == FinancialCorrectionStatus.applied,
+            )
+        )
+        return list(result.scalars().all())
+
     async def _get_or_create_memory(self, user_id: uuid.UUID) -> FinancialMemory:
         result = await self._session.execute(
             select(FinancialMemory).where(FinancialMemory.user_id == user_id)
@@ -132,6 +144,30 @@ class CorrectionService:
                 "primary_category": tx.primary_category,
                 "detailed_category": tx.detailed_category,
             }
+        if target_field == "debt_balance":
+            if not target_id:
+                raise HTTPException(status_code=400, detail="debt_balance requires target_id")
+            from app.models.debt_account import DebtAccount
+            result = await self._session.execute(
+                select(DebtAccount).where(DebtAccount.id == uuid.UUID(target_id), DebtAccount.user_id == user_id)
+            )
+            debt = result.scalar_one_or_none()
+            if not debt:
+                raise HTTPException(status_code=404, detail="Debt account not found")
+            return {"balance": float(debt.balance)}
+
+        if target_field == "asset_allocation":
+            if not target_id:
+                raise HTTPException(status_code=400, detail="asset_allocation requires target_id")
+            from app.models.security import Security
+            result = await self._session.execute(
+                select(Security).where(Security.id == uuid.UUID(target_id))
+            )
+            security = result.scalar_one_or_none()
+            if not security:
+                raise HTTPException(status_code=404, detail="Security not found")
+            return {"security_type": security.security_type.value}
+
         return {}
 
     async def _apply_if_supported(
@@ -223,6 +259,68 @@ class CorrectionService:
                     ),
                 },
                 "transaction_is_commingled": tx.is_commingled,
+            }
+
+        if correction.target_field == "debt_balance":
+            target_id = correction.target_id
+            new_balance = correction.proposed_value.get("balance")
+            if new_balance is None:
+                raise HTTPException(status_code=400, detail="proposed_value.balance required")
+            from app.models.debt_account import DebtAccount
+            result = await self._session.execute(
+                select(DebtAccount).where(DebtAccount.id == uuid.UUID(target_id), DebtAccount.user_id == user_id)
+            )
+            debt = result.scalar_one_or_none()
+            if not debt:
+                raise HTTPException(status_code=404, detail="Debt account not found")
+
+            debt.balance = Decimal(str(new_balance))
+            # Optional: recompute metrics
+            trace = await build_metric_trace(user_id, "netWorth", self._session)
+            return {
+                "applied": True,
+                "target_field": "debt_balance",
+                "impacted_metrics": ["netWorth"],
+                "recomputed_traces": {
+                    "netWorth": {
+                        "confidence_score": trace.confidence_score,
+                        "data_points": [p.model_dump() for p in trace.data_points]
+                    }
+                }
+            }
+
+        if correction.target_field == "asset_allocation":
+            target_id = correction.target_id
+            new_type = correction.proposed_value.get("security_type")
+            if not new_type:
+                raise HTTPException(status_code=400, detail="proposed_value.security_type required")
+            from app.models.security import Security, SecurityType
+            result = await self._session.execute(
+                select(Security).where(Security.id == uuid.UUID(target_id))
+            )
+            security = result.scalar_one_or_none()
+            if not security:
+                raise HTTPException(status_code=404, detail="Security not found")
+
+            try:
+                security.security_type = SecurityType(new_type)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid security type")
+
+            return {
+                "applied": True,
+                "target_field": "asset_allocation",
+                "impacted_metrics": ["portfolioAllocation"]
+            }
+
+        if correction.correction_type == FinancialCorrectionType.wrong_recommendation:
+            # Applying a recommendation suppression doesn't mutate a strict DB record,
+            # but setting the correction to `applied` is enough to trigger the blocklist
+            # logic in the agent when it queries for suppressed intents matching this metric.
+            return {
+                "applied": True,
+                "target_field": correction.target_field,
+                "action": "suppress_recommendation_intent"
             }
 
         return None

@@ -97,3 +97,28 @@ class SavingsMetrics(BaseModel):
     monthly_savings: float
     savings_rate_90d: float
     liquidity_months_target: int
+
+class ConcentrationRisk(BaseModel):
+    holding_name: str
+    ticker: str | None = None
+    percentage_of_portfolio: float
+    value: float
+    is_warning: bool
+
+class CashDrag(BaseModel):
+    excess_cash: float
+    current_cash_yield: float
+    target_cash_yield: float
+    missed_annual_yield: float
+    is_warning: bool
+
+class TaxDrag(BaseModel):
+    taxable_yield_value: float
+    tax_advantaged_yield_value: float
+    estimated_tax_drag_value: float
+    is_warning: bool
+
+class PortfolioAnalysisMetrics(BaseModel):
+    concentration_risks: list[ConcentrationRisk]
+    cash_drag: CashDrag | None = None
+    tax_drag: TaxDrag | None = None

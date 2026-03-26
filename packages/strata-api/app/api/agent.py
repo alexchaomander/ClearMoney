@@ -13,6 +13,7 @@ from app.models.decision_trace import DecisionTrace, DecisionTraceType
 from app.models.user import User
 from app.schemas.agent import (
     AgentContextResponse,
+    BriefingSummary,
     ContextQualityResponse,
     DecisionTracePayload,
     DecisionTraceResponse,
@@ -23,6 +24,7 @@ from app.schemas.agent import (
 )
 from app.services.action_policy import ActionPolicyService
 from app.services.agent_guardrails import evaluate_freshness
+from app.services.briefing import AdvisorBriefingService
 from app.services.brokerage_execution import BrokerageExecutionService
 from app.services.context_quality import evaluate_context_quality
 from app.services.deep_links import DeepLinkService
@@ -131,6 +133,16 @@ async def get_portfolio_metrics(
         freshness=FreshnessStatus(**freshness),
         context={"portfolio_metrics": portfolio_metrics},
     )
+
+@router.get("/briefing", response_model=BriefingSummary)
+async def get_advisor_briefing(
+    user: User = Depends(require_scopes(["agent:read"])),
+    session: AsyncSession = Depends(get_async_session),
+) -> BriefingSummary:
+    """Get the Advisor continuity briefing, summarizing what changed since last login."""
+    service = AdvisorBriefingService(session)
+    data = await service.generate_briefing(user.id)
+    return BriefingSummary(**data)
 
 
 @router.get("/decision-traces", response_model=list[DecisionTraceResponse])

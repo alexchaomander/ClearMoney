@@ -673,8 +673,8 @@ export default function FounderOperatingRoomPage() {
                   {formatCurrency(taxShield?.next_quarterly_payment as number ?? 0)}
                 </p>
                 <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
-                  <p>YTD Biz Income: {formatCurrency(taxShield?.ytd_business_income as number ?? 0)}</p>
-                  <p>Combined Rate: {formatPercent(taxShield?.estimated_combined_tax_rate as number ?? 0.31, 1)}</p>
+                  <p>YTD 1099 Income: {formatCurrency(taxShield?.ytd_1099_income as number ?? 0)}</p>
+                  <p>Total Tax YTD: {formatCurrency(taxShield?.total_tax_liability_ytd as number ?? 0)}</p>
                   <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-widest ${
                     taxShield?.safe_harbor_met
                       ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40"

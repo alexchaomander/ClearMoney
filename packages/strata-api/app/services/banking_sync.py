@@ -8,12 +8,12 @@ from app.core.config import settings
 from app.models.bank_transaction import BankTransaction
 from app.models.cash_account import CashAccount
 from app.models.connection import Connection
+from app.services.merchant_categorization import merchant_categorization_service
 from app.services.providers.base_banking import (
     BaseBankingProvider,
     NormalizedBankAccount,
     NormalizedBankTransaction,
 )
-from app.services.merchant_categorization import merchant_categorization_service
 from app.services.spending_derivation import update_memory_spending_categories
 from app.services.user_refresh import refresh_user_financials
 
@@ -130,14 +130,14 @@ async def upsert_bank_transactions(
         Number of transactions upserted.
     """
     upserted = 0
-    
+
     # Pre-process categorization for transactions missing clean merchant info
     # or to normalize Plaid categories into our unified graph schema
     names_to_categorize = []
     for tx in transactions:
         if not tx.merchant_name or tx.primary_category is None:
             names_to_categorize.append(tx.name)
-            
+
     categorizations = await merchant_categorization_service.categorize_transactions(names_to_categorize)
 
     for normalized in transactions:
@@ -166,10 +166,10 @@ async def upsert_bank_transactions(
             )
         )
         txn = result.scalar_one_or_none()
-        
+
         merchant_name = normalized.merchant_name
         primary_category = normalized.primary_category
-        
+
         if normalized.name in categorizations:
             cat_data = categorizations[normalized.name]
             merchant_name = merchant_name or cat_data.get("clean_merchant_name")
