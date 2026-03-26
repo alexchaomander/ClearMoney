@@ -751,6 +751,19 @@ export class DemoStrataClient implements StrataClientInterface {
     return [];
   }
 
+  async getInvoices(): Promise<any[]> {
+    await delay(300);
+    return [];
+  }
+
+  async getAdvisorBriefing(): Promise<import('@clearmoney/strata-sdk').BriefingSummary> {
+    await delay(300);
+    return {
+      last_login: new Date().toISOString(),
+      items: []
+    };
+  }
+
   async getAdvisorSession(sessionId: string): Promise<AdvisorSession> {
     await delay(300);
     return {

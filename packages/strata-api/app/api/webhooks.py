@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Header, Request, Depends
-from app.api.deps import get_db
+from fastapi import APIRouter, Depends, Header, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_db
 from app.services.billing import BillingService
 
 router = APIRouter(prefix="/webhooks", tags=["Webhooks"])

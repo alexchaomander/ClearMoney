@@ -4,7 +4,6 @@ from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
 
 from app.models.bank_transaction import BankTransaction
 from app.models.cash_account import CashAccount
@@ -18,7 +17,7 @@ class SavingsService:
     async def get_savings_metrics(self, user_id: uuid.UUID) -> dict:
         """Calculate savings metrics based on true organic inflow vs outflow."""
         cutoff = date.today() - timedelta(days=90)
-        
+
         result = await self._session.execute(
             select(BankTransaction)
             .join(CashAccount)

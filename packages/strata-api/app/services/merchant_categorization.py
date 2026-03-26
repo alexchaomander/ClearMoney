@@ -1,6 +1,4 @@
-import json
 import logging
-from typing import Any
 
 from app.core.config import settings
 from app.services.agent_runtime import AgentRuntime
@@ -50,12 +48,12 @@ class MerchantCategorizationService:
 
         # Deduplicate to save tokens
         unique_names = list(set(raw_names))
-        
-        # If there are too many, batching would be needed in production. 
+
+        # If there are too many, batching would be needed in production.
         # For MVP, we'll process up to 50 at a time.
         results = {}
         batch_size = 50
-        
+
         for i in range(0, len(unique_names), batch_size):
             batch = unique_names[i:i + batch_size]
             prompt = "Please categorize the following transaction descriptions:\n"
@@ -91,7 +89,7 @@ class MerchantCategorizationService:
                         }
                     }]
                 )
-                
+
                 # Extract the tool call
                 content = response.get("content", [])
                 for block in content:
@@ -111,7 +109,7 @@ class MerchantCategorizationService:
                         "clean_merchant_name": name.title()[:50],  # naive fallback
                         "category": "uncategorized"
                     }
-                    
+
         return results
 
 merchant_categorization_service = MerchantCategorizationService()

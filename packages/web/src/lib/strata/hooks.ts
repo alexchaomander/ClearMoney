@@ -306,6 +306,15 @@ export function useConvertRecommendationReviewToCorrection() {
   });
 }
 
+export function useAdvisorBriefing(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: ["advisor", "briefing"],
+    queryFn: () => client.getAdvisorBriefing(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
 export function useSearchProperties() {
   const client = useClient();
   return useMutation({

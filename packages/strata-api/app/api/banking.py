@@ -99,7 +99,7 @@ async def create_plaid_link_token(
     provider: PlaidProvider = Depends(get_plaid_provider),
 ) -> PlaidLinkResponse:
     """Create a Plaid Link token for initializing Plaid Link.
-    
+
     Enforces the 3 connected accounts limit for Free tier users.
     """
     if user.plan == "free":

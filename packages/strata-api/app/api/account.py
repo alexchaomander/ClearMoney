@@ -8,6 +8,7 @@ from app.core.rate_limit import limiter
 from app.models.user import User
 from app.schemas.user import UserResponse
 from app.services.account_management import delete_user_account, export_user_data
+from app.services.billing import BillingService
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,6 @@ async def get_me(
     return UserResponse.model_validate(current_user)
 
 
-from app.services.billing import BillingService
 
 @router.post("/upgrade")
 async def upgrade_account(
@@ -32,11 +32,11 @@ async def upgrade_account(
 ) -> dict:
     """Create a Stripe checkout session for upgrading to Premium."""
     billing_service = BillingService(db)
-    
+
     # In a real app, these would come from environment variables or be dynamic
     success_url = str(request.base_url).rstrip("/") + "/settings?tab=billing&session_id={CHECKOUT_SESSION_ID}"
     cancel_url = str(request.base_url).rstrip("/") + "/settings?tab=billing"
-    
+
     checkout_url = await billing_service.create_checkout_session(
         current_user, success_url, cancel_url
     )
