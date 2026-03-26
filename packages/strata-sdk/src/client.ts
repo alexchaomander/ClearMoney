@@ -228,6 +228,7 @@ export interface StrataClientInterface {
     data: RecommendationReviewConvertToCorrection
   ): Promise<RecommendationReview>;
   getAdvisorBriefing(): Promise<import('./types').BriefingSummary>;
+  getBriefingNarrative(): Promise<import('./types').NarrativeResponse>;
   // Consent
   listConsents(): Promise<ConsentResponse[]>;
   createConsent(data: ConsentCreateRequest): Promise<ConsentResponse>;
@@ -957,6 +958,10 @@ export class StrataClient implements StrataClientInterface {
 
   async getAdvisorBriefing(): Promise<import('./types').BriefingSummary> {
     return this.request<import('./types').BriefingSummary>('/api/v1/agent/briefing');
+  }
+
+  async getBriefingNarrative(): Promise<import('./types').NarrativeResponse> {
+    return this.request<import('./types').NarrativeResponse>('/api/v1/agent/briefing-narrative');
   }
 
   // === Consent ===

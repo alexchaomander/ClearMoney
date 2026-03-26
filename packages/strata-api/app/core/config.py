@@ -60,8 +60,11 @@ class Settings(BaseSettings):
     gold_price_api_key: str = ""  # For precious metals
 
     # Advisor configuration
-    advisor_provider: str = "anthropic"  # anthropic | openrouter
+    advisor_provider: str = "anthropic"  # anthropic | openrouter | openai | gemini | ollama | nvidia
     anthropic_api_key: str = ""
+    openrouter_api_key: str = ""
+    ollama_base_url: str = "http://localhost:11434/v1"
+    nvidia_api_key: str = ""
     advisor_model: str = "claude-3-5-sonnet-20241022"
     advisor_base_url: str = "https://openrouter.ai/api/v1"
 
