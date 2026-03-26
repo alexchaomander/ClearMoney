@@ -132,6 +132,7 @@ export interface Connection {
   provider: string;
   provider_user_id: string;
   status: ConnectionStatus;
+  continuity_status?: 'healthy' | 'stale' | 'degraded' | 'revoked';
   capabilities?: ActionCapability[];
   last_synced_at: string | null;
   error_code: string | null;

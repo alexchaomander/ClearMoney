@@ -88,6 +88,7 @@ class RunwayService:
                 CashAccount.user_id == user_id,
                 BankTransaction.amount < 0,  # Debits
                 BankTransaction.transaction_date >= cutoff,
+                BankTransaction.primary_category != "TRANSFER_OUT",
             )
         )
         transactions = result.scalars().all()

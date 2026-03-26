@@ -42,6 +42,9 @@ class Connection(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     last_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     error_code: Mapped[str | None] = mapped_column(String(50))
     error_message: Mapped[str | None] = mapped_column(String(1000))
+    continuity_status: Mapped[str] = mapped_column(
+        String(50), default="healthy", server_default="healthy"
+    )
 
     user: Mapped["User"] = relationship(back_populates="connections")
     institution: Mapped["Institution | None"] = relationship(
