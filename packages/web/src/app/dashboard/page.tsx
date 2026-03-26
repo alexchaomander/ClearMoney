@@ -379,6 +379,22 @@ export default function DashboardPage() {
     return new Date(Math.max(...syncDates));
   }, [connections]);
 
+  const connectionStatusState = useMemo(() => {
+    if (!connections?.length) return { tone: "warning" as const, value: "No active links", detail: "No live connector metadata yet." };
+    
+    if (connections.some(c => c.continuity_status === "revoked")) {
+      return { tone: "error" as const, value: "Action Required", detail: "A connection was revoked. Re-authenticate to restore service." };
+    }
+    if (connections.some(c => c.continuity_status === "degraded")) {
+      return { tone: "partial" as const, value: "Degraded", detail: "Some data sources are experiencing issues." };
+    }
+    if (connections.some(c => c.continuity_status === "stale")) {
+      return { tone: "warning" as const, value: "Stale Data", detail: "Some data sources haven't synced recently." };
+    }
+    
+    return { tone: "live" as const, value: `${connections.length} active`, detail: "Connector metadata is healthy and synced." };
+  }, [connections]);
+
   const sourceItems = useMemo<DataSourceStatusItem[]>(() => [
     {
       id: "portfolio",
@@ -415,17 +431,15 @@ export default function DashboardPage() {
     {
       id: "connections",
       title: "Connection sync",
-      value: connections?.length ? `${connections.length} active` : "No active links",
-      detail: connections?.length
-        ? "Connector metadata is connected."
-        : "No live connector metadata yet.",
-      tone: connections?.length ? "live" : "warning",
+      value: connectionStatusState.value,
+      detail: connectionStatusState.detail,
+      tone: connectionStatusState.tone,
       href: "/connect",
       actionLabel: "Manage links",
     },
   ], [
     accountCount,
-    connections,
+    connectionStatusState,
     effectiveAllAccounts.cash_accounts,
     effectiveAllAccounts.debt_accounts,
     effectiveAllAccounts.investment_accounts,

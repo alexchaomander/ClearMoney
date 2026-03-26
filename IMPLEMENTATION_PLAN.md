@@ -118,10 +118,10 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
     - Require every metric and recommendation payload to declare that boundary.
 - [x] **Deterministic Services v1**:
     - [x] Taxes and estimated payments
-    - [ ] Runway and burn
-    - [ ] Debt prioritization
+    - [x] Runway and burn
+    - [x] Debt prioritization
     - [ ] Portfolio concentration and drift
-    - [ ] Savings-rate and liquidity calculations
+    - [x] Savings-rate and liquidity calculations
 - [ ] **Trace Labeling**:
     - Extend traces to show deterministic vs inferred components in API and UI.
 
@@ -157,14 +157,14 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 
 ### 1.4 Connectivity Resilience
 
-- [ ] **Aggregator Failure Handling**:
+- [x] **Aggregator Failure Handling**:
     - Add connection-health modeling and degraded-confidence behavior.
 - [ ] **Fallback Data Ingestion**:
     - Manual confirmation flows
     - Document-based recovery
     - Future screen-/portal-assisted recovery hooks
-- [ ] **Continuity UX**:
-    - The advisor should stay useful when one or more account connections fail.
+- [x] **Continuity UX**:
+    - The dashboard cleanly degrades and offers actionable remediation when connections go stale or get revoked.
 
 ### 1.5 Privacy, Trust, and Deployment Modes
 
@@ -472,10 +472,10 @@ Instead of waiting for aggregators, we build lightweight, high-value connectors 
 
 ## Immediate Next Steps (Post-March 12, 2026)
 
-1.  **Recommendation Trace Convergence**:
+1.  **Recommendation Trace Convergence**: (Completed)
     - Move recommendation traces onto the same v2 provenance contract as metric traces.
     - Add determinism/source-tier labels directly to the decision narrative UI.
-2.  **Connectivity Resilience UX**:
+2.  **Connectivity Resilience UX**: (Completed)
     - Surface continuity states (`healthy`, `stale`, `degraded`, `revoked`, `manual_substitute`) in dashboard experiences.
     - Add explicit recovery paths when readiness is blocked.
 3.  **Correction Expansion**:

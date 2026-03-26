@@ -68,3 +68,32 @@ class TaxShieldMetrics(BaseModel):
     next_quarterly_payment: float
     current_quarter: int
     safe_harbor_met: bool
+
+class RunwayComponent(BaseModel):
+    liquid_cash: float
+    monthly_burn: float
+    runway_months: float
+
+class RunwayMetrics(BaseModel):
+    personal: RunwayComponent
+    entity: RunwayComponent
+
+class DebtPrioritizationItem(BaseModel):
+    account_id: str
+    name: str
+    balance: float
+    interest_rate: float
+    minimum_payment: float
+
+class DebtMetrics(BaseModel):
+    total_debt_value: float
+    total_minimum_payments: float
+    weighted_average_interest: float
+    avalanche_strategy: list[DebtPrioritizationItem]
+
+class SavingsMetrics(BaseModel):
+    monthly_income: float
+    monthly_burn: float
+    monthly_savings: float
+    savings_rate_90d: float
+    liquidity_months_target: int
