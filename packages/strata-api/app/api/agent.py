@@ -145,6 +145,28 @@ async def get_advisor_briefing(
     return BriefingSummary(**data)
 
 
+@router.get("/briefing-narrative")
+async def get_briefing_narrative(
+    user: User = Depends(require_scopes(["agent:read", "portfolio:read"])),
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Generate an AI-driven briefing narrative based on recent portfolio metrics."""
+    context = await build_financial_context(user.id, session)
+    
+    from app.services.portfolio_analysis import PortfolioAnalysisService
+    analysis_metrics = await PortfolioAnalysisService.analyze(session, user.id)
+    
+    from app.services.narrative import NarrativeService
+    narrative = await NarrativeService.generate_briefing_narrative(context, analysis_metrics)
+    
+    from app.core.config import settings
+    return {
+        "text": narrative,
+        "provider": settings.advisor_provider,
+        "model": settings.advisor_model
+    }
+
+
 @router.get("/decision-traces", response_model=list[DecisionTraceResponse])
 async def list_decision_traces(
     session_id: uuid.UUID | None = Query(default=None),
