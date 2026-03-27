@@ -44,6 +44,7 @@ from app.api.webhooks import router as webhooks_router
 from app.core.config import settings
 from app.core.rate_limit import limiter
 from app.db.session import close_db
+from app.middleware.maintenance import MaintenanceMiddleware
 from app.middleware.request_id import RequestIdMiddleware
 from app.services.jobs.background import start_background_tasks
 from app.services.providers.metal_price import metal_price_service
@@ -107,6 +108,7 @@ app.add_middleware(
     allow_headers=settings.cors_allow_headers,
 )
 app.add_middleware(RequestIdMiddleware)
+app.add_middleware(MaintenanceMiddleware)
 
 # Include routers
 app.include_router(health_router, prefix="/api/v1")
