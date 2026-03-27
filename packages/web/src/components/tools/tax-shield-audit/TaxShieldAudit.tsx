@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { 
   Upload, 
   FileText, 
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { UnifiedIntakeForm } from "@/components/shared/UnifiedIntakeForm";
+import { useStrataClient } from "@/lib/strata/client";
 import { cn } from "@/lib/utils";
 
 interface TaxShieldAuditProps {
@@ -25,32 +26,58 @@ interface TaxShieldAuditProps {
 
 type AuditStep = "upload" | "processing" | "results" | "capture";
 
-/**
- * TaxShieldAudit - "Shot #3" for the viral launch.
- * High-signal tool that scans tax docs to find missing deductions.
- */
 export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
+  const strataClient = useStrataClient();
   const [step, setStep] = useState<AuditStep>("upload");
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [auditData, setAuditData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const startAudit = useCallback((uploadedFile: File) => {
-    setFile(uploadedFile);
+  const startAudit = useCallback(async (uploadedFile: File) => {
     setStep("processing");
+    setProgress(10);
+    setError(null);
     
-    // Simulate processing
-    let currentProgress = 0;
-    const interval = setInterval(() => {
-      currentProgress += Math.random() * 15;
-      if (currentProgress >= 100) {
-        currentProgress = 100;
-        clearInterval(interval);
-        setTimeout(() => setStep("results"), 500);
+    try {
+      const response = await strataClient.uploadPublicAuditDocument(uploadedFile, uploadedFile.name);
+      setSessionId(response.session_id);
+    } catch (err: any) {
+      console.error("Upload failed", err);
+      setError(err.message || "Failed to upload document");
+      setStep("upload");
+    }
+  }, [strataClient]);
+
+  // Polling logic
+  useEffect(() => {
+    if (!sessionId || step !== "processing") return;
+
+    let pollInterval: NodeJS.Timeout;
+
+    const pollStatus = async () => {
+      try {
+        const data = await strataClient.getPublicAuditStatus(sessionId);
+        setProgress(data.progress || 50);
+        
+        if (data.status === "success") {
+          setAuditData(data.trace_payload);
+          setStep("results");
+          clearInterval(pollInterval);
+        } else if (data.status === "error") {
+          setError(data.error_message || "Audit failed");
+          setStep("upload");
+          clearInterval(pollInterval);
+        }
+      } catch (err) {
+        console.error("Polling failed", err);
       }
-      setProgress(currentProgress);
-    }, 400);
-  }, []);
+    };
+
+    pollInterval = setInterval(pollStatus, 2000);
+    return () => clearInterval(pollInterval);
+  }, [sessionId, step, strataClient]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -93,6 +120,12 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
               </p>
             </div>
             
+            {error && (
+              <div className="p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm flex items-center gap-2 justify-center">
+                <AlertCircle className="w-4 h-4" /> {error}
+              </div>
+            )}
+
             <div className="pt-4">
               <label className="cursor-pointer">
                 <span className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-slate-800 transition-colors inline-block">
@@ -152,15 +185,19 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
               </div>
               <div className="space-y-1">
                 <p className="text-slate-500 text-sm font-medium">Estimated Tax Shields Found</p>
-                <h4 className="text-5xl font-black text-slate-900 tracking-tight">$12,450</h4>
+                <h4 className="text-5xl font-black text-slate-900 tracking-tight">
+                  ${auditData?.deterministic?.total_impact?.toLocaleString() || "0"}
+                </h4>
               </div>
               <div className="mt-8 pt-8 border-t border-slate-100 flex items-center gap-4">
                 <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-900">92% Confidence Score</p>
-                  <p className="text-xs text-slate-500">Based on verified Schedule C rules</p>
+                  <p className="text-sm font-bold text-slate-900">
+                    {Math.round((auditData?.confidence_score || 0.9) * 100)}% Confidence Score
+                  </p>
+                  <p className="text-xs text-slate-500">Based on verified IRS rules</p>
                 </div>
               </div>
             </Card>
@@ -181,24 +218,25 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
 
           <div className="p-8 rounded-3xl bg-slate-900 text-white space-y-6">
             <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <FileText className="w-4 h-4 text-emerald-500" /> Partial Decision Trace (Un-redacted)
+              <FileText className="w-4 h-4 text-emerald-500" /> Decision Trace (Lineage)
             </h4>
             <div className="space-y-4">
-              {[
-                { rule: "QSBS 1202 Eligibility", result: "Qualified", impact: "$0 Capital Gains" },
-                { rule: "Home Office Deduction", result: "Underspent", impact: "+$2,100 Shield" },
-                { rule: "RSU Tax Withholding", result: "Inefficient", impact: "+$4,200 Cash" }
-              ].map((r, i) => (
+              {auditData?.rules_applied?.map((r: any, i: number) => (
                 <div key={i} className="flex justify-between items-center py-3 border-b border-white/10 last:border-0">
-                  <div>
-                    <p className="font-bold text-white">{r.rule}</p>
-                    <p className="text-xs text-slate-400">{r.result}</p>
+                  <div className="max-w-[70%]">
+                    <p className="font-bold text-white">{r.name}</p>
+                    <p className="text-xs text-slate-400">{r.message}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-emerald-400 font-bold">{r.impact}</p>
+                    <p className="text-emerald-400 font-bold">
+                      {r.passed ? "Verified" : `+$${r.threshold?.toLocaleString() || "???"}`}
+                    </p>
                   </div>
                 </div>
               ))}
+              {(!auditData?.rules_applied || auditData.rules_applied.length === 0) && (
+                <p className="text-slate-400 text-sm italic">No specific shields identified in this document scan.</p>
+              )}
             </div>
           </div>
         </div>

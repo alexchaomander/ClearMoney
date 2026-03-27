@@ -8,12 +8,12 @@ from cryptography.fernet import Fernet
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.session import SessionLocal
+from app.db.session import async_session_factory
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-async def rotate_keys(old_key: str, new_key: str, batch_size: int = 100):
+async def rotate_keys(old_key: str, new_key: str, batch_size: int = 100, session: AsyncSession | None = None):
     """
     Rotates the encryption key for all Connection credentials using raw SQL
     to bypass the TypeDecorator which uses the current environment key.
@@ -25,34 +25,40 @@ async def rotate_keys(old_key: str, new_key: str, batch_size: int = 100):
     fernet_old = Fernet(old_key.encode())
     fernet_new = Fernet(new_key.encode())
 
-    async with SessionLocal() as session:
-        # Fetch raw encrypted strings
-        result = await session.execute(text("SELECT id, credentials FROM connections WHERE credentials IS NOT NULL"))
-        rows = result.all()
-        total = len(rows)
-        logger.info(f"Found {total} connections to re-encrypt.")
+    if session is None:
+        async with async_session_factory() as session:
+            await _run_rotation(session, fernet_old, fernet_new, batch_size)
+    else:
+        await _run_rotation(session, fernet_old, fernet_new, batch_size)
 
-        processed = 0
-        for i in range(0, total, batch_size):
-            batch = rows[i : i + batch_size]
-            for row_id, encrypted_blob in batch:
-                try:
-                    # Decrypt with old key
-                    decrypted_data = fernet_old.decrypt(encrypted_blob.encode()).decode()
-                    # Re-encrypt with new key
-                    new_blob = fernet_new.encrypt(decrypted_data.encode()).decode()
-                    
-                    # Update row
-                    await session.execute(
-                        text("UPDATE connections SET credentials = :new_blob WHERE id = :row_id"),
-                        {"new_blob": new_blob, "row_id": row_id}
-                    )
-                except Exception as e:
-                    logger.error(f"Failed to rotate key for connection {row_id}: {e}")
-            
-            await session.commit()
-            processed += len(batch)
-            logger.info(f"Processed {processed}/{total}")
+async def _run_rotation(session: AsyncSession, fernet_old: Fernet, fernet_new: Fernet, batch_size: int):
+    # Fetch raw encrypted strings
+    result = await session.execute(text("SELECT id, credentials FROM connections WHERE credentials IS NOT NULL"))
+    rows = result.all()
+    total = len(rows)
+    logger.info(f"Found {total} connections to re-encrypt.")
+
+    processed = 0
+    for i in range(0, total, batch_size):
+        batch = rows[i : i + batch_size]
+        for row_id, encrypted_blob in batch:
+            try:
+                # Decrypt with old key
+                decrypted_data = fernet_old.decrypt(encrypted_blob.encode()).decode()
+                # Re-encrypt with new key
+                new_blob = fernet_new.encrypt(decrypted_data.encode()).decode()
+                
+                # Update row
+                await session.execute(
+                    text("UPDATE connections SET credentials = :new_blob WHERE id = :row_id"),
+                    {"new_blob": new_blob, "row_id": row_id}
+                )
+            except Exception as e:
+                logger.error(f"Failed to rotate key for connection {row_id}: {e}")
+        
+        await session.commit()
+        processed += len(batch)
+        logger.info(f"Processed {processed}/{total}")
 
     logger.info("Rotation complete.")
 
