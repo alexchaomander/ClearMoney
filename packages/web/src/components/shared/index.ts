@@ -22,3 +22,5 @@ export { ShareResults, useSharedParams } from "./ShareResults";
 export { CategoryPage } from "./CategoryPage";
 export { UnifiedIntakeForm } from "./UnifiedIntakeForm";
 export { ProductTour } from "./ProductTour";
+export { ShotHero } from "./ShotHero";
+export { ShotWorkspace } from "./ShotWorkspace";
