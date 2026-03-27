@@ -70,55 +70,40 @@ ClearMoney is built as a high-performance monorepo:
 
 ## Getting Started
 
-### Prerequisites
-*   Node.js (v20+)
-*   Python 3.11
-*   [`uv`](https://github.com/astral-sh/uv) for Python package management
-*   [`pnpm`](https://pnpm.io/) for JavaScript package management
-*   Docker (optional, for containerized local dev)
+### Option A: One-Click Local Setup (Recommended)
 
-### Option A: Docker (Recommended)
-
-Spin up PostgreSQL, Redis, and the API with one command:
+ClearMoney includes a `dev.sh` script that automates environment setup, dependency installation, and database migrations for a purely local (non-Docker) experience.
 
 ```bash
-# Copy env files
-cp packages/strata-api/.env.example packages/strata-api/.env
-cp packages/web/.env.example packages/web/.env.local
+# Clone the repo and run the launch script
+./dev.sh
+```
 
+This will:
+- Check for prerequisites (`pnpm`, `uv`, `Python 3.11+`).
+- Create `.env` and `.env.local` from examples if missing.
+- Install JS and Python dependencies.
+- Run migrations for a local SQLite database (`strata.db`).
+- Start both the API and Web dev servers.
+
+### Option B: Docker Setup
+
+Useful if you prefer running PostgreSQL and Redis in containers:
+
+```bash
 # Start backend services (PostgreSQL + Redis + API)
 docker compose up -d
 
-# Install frontend dependencies and start dev server
-pnpm install
-cd packages/web
+# Start the frontend
 pnpm dev
 ```
 
-The API will be available at `http://localhost:8000` and the web app at `http://localhost:3000`.
+### Option C: Manual Setup
 
-### Option B: Manual Setup
-
-```bash
-# Install root dependencies
-pnpm install
-
-# Setup API environment
-cd packages/strata-api
-cp .env.example .env
-uv venv --python 3.11
-source .venv/bin/activate
-uv pip install -e ".[dev]"
-alembic upgrade head
-
-# Setup Web environment
-cd ../web
-cp .env.example .env.local
-
-# Start development (from monorepo root)
-cd ../..
-pnpm dev
-```
+1.  **Install dependencies**: `pnpm install`
+2.  **API Environment**: `cd packages/strata-api && cp .env.example .env && uv venv && uv pip install -e ".[dev]" && alembic upgrade head`
+3.  **Web Environment**: `cd packages/web && cp .env.example .env.local`
+4.  **Launch**: From root, run `pnpm dev`
 
 ### Beta Access
 
