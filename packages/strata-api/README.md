@@ -4,7 +4,17 @@ FastAPI-based backend for the ClearMoney financial platform. Provides investment
 
 ## Quick Start
 
-### Option A: Docker (Recommended)
+### Option A: One-Click Local Setup (Recommended)
+
+From the **monorepo root**, run the local launch script:
+
+```bash
+./dev.sh
+```
+
+This automates environment setup, dependency installation, and starts the entire stack (Web + API) using local SQLite.
+
+### Option B: Docker Setup
 
 From the **monorepo root**:
 
@@ -13,9 +23,7 @@ cp packages/strata-api/.env.example packages/strata-api/.env
 docker compose up -d
 ```
 
-This starts PostgreSQL, Redis, and the API. The API runs at `http://localhost:8000` with auto-reload. Migrations run automatically on startup.
-
-### Option B: Manual Setup
+### Option C: Manual Setup
 
 ```bash
 cd packages/strata-api
