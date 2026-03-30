@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+<<<<<<< Updated upstream
 import { Trash2, RefreshCw, Wifi, Landmark, CreditCard, Info, Check, Shield, Lock, AlertCircle, TrendingUp, History, Plus } from "lucide-react";
+=======
+import { Trash2, RefreshCw, Wifi, Landmark, CreditCard, Info, Check, Shield, Lock, AlertCircle, TrendingUp, History, Plus, FileText } from "lucide-react";
+
+>>>>>>> Stashed changes
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import {
   useConnections,
