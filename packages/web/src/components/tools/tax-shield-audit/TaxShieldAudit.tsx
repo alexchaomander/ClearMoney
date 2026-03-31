@@ -155,7 +155,7 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
             </div>
             
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
-              <Lock className="w-3 h-3" /> 256-bit AES Encrypted & Ephemeral
+              <Lock className="w-3 h-3" /> Short-Lived Session, TLS In Transit
             </p>
           </div>
         </div>
@@ -225,7 +225,7 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
               <p className="text-center text-xs text-slate-400">
-                Unlock the full Decision Trace and specific execution steps.
+                Save your preview and request a personalized follow-up plan.
               </p>
             </div>
           </div>
@@ -263,7 +263,7 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
           </div>
           <h3 className="text-3xl font-bold text-slate-900 mb-2">Claim Your Math</h3>
           <p className="text-slate-500 mb-12 text-center max-w-sm">
-            Join the waitlist to unlock your full tax audit and get 1-click execution for these shields.
+            Join the waitlist to save this preview and get a personalized follow-up on the opportunities we flagged.
           </p>
           
           <UnifiedIntakeForm 

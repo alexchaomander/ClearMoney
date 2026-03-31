@@ -56,8 +56,8 @@ export function ShotLayout({ children, className }: ShotLayoutProps) {
           <div className="space-y-4">
             <h4 className="font-bold text-slate-800">Security & Privacy</h4>
             <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
-              Audit data is processed ephemerally. We do not store your documents after the audit 
-              is complete unless you explicitly join the waitlist.
+              We do not store uploaded source documents in the product database. Public
+              audit previews stay available in a short-lived session so you can review the result.
             </p>
             <div className="flex gap-4">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-200 px-2 py-1 rounded">Short-Lived Uploads</div>

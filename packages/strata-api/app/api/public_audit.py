@@ -74,30 +74,34 @@ async def upload_audit_document(
         raise HTTPException(status_code=400, detail="Unsupported MIME type")
 
     del request
-    session_id = uuid4()
-    await store.set(
-        str(session_id),
-        {"status": "processing", "progress": 10},
-        ttl=PUBLIC_AUDIT_TTL_SECONDS,
-    )
+    try:
+        file_bytes = await file.read()
+        if len(file_bytes) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail="File too large")
 
-    file_bytes = await file.read()
-    if len(file_bytes) > MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="File too large")
-    asyncio.create_task(
-        _run_public_audit(
-            store=store,
-            session_id=session_id,
-            file_bytes=file_bytes,
-            filename=filename,
-            mime_type=file.content_type or "application/pdf",
+        session_id = uuid4()
+        await store.set(
+            str(session_id),
+            {"status": "processing", "progress": 10},
+            ttl=PUBLIC_AUDIT_TTL_SECONDS,
         )
-    )
 
-    return PublicAuditUploadResponse(
-        session_id=session_id,
-        message="Document uploaded successfully. Audit in progress.",
-    )
+        asyncio.create_task(
+            _run_public_audit(
+                store=store,
+                session_id=session_id,
+                file_bytes=file_bytes,
+                filename=filename,
+                mime_type=file.content_type or "application/pdf",
+            )
+        )
+
+        return PublicAuditUploadResponse(
+            session_id=session_id,
+            message="Document uploaded successfully. Audit in progress.",
+        )
+    finally:
+        await file.close()
 
 
 @router.get("/status/{session_id}", response_model=PublicAuditStatusResponse)

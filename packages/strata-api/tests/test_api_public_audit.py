@@ -30,6 +30,16 @@ async def test_upload_audit_document_invalid_type():
 
 
 @pytest.mark.asyncio
+async def test_upload_audit_document_too_large():
+    oversized = b"x" * (21 * 1024 * 1024)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        files = {"file": ("large.pdf", oversized, "application/pdf")}
+        response = await ac.post("/api/v1/public/audit/upload", files=files)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "File too large"
+
+
+@pytest.mark.asyncio
 async def test_public_tax_audit_does_not_persist_tax_documents(session, monkeypatch):
     class FakeProvider:
         async def extract(self, _file_bytes, _mime_type, _filename):

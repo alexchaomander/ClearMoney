@@ -87,7 +87,7 @@ ClearMoney includes a `dev.sh` script that automates environment setup, dependen
 ```
 
 This will:
-- Check for prerequisites (`pnpm`, `uv`, `Python 3.11+`).
+- Check for prerequisites (`pnpm`, `uv`, `Python 3.12`).
 - Create `.env` and `.env.local` from examples if missing.
 - Install JS and Python dependencies for both backend services.
 - Run migrations for a local SQLite database (`strata.db`).
@@ -108,10 +108,12 @@ pnpm dev
 ### Option C: Manual Setup
 
 1.  **Install dependencies**: `pnpm install`
-2.  **Core API Environment**: `cd packages/strata-api && cp .env.example .env && uv venv && uv pip install --python .venv/bin/python -e ".[dev]" && alembic upgrade head`
-3.  **Brokerage Service Environment**: `cd packages/brokerage-service && cp .env.example .env && uv venv && uv pip install --python .venv/bin/python -e ".[dev]"`
-4.  **Web Environment**: `cd packages/web && cp .env.example .env.local`
-5.  **Launch**: run the three services separately (`uvicorn` for the Python services, `pnpm --dir packages/web dev` for web)
+2.  **Core API Environment**: `cd packages/strata-api && cp .env.example .env && cd ../..`
+3.  **Root Python Environment**: `uv venv --python 3.12 && uv pip install --python .venv/bin/python -e "packages/strata-api[dev]"`
+4.  **Database Migration**: `cd packages/strata-api && ../../.venv/bin/python -m alembic upgrade head && cd ../..`
+5.  **Brokerage Service Environment**: `cd packages/brokerage-service && cp .env.example .env && uv venv --python 3.12 && uv pip install --python .venv/bin/python -e ".[dev]" && cd ../..`
+6.  **Web Environment**: `cd packages/web && cp .env.example .env.local && cd ../..`
+7.  **Launch**: run the three services separately (`uvicorn` for the Python services, `pnpm --dir packages/web dev` for web)
 
 ### Beta Access
 
