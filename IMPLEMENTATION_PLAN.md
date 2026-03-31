@@ -28,81 +28,26 @@ ClearMoney is the "Prime" application for the Strata platform. It demonstrates t
 
 ## Phase 1: Context OS Foundation (Current)
 
-**Goal:** Build a deterministic, trust-scored, resilient context layer that can support a true financial chief-of-staff experience.
+**Goal:** Build a deterministic, trust-scored, resilient context layer while launching viral calculators to capture user intent.
 
-### Recently Completed (March 12, 2026)
+### Recently Completed (March 27, 2026)
 
-- [x] **Typed Context Contracts**:
-    - Added typed response models for assembled financial context payloads.
-    - Aligned SDK types with richer context structures.
-- [x] **Live Provenance Pilot**:
-    - Replaced static methodology with live metric trace APIs for:
-        - Net worth
-        - Total assets
-        - Savings rate
-        - Personal runway
-- [x] **Trace Schema v2 (Metrics)**:
-    - Added `formula_id`, `formula_version`, `determinism_class`, `source_tier`, `continuity_status`, `recommendation_readiness`, `confidence_factors`, and correction targets to metric traces.
-- [x] **Formula Registry v1**:
-    - Registered versioned formulas for the initial core metrics.
-- [x] **Correction Engine v1**:
-    - Added first-class corrections with deterministic application for monthly income, monthly expenses, and transaction category fixes.
-    - Added recomputation impact summaries for corrected metrics.
-- [x] **Context Quality / Continuity v1**:
-    - Added context-quality evaluation and API surface with continuity states and recommendation readiness.
-- [x] **Advisor Trace Upgrade v1**:
-    - Added context-quality metadata and readiness gating to advisor-created traces and recommendation generation.
-- [x] **Real-World Billing Integration**:
-    - Connected Stripe Checkout and Invoice data to Settings.
-    - Implemented tiered plan enforcement (3-account limit for Free tier).
-- [x] **Canonical Context Graph Expansion (Profile)**:
-    - Expanded `FinancialMemory` with Employer, Insurance, and Estate planning nodes.
-    - Implemented automated derivation of profile fields from transaction history.
-    - Added Deep-Linking and Context Quality UX to the Dashboard.
+- [x] **Mini-Product Flywheel Launch**:
+    - Launched **Shot #1: Founder Runway** and **Shot #3: AI Tax Shield Audit**.
+    - Implemented "Advisor" (Approachable) UI foundation with `ShotLayout` and `ShotHero`.
+- [x] **Sanitized Public Traces**:
+    - Built public API at `/api/v1/public/audit/` for unauthenticated "Decision Trace" access.
+    - Implemented ephemeral document upload and audit status polling.
+- [x] **Security P0 - Key Rotation & Git Scrub**:
+    - Scrubbed git history of leaked `.env` and `STRATA_CREDENTIALS_ENCRYPTION_KEY`.
+    - Built `rotate_keys.py` migration script for automated database re-encryption.
+    - Added `MaintenanceMiddleware` for safe system updates.
 - [x] **Quarterly Tax Estimator (Deterministic Core)**:
     - Split transaction ingestion to intelligently categorize income into W2 vs 1099 streams based on entity logic.
     - Transitioned to progressive 2026 tax brackets and standard deductions instead of flat-rate estimates, including 15.3% Self-Employment (FICA) logic.
     - Added `TaxShieldMetrics` to the strata-sdk and built `TaxShieldCard` with beautiful visualizations on the main Dashboard.
-
-### Next Build Slice: Recommendation-Trace Convergence (Completed)
-
-**Objective:** Move ClearMoney from explainable metrics to explainable advisory behavior by putting analysis and recommendation traces onto the same trust contract.
-
-**Deliverables**
-- [x] **Shared Decision Trace v2 Contract**:
-    - Typed payload for advisor `analysis` and `recommendation` traces.
-    - Required fields:
-        - `trace_version`
-        - `trace_kind`
-        - `rules_applied`
-        - `insights`
-        - `assumptions`
-        - `confidence_score`
-        - `confidence_factors`
-        - `determinism_class`
-        - `source_tier`
-        - `continuity_status`
-        - `recommendation_readiness`
-        - `coverage_status`
-        - `policy_version`
-        - `freshness`
-        - `context_quality`
-        - `warnings`
-        - `remediation_actions`
-        - `correction_targets`
-- [x] **Recommendation Remediation UX**:
-    - The UI should explain why a recommendation is `cautious` or `blocked`.
-    - It should point users to reconnect accounts, refresh stale data, or fill missing profile inputs.
-- [x] **Decision Trace UI Migration**:
-    - Replace raw JSON-heavy trace viewers with structured rendering of rules, insights, assumptions, confidence, and remediation.
-- [x] **Backward Compatibility**:
-    - Existing traces should still render via fallback parsing while new traces emit the typed v2 shape.
-
-**Completed**
-- Shared `DecisionTracePayload` is now live across advisor traces, API serialization, SDK types, and dashboard rendering.
-- Recommendation traces now carry remediation actions, correction targets, and review summaries.
-- User-facing review entry points and a recommendation review queue are implemented.
-- **Multi-LLM Math-to-Narrative Pipeline**: Integrated OpenAI, Anthropic, Gemini, OpenRouter, NVIDIA, and Ollama for automated financial briefings.
+- [x] **Multi-LLM Math-to-Narrative Pipeline**:
+    - Integrated OpenAI, Anthropic, Gemini, OpenRouter, NVIDIA, and Ollama for automated financial briefings.
 
 **Execution Sequence**
 1. Add `DecisionTracePayload` and response parsing in the API/schema layer.

@@ -75,10 +75,16 @@ Every JIT mini-app must route through our shared **`UnifiedIntakeForm`** compone
 
 ---
 
-## 6. Immediate Execution Sprints (The Next 3 Shots)
+## 6. Immediate Execution Sprints (Launch Sequence)
 
-Based on current market sentiment, we will launch these three tools over the next 30 days:
+Based on current market sentiment and launch readiness, we have prioritized these shots:
 
-1. **Shot #1: Founder Runway & Burn Tester** (Already Built - Target: YC/X)
-2. **Shot #2: The Honest Card Optimizer** (Target: r/CreditCards, exposing Q1 fee hikes)
-3. **Shot #3: The AI Tax Shield Audit** (Target: Pre-April tax season anxiety for 1099s/Founders)
+1. **Shot #1: Founder Runway & Burn Tester** (**LAUNCHED** - March 2026)
+   - Status: Live at `/tools/founder-runway`
+   - UI: "Advisor" (Approachable) Theme
+2. **Shot #3: AI Tax Shield Audit** (**LAUNCHED** - March 2026)
+   - Status: Live at `/tools/tax-shield-audit`
+   - Feature: AI document extraction + deterministic audit
+3. **Shot #2: The Honest Card Optimizer** (In Development - Target: April 2026)
+   - Focus: r/CreditCards, exposing Q1 fee hikes
+

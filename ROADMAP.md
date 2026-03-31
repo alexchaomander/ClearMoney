@@ -340,6 +340,7 @@ What we've already built:
 - [x] Plaid integration for account linking
 - [x] Light/dark mode with Strata design system
 - [x] Blog infrastructure with editorial content
+- [x] **P0 Security**: Scrubbed git history and rotated core encryption keys (v0.1.1.0)
 
 What is only partially complete and must not be treated as finished:
 
@@ -350,9 +351,18 @@ What is only partially complete and must not be treated as finished:
 
 ---
 
-### Phase 1: Context OS Foundation + Competitive Parity (Months 1-3)
+### Phase 1: Mini-Product Flywheel & Competitive Parity (In Progress)
 
-**Goal: Build the foundation for 10/10 agent-context alignment while still closing core market gaps.**
+**Goal: Launch targeted, viral tools to build trust and capture high-intent users while building the Context OS foundation.**
+
+#### 1.0 Mini-Product Flywheel (P0)
+
+| Tool | Status | Details |
+|------|--------|---------|
+| Shot #1: Founder Runway | **LAUNCHED** | Combined personal + company runway calculator. |
+| Shot #3: AI Tax Shield Audit | **LAUNCHED** | W-2/Schedule C audit for missed deductions. |
+| Shot #2: Honest Card Optimizer | Panned | Real ROI credit card comparison. |
+| Sanitized Public Traces | **LIVE** | Public API for "Show the Math" lineage on viral tools. |
 
 #### 1.1 Context Operating System Foundation (P0)
 

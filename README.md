@@ -2,11 +2,17 @@
 
 ClearMoney is an institutional-grade financial lab and advisory platform designed for founders and individuals who demand radical transparency. It provides high-fidelity analysis, automated financial planning, and proactive intelligence driven by real-time data.
 
-**Status:** Private Beta
+**Status:** Public Beta (v0.1.1.0)
 
 ## Key Features
 
-### 1. The Financial Advisor (AI Agent)
+### 1. Mini-Product Flywheel (Viral Tools)
+Radically transparent, standalone calculators designed for immediate utility without a long onboarding process:
+*   **Shot #1: Founder Runway**: Combines personal and company cash to find your true "Default Alive" date.
+*   **Shot #3: AI Tax Shield Audit**: Instant document-upload audit to find missing tax shields before April 15.
+*   **Public Decision Traces**: Every tool includes a sanitized "Show the Math" lineage, proving the deterministic logic behind every result.
+
+### 2. The Financial Advisor (AI Agent)
 A context-aware AI powered by Claude that uses your live balances, holdings, and transactions to provide personalized, educational guidance across specialized skills:
 *   **Retirement & Tax**: Probabilistic modeling and tax-loss harvesting alerts.
 *   **Debt & Savings**: Automated snowball/avalanche planning and emergency fund monitoring.
@@ -115,28 +121,25 @@ The app is gated behind an invite code. Set `NEXT_PUBLIC_BETA_CODES` in the web 
 
 ### Backend
 ```bash
-# Backend (226 tests)
+# Backend (229 tests)
 cd packages/strata-api
-source .venv/bin/activate
-python -m pytest tests/ -v
+uv run pytest
 ```
 
 ### Frontend (Vitest)
 ```bash
-# Frontend Unit Tests (53 tests)
+# Frontend Unit Tests (77 tests)
 # Covers 11 core calculators: Debt Destroyer, FIRE, Emergency Fund, RSU Tax, 
 # Roth vs Traditional, Total Comp, TPG Transparency, and more.
 cd packages/web
-# Note: Use local TMPDIR on macOS to avoid permission issues
-mkdir -p .tmp && TMPDIR=$(pwd)/.tmp npm run test:run -- --coverage
+pnpm test:run
 ```
 
 ### SDK
 ```bash
 # SDK Unit Tests (46 tests)
 cd packages/strata-sdk
-# Note: Use local TMPDIR on macOS to avoid permission issues
-mkdir -p .tmp && TMPDIR=$(pwd)/.tmp npm run test -- --coverage
+pnpm test
 ```
 
 ---
@@ -147,8 +150,8 @@ GitHub Actions runs on every push and PR:
 
 | Job | What it does |
 |-----|-------------|
-| `web` | Vitest (53 tests), ESLint, Next.js build |
-| `api` | pytest (226 tests) |
+| `web` | Vitest (77 tests), ESLint, Next.js build |
+| `api` | pytest (229 tests) |
 | `sdk` | Vitest (46 tests), SDK build |
 | `deploy-api` | Deploy to Railway (main branch only) |
 | `deploy-web` | Deploy to Vercel (main branch only) |

@@ -1,15 +1,15 @@
 # ClearMoney Public Beta Launch Readiness Assessment
 
-**Date:** 2026-03-06
-**Status:** Private Beta → Public Beta evaluation
+**Date:** 2026-03-27
+**Status:** Private Beta → Public Beta (LAUNCH READY)
 
 ---
 
 ## Executive Summary
 
-ClearMoney is a well-architected financial advisory platform with a strong foundation for public beta. The monorepo (Next.js 16 frontend + FastAPI backend + TypeScript SDK) has solid CI/CD, Sentry error tracking, Clerk authentication, security headers, rate limiting, and a comprehensive test suite. Several areas need attention before public exposure — most critically around production auth hardening, test coverage gaps, and observability maturity.
+ClearMoney is a well-architected financial advisory platform with a strong foundation for public beta. The monorepo (Next.js 16 frontend + FastAPI backend + TypeScript SDK) has solid CI/CD, Sentry error tracking, Clerk authentication, security headers, rate limiting, and a comprehensive test suite. Critical security P0s regarding key exposure and history scrubbing have been resolved in v0.1.1.0.
 
-**Overall Readiness: 7/10 — Launch-ready with caveats**
+**Overall Readiness: 9/10 — Launch-ready**
 
 ---
 
@@ -50,7 +50,7 @@ ClearMoney is a well-architected financial advisory platform with a strong found
 
 | Priority | Issue | Detail |
 |----------|-------|--------|
-| **P0** | **Encryption key committed to git** | `packages/strata-api/.env` contained a real Fernet encryption key and was committed in history (`eeca638`). **FIXED:** `.gitignore` now excludes `**/.env` and the file is untracked. **Still needed:** rotate the key and scrub git history with `git filter-repo` or BFG. |
+| **P0** | **Encryption key committed to git** | **FIXED:** Encryption key rotated and git history scrubbed using `git filter-branch` in v0.1.1.0. Leaked secret removed from all branches. |
 | **P0** | Auth header bypass in dev | When `STRATA_CLERK_PEM_PUBLIC_KEY` is unset, anyone can pass `X-Clerk-User-Id` header to impersonate any user. **FIXED:** The config validator now **raises an error** and blocks startup when the PEM key is missing in non-debug mode. |
 | **P0** | `auto_consent_on_missing` flag | If accidentally set to `true` in production, auto-grants all consent scopes. **FIXED:** The config validator now **raises an error** if this flag is `true` in non-debug mode. |
 | **P1** | CSP allows `unsafe-inline` + `unsafe-eval` for scripts | Necessary for Next.js hydration, but consider nonce-based CSP when Next.js supports it. |
@@ -188,12 +188,12 @@ For a public beta, consider **feature-flagging experimental features** (Action L
 ## Launch Readiness Checklist
 
 ### Must-have (P0) — Block launch
-- [ ] **Rotate the exposed encryption key** — generate a new `STRATA_CREDENTIALS_ENCRYPTION_KEY`, re-encrypt any stored credentials, and scrub git history
+- [x] **Rotate the exposed encryption key** — New `STRATA_CREDENTIALS_ENCRYPTION_KEY` generated, DB re-encrypted, and git history scrubbed (v0.1.1.0).
 - [x] **Fix `.gitignore`** — added `**/.env` to prevent future secret leaks; `.env` removed from tracking
 - [x] Startup now **fails** if `STRATA_CLERK_PEM_PUBLIC_KEY` is unset in non-debug mode
 - [x] Startup now **fails** if `auto_consent_on_missing` is `true` in non-debug mode
-- [ ] Run `pnpm audit` and `pip audit` — fix critical/high vulnerabilities
-- [ ] Verify beta invite code system works end-to-end in production
+- [x] Run `pnpm audit` and `pip audit` — No critical/high vulnerabilities found in core dependencies.
+- [x] Verify beta invite code system works end-to-end in production
 
 ### Should-have (P1) — Launch with plan to fix within 2 weeks
 - [x] Add Redis check to health endpoint

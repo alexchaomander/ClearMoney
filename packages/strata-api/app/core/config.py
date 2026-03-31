@@ -9,6 +9,7 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite+aiosqlite:///./strata.db"
     database_echo: bool = False
+    maintenance_mode: bool = False
     credentials_encryption_key: str = ""
     cors_allow_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
     cors_allow_credentials: bool = True
