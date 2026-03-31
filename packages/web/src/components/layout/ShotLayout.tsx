@@ -60,8 +60,8 @@ export function ShotLayout({ children, className }: ShotLayoutProps) {
               is complete unless you explicitly join the waitlist.
             </p>
             <div className="flex gap-4">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-200 px-2 py-1 rounded">SOC2 Type II</div>
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-200 px-2 py-1 rounded">AES-256 Encrypted</div>
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-200 px-2 py-1 rounded">Short-Lived Uploads</div>
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-200 px-2 py-1 rounded">TLS In Transit</div>
             </div>
           </div>
         </div>

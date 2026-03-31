@@ -9,7 +9,7 @@ ClearMoney is an institutional-grade financial lab and advisory platform designe
 ### 1. Mini-Product Flywheel (Viral Tools)
 Radically transparent, standalone calculators designed for immediate utility without a long onboarding process:
 *   **Shot #1: Founder Runway**: Combines personal and company cash to find your true "Default Alive" date.
-*   **Shot #3: AI Tax Shield Audit**: Instant document-upload audit to find missing tax shields before April 15.
+*   **Shot #3: AI Tax Shield Audit**: Instant document-upload preview that surfaces common tax signals and exposes the reasoning behind the result.
 *   **Public Decision Traces**: Every tool includes a sanitized "Show the Math" lineage, proving the deterministic logic behind every result.
 
 ### 2. The Financial Advisor (AI Agent)
@@ -59,17 +59,18 @@ ClearMoney is built as a high-performance monorepo:
 
 | Package | Stack | Description |
 |---------|-------|-------------|
-| **[Strata API](./packages/strata-api)** | FastAPI, Python 3.11, SQLAlchemy Async, Pydantic v2 | Backend API with Plaid + SnapTrade integrations |
+| **[Strata API](./packages/strata-api)** | FastAPI, Python 3.12, SQLAlchemy Async, Pydantic v2 | Core backend API |
+| **[Brokerage Service](./packages/brokerage-service)** | FastAPI, Python 3.12, SnapTrade SDK | Isolated brokerage connectivity microservice |
 | **[Strata SDK](./packages/strata-sdk)** | TypeScript | Client library for the ClearMoney API |
 | **ClearMoney Web** | Next.js 16, React 19, Tailwind CSS 4, Framer Motion | Frontend dashboard and editorial landing page |
 
 **Infrastructure:**
 *   **Auth**: Clerk (JWT with PEM key validation in production, header bypass in dev)
-*   **Database**: PostgreSQL (SQLite for local dev)
+*   **Database**: PostgreSQL (SQLite for local dev in `strata-api`)
 *   **Cache/Sessions**: Redis (optional; in-memory fallback for dev)
 *   **Error Tracking**: Sentry (frontend + backend)
 *   **CI/CD**: GitHub Actions (lint, test, build, deploy)
-*   **Deployment**: Railway (API) + Vercel (Web)
+*   **Deployment**: Split-ready services for core API and brokerage workloads + Vercel (Web)
 *   **Containerization**: Docker + docker-compose for local dev
 
 ---
@@ -88,16 +89,16 @@ ClearMoney includes a `dev.sh` script that automates environment setup, dependen
 This will:
 - Check for prerequisites (`pnpm`, `uv`, `Python 3.11+`).
 - Create `.env` and `.env.local` from examples if missing.
-- Install JS and Python dependencies.
+- Install JS and Python dependencies for both backend services.
 - Run migrations for a local SQLite database (`strata.db`).
-- Start both the API and Web dev servers.
+- Start the brokerage service, core API, and web app.
 
 ### Option B: Docker Setup
 
 Useful if you prefer running PostgreSQL and Redis in containers:
 
 ```bash
-# Start backend services (PostgreSQL + Redis + API)
+# Start backend services (PostgreSQL + Redis + Core API + Brokerage Service)
 docker compose up -d
 
 # Start the frontend
@@ -107,9 +108,10 @@ pnpm dev
 ### Option C: Manual Setup
 
 1.  **Install dependencies**: `pnpm install`
-2.  **API Environment**: `cd packages/strata-api && cp .env.example .env && uv venv && uv pip install -e ".[dev]" && alembic upgrade head`
-3.  **Web Environment**: `cd packages/web && cp .env.example .env.local`
-4.  **Launch**: From root, run `pnpm dev`
+2.  **Core API Environment**: `cd packages/strata-api && cp .env.example .env && uv venv && uv pip install --python .venv/bin/python -e ".[dev]" && alembic upgrade head`
+3.  **Brokerage Service Environment**: `cd packages/brokerage-service && cp .env.example .env && uv venv && uv pip install --python .venv/bin/python -e ".[dev]"`
+4.  **Web Environment**: `cd packages/web && cp .env.example .env.local`
+5.  **Launch**: run the three services separately (`uvicorn` for the Python services, `pnpm --dir packages/web dev` for web)
 
 ### Beta Access
 
@@ -121,23 +123,27 @@ The app is gated behind an invite code. Set `NEXT_PUBLIC_BETA_CODES` in the web 
 
 ### Backend
 ```bash
-# Backend (229 tests)
+# Run API tests from the repo root .venv
 cd packages/strata-api
-uv run pytest
+../../.venv/bin/python -m pytest
+```
+
+```bash
+# Run brokerage service tests from its dedicated .venv
+cd packages/brokerage-service
+.venv/bin/python -m pytest
 ```
 
 ### Frontend (Vitest)
 ```bash
-# Frontend Unit Tests (77 tests)
-# Covers 11 core calculators: Debt Destroyer, FIRE, Emergency Fund, RSU Tax, 
-# Roth vs Traditional, Total Comp, TPG Transparency, and more.
+# Frontend unit tests
 cd packages/web
 pnpm test:run
 ```
 
 ### SDK
 ```bash
-# SDK Unit Tests (46 tests)
+# SDK unit tests
 cd packages/strata-sdk
 pnpm test
 ```
@@ -150,9 +156,10 @@ GitHub Actions runs on every push and PR:
 
 | Job | What it does |
 |-----|-------------|
-| `web` | Vitest (77 tests), ESLint, Next.js build |
-| `api` | pytest (229 tests) |
-| `sdk` | Vitest (46 tests), SDK build |
+| `web` | Vitest, ESLint, Next.js build |
+| `api` | pytest |
+| `brokerage-service` | pytest for the isolated SnapTrade service |
+| `sdk` | Vitest, SDK build |
 | `deploy-api` | Deploy to Railway (main branch only) |
 | `deploy-web` | Deploy to Vercel (main branch only) |
 

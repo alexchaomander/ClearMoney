@@ -1,15 +1,15 @@
 # ClearMoney Public Beta Launch Readiness Assessment
 
 **Date:** 2026-03-27
-**Status:** Private Beta → Public Beta (LAUNCH READY)
+**Status:** Private Beta → Public Beta evaluation
 
 ---
 
 ## Executive Summary
 
-ClearMoney is a well-architected financial advisory platform with a strong foundation for public beta. The monorepo (Next.js 16 frontend + FastAPI backend + TypeScript SDK) has solid CI/CD, Sentry error tracking, Clerk authentication, security headers, rate limiting, and a comprehensive test suite. Critical security P0s regarding key exposure and history scrubbing have been resolved in v0.1.1.0.
+ClearMoney is a well-architected financial advisory platform with a strong foundation for public beta. The monorepo (Next.js 16 frontend + FastAPI backend + TypeScript SDK) has solid CI/CD, Sentry error tracking, Clerk authentication, security headers, rate limiting, and a comprehensive test suite. Critical security P0s regarding key exposure and history scrubbing have been resolved in v0.1.1.0, but some launch-readiness items below still require operational verification.
 
-**Overall Readiness: 9/10 — Launch-ready**
+**Overall Readiness: 8/10 — Strong beta candidate, pending operational verification**
 
 ---
 
@@ -55,7 +55,8 @@ ClearMoney is a well-architected financial advisory platform with a strong found
 | **P0** | `auto_consent_on_missing` flag | If accidentally set to `true` in production, auto-grants all consent scopes. **FIXED:** The config validator now **raises an error** if this flag is `true` in non-debug mode. |
 | **P1** | CSP allows `unsafe-inline` + `unsafe-eval` for scripts | Necessary for Next.js hydration, but consider nonce-based CSP when Next.js supports it. |
 | **P1** | No CSRF protection beyond SameSite cookies | Clerk handles session tokens, but custom API calls should validate origin. |
-| **P2** | Dependency audit | Run `pnpm audit` and `pip audit` before launch. No evidence of regular vulnerability scanning. |
+| **P1** | Brokerage-service dependency audit | `packages/strata-api` is now clear of the old `cryptography 43.0.3` blocker after the SnapTrade split. The remaining audit exception is isolated to `packages/brokerage-service`, because `snaptrade-python-sdk 11.0.172` still pins `cryptography<44.0.0`. |
+| **P2** | Frontend dependency audit | `pnpm audit --audit-level high` is now down to moderate-only findings after transitive overrides were applied. Keep auditing in CI. |
 | **P2** | ~~No secrets scanning in CI~~ | **FIXED:** `gitleaks` added to CI pipeline. |
 
 ---
@@ -192,8 +193,10 @@ For a public beta, consider **feature-flagging experimental features** (Action L
 - [x] **Fix `.gitignore`** — added `**/.env` to prevent future secret leaks; `.env` removed from tracking
 - [x] Startup now **fails** if `STRATA_CLERK_PEM_PUBLIC_KEY` is unset in non-debug mode
 - [x] Startup now **fails** if `auto_consent_on_missing` is `true` in non-debug mode
-- [x] Run `pnpm audit` and `pip audit` — No critical/high vulnerabilities found in core dependencies.
-- [x] Verify beta invite code system works end-to-end in production
+- [x] Remove the `pip-audit` blocker from the core API by isolating SnapTrade into `packages/brokerage-service`
+- [ ] Track the remaining `packages/brokerage-service` exception around `snaptrade-python-sdk` → `cryptography`
+- [x] Run `pnpm audit` — no high/critical findings remain
+- [ ] Verify beta invite code system works end-to-end in production
 
 ### Should-have (P1) — Launch with plan to fix within 2 weeks
 - [x] Add Redis check to health endpoint
@@ -220,12 +223,12 @@ For a public beta, consider **feature-flagging experimental features** (Action L
 
 ## Conclusion
 
-ClearMoney has impressive engineering maturity for its stage: proper auth, security headers, Sentry integration, CI/CD pipelines, and a substantial test suite. Most P0 items are configuration verification, but the **committed encryption key requires immediate rotation and git history cleanup**.
+ClearMoney has impressive engineering maturity for its stage: proper auth, security headers, Sentry integration, CI/CD pipelines, and a substantial test suite. Most remaining launch items are now operational rather than architectural, and the prior core-API dependency blocker has been pushed behind a dedicated brokerage service boundary.
 
 The biggest risks for public beta are:
-1. **Committed secret** — A Fernet encryption key is in git history; must be rotated before any public exposure
+1. **Brokerage vendor dependency exception** — `packages/brokerage-service` still inherits SnapTrade's `cryptography<44` pin
 2. **Large attack surface** — 100+ routes and 30+ API endpoints mean more places for bugs to hide
 3. **Financial data sensitivity** — any data leak is brand-destroying
 4. **AI advisor liability** — financial recommendations carry regulatory implications
 
-**Recommendation:** Rotate the exposed encryption key and fix `.gitignore` first. Then address the remaining P0 items (auth enforcement, consent flag). Launch the public beta with experimental features gated behind a "Labs" flag. Monitor Sentry closely in the first 48 hours. Have the rollback procedure documented and tested before go-live.
+**Recommendation:** Keep the new split deployment model: run `packages/strata-api` without SnapTrade in the default runtime, deploy `packages/brokerage-service` separately with tighter network controls, and treat the remaining SnapTrade dependency exception as an isolated service risk until upstream loosens the pin. Launch the public beta with experimental features gated behind a "Labs" flag. Monitor Sentry closely in the first 48 hours. Have the rollback procedure documented and tested before go-live.

@@ -37,12 +37,27 @@ services:
     environment:
       STRATA_DATABASE_URL: postgresql+asyncpg://strata:strata@postgres:5432/strata
       STRATA_REDIS_URL: redis://redis:6379/0
+      STRATA_BROKERAGE_SERVICE_URL: http://brokerage:8010
+      STRATA_BROKERAGE_INTERNAL_TOKEN: dev-brokerage-token
       PORT: "8000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      brokerage:
+        condition: service_started
+
+  brokerage:
+    build:
+      context: packages/brokerage-service
+    ports:
+      - "8010:8010"
+    env_file:
+      - path: packages/brokerage-service/.env
+        required: false
+    environment:
+      BROKERAGE_INTERNAL_TOKEN: dev-brokerage-token
 
 volumes:
   pgdata:

@@ -6,19 +6,19 @@ import { TaxShieldAudit } from "@/components/tools/tax-shield-audit/TaxShieldAud
 export const metadata: Metadata = {
   title: "AI Tax Shield Audit - ClearMoney",
   description:
-    "Auditing your W-2 or Schedule C for missing tax shields. Find hidden deductions, QSBS eligibility, and RSU optimization in seconds.",
+    "Upload a W-2 or Schedule C to surface common tax signals and review the public decision trace behind the result.",
   keywords: [
     "tax audit ai",
-    "missing tax shields",
+    "tax review",
     "W-2 deduction finder",
     "Schedule C audit",
-    "RSU tax optimization",
-    "QSBS eligibility checker",
+    "tax document upload",
+    "decision trace",
   ],
   openGraph: {
     title: "AI Tax Shield Audit - ClearMoney",
     description:
-      "Our AI scans your tax docs for missing deductions and shields. See the math behind your savings.",
+      "Upload a tax document, review common tax signals, and inspect the reasoning behind the result.",
     type: "website",
   },
 };
@@ -28,8 +28,8 @@ export default function TaxShieldAuditPage() {
     <ShotLayout>
       <ShotHero
         title="Shot #3: Tax Intelligence"
-        subtitle="Did you miss a massive tax shield?"
-        description="Upload your tax docs for an instant AI audit. We'll scan for missed deductions, credits, and optimization opportunities grounded in deterministic tax rules."
+        subtitle="Did your return leave money on the table?"
+        description="Upload your tax docs for a fast public-audit preview. We extract the visible signals, apply simple deterministic checks, and show the reasoning behind the result."
       />
       
       <ShotWorkspace>

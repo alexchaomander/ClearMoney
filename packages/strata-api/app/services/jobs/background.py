@@ -15,8 +15,11 @@ from app.services.crypto import CryptoService
 from app.services.portfolio_snapshots import create_daily_snapshots
 from app.services.providers.base import BaseProvider
 from app.services.providers.base_banking import BaseBankingProvider
+from app.services.providers.brokerage_service import (
+    BrokerageServiceProvider,
+    BrokerageServiceUnavailableError,
+)
 from app.services.providers.plaid import PlaidProvider
-from app.services.providers.snaptrade import SnapTradeProvider
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +28,8 @@ def _get_provider_for_connection(
     connection: Connection,
 ) -> BaseProvider | BaseBankingProvider:
     """Get the appropriate provider instance for a connection."""
-    if connection.provider == SnapTradeProvider.provider_name:
-        return SnapTradeProvider()
+    if connection.provider == "snaptrade":
+        return BrokerageServiceProvider()
     elif connection.provider == PlaidProvider.provider_name:
         return PlaidProvider()
     raise ValueError(f"Unknown provider: {connection.provider}")
@@ -70,6 +73,13 @@ async def run_connection_sync() -> None:
                 connection.last_synced_at = datetime.now(timezone.utc)
                 connection.error_code = None
                 connection.error_message = None
+            except BrokerageServiceUnavailableError as exc:
+                logger.warning(
+                    "Brokerage sync skipped for connection %s: %s", conn_id, exc
+                )
+                connection.status = ConnectionStatus.error
+                connection.error_code = "PROVIDER_UNAVAILABLE"
+                connection.error_message = str(exc)[:1000]
             except Exception as exc:
                 logger.warning("Sync failed for connection %s: %s", conn_id, exc)
                 connection.status = ConnectionStatus.error

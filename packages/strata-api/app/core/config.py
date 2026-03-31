@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     app_name: str = "Strata API"
-    version: str = "0.1.0"
+    version: str = "0.1.1.0"
     debug: bool = False
 
     database_url: str = "sqlite+aiosqlite:///./strata.db"
@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     # SnapTrade configuration
     snaptrade_client_id: str = ""
     snaptrade_consumer_key: str = ""
+    brokerage_service_url: str = ""
+    brokerage_internal_token: str = ""
 
     # Plaid configuration
     plaid_client_id: str = ""

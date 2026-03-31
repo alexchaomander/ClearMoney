@@ -159,7 +159,7 @@ This document outlines the comprehensive plan to elevate the ClearMoney UI/UX to
 ### 8.2 Viral "Show the Math" UI
 - [x] **Lineage-First Results:** Instead of a static number, the result card immediately expands the **Decision Trace** logic tree.
 - [x] **Privacy Shield:** A prominent "Ephemeral & Encrypted" badge displayed during document upload to mitigate "Plaid Fatigue."
-- [x] **Viral Sharing:** High-contrast "Share My Audit" buttons with pre-filled "I found $[Value] in missing tax shields" copy.
+- [ ] **Viral Sharing:** High-contrast "Share My Audit" buttons with pre-filled "I found $[Value] in missing tax shields" copy.
 
 ---
 

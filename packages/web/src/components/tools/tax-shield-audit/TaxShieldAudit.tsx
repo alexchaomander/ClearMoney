@@ -8,7 +8,6 @@ import {
   Search, 
   CheckCircle2, 
   AlertCircle,
-  Loader2,
   ArrowRight,
   TrendingUp,
   Lock
@@ -25,8 +24,11 @@ interface TaxShieldAuditProps {
 }
 
 type AuditStep = "upload" | "processing" | "results" | "capture";
+const ALLOWED_UPLOAD_TYPES = ["application/pdf", "image/png", "image/jpeg"];
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 
 export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
+  void showShell;
   const strataClient = useStrataClient();
   const [step, setStep] = useState<AuditStep>("upload");
   const [progress, setProgress] = useState(0);
@@ -36,9 +38,20 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
   const [error, setError] = useState<string | null>(null);
 
   const startAudit = useCallback(async (uploadedFile: File) => {
+    if (!ALLOWED_UPLOAD_TYPES.includes(uploadedFile.type)) {
+      setError("Please upload a PDF, PNG, or JPG file.");
+      return;
+    }
+    if (uploadedFile.size > MAX_UPLOAD_BYTES) {
+      setError("Please upload a file smaller than 20 MB.");
+      return;
+    }
+
     setStep("processing");
     setProgress(10);
     setError(null);
+    setSessionId(null);
+    setAuditData(null);
     
     try {
       const response = await strataClient.uploadPublicAuditDocument(uploadedFile, uploadedFile.name);
@@ -53,8 +66,6 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
   // Polling logic
   useEffect(() => {
     if (!sessionId || step !== "processing") return;
-
-    let pollInterval: NodeJS.Timeout;
 
     const pollStatus = async () => {
       try {
@@ -75,7 +86,8 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
       }
     };
 
-    pollInterval = setInterval(pollStatus, 2000);
+    void pollStatus();
+    const pollInterval = setInterval(pollStatus, 2000);
     return () => clearInterval(pollInterval);
   }, [sessionId, step, strataClient]);
 
@@ -92,8 +104,10 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
     e.preventDefault();
     setIsDragging(false);
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type === "application/pdf") {
+    if (droppedFile && ALLOWED_UPLOAD_TYPES.includes(droppedFile.type)) {
       startAudit(droppedFile);
+    } else {
+      setError("Please upload a PDF, PNG, or JPG file.");
     }
   };
 
@@ -116,7 +130,7 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
             <div className="space-y-2">
               <h3 className="text-2xl font-bold text-slate-900">Upload your W-2 or Schedule C</h3>
               <p className="text-slate-500">
-                Drag and drop your document here. Our AI will audit it for missing tax shields in seconds.
+                Drag and drop your W-2, Schedule C, or tax screenshot here. We support PDF, PNG, and JPG uploads.
               </p>
             </div>
             
@@ -134,7 +148,7 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
                 <input 
                   type="file" 
                   className="hidden" 
-                  accept=".pdf"
+                  accept=".pdf,image/png,image/jpeg"
                   onChange={(e) => e.target.files?.[0] && startAudit(e.target.files[0])}
                 />
               </label>
@@ -163,7 +177,7 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
           <div className="space-y-3">
             <h3 className="text-2xl font-bold text-slate-900">Auditing your tax shields...</h3>
             <p className="text-slate-500 max-w-sm mx-auto">
-              Scanning for missed 83(b) elections, QSBS eligibility, and RSU optimization.
+              Extracting income signals and checking for common tax opportunities.
             </p>
           </div>
           
@@ -197,7 +211,7 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
                   <p className="text-sm font-bold text-slate-900">
                     {Math.round((auditData?.confidence_score || 0.9) * 100)}% Confidence Score
                   </p>
-                  <p className="text-xs text-slate-500">Based on verified IRS rules</p>
+                  <p className="text-xs text-slate-500">Based on the current public-rule preview</p>
                 </div>
               </div>
             </Card>
@@ -254,7 +268,7 @@ export function TaxShieldAudit({ showShell = true }: TaxShieldAuditProps) {
           
           <UnifiedIntakeForm 
             sourceTool="AI Tax Shield Audit"
-            onSuccess={() => console.log("Joined waitlist")}
+            onSuccess={() => undefined}
             className="w-full max-w-xl shadow-2xl"
           />
         </div>

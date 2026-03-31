@@ -17,7 +17,10 @@ from app.models.tax_plan_workspace import TaxPlan
 from app.models.user import User
 from app.services.financial_context import build_financial_context
 from app.services.providers.plaid import PlaidProvider
-from app.services.providers.snaptrade import SnapTradeProvider
+from app.services.providers.brokerage_service import (
+    BrokerageServiceProvider,
+    BrokerageServiceUnavailableError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -178,7 +181,7 @@ async def delete_user_account(user_id: uuid.UUID, session: AsyncSession) -> None
     )
     connections = conn_result.scalars().all()
 
-    providers: dict[str, PlaidProvider | SnapTradeProvider] = {}
+    providers: dict[str, object] = {}
     for connection in connections:
         try:
             if connection.provider == "plaid":
@@ -187,8 +190,14 @@ async def delete_user_account(user_id: uuid.UUID, session: AsyncSession) -> None
                 await providers["plaid"].delete_connection(connection)
             elif connection.provider == "snaptrade":
                 if "snaptrade" not in providers:
-                    providers["snaptrade"] = SnapTradeProvider()
+                    providers["snaptrade"] = BrokerageServiceProvider()
                 await providers["snaptrade"].delete_connection(connection)
+        except BrokerageServiceUnavailableError:
+            logger.warning(
+                "Brokerage service unavailable while deleting user %s; skipping external revocation for connection %s",
+                user_id,
+                connection.id,
+            )
         except Exception:
             logger.warning(
                 "Failed to revoke %s connection %s for user %s, proceeding with deletion",

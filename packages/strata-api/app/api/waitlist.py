@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.api.deps import get_db
+from app.core.rate_limit import limiter
 from app.models.waitlist import WaitlistUser
 from app.schemas.waitlist import WaitlistCreate, WaitlistResponse
 
@@ -11,8 +12,14 @@ router = APIRouter()
 
 
 @router.post("/", response_model=WaitlistResponse)
-async def join_waitlist(data: WaitlistCreate, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")
+async def join_waitlist(
+    request: Request,
+    data: WaitlistCreate,
+    db: AsyncSession = Depends(get_db),
+):
     """Join the ClearMoney waitlist and collect profile data for hard signals."""
+    del request
     new_user = WaitlistUser(
         email=data.email,
         role=data.role,

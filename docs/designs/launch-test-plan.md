@@ -10,12 +10,12 @@ Repo: alexchaomander/ClearMoney
 - `/api/v1/public/audit/` — Sanitized public API for decision traces.
 
 ## Key Interactions to Verify
-- **Doc Upload**: Verify file size limits (5MB), file types (.pdf, .png, .jpg), and success/error feedback.
+- **Doc Upload**: Verify file size limits, supported file types (.pdf, .png, .jpg), and success/error feedback.
 - **Waitlist Capture**: Verify email format validation and referral link generation via `UnifiedIntakeForm`.
 - **Decision Trace Reveal**: Verify logic tree expands correctly and displays confidence score.
 
 ## Edge Cases
-- **Extraction Failure**: User uploads a low-quality photo; verify "Manual Input" fallback appears.
+- **Extraction Failure**: User uploads a low-quality photo; verify the audit fails cleanly and the user can retry with another file.
 - **Concurrent Uploads**: Multiple users audit simultaneously; verify Redis session isolation.
 - **Slow Connection**: Simulate 15s latency; verify loading state ("Advisor" theme).
 
