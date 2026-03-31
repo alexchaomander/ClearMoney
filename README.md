@@ -2,11 +2,17 @@
 
 ClearMoney is an institutional-grade financial lab and advisory platform designed for founders and individuals who demand radical transparency. It provides high-fidelity analysis, automated financial planning, and proactive intelligence driven by real-time data.
 
-**Status:** Private Beta
+**Status:** Public Beta (v0.1.1.0)
 
 ## Key Features
 
-### 1. The Financial Advisor (AI Agent)
+### 1. Mini-Product Flywheel (Viral Tools)
+Radically transparent, standalone calculators designed for immediate utility without a long onboarding process:
+*   **Shot #1: Founder Runway**: Combines personal and company cash to find your true "Default Alive" date.
+*   **Shot #3: AI Tax Shield Audit**: Instant document-upload preview that surfaces common tax signals and exposes the reasoning behind the result.
+*   **Public Decision Traces**: Every tool includes a sanitized "Show the Math" lineage, proving the deterministic logic behind every result.
+
+### 2. The Financial Advisor (AI Agent)
 A context-aware AI powered by Claude that uses your live balances, holdings, and transactions to provide personalized, educational guidance across specialized skills:
 *   **Retirement & Tax**: Probabilistic modeling and tax-loss harvesting alerts.
 *   **Debt & Savings**: Automated snowball/avalanche planning and emergency fund monitoring.
@@ -53,17 +59,18 @@ ClearMoney is built as a high-performance monorepo:
 
 | Package | Stack | Description |
 |---------|-------|-------------|
-| **[Strata API](./packages/strata-api)** | FastAPI, Python 3.11, SQLAlchemy Async, Pydantic v2 | Backend API with Plaid + SnapTrade integrations |
+| **[Strata API](./packages/strata-api)** | FastAPI, Python 3.12, SQLAlchemy Async, Pydantic v2 | Core backend API |
+| **[Brokerage Service](./packages/brokerage-service)** | FastAPI, Python 3.12, SnapTrade SDK | Isolated brokerage connectivity microservice |
 | **[Strata SDK](./packages/strata-sdk)** | TypeScript | Client library for the ClearMoney API |
 | **ClearMoney Web** | Next.js 16, React 19, Tailwind CSS 4, Framer Motion | Frontend dashboard and editorial landing page |
 
 **Infrastructure:**
 *   **Auth**: Clerk (JWT with PEM key validation in production, header bypass in dev)
-*   **Database**: PostgreSQL (SQLite for local dev)
+*   **Database**: PostgreSQL (SQLite for local dev in `strata-api`)
 *   **Cache/Sessions**: Redis (optional; in-memory fallback for dev)
 *   **Error Tracking**: Sentry (frontend + backend)
 *   **CI/CD**: GitHub Actions (lint, test, build, deploy)
-*   **Deployment**: Railway (API) + Vercel (Web)
+*   **Deployment**: Split-ready services for core API and brokerage workloads + Vercel (Web)
 *   **Containerization**: Docker + docker-compose for local dev
 
 ---
@@ -80,18 +87,18 @@ ClearMoney includes a `dev.sh` script that automates environment setup, dependen
 ```
 
 This will:
-- Check for prerequisites (`pnpm`, `uv`, `Python 3.11+`).
+- Check for prerequisites (`pnpm`, `uv`, `Python 3.12`).
 - Create `.env` and `.env.local` from examples if missing.
-- Install JS and Python dependencies.
+- Install JS and Python dependencies for both backend services.
 - Run migrations for a local SQLite database (`strata.db`).
-- Start both the API and Web dev servers.
+- Start the brokerage service, core API, and web app.
 
 ### Option B: Docker Setup
 
 Useful if you prefer running PostgreSQL and Redis in containers:
 
 ```bash
-# Start backend services (PostgreSQL + Redis + API)
+# Start backend services (PostgreSQL + Redis + Core API + Brokerage Service)
 docker compose up -d
 
 # Start the frontend
@@ -101,9 +108,12 @@ pnpm dev
 ### Option C: Manual Setup
 
 1.  **Install dependencies**: `pnpm install`
-2.  **API Environment**: `cd packages/strata-api && cp .env.example .env && uv venv && uv pip install -e ".[dev]" && alembic upgrade head`
-3.  **Web Environment**: `cd packages/web && cp .env.example .env.local`
-4.  **Launch**: From root, run `pnpm dev`
+2.  **Core API Environment**: `cd packages/strata-api && cp .env.example .env && cd ../..`
+3.  **Root Python Environment**: `uv venv --python 3.12 && uv pip install --python .venv/bin/python -e "packages/strata-api[dev]"`
+4.  **Database Migration**: `cd packages/strata-api && ../../.venv/bin/python -m alembic upgrade head && cd ../..`
+5.  **Brokerage Service Environment**: `cd packages/brokerage-service && cp .env.example .env && uv venv --python 3.12 && uv pip install --python .venv/bin/python -e ".[dev]" && cd ../..`
+6.  **Web Environment**: `cd packages/web && cp .env.example .env.local && cd ../..`
+7.  **Launch**: run the three services separately (`uvicorn` for the Python services, `pnpm --dir packages/web dev` for web)
 
 ### Beta Access
 
@@ -115,28 +125,29 @@ The app is gated behind an invite code. Set `NEXT_PUBLIC_BETA_CODES` in the web 
 
 ### Backend
 ```bash
-# Backend (226 tests)
+# Run API tests from the repo root .venv
 cd packages/strata-api
-source .venv/bin/activate
-python -m pytest tests/ -v
+../../.venv/bin/python -m pytest
+```
+
+```bash
+# Run brokerage service tests from its dedicated .venv
+cd packages/brokerage-service
+.venv/bin/python -m pytest
 ```
 
 ### Frontend (Vitest)
 ```bash
-# Frontend Unit Tests (53 tests)
-# Covers 11 core calculators: Debt Destroyer, FIRE, Emergency Fund, RSU Tax, 
-# Roth vs Traditional, Total Comp, TPG Transparency, and more.
+# Frontend unit tests
 cd packages/web
-# Note: Use local TMPDIR on macOS to avoid permission issues
-mkdir -p .tmp && TMPDIR=$(pwd)/.tmp npm run test:run -- --coverage
+pnpm test:run
 ```
 
 ### SDK
 ```bash
-# SDK Unit Tests (46 tests)
+# SDK unit tests
 cd packages/strata-sdk
-# Note: Use local TMPDIR on macOS to avoid permission issues
-mkdir -p .tmp && TMPDIR=$(pwd)/.tmp npm run test -- --coverage
+pnpm test
 ```
 
 ---
@@ -147,9 +158,10 @@ GitHub Actions runs on every push and PR:
 
 | Job | What it does |
 |-----|-------------|
-| `web` | Vitest (53 tests), ESLint, Next.js build |
-| `api` | pytest (226 tests) |
-| `sdk` | Vitest (46 tests), SDK build |
+| `web` | Vitest, ESLint, Next.js build |
+| `api` | pytest |
+| `brokerage-service` | pytest for the isolated SnapTrade service |
+| `sdk` | Vitest, SDK build |
 | `deploy-api` | Deploy to Railway (main branch only) |
 | `deploy-web` | Deploy to Vercel (main branch only) |
 

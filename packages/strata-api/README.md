@@ -1,6 +1,6 @@
 # Strata API
 
-FastAPI-based backend for the ClearMoney financial platform. Provides investment account connectivity via SnapTrade, banking via Plaid, read-only crypto wallet aggregation, AI-powered financial advice, action intent lifecycle, and portfolio management.
+FastAPI-based core backend for the ClearMoney platform. Provides banking via Plaid, read-only crypto wallet aggregation, AI-powered financial advice, action intent lifecycle, public tools, and portfolio management. Brokerage connectivity is delegated to the separate `packages/brokerage-service` microservice.
 
 ## Quick Start
 
@@ -12,7 +12,7 @@ From the **monorepo root**, run the local launch script:
 ./dev.sh
 ```
 
-This automates environment setup, dependency installation, and starts the entire stack (Web + API) using local SQLite.
+This automates environment setup, dependency installation, and starts the entire stack (Web + Core API + Brokerage Service) using local SQLite.
 
 ### Option B: Docker Setup
 
@@ -67,14 +67,14 @@ docker run -p 8000:8000 --env-file .env strata-api
 | Variable | Description |
 |----------|-------------|
 | `STRATA_CLERK_SECRET_KEY` | Clerk secret key for server-side API calls |
-| `STRATA_CLERK_PEM_PUBLIC_KEY` | Clerk PEM public key for JWT validation. **When unset, the API falls back to trusting the `X-Clerk-User-Id` header** (dev/testing only). A startup warning is logged in non-debug mode. |
+| `STRATA_CLERK_PEM_PUBLIC_KEY` | Clerk PEM public key for JWT validation. Required outside debug mode; the API now refuses to start in non-debug environments when this is unset. |
 
 ### Data Providers
 
 | Variable | Description |
 |----------|-------------|
-| `STRATA_SNAPTRADE_CLIENT_ID` | SnapTrade API client ID (brokerage connections) |
-| `STRATA_SNAPTRADE_CONSUMER_KEY` | SnapTrade API consumer key |
+| `STRATA_BROKERAGE_SERVICE_URL` | Internal URL for the brokerage service |
+| `STRATA_BROKERAGE_INTERNAL_TOKEN` | Shared internal token used to authenticate to the brokerage service |
 | `STRATA_PLAID_CLIENT_ID` | Plaid API client ID (banking connections) |
 | `STRATA_PLAID_SECRET` | Plaid API secret |
 | `STRATA_PLAID_ENVIRONMENT` | `sandbox`, `development`, or `production` (default: `sandbox`) |
@@ -84,11 +84,17 @@ docker run -p 8000:8000 --env-file .env strata-api
 | `STRATA_ALPHA_VANTAGE_API_KEY` | Alpha Vantage API key (stock prices, crypto spot rates, precious metals) |
 | `STRATA_ALCHEMY_API_KEY` | Alchemy API key for EVM/Solana wallet balances and token discovery |
 
+### Service Boundaries
+
+- Brokerage connectivity runs in `packages/brokerage-service`.
+- `strata-api` talks to it over HTTP using `STRATA_BROKERAGE_SERVICE_URL`.
+- This keeps provider-specific dependencies and security posture isolated from the core API runtime.
+
 ### Infrastructure (Optional)
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `STRATA_REDIS_URL` | Redis URL for SnapTrade session persistence. Falls back to in-memory store when unset. | _(empty)_ |
+| `STRATA_REDIS_URL` | Redis URL for rate limiting and public-session persistence. Falls back to in-memory store when unset. | _(empty)_ |
 | `STRATA_SENTRY_DSN` | Sentry DSN for error tracking. Disabled when unset. | _(empty)_ |
 | `STRATA_DEBUG` | Enable debug mode (suppresses PEM key warning, enables verbose logging) | `false` |
 | `STRATA_DATABASE_ECHO` | Echo SQL queries to stdout | `false` |

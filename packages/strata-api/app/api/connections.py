@@ -20,7 +20,11 @@ from app.schemas.connection import (
     LinkSessionResponse,
 )
 from app.services.connection_sync import sync_connection_accounts
-from app.services.providers.snaptrade import SnapTradeProvider
+from app.services.providers.base import BaseProvider
+from app.services.providers.brokerage_service import (
+    BrokerageServiceProvider,
+    BrokerageServiceUnavailableError,
+)
 from app.services.session_store import SessionStore
 from app.services.user_refresh import refresh_user_financials
 
@@ -29,9 +33,12 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/connections", tags=["connections"])
 
 
-def get_provider() -> SnapTradeProvider:
-    """Get the SnapTrade provider instance."""
-    return SnapTradeProvider()
+def get_provider() -> BaseProvider:
+    """Get the brokerage service-backed provider instance."""
+    try:
+        return BrokerageServiceProvider()
+    except BrokerageServiceUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 def get_session_store(request: Request) -> SessionStore:
@@ -64,7 +71,7 @@ async def create_link_session(
     request: LinkSessionRequest,
     user: User = Depends(require_scopes(["connections:write"])),
     db: AsyncSession = Depends(get_async_session),
-    provider: SnapTradeProvider = Depends(get_provider),
+    provider: BaseProvider = Depends(get_provider),
     store: SessionStore = Depends(get_session_store),
 ) -> LinkSessionResponse:
     """Create a link session to connect a new investment account.
@@ -107,7 +114,7 @@ async def handle_callback(
     request: ConnectionCallbackRequest,
     user: User = Depends(require_scopes(["connections:write"])),
     session: AsyncSession = Depends(get_async_session),
-    provider: SnapTradeProvider = Depends(get_provider),
+    provider: BaseProvider = Depends(get_provider),
     store: SessionStore = Depends(get_session_store),
 ) -> ConnectionResponse:
     """Handle the OAuth callback from the brokerage.
@@ -192,7 +199,7 @@ async def delete_connection(
     connection_id: uuid.UUID,
     user: User = Depends(require_scopes(["connections:write"])),
     session: AsyncSession = Depends(get_async_session),
-    provider: SnapTradeProvider = Depends(get_provider),
+    provider: BaseProvider = Depends(get_provider),
 ) -> dict:
     """Delete a connection and all associated accounts/holdings."""
     connection = await _get_user_connection(session, connection_id, user.id)
@@ -231,7 +238,7 @@ async def sync_connection(
     connection_id: uuid.UUID,
     user: User = Depends(require_scopes(["connections:write"])),
     session: AsyncSession = Depends(get_async_session),
-    provider: SnapTradeProvider = Depends(get_provider),
+    provider: BaseProvider = Depends(get_provider),
 ) -> ConnectionResponse:
     """Manually trigger a sync for a connection."""
     connection = await _get_user_connection(session, connection_id, user.id)
@@ -257,7 +264,7 @@ async def sync_connection(
 async def sync_all_connections(
     user: User = Depends(require_scopes(["connections:write"])),
     session: AsyncSession = Depends(get_async_session),
-    provider: SnapTradeProvider = Depends(get_provider),
+    provider: BaseProvider = Depends(get_provider),
 ) -> list[ConnectionResponse]:
     """Sync all active connections for the current user."""
     result = await session.execute(

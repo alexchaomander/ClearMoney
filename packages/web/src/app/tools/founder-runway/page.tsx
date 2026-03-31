@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { RunwayCalculator } from "@/components/tools/founder-runway/RunwayCalculator";
+import { ShotLayout } from "@/components/layout";
+import { ShotClientPage } from "@/components/tools/founder-runway/ShotClientPage";
 
 export const metadata: Metadata = {
   title: "Founder Runway & Burn Tester - ClearMoney",
@@ -22,5 +23,9 @@ export const metadata: Metadata = {
 };
 
 export default function FounderRunwayPage() {
-  return <RunwayCalculator />;
+  return (
+    <ShotLayout>
+      <ShotClientPage />
+    </ShotLayout>
+  );
 }

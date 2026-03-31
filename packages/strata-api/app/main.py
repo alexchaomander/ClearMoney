@@ -33,6 +33,7 @@ from app.api.notifications import router as notifications_router
 from app.api.physical_assets import router as physical_assets_router
 from app.api.portability import router as portability_router
 from app.api.portfolio import router as portfolio_router
+from app.api.public_audit import router as public_audit_router
 from app.api.recommendation_reviews import router as recommendation_reviews_router
 from app.api.share_reports import router as share_reports_router
 from app.api.skills import router as skills_router
@@ -44,6 +45,7 @@ from app.api.webhooks import router as webhooks_router
 from app.core.config import settings
 from app.core.rate_limit import limiter
 from app.db.session import close_db
+from app.middleware.maintenance import MaintenanceMiddleware
 from app.middleware.request_id import RequestIdMiddleware
 from app.services.jobs.background import start_background_tasks
 from app.services.providers.metal_price import metal_price_service
@@ -107,6 +109,7 @@ app.add_middleware(
     allow_headers=settings.cors_allow_headers,
 )
 app.add_middleware(RequestIdMiddleware)
+app.add_middleware(MaintenanceMiddleware)
 
 # Include routers
 app.include_router(health_router, prefix="/api/v1")
@@ -121,6 +124,7 @@ app.include_router(consent_router, prefix="/api/v1")
 app.include_router(institutions_router, prefix="/api/v1")
 app.include_router(portfolio_router, prefix="/api/v1")
 app.include_router(portability_router, prefix="/api/v1")
+app.include_router(public_audit_router, prefix="/api/v1/public/audit", tags=["Public Audit"])
 app.include_router(recommendation_reviews_router, prefix="/api/v1")
 app.include_router(transactions_router, prefix="/api/v1")
 app.include_router(memory_router, prefix="/api/v1")

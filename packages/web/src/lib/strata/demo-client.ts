@@ -1715,4 +1715,108 @@ export class DemoStrataClient implements StrataClientInterface {
     void attestation;
     return { valid: true, statement: "Valid", issued_at: "", expires_at: "" };
   }
+
+  async uploadPublicAuditDocument(
+    _file: File | Blob,
+    _filename: string
+  ): Promise<{ session_id: string; message: string }> {
+    void _file;
+    void _filename;
+    await delay(300);
+    return {
+      session_id: "demo-public-audit-session",
+      message: "Demo audit started",
+    };
+  }
+
+  async getPublicAuditStatus(_sessionId: string): Promise<{
+    session_id: string;
+    status: "pending" | "processing" | "success" | "error";
+    progress: number;
+    error_message?: string;
+    trace_payload?: DecisionTrace["trace_payload"];
+  }> {
+    void _sessionId;
+    await delay(600);
+    return {
+      session_id: "demo-public-audit-session",
+      status: "success",
+      progress: 100,
+      trace_payload: {
+        trace_version: "v2",
+        trace_kind: "public_tax_audit",
+        title: "Demo Tax Shield Audit",
+        summary: "We identified $2,100 in potential missing tax shields.",
+        recommendation_status: "actionable",
+        rules_applied: [
+          {
+            name: "Home Office Deduction",
+            passed: false,
+            value: 0,
+            threshold: 2100,
+            message: "Based on your income level, you may qualify for a home office deduction.",
+          },
+        ],
+        insights: [],
+        assumptions: [],
+        confidence_score: 0.92,
+        confidence_factors: [],
+        determinism_class: "deterministic",
+        source_tier: "demo",
+        continuity_status: "healthy",
+        recommendation_readiness: "ready",
+        coverage_status: "full",
+        policy_version: "context-policy-v1",
+        freshness: {
+          is_fresh: true,
+          age_hours: null,
+          max_age_hours: 24,
+          last_sync: null,
+          warning: null,
+        },
+        context_quality: {
+          continuity_status: "healthy",
+          recommendation_readiness: "ready",
+          confidence_score: 0.92,
+          freshness: {
+            is_fresh: true,
+            age_hours: null,
+            max_age_hours: 24,
+            last_sync: null,
+            warning: null,
+          },
+          coverage_ratio: 1,
+          active_connection_count: 0,
+          total_connection_count: 0,
+          stale_connection_count: 0,
+          errored_connection_count: 0,
+          warnings: [],
+          confidence_factors: [],
+        },
+        warnings: [],
+        remediation_actions: [],
+        correction_targets: [],
+        review_summary: null,
+        deterministic: {
+          total_impact: 2100,
+          wages_detected: 120000,
+          withholding_detected: 18000,
+        },
+      },
+    };
+  }
+
+  async runPublicManualAudit(_data: Record<string, any>): Promise<{
+    session_id: string;
+    status: "success";
+    progress: number;
+  }> {
+    void _data;
+    await delay(300);
+    return {
+      session_id: "demo-public-manual-audit-session",
+      status: "success",
+      progress: 100,
+    };
+  }
 }

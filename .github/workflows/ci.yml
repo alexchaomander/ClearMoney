@@ -73,6 +73,19 @@ jobs:
       - run: .venv/bin/python -m coverage run -m pytest tests -v
       - run: .venv/bin/python -m coverage report --fail-under=70
 
+  brokerage-service:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/brokerage-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv python install 3.12
+      - run: uv venv --python 3.12
+      - run: uv pip install -e ".[dev]"
+      - run: .venv/bin/python -m pytest tests -v
+
   deploy-api:
     needs: api
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

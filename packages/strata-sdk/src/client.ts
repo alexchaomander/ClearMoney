@@ -350,6 +350,20 @@ export interface StrataClientInterface {
     issued_at: string;
     expires_at: string;
   }>;
+  // Public Audit
+  uploadPublicAuditDocument(file: File | Blob, filename: string): Promise<{ session_id: string; message: string }>;
+  getPublicAuditStatus(sessionId: string): Promise<{
+    session_id: string;
+    status: 'pending' | 'processing' | 'success' | 'error';
+    progress: number;
+    error_message?: string;
+    trace_payload?: DecisionTrace['trace_payload'];
+  }>;
+  runPublicManualAudit(data: Record<string, any>): Promise<{
+    session_id: string;
+    status: 'success';
+    progress: number;
+  }>;
 }
 
 export interface StrataClientOptions {
@@ -1591,6 +1605,39 @@ export class StrataClient implements StrataClientInterface {
     return this.request('/api/v1/portability/verify/validate', {
       method: 'POST',
       body: JSON.stringify(attestation),
+    });
+  }
+
+  // === Public Audit ===
+
+  async uploadPublicAuditDocument(
+    file: File | Blob,
+    filename: string
+  ): Promise<{ session_id: string; message: string }> {
+    const formData = new FormData();
+    formData.append('file', file, filename);
+
+    const response = await fetch(`${this.baseUrl}/api/v1/public/audit/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      throw new StrataApiError(response.status, errorBody?.detail || 'Upload failed');
+    }
+
+    return response.json();
+  }
+
+  async getPublicAuditStatus(sessionId: string): Promise<any> {
+    return this.request(`/api/v1/public/audit/status/${sessionId}`);
+  }
+
+  async runPublicManualAudit(data: Record<string, any>): Promise<any> {
+    return this.request('/api/v1/public/audit/manual', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 }

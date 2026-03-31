@@ -4,11 +4,12 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     app_name: str = "Strata API"
-    version: str = "0.1.0"
+    version: str = "0.1.1.0"
     debug: bool = False
 
     database_url: str = "sqlite+aiosqlite:///./strata.db"
     database_echo: bool = False
+    maintenance_mode: bool = False
     credentials_encryption_key: str = ""
     cors_allow_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
     cors_allow_credentials: bool = True
@@ -23,6 +24,8 @@ class Settings(BaseSettings):
     # SnapTrade configuration
     snaptrade_client_id: str = ""
     snaptrade_consumer_key: str = ""
+    brokerage_service_url: str = ""
+    brokerage_internal_token: str = ""
 
     # Plaid configuration
     plaid_client_id: str = ""

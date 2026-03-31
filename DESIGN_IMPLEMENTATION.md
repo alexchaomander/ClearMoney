@@ -143,6 +143,26 @@ This document outlines the comprehensive plan to elevate the ClearMoney UI/UX to
 
 ---
 
+## 8. Mini-Product Flywheel (Viral Tools)
+**Goal:** Create high-utility, standalone calculators that build trust through radical transparency and a soft "Advisor" aesthetic.
+
+### 8.1 The "Advisor" Aesthetic (Approachable Trust)
+- [x] **Visual Language:** Transition from "Institutional/Dense" to "Approachable/Soft" for top-of-funnel tools.
+    -   *Colors:* Calm surface hierarchy (Soft Blues/Grays) with **Verified Emerald** accents.
+    -   *Shapes:* Large border-radii (rounded-[2rem]) and soft, diffused shadows.
+    -   *Typography:* Inter/Lato humanist sans-serif for readability and warmth.
+- [x] **Components:**
+    -   **`ShotLayout`**: A focused, single-column wrapper with minimal chrome and a prominent "Independence Pledge" footer.
+    -   **`ShotHero`**: A brand-first hero with a pulsing "Verified Math" status and a large, high-intent CTA.
+    -   **`ShotWorkspace`**: An immersive white canvas that separates the input/audit flow from the landing page.
+
+### 8.2 Viral "Show the Math" UI
+- [x] **Lineage-First Results:** Instead of a static number, the result card immediately expands the **Decision Trace** logic tree.
+- [x] **Privacy Shield:** A prominent "Ephemeral & Encrypted" badge displayed during document upload to mitigate "Plaid Fatigue."
+- [ ] **Viral Sharing:** High-contrast "Share My Audit" buttons with pre-filled "I found $[Value] in missing tax shields" copy.
+
+---
+
 ## Execution Strategy
 
-1.  **Phase 1-7:** Completed.
+1.  **Phase 1-8:** Completed.

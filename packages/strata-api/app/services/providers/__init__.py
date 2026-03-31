@@ -12,18 +12,18 @@ from app.services.providers.base_banking import (
 from app.services.providers.base_banking import (
     LinkSession as BankingLinkSession,
 )
+from app.services.providers.brokerage_service import BrokerageServiceProvider
 from app.services.providers.plaid import PlaidProvider
-from app.services.providers.snaptrade import SnapTradeProvider
 
 __all__ = [
     "BankingLinkSession",
     "BaseBankingProvider",
     "BaseProvider",
+    "BrokerageServiceProvider",
     "LinkSession",
     "NormalizedAccount",
     "NormalizedBankAccount",
     "NormalizedBankTransaction",
     "NormalizedHolding",
     "PlaidProvider",
-    "SnapTradeProvider",
 ]

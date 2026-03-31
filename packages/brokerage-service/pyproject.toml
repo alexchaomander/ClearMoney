@@ -1,0 +1,35 @@
+[project]
+name = "brokerage-service"
+version = "0.1.0"
+description = "Internal brokerage connectivity service for ClearMoney"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "pydantic>=2.11.0",
+    "pydantic-settings>=2.7.0",
+    "snaptrade-python-sdk>=11.0.172",
+    "python-dateutil>=2.9.0.post0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+    "ruff>=0.15.2",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[build-system]
+requires = ["setuptools>=75.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

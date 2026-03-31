@@ -6,7 +6,6 @@ from sqlalchemy import Text, TypeDecorator
 
 from app.core.config import settings
 
-
 class EncryptedJSON(TypeDecorator[dict[str, Any] | None]):
     """Stores a JSON-serializable dict as a Fernet-encrypted string.
 
@@ -20,7 +19,13 @@ class EncryptedJSON(TypeDecorator[dict[str, Any] | None]):
 
     @property
     def _fernet(self) -> Fernet:
-        return Fernet(settings.credentials_encryption_key.encode())
+        key = settings.credentials_encryption_key
+        if not key:
+            raise RuntimeError(
+                "STRATA_CREDENTIALS_ENCRYPTION_KEY must be set before encrypted "
+                "connection credentials can be read or written."
+            )
+        return Fernet(key.encode())
 
     def process_bind_param(
         self, value: dict[str, Any] | None, dialect: Any
