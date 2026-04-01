@@ -111,6 +111,7 @@ pnpm dev
 2.  **Core API Environment**: `cd packages/strata-api && cp .env.example .env && cd ../..`
 3.  **Root Python Environment**: `uv venv --python 3.12 && uv pip install --python .venv/bin/python -e "packages/strata-api[dev]"`
 4.  **Database Migration**: `cd packages/strata-api && ../../.venv/bin/python -m alembic upgrade head && cd ../..`
+    *Note: If you get a missing revision error, it's due to the Day 0 migration squash. Simply delete `packages/strata-api/strata.db` and re-run the command.*
 5.  **Brokerage Service Environment**: `cd packages/brokerage-service && cp .env.example .env && uv venv --python 3.12 && uv pip install --python .venv/bin/python -e ".[dev]" && cd ../..`
 6.  **Web Environment**: `cd packages/web && cp .env.example .env.local && cd ../..`
 7.  **Launch**: run the three services separately (`uvicorn` for the Python services, `pnpm --dir packages/web dev` for web)
