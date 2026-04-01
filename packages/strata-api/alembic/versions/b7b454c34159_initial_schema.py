@@ -29,8 +29,8 @@ def upgrade() -> None:
     sa.Column('image_url', sa.String(length=500), nullable=True),
     sa.Column('apply_url', sa.String(length=500), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('credit_cards', schema=None) as batch_op:
@@ -41,8 +41,8 @@ def upgrade() -> None:
     sa.Column('logo_url', sa.String(length=512), nullable=True),
     sa.Column('providers', sa.JSON(), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('securities',
@@ -54,8 +54,8 @@ def upgrade() -> None:
     sa.Column('close_price', sa.Numeric(precision=14, scale=4), nullable=True),
     sa.Column('close_price_as_of', sa.Date(), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('securities', schema=None) as batch_op:
@@ -64,13 +64,13 @@ def upgrade() -> None:
     op.create_table('users',
     sa.Column('clerk_id', sa.String(length=255), nullable=False),
     sa.Column('email', sa.String(length=320), nullable=False),
-    sa.Column('plan', sa.String(length=50), nullable=False),
-    sa.Column('subscription_status', sa.String(length=50), nullable=False),
+    sa.Column('plan', sa.String(length=50), server_default='free', nullable=False),
+    sa.Column('subscription_status', sa.String(length=50), server_default='active', nullable=False),
     sa.Column('stripe_customer_id', sa.String(length=255), nullable=True),
     sa.Column('stripe_subscription_id', sa.String(length=255), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('users', schema=None) as batch_op:
@@ -88,8 +88,8 @@ def upgrade() -> None:
     sa.Column('referred_by', sa.String(length=20), nullable=True),
     sa.Column('metadata_json', sa.JSON(), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('waitlist_users', schema=None) as batch_op:
@@ -102,8 +102,8 @@ def upgrade() -> None:
     sa.Column('payload', sa.JSON(), nullable=False),
     sa.Column('status', sa.Enum('pending', 'approved', 'rejected', name='actionapprovalstatus'), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -118,8 +118,8 @@ def upgrade() -> None:
     sa.Column('require_mfa', sa.Boolean(), nullable=False),
     sa.Column('status', sa.Enum('active', 'inactive', name='actionpolicystatus'), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -133,8 +133,8 @@ def upgrade() -> None:
     sa.Column('vanish_mode', sa.Boolean(), nullable=False),
     sa.Column('messages', sa.JSON(), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -144,17 +144,17 @@ def upgrade() -> None:
     op.create_table('alternative_assets',
     sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
-    sa.Column('asset_type', sa.Enum('private_equity', 'angel_investment', 'venture_capital', 'hedge_fund', 'limited_partnership', 'other', name='alternativeassettype'), nullable=False),
+    sa.Column('asset_type', sa.Enum('private_equity', 'angel_investment', 'venture_capital', 'hedge_fund', 'limited_partnership', 'other', name='alternativeassettype'), server_default='other', nullable=False),
     sa.Column('description', sa.String(length=1000), nullable=True),
-    sa.Column('market_value', sa.Numeric(precision=14, scale=2), nullable=False),
+    sa.Column('market_value', sa.Numeric(precision=14, scale=2), server_default='0', nullable=False),
     sa.Column('cost_basis', sa.Numeric(precision=14, scale=2), nullable=True),
     sa.Column('purchase_date', sa.DateTime(timezone=True), nullable=True),
     sa.Column('estimated_annual_growth_rate', sa.Numeric(precision=6, scale=4), nullable=True),
     sa.Column('last_valuation_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('metadata_json', sa.JSON(), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -170,8 +170,8 @@ def upgrade() -> None:
     sa.Column('source', sa.String(length=100), nullable=True),
     sa.Column('notes', sa.String(length=500), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -186,8 +186,8 @@ def upgrade() -> None:
     sa.Column('valuation_method', sa.String(length=50), nullable=True),
     sa.Column('default_value', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['card_id'], ['credit_cards.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -202,8 +202,8 @@ def upgrade() -> None:
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('category', sa.String(length=100), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['card_id'], ['credit_cards.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -222,8 +222,8 @@ def upgrade() -> None:
     sa.Column('metadata_json', sa.JSON(), nullable=True),
     sa.Column('last_valuation_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -242,8 +242,8 @@ def upgrade() -> None:
     sa.Column('error_message', sa.String(length=1000), nullable=True),
     sa.Column('continuity_status', sa.String(length=50), server_default='healthy', nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['institution_id'], ['institutions.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -259,8 +259,8 @@ def upgrade() -> None:
     sa.Column('status', sa.Enum('active', 'revoked', 'expired', name='consentstatus'), nullable=False),
     sa.Column('source', sa.String(length=50), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -274,8 +274,8 @@ def upgrade() -> None:
     sa.Column('label', sa.String(length=255), nullable=True),
     sa.Column('last_balance_usd', sa.Numeric(precision=36, scale=18), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('user_id', 'address', 'chain', name='uq_crypto_wallet_user_address_chain')
@@ -289,8 +289,8 @@ def upgrade() -> None:
     sa.Column('name', sa.String(length=255), nullable=False),
     sa.Column('entity_type', sa.Enum('personal', 'c_corp', 's_corp', 'llc', 'spv', 'trust', name='entitytype'), server_default='personal', nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -316,8 +316,8 @@ def upgrade() -> None:
     sa.Column('vesting_schedule', sa.JSON(), nullable=True),
     sa.Column('notes', sa.String(length=1000), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -368,8 +368,8 @@ def upgrade() -> None:
     sa.Column('notes', sa.JSON(), nullable=True),
     sa.Column('preferences', sa.JSON(), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -384,8 +384,8 @@ def upgrade() -> None:
     sa.Column('frequency', sa.Enum('weekly', 'biweekly', 'semimonthly', 'monthly', 'quarterly', 'annually', name='incomefrequency'), nullable=False),
     sa.Column('is_variable', sa.Boolean(), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -400,8 +400,8 @@ def upgrade() -> None:
     sa.Column('source', sa.Enum('user_input', 'calculator', 'account_sync', 'agent', name='memoryeventsource'), nullable=False),
     sa.Column('context', sa.Text(), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -418,8 +418,8 @@ def upgrade() -> None:
     sa.Column('is_read', sa.Boolean(), nullable=False),
     sa.Column('action_url', sa.String(length=200), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -434,8 +434,8 @@ def upgrade() -> None:
     sa.Column('total_cash_value', sa.Numeric(precision=14, scale=2), nullable=False),
     sa.Column('total_debt_value', sa.Numeric(precision=14, scale=2), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('user_id', 'snapshot_date', name='uq_portfolio_snapshot_user_date')
@@ -453,8 +453,8 @@ def upgrade() -> None:
     sa.Column('market_value', sa.Numeric(precision=14, scale=2), nullable=False),
     sa.Column('last_valuation_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -477,8 +477,8 @@ def upgrade() -> None:
     sa.Column('zillow_zpid', sa.String(length=100), nullable=True),
     sa.Column('last_valuation_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -494,12 +494,12 @@ def upgrade() -> None:
     sa.Column('expires_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('revoked_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('max_views', sa.Integer(), nullable=True),
-    sa.Column('view_count', sa.Integer(), nullable=False),
+    sa.Column('view_count', sa.Integer(), server_default='0', nullable=False),
     sa.Column('first_viewed_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('last_viewed_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -522,8 +522,8 @@ def upgrade() -> None:
     sa.Column('validation_errors', sa.JSON(), nullable=True),
     sa.Column('error_message', sa.Text(), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -537,8 +537,8 @@ def upgrade() -> None:
     sa.Column('status', sa.String(length=32), nullable=False),
     sa.Column('approved_version_id', sa.Uuid(), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['approved_version_id'], ['tax_plan_versions.id'], ondelete='SET NULL', use_alter=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -562,8 +562,8 @@ def upgrade() -> None:
     sa.Column('estimated_annual_growth_rate', sa.Numeric(precision=6, scale=4), nullable=True),
     sa.Column('last_valuation_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -586,8 +586,8 @@ def upgrade() -> None:
     sa.Column('is_business', sa.Boolean(), server_default='false', nullable=False),
     sa.Column('capabilities', sa.JSON(), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['connection_id'], ['connections.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['entity_id'], ['entities.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
@@ -609,8 +609,8 @@ def upgrade() -> None:
     sa.Column('institution_name', sa.String(length=255), nullable=True),
     sa.Column('is_business', sa.Boolean(), server_default='false', nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['entity_id'], ['entities.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -633,8 +633,8 @@ def upgrade() -> None:
     sa.Column('is_business', sa.Boolean(), server_default='false', nullable=False),
     sa.Column('capabilities', sa.JSON(), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['connection_id'], ['connections.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['entity_id'], ['entities.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['institution_id'], ['institutions.id'], ondelete='SET NULL'),
@@ -658,8 +658,8 @@ def upgrade() -> None:
     sa.Column('superseded_recommendation_id', sa.Uuid(), nullable=True),
     sa.Column('superseded_by_recommendation_id', sa.Uuid(), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['session_id'], ['agent_sessions.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['superseded_by_recommendation_id'], ['recommendations.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['superseded_recommendation_id'], ['recommendations.id'], ondelete='SET NULL'),
@@ -677,8 +677,8 @@ def upgrade() -> None:
     sa.Column('accepted_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('revoked_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['invited_by_user_id'], ['users.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['plan_id'], ['tax_plans.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -700,8 +700,8 @@ def upgrade() -> None:
     sa.Column('approved_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('approved_by_user_id', sa.Uuid(), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['approved_by_user_id'], ['users.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['created_by_user_id'], ['users.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['plan_id'], ['tax_plans.id'], ondelete='CASCADE'),
@@ -723,14 +723,14 @@ def upgrade() -> None:
     sa.Column('plaid_category', sa.JSON(), nullable=True),
     sa.Column('merchant_name', sa.String(length=255), nullable=True),
     sa.Column('payment_channel', sa.String(length=50), nullable=True),
-    sa.Column('pending', sa.Boolean(), nullable=False),
-    sa.Column('iso_currency_code', sa.String(length=3), nullable=False),
+    sa.Column('pending', sa.Boolean(), server_default='false', nullable=False),
+    sa.Column('iso_currency_code', sa.String(length=3), server_default='USD', nullable=False),
     sa.Column('reimbursed_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('reimbursement_memo', sa.String(length=500), nullable=True),
     sa.Column('is_commingled', sa.Boolean(), server_default='false', nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['cash_account_id'], ['cash_accounts.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('cash_account_id', 'provider_transaction_id', name='uq_bank_tx_account_provider')
@@ -752,8 +752,8 @@ def upgrade() -> None:
     sa.Column('warnings', sa.JSON(), nullable=False),
     sa.Column('source', sa.String(length=50), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['recommendation_id'], ['recommendations.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['session_id'], ['agent_sessions.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
@@ -771,8 +771,8 @@ def upgrade() -> None:
     sa.Column('market_value', sa.Numeric(precision=14, scale=2), nullable=True),
     sa.Column('as_of', sa.DateTime(timezone=True), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['account_id'], ['investment_accounts.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['security_id'], ['securities.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -788,8 +788,8 @@ def upgrade() -> None:
     sa.Column('author_role', sa.String(length=32), nullable=False),
     sa.Column('body', sa.Text(), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['author_user_id'], ['users.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['plan_id'], ['tax_plans.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['version_id'], ['tax_plan_versions.id'], ondelete='SET NULL'),
@@ -807,8 +807,8 @@ def upgrade() -> None:
     sa.Column('event_type', sa.String(length=64), nullable=False),
     sa.Column('event_metadata', sa.JSON(), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['actor_user_id'], ['users.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['plan_id'], ['tax_plans.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['version_id'], ['tax_plan_versions.id'], ondelete='SET NULL'),
@@ -833,8 +833,8 @@ def upgrade() -> None:
     sa.Column('description', sa.String(length=500), nullable=True),
     sa.Column('source', sa.String(length=100), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['account_id'], ['investment_accounts.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['security_id'], ['securities.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id'),
@@ -854,10 +854,10 @@ def upgrade() -> None:
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('payload', sa.JSON(), nullable=False),
     sa.Column('impact_summary', sa.JSON(), nullable=False),
-    sa.Column('execution_manifest', sa.JSON(), nullable=False),
+    sa.Column('execution_manifest', sa.JSON(), server_default=sa.text("'{}'"), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['decision_trace_id'], ['decision_traces.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -881,8 +881,8 @@ def upgrade() -> None:
     sa.Column('resolved_value', sa.JSON(), nullable=True),
     sa.Column('impact_summary', sa.JSON(), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['trace_id'], ['decision_traces.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -904,12 +904,12 @@ def upgrade() -> None:
     sa.Column('opened_reason', sa.Text(), nullable=False),
     sa.Column('resolution', sa.String(length=255), nullable=True),
     sa.Column('resolution_notes', sa.Text(), nullable=True),
-    sa.Column('applied_changes', sa.JSON(), nullable=False),
+    sa.Column('applied_changes', sa.JSON(), server_default=sa.text("'{}'"), nullable=False),
     sa.Column('reviewer_label', sa.String(length=255), nullable=True),
     sa.Column('resolved_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     sa.ForeignKeyConstraint(['decision_trace_id'], ['decision_traces.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['recommendation_id'], ['recommendations.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
