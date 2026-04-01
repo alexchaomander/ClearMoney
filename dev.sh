@@ -88,7 +88,13 @@ uv pip install --python packages/brokerage-service/.venv/bin/python -e "packages
 echo -e "${YELLOW}🗄️ Running database migrations (SQLite)...${NC}"
 cd packages/strata-api
 source ../../.venv/bin/activate
-alembic upgrade head
+if ! alembic upgrade head; then
+    echo -e "${YELLOW}⚠️ Alembic migration failed. This is expected if you have an old database and we recently squashed migrations.${NC}"
+    echo -e "${YELLOW}🔄 Resetting local strata.db...${NC}"
+    rm -f strata.db
+    git checkout strata.db 2>/dev/null || true
+    alembic upgrade head
+fi
 deactivate
 cd ../..
 

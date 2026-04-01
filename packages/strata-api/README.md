@@ -41,6 +41,9 @@ cp .env.example .env
 
 # Run database migrations
 alembic upgrade head
+# Note: As of the Day 0 launch, all prior migrations were squashed into a single initial schema.
+# If you receive an Alembic error about missing revisions, your local database is stamped with a deleted migration.
+# For local dev, you can simply delete your local `strata.db` and re-run `alembic upgrade head`.
 
 # Start development server
 uvicorn app.main:app --reload --port 8000
