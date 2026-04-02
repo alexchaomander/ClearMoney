@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Clock3, Lock, Sparkles } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { InstitutionCard } from "@/components/connect/InstitutionCard";
 import { ConnectionProgress } from "@/components/connect/ConnectionProgress";
@@ -104,6 +104,7 @@ export default function ConnectPage() {
     captureAnalyticsEvent("founder_connect_started", {
       institution_id: institutionId,
       source,
+      connection_method: "brokerage_oauth",
     });
     try {
       const { redirect_url } = await client.createLinkSession({
@@ -112,6 +113,12 @@ export default function ConnectPage() {
       window.location.assign(redirect_url);
     } catch (err: unknown) {
       const message = (err as { message?: string })?.message || "Failed to start connection session";
+      captureAnalyticsEvent("founder_connect_failed", {
+        institution_id: institutionId,
+        source,
+        connection_method: "brokerage_oauth",
+        reason: message,
+      });
       pushToast({ title: "Connection Error", message, variant: "error" });
       setConnectingId(null);
     }
@@ -155,6 +162,21 @@ export default function ConnectPage() {
           </p>
 
           <SecurityBadges />
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm text-neutral-300">
+            <div className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900/70 px-4 py-2">
+              <Clock3 className="h-4 w-4 text-emerald-400" />
+              Usually under two minutes
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900/70 px-4 py-2">
+              <Lock className="h-4 w-4 text-emerald-400" />
+              Read-only by default
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900/70 px-4 py-2">
+              <Sparkles className="h-4 w-4 text-emerald-400" />
+              Manual fallback stays available
+            </div>
+          </div>
         </motion.div>
 
         <ConsentGate
@@ -176,7 +198,8 @@ export default function ConnectPage() {
               <p className="mb-4 max-w-2xl text-sm text-neutral-400">
                 Bank links sharpen burn, liquidity, and tax timing. Brokerage links sharpen exposure, concentration, and recommendation quality.
               </p>
-              <PlaidLinkButton 
+              <PlaidLinkButton
+                source={source}
                 onError={(err) => pushToast({ title: "Connection Error", message: err, variant: "error" })} 
               />
             </motion.div>
@@ -317,6 +340,17 @@ export default function ConnectPage() {
                 </div>
               </div>
 
+              <div className="rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500">
+                  What improves immediately
+                </p>
+                <div className="mt-3 space-y-3 text-sm text-neutral-300">
+                  <p>Runway gets tighter because live balances replace guesswork.</p>
+                  <p>Tax pressure improves as cash timing and account mix become visible.</p>
+                  <p>Decision traces get more credible because they cite fresher sources.</p>
+                </div>
+              </div>
+
               {accountsLoading ? (
                 <div className="space-y-3">
                   {[...Array(3)].map((_, i) => (
@@ -375,13 +409,20 @@ export default function ConnectPage() {
                     captureAnalyticsEvent("founder_connect_continue_clicked", {
                       source,
                       connected_accounts: totalConnected,
+                      path: totalConnected > 0 ? "linked_accounts" : "manual_fallback",
                     });
                   }}
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium transition-all duration-200 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
                 >
-                  Continue to Dashboard
+                  {totalConnected > 0 ? "Continue with linked accounts" : "Continue without links"}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
+
+                {totalConnected > 0 ? null : (
+                  <p className="mt-3 text-center text-xs text-neutral-500">
+                    You can still add manual cash, debt, and founder context once you land.
+                  </p>
+                )}
 
                 <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-950/70 p-4 text-left">
                   <p className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Fallback path</p>

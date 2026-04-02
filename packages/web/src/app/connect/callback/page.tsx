@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { useHandleConnectionCallback } from "@/lib/strata/hooks";
+import { captureAnalyticsEvent, readFounderFunnelSource } from "@/lib/analytics";
 
 type CallbackStatus = "loading" | "success" | "error";
 
@@ -25,6 +26,11 @@ export default function ConnectCallbackPage() {
       const errorDescription = searchParams.get("error_description");
 
       if (error) {
+        captureAnalyticsEvent("founder_connect_failed", {
+          source: readFounderFunnelSource() ?? "unknown",
+          connection_method: "brokerage_oauth",
+          reason: errorDescription ?? error,
+        });
         setStatus("error");
         setErrorMessage(errorDescription ?? error);
         return;
@@ -36,12 +42,21 @@ export default function ConnectCallbackPage() {
           state: state ?? undefined,
         });
 
+        captureAnalyticsEvent("founder_connect_succeeded", {
+          source: readFounderFunnelSource() ?? "unknown",
+          connection_method: "brokerage_oauth",
+        });
         setStatus("success");
 
         setTimeout(() => {
           router.push("/dashboard");
         }, 2000);
       } catch (err) {
+        captureAnalyticsEvent("founder_connect_failed", {
+          source: readFounderFunnelSource() ?? "unknown",
+          connection_method: "brokerage_oauth",
+          reason: err instanceof Error ? err.message : "callback_failed",
+        });
         setStatus("error");
         setErrorMessage(
           err instanceof Error ? err.message : "Failed to complete connection"
@@ -148,6 +163,13 @@ export default function ConnectCallbackPage() {
               </Link>
               <Link
                 href="/dashboard"
+                onClick={() => {
+                  captureAnalyticsEvent("founder_connect_continue_clicked", {
+                    source: readFounderFunnelSource() ?? "unknown",
+                    connected_accounts: 0,
+                    path: "callback_error_manual_fallback",
+                  });
+                }}
                 className="w-full py-3 rounded-lg font-medium transition-all duration-200 border border-neutral-700 text-neutral-300 hover:bg-neutral-800"
               >
                 Go to Dashboard

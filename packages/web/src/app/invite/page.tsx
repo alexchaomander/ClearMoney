@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, ArrowRight, AlertTriangle, BriefcaseBusiness, FlaskConical } from "lucide-react";
+import { ShieldCheck, ArrowRight, AlertTriangle, BriefcaseBusiness, FlaskConical, Clock3, Lock, Sparkles } from "lucide-react";
 import {
   captureAnalyticsEvent,
   readFounderFunnelSource,
@@ -26,6 +26,10 @@ export default function InvitePage() {
   const [error, setError] = useState("");
   const inviteConfigured = VALID_CODES.length > 0;
   const source = readFounderFunnelSource() ?? "invite_direct";
+  const devCode = useMemo(
+    () => (!isProduction && VALID_CODES[0] ? VALID_CODES[0] : null),
+    []
+  );
 
   useEffect(() => {
     rememberFounderFunnelSource(source);
@@ -87,6 +91,24 @@ export default function InvitePage() {
           </div>
         </div>
 
+        <div className="mb-8 grid gap-3 text-left sm:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-4">
+            <Clock3 className="h-4 w-4 text-emerald-500" />
+            <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">Fast setup</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">Invite, onboarding, and first dashboard value should take a few minutes, not an hour.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-4">
+            <Lock className="h-4 w-4 text-emerald-500" />
+            <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">Read-only links</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">You can connect sources later, and the linked data stays focused on analysis rather than account actions.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-4">
+            <Sparkles className="h-4 w-4 text-emerald-500" />
+            <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">Manual fallback</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">If you are not ready to link data yet, you can still reach the founder dashboard and add context manually.</p>
+          </div>
+        </div>
+
         {!inviteConfigured && (
           <div className="mb-6 rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-left text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
             <div className="flex items-start gap-3">
@@ -109,11 +131,18 @@ export default function InvitePage() {
             onChange={(e) => {
               setCode(e.target.value);
               setError("");
+              if (e.target.value.length === 1) {
+                captureAnalyticsEvent("founder_invite_code_started", {
+                  source,
+                });
+              }
             }}
             placeholder="Enter invite code"
             className="w-full px-5 py-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-center text-lg tracking-widest uppercase"
             autoFocus
             disabled={!inviteConfigured}
+            autoCapitalize="characters"
+            autoCorrect="off"
           />
           {error && (
             <p className="text-sm text-red-500">{error}</p>
@@ -127,6 +156,12 @@ export default function InvitePage() {
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
+
+        {devCode ? (
+          <div className="mt-4 rounded-xl border border-emerald-200/70 bg-emerald-50/70 px-4 py-3 text-left text-sm text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-200">
+            Development shortcut: use <span className="font-bold tracking-widest">{devCode}</span> in non-production environments.
+          </div>
+        ) : null}
 
         <div className="mt-8 flex items-center justify-center gap-2 text-xs text-slate-400">
           <FlaskConical className="h-3.5 w-3.5" />
