@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from "framer-motion";
 import {
@@ -31,6 +31,7 @@ import {
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { VALUATIONS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { captureAnalyticsEvent, rememberFounderFunnelSource } from "@/lib/analytics";
 
 // --- Sub-components for Polish ---
 
@@ -173,6 +174,22 @@ export default function LandingPage() {
   const goPrev = useCallback(() => setPersonaIndex((i) => (i - 1 + PERSONAS.length) % PERSONAS.length), []);
   const persona = PERSONAS[personaIndex];
 
+  useEffect(() => {
+    captureAnalyticsEvent("founder_funnel_landing_viewed", {
+      primary_persona: PERSONAS[0]?.persona ?? "Founder",
+      founder_tool_href: "/tools/founder-runway",
+    });
+  }, []);
+
+  const trackLandingCta = (cta: string, destination: string) => {
+    rememberFounderFunnelSource(cta);
+    captureAnalyticsEvent("founder_funnel_cta_clicked", {
+      cta,
+      destination,
+      active_persona: persona.persona,
+    });
+  };
+
   return (
     <div ref={containerRef} className="min-h-screen bg-[#fafafa] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 selection:bg-emerald-500/30 overflow-x-hidden">
       {/* Background Pillars */}
@@ -207,7 +224,11 @@ export default function LandingPage() {
           </Link>
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
           <ThemeToggle />
-          <Link href="/invite" className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-sm font-bold hover:bg-emerald-600 dark:hover:bg-emerald-400 transition-all">
+          <Link
+            href="/invite"
+            onClick={() => trackLandingCta("nav_founder_beta", "/invite")}
+            className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-sm font-bold hover:bg-emerald-600 dark:hover:bg-emerald-400 transition-all"
+          >
             Founder Beta
           </Link>
         </div>
@@ -269,11 +290,19 @@ export default function LandingPage() {
             transition={{ delay: 0.3, duration: 0.8 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Link href="/tools/founder-runway" className="group w-full sm:w-auto px-10 py-5 rounded-2xl bg-slate-900 dark:bg-emerald-600 text-white font-bold text-xl hover:bg-emerald-600 dark:hover:bg-emerald-500 shadow-2xl shadow-emerald-900/20 transition-all flex items-center justify-center gap-3">
+            <Link
+              href="/tools/founder-runway"
+              onClick={() => trackLandingCta("hero_founder_runway", "/tools/founder-runway")}
+              className="group w-full sm:w-auto px-10 py-5 rounded-2xl bg-slate-900 dark:bg-emerald-600 text-white font-bold text-xl hover:bg-emerald-600 dark:hover:bg-emerald-500 shadow-2xl shadow-emerald-900/20 transition-all flex items-center justify-center gap-3"
+            >
               Try Founder Runway
               <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="/invite" className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+            <Link
+              href="/invite"
+              onClick={() => trackLandingCta("hero_founder_beta", "/invite")}
+              className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+            >
               Enter Founder Beta
             </Link>
           </motion.div>
@@ -373,7 +402,11 @@ export default function LandingPage() {
                     <p className="text-lg text-slate-500 dark:text-slate-400 mb-8 max-w-xl leading-relaxed">
                       {persona.description}
                     </p>
-                    <Link href={persona.href} className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold hover:gap-3 transition-all">
+                    <Link
+                      href={persona.href}
+                      onClick={() => trackLandingCta(`persona_${persona.persona.toLowerCase()}`, persona.href)}
+                      className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold hover:gap-3 transition-all"
+                    >
                       Open the founder-first tool
                       <ArrowRight className="w-5 h-5" />
                     </Link>

@@ -11,10 +11,13 @@
 const isBuildPhase =
   process.env.NEXT_PHASE === "phase-production-build" ||
   process.env.STATIC_EXPORT === "true";
+const isDemoPhase =
+  process.env.NEXT_PUBLIC_DEMO_MODE === "true" ||
+  process.env.NODE_ENV === "test";
 
 function required(name: string): string {
   const value = process.env[name];
-  if (!value && !isBuildPhase) {
+  if (!value && !isBuildPhase && !isDemoPhase) {
     throw new Error(
       `Missing required environment variable: ${name}. Check .env.local or your deployment config.`
     );

@@ -48,6 +48,7 @@ import {
   useConsentStatus,
   useVulnerabilityReport,
   useFinancialMemory,
+  useDecisionTraces,
 } from "@/lib/strata/hooks";
 import type { 
   PhysicalAssetsSummary, 
@@ -85,6 +86,7 @@ import { ApiErrorState } from "@/components/shared/ApiErrorState";
 import { AnimatedAmount } from "@/components/shared/AnimatedAmount";
 import { ConsentGate } from "@/components/shared/ConsentGate";
 import { useToast } from "@/components/shared/toast";
+import { captureAnalyticsEvent, readFounderFunnelSource } from "@/lib/analytics";
 
 import {
   getPreviewPortfolioSummary,
@@ -95,6 +97,14 @@ import {
 } from "./_shared/preview-data";
 import { getPreviewPhysicalAssets } from "./_shared/preview-data";
 import type { FinancialMemory } from "@clearmoney/strata-sdk";
+
+function isFounderBaselineComplete(memory?: FinancialMemory): boolean {
+  return Boolean(
+    memory?.entity_type != null &&
+      (memory?.annual_income != null || memory?.monthly_income != null) &&
+      memory?.average_monthly_expenses != null
+  );
+}
 
 function ProfileProgressCard({ memory }: { memory?: FinancialMemory }) {
   const completeness = useMemo(() => {
@@ -114,11 +124,12 @@ function ProfileProgressCard({ memory }: { memory?: FinancialMemory }) {
 
   if (completeness === 100) return null;
 
+  const founderBaselineComplete = isFounderBaselineComplete(memory);
   const incompleteFields = [
     {
-      id: 'profile-founder-baseline',
+      id: 'founder-baseline',
       label: 'Founder baseline',
-      done: memory?.entity_type != null && (memory?.annual_income != null || memory?.monthly_income != null) && memory?.average_monthly_expenses != null,
+      done: founderBaselineComplete,
       icon: Briefcase,
     },
     { id: 'profile-employment', label: 'Employment', done: memory?.employer_name != null, icon: Briefcase },
@@ -143,7 +154,7 @@ function ProfileProgressCard({ memory }: { memory?: FinancialMemory }) {
 
       <div className="space-y-1 relative z-10">
         {incompleteFields.map(f => (
-          <Link key={f.id} href={`/profile#${f.id}`} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 group/item transition-colors">
+          <Link key={f.id} href={`/settings?tab=profile#${f.id}`} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 group/item transition-colors">
             <div className="flex items-center gap-2">
               <f.icon className="w-3.5 h-3.5 text-slate-400 group-hover/item:text-emerald-500 transition-colors" />
               <span className="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover/item:text-slate-900 dark:group-hover/item:text-white transition-colors">{f.label}</span>
@@ -162,13 +173,29 @@ function ProfileProgressCard({ memory }: { memory?: FinancialMemory }) {
 function FounderPriorityCard({
   usingDemoData,
   hasAccounts,
+  hasFounderBaseline,
+  hasDecisionTraces,
   connectionStatusState,
 }: {
   usingDemoData: boolean;
   hasAccounts: boolean;
+  hasFounderBaseline: boolean;
+  hasDecisionTraces: boolean;
   connectionStatusState: { tone: "live" | "partial" | "warning" | "missing" | "error"; value: string; detail: string };
 }) {
   const state = (() => {
+    if (!hasFounderBaseline) {
+      return {
+        eyebrow: "Baseline gap",
+        title: "Finish your founder baseline before the dashboard starts inferring too much.",
+        summary: "Entity type, income, and monthly burn are the minimum inputs behind trustworthy runway and tax pressure guidance.",
+        primaryHref: "/settings?tab=profile",
+        primaryLabel: "Complete profile",
+        secondaryHref: "/tools/founder-runway",
+        secondaryLabel: "Open founder runway",
+      };
+    }
+
     if (!hasAccounts) {
       return {
         eyebrow: "Next best move",
@@ -176,6 +203,18 @@ function FounderPriorityCard({
         summary: "Right now the dashboard can preview the shape of your plan, but linked accounts are what tighten runway, liquidity, and tax pressure.",
         primaryHref: "/connect",
         primaryLabel: "Connect accounts",
+        secondaryHref: "/data-health",
+        secondaryLabel: "See what is missing",
+      };
+    }
+
+    if (usingDemoData) {
+      return {
+        eyebrow: "Preview mode",
+        title: "You still need one real source before this becomes a founder control room.",
+        summary: "Manual context helps, but live balances are what make runway, tax timing, and concentration guidance decision-grade.",
+        primaryHref: "/connect",
+        primaryLabel: "Connect real sources",
         secondaryHref: "/data-health",
         secondaryLabel: "See what is missing",
       };
@@ -205,16 +244,24 @@ function FounderPriorityCard({
       };
     }
 
+    if (!hasDecisionTraces) {
+      return {
+        eyebrow: "Generate first value",
+        title: "You have enough context. Now generate the first recommendation you can inspect.",
+        summary: "Open the advisor or founder operating room to create an auditable recommendation, then review the trace before you act.",
+        primaryHref: "/advisor",
+        primaryLabel: "Generate guidance",
+        secondaryHref: "/dashboard/founder-operating-room",
+        secondaryLabel: "Open operating room",
+      };
+    }
+
     return {
       eyebrow: "Founder baseline",
-      title: usingDemoData
-        ? "You are still looking at preview data."
-        : "Your founder data surface is live and ready for decisions.",
-      summary: usingDemoData
-        ? "Preview mode is fine for orientation, but connect real sources before you trust runway, tax timing, or concentration alerts."
-        : "Use the cards below to inspect your current pressure points, then open the trace behind any recommendation that matters.",
-      primaryHref: usingDemoData ? "/connect" : "/dashboard/recommendation-reviews",
-      primaryLabel: usingDemoData ? "Connect real sources" : "Review active guidance",
+      title: "Your founder data surface is live and ready for decisions.",
+      summary: "Use the cards below to inspect your current pressure points, then open the trace behind any recommendation that matters.",
+      primaryHref: "/dashboard/recommendation-reviews",
+      primaryLabel: "Review active guidance",
       secondaryHref: "/data-health",
       secondaryLabel: "Open data health",
     };
@@ -422,7 +469,9 @@ export default function DashboardPage() {
     return allAccountsData?.investment_accounts ?? [];
   }, [accounts, allAccountsData]);
   
-  const { data: memory } = useFinancialMemory();
+  const { data: memory, isFetched: memoryFetched } = useFinancialMemory();
+  const { hasConsent: hasDecisionTraceConsent } = useConsentStatus(["decision_traces:read"]);
+  const { data: traces, isFetched: tracesFetched } = useDecisionTraces(undefined, { enabled: hasDecisionTraceConsent });
 
   const effectiveAllAccounts = allAccountsData ?? getPreviewAccounts();
   const effectiveHoldingsRows = useMemo(() => mapHoldings(holdingsData ?? getPreviewHoldings()), [holdingsData]);
@@ -435,6 +484,8 @@ export default function DashboardPage() {
     effectiveAllAccounts.debt_accounts.length;
   const holdingsCount = effectiveHoldingsRows.length;
   const hasAccounts = accountCount > 0;
+  const hasFounderBaseline = isFounderBaselineComplete(memory);
+  const hasDecisionTraces = (traces?.length ?? 0) > 0;
 
   const intelligenceCards = [
     {
@@ -550,6 +601,42 @@ export default function DashboardPage() {
     lastSyncedAt,
   ]);
 
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      isLoading ||
+      !memoryFetched ||
+      (hasDecisionTraceConsent && !tracesFetched)
+    ) {
+      return;
+    }
+
+    const trackedKey = "cm_founder_dashboard_arrival_tracked";
+    if (window.sessionStorage.getItem(trackedKey) === "true") {
+      return;
+    }
+
+    captureAnalyticsEvent("founder_dashboard_arrived", {
+      source: readFounderFunnelSource() ?? "unknown",
+      using_demo_data: usingDemoData,
+      has_accounts: hasAccounts,
+      has_founder_baseline: hasFounderBaseline,
+      has_decision_traces: hasDecisionTraces,
+      connection_tone: connectionStatusState.tone,
+    });
+    window.sessionStorage.setItem(trackedKey, "true");
+  }, [
+    connectionStatusState.tone,
+    hasAccounts,
+    hasDecisionTraceConsent,
+    hasDecisionTraces,
+    hasFounderBaseline,
+    isLoading,
+    memoryFetched,
+    tracesFetched,
+    usingDemoData,
+  ]);
+
   function renderContent() {
     const totalCryptoValue = Number(cryptoPortfolio?.total_value_usd ?? 0);
     const totalPhysicalValue = Number(effectivePhysicalAssets?.total_value ?? 0);
@@ -626,6 +713,8 @@ export default function DashboardPage() {
           <FounderPriorityCard
             usingDemoData={usingDemoData}
             hasAccounts={hasAccounts}
+            hasFounderBaseline={hasFounderBaseline}
+            hasDecisionTraces={hasDecisionTraces}
             connectionStatusState={connectionStatusState}
           />
           <AdvisorBriefing />

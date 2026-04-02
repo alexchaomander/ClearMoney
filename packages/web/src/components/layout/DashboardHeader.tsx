@@ -9,7 +9,10 @@ import { NotificationCenter } from "@/components/dashboard/NotificationCenter";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { usePrivacy } from "@/lib/privacy-context";
 
-const hasClerkKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const hasClerkKey = Boolean(
+  clerkPublishableKey && clerkPublishableKey !== "pk_test_placeholder"
+);
 
 interface DashboardHeaderProps {
   onRefresh?: () => void;

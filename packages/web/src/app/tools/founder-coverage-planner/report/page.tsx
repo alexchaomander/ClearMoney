@@ -174,6 +174,16 @@ function writeStoredShareTokens(tokens: StoredShareTokens): void {
   }
 }
 
+async function tryWriteClipboard(text: string): Promise<boolean> {
+  if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) return false;
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default function FounderCoveragePlannerReportPage(): ReactElement {
   const searchParams = useSearchParams();
   const demoQuery = useMemo(() => toDemoQuery(searchParams), [searchParams]);
@@ -194,7 +204,11 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
   );
 
   const { hasConsent: hasMemoryRead } = useConsentStatus(["memory:read"]);
-  const { data: memory, isSuccess: memoryLoaded } = useFinancialMemory({ enabled: hasMemoryRead });
+  const canReadMemory = isDemo || hasMemoryRead;
+  const needsProfileMemory = !encodedSnapshot && !isServerShare;
+  const { data: memory, isSuccess: memoryLoaded } = useFinancialMemory({
+    enabled: needsProfileMemory && canReadMemory,
+  });
   const [revoked, setRevoked] = useState(false);
   const [revokeBusy, setRevokeBusy] = useState(false);
   const [shareBusy, setShareBusy] = useState(false);
@@ -202,6 +216,22 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
 
   useEffect(() => {
     setStoredTokens(readStoredShareTokens());
+  }, []);
+
+  useEffect(() => {
+    function handleConsumedMessage(event: MessageEvent) {
+      if (typeof window === "undefined" || event.origin !== window.location.origin) {
+        return;
+      }
+      const data = event.data as { type?: string; reportId?: string } | null;
+      if (data?.type !== "clearmoney-demo-share-consumed" || typeof data.reportId !== "string") {
+        return;
+      }
+      void markOneTimeLinkConsumed(data.reportId);
+    }
+
+    window.addEventListener("message", handleConsumedMessage);
+    return () => window.removeEventListener("message", handleConsumedMessage);
   }, []);
 
   const serverShare = useQuery({
@@ -239,6 +269,29 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
     markFounderDemoStep("report_opened");
     setDemoFlow(readFounderDemoFlowState());
   }, [isDemo, isShareMode]);
+
+  useEffect(() => {
+    if (
+      !isDemo ||
+      !reportId ||
+      !reportToken ||
+      !serverShare.isSuccess ||
+      serverShare.data?.max_views !== 1
+    ) {
+      return;
+    }
+
+    window.opener?.postMessage(
+      { type: "clearmoney-demo-share-consumed", reportId },
+      window.location.origin
+    );
+  }, [
+    isDemo,
+    reportId,
+    reportToken,
+    serverShare.data?.max_views,
+    serverShare.isSuccess,
+  ]);
 
   const demoShowcase = useMemo(() => {
     if (!isDemo) return null;
@@ -519,8 +572,8 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
     try {
       if (reportId && reportToken) {
         const url = buildReportUrl({ demoQuery, rid: reportId, rt: reportToken });
-        await navigator.clipboard?.writeText(url);
-        pushToast({ title: "Link copied", variant: "success" });
+        const copied = await tryWriteClipboard(url);
+        pushToast({ title: copied ? "Link copied" : "Link ready", variant: "success" });
         return;
       }
 
@@ -538,7 +591,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
       rememberShareToken(created.id, created.token);
       await queryClient.invalidateQueries({ queryKey: ["shareReports", shareToolId] });
       const url = buildReportUrl({ demoQuery, rid: created.id, rt: created.token });
-      await navigator.clipboard?.writeText(url);
+      const copied = await tryWriteClipboard(url);
 
       const isOneTime = args.maxViews === 1;
       if (isOneTime) {
@@ -547,14 +600,20 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
       }
 
       pushToast({
-        title: "Link copied",
-        message: isOneTime ? "One-time link created and copied." : "Share link created and copied.",
+        title: copied ? "Link copied" : "Link ready",
+        message: isOneTime
+          ? copied
+            ? "One-time link created and copied."
+            : "One-time link created."
+          : copied
+            ? "Share link created and copied."
+            : "Share link created.",
         variant: "success",
       });
     } catch (err) {
       if (shareLink) {
-        await navigator.clipboard?.writeText(shareLink);
-        pushToast({ title: "Link copied", variant: "success" });
+        const copied = await tryWriteClipboard(shareLink);
+        pushToast({ title: copied ? "Link copied" : "Link ready", variant: "success" });
       } else {
         void err;
         pushToast({ title: "Could not create share link", variant: "error" });
@@ -603,6 +662,58 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
   function clearStoredTokens(): void {
     setStoredTokens({});
     writeStoredShareTokens({});
+  }
+
+  async function markOneTimeLinkConsumed(id: string): Promise<void> {
+    const reports = shareReports.data;
+    if (!reports) return;
+    const existing = reports.find((report) => report.id === id);
+    if (!existing || existing.max_views !== 1 || (existing.view_count ?? 0) >= 1) {
+      return;
+    }
+    await client.revokeShareReport(id);
+    await queryClient.invalidateQueries({ queryKey: ["shareReports", shareToolId] });
+  }
+
+  function buildConsumedShareUrl(payload: FounderCoverageSharePayload): string {
+    return buildReportUrl({
+      demoQuery,
+      snapshot: encodeFounderCoverageSharePayload(payload),
+    });
+  }
+
+  async function openShareReportLink(args: {
+    report: NonNullable<typeof shareReports.data>[number];
+    token?: string;
+    url: string;
+  }): Promise<void> {
+    const { report, token, url } = args;
+    const popup = window.open("", "_blank");
+    if (!popup) return;
+
+    if (isDemo && report.max_views === 1 && token) {
+      if ((report.view_count ?? 0) >= 1) {
+        popup.location.href = buildReportUrl({
+          demoQuery,
+          rid: report.id,
+          rt: "expired",
+        });
+        return;
+      }
+
+      try {
+        const consumed = await client.getShareReport(report.id, token);
+        const payload = consumed.payload as FounderCoverageSharePayload | undefined;
+        popup.location.href = payload ? buildConsumedShareUrl(payload) : url;
+        await queryClient.invalidateQueries({ queryKey: ["shareReports", shareToolId] });
+        return;
+      } catch {
+        popup.location.href = url;
+        return;
+      }
+    }
+
+    popup.location.href = url;
   }
 
   function resetDemo(): void {
@@ -702,7 +813,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                 >
                   Share links
                 </button>
-                {reportId && hasMemoryRead && (
+                {reportId && canReadMemory && (
                   <button
                     type="button"
                     onClick={() => void revokeLink()}
@@ -771,7 +882,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
               </div>
             )}
 
-            {reportId && reportToken && (
+            {reportId && reportToken && serverShare.isSuccess && (
               <div className="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
                 <p className="text-sm font-semibold text-amber-100">Shared report link</p>
                 <p className="mt-2 text-xs text-amber-200/80">
@@ -855,6 +966,10 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                       {shareReports.data.slice(0, 10).map((r) => {
                         const token = storedTokens[r.id];
                         const url = token ? buildReportUrl({ demoQuery, rid: r.id, rt: token }) : null;
+                        const isConsumed =
+                          typeof r.max_views === "number" &&
+                          typeof r.view_count === "number" &&
+                          r.view_count >= r.max_views;
                         return (
                           <div key={r.id} className="flex flex-col gap-2 rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="min-w-0">
@@ -866,6 +981,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                                 {r.expires_at ? ` · Expires: ${new Date(r.expires_at).toLocaleString()}` : ""}
                                 {r.max_views ? ` · Max views: ${r.max_views}` : ""}
                                 {r.view_count != null ? ` · Views: ${r.view_count}` : ""}
+                                {isConsumed ? " · Consumed" : ""}
                                 {r.revoked_at ? " · Revoked" : ""}
                               </p>
                               {!token && (
@@ -877,21 +993,28 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                             <div className="flex flex-wrap gap-2">
                               <button
                                 type="button"
-                                disabled={!url}
-                                onClick={() => url && window.open(url, "_blank", "noreferrer")}
+                                disabled={!url || isConsumed}
+                                onClick={() => void (async () => {
+                                  if (!url) return;
+                                  await openShareReportLink({
+                                    report: r,
+                                    token,
+                                    url,
+                                  });
+                                })()}
                                 className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs font-semibold text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
                               >
                                 Open
                               </button>
                               <button
                                 type="button"
-                                disabled={!url}
-                                onClick={() => url && void navigator.clipboard?.writeText(url)}
+                                disabled={!url || isConsumed}
+                                onClick={() => url && void tryWriteClipboard(url)}
                                 className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs font-semibold text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
                               >
                                 Copy
                               </button>
-                              {!r.revoked_at && (
+                              {!r.revoked_at && !isConsumed && (
                                 <button
                                   type="button"
                                   onClick={() => void revokeShareReportById(r.id)}
@@ -900,7 +1023,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                                   Revoke
                                 </button>
                               )}
-                              {!r.revoked_at && token && (
+                              {!r.revoked_at && token && !isConsumed && (
                                 <button
                                   type="button"
                                   onClick={() => void rotateShareLink(r.id)}
@@ -937,7 +1060,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
               </div>
             )}
 
-            {!hasMemoryRead && (
+            {needsProfileMemory && !canReadMemory && (
               <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
                 <p className="text-sm font-semibold text-white">Connect your profile</p>
                 <p className="mt-2 text-sm text-neutral-400">
@@ -950,13 +1073,13 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
               </div>
             )}
 
-            {hasMemoryRead && !memoryLoaded && (
+            {needsProfileMemory && canReadMemory && !memoryLoaded && (
               <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
                 <p className="text-sm text-neutral-200">Loading your saved snapshot…</p>
               </div>
             )}
 
-            {hasMemoryRead && memoryLoaded && !snapshot && !isShareMode && !serverShare.isLoading && !serverShare.isError && (
+            {needsProfileMemory && canReadMemory && memoryLoaded && !snapshot && !isShareMode && !serverShare.isLoading && !serverShare.isError && (
               <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
                 <p className="text-sm font-semibold text-white">No snapshot saved yet</p>
                 <p className="mt-2 text-sm text-neutral-400">

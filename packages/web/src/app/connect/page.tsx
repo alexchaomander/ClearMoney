@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
@@ -24,12 +24,14 @@ import {
 import { useToast } from "@/components/shared/toast";
 import { ConsentGate } from "@/components/shared/ConsentGate";
 import { isOnboardingComplete } from "@/lib/onboarding";
+import { captureAnalyticsEvent, rememberFounderFunnelSource } from "@/lib/analytics";
 
 export default function ConnectPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const client = useStrataClient();
   const { pushToast } = useToast();
@@ -44,12 +46,21 @@ export default function ConnectPage() {
   }, [searchQuery]);
 
   const onboardingComplete = useMemo(() => isOnboardingComplete(), []);
+  const source = searchParams.get("source") || "direct";
 
   useEffect(() => {
     if (!onboardingComplete) {
       router.replace("/onboarding");
     }
   }, [onboardingComplete, router]);
+
+  useEffect(() => {
+    rememberFounderFunnelSource(source);
+    captureAnalyticsEvent("founder_connect_viewed", {
+      source,
+      onboarding_complete: onboardingComplete,
+    });
+  }, [onboardingComplete, source]);
 
   const isSearching = debouncedQuery.length > 0;
 
@@ -83,6 +94,10 @@ export default function ConnectPage() {
 
   const handleConnect = async (institutionId: string) => {
     setConnectingId(institutionId);
+    captureAnalyticsEvent("founder_connect_started", {
+      institution_id: institutionId,
+      source,
+    });
     try {
       const { redirect_url } = await client.createLinkSession({
         institution_id: institutionId,
@@ -349,6 +364,13 @@ export default function ConnectPage() {
 
                 <Link
                   href="/dashboard"
+                  onClick={() => {
+                    rememberFounderFunnelSource("connect_continue_dashboard");
+                    captureAnalyticsEvent("founder_connect_continue_clicked", {
+                      source,
+                      connected_accounts: totalConnected,
+                    });
+                  }}
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium transition-all duration-200 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
                 >
                   Continue to Dashboard

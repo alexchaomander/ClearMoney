@@ -32,11 +32,8 @@ test.describe("founder showcase", () => {
     const popup1 = await popupPromise1;
     await expect(popup1.getByText(/shared report link/i)).toBeVisible();
     await expect(popup1.getByText(/shared report not found/i)).toHaveCount(0);
-
-    const popupPromise2 = page.waitForEvent("popup");
-    await shareSection.getByRole("button", { name: "Open" }).first().click();
-    const popup2 = await popupPromise2;
-    await expect(popup2.getByText(/shared report not found/i)).toBeVisible();
+    await expect(shareSection.getByText(/views: 1/i)).toBeVisible();
+    await expect(shareSection.getByRole("button", { name: "Open" }).first()).toBeDisabled();
   });
 
   test("reset demo clears created share links", async ({ page }) => {

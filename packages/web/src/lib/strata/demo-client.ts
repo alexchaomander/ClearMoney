@@ -160,9 +160,369 @@ import {
   DEMO_DATA_HEALTH,
   DEMO_TRANSPARENCY_PAYLOAD,
 } from "./demo-data";
+import type { CalculatorInputs } from "@/lib/calculators/founder-coverage-planner/types";
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const DEMO_MEMORY_STORAGE_KEY = "clearmoney-demo-memory.v1";
+const DEMO_SHARE_REPORTS_STORAGE_KEY = "clearmoney-demo-share-reports.v1";
+const DEMO_TAX_DOCS_STORAGE_KEY = "clearmoney-demo-tax-docs.v1";
+const DEMO_TAX_PLANS_STORAGE_KEY = "clearmoney-demo-tax-plans.v1";
+const DEMO_BANK_TX_REIMBURSEMENTS_STORAGE_KEY = "clearmoney-demo-bank-tx-reimbursements.v1";
+const DEMO_SYNC_CHANNEL_NAME = "clearmoney-demo-sync.v1";
+
+type DemoShareReportRecord = ShareReportListItem & {
+  token: string;
+  payload: unknown;
+  tool_id: string;
+  expires_at: string | null;
+  last_viewed_at: string | null;
+  max_views: number | null;
+  view_count: number;
+  revoked_at: string | null;
+};
+
+type DemoSyncMessage = {
+  key: string;
+  value: unknown;
+};
+
+let demoSyncChannel: BroadcastChannel | null = null;
+let demoSyncListenerAttached = false;
+
+function getDemoSyncChannel(): BroadcastChannel | null {
+  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") {
+    return null;
+  }
+  if (!demoSyncChannel) {
+    demoSyncChannel = new BroadcastChannel(DEMO_SYNC_CHANNEL_NAME);
+  }
+  return demoSyncChannel;
+}
+
+function ensureDemoSyncListener(): void {
+  const channel = getDemoSyncChannel();
+  if (!channel || demoSyncListenerAttached) {
+    return;
+  }
+  channel.addEventListener("message", (event: MessageEvent<DemoSyncMessage>) => {
+    const { key, value } = event.data ?? {};
+    if (typeof window === "undefined" || typeof key !== "string") {
+      return;
+    }
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // ignore demo sync failures
+    }
+  });
+  demoSyncListenerAttached = true;
+}
+
+function readStorageJson<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  ensureDemoSyncListener();
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeStorageJson<T>(key: string, value: T): void {
+  if (typeof window === "undefined") return;
+  ensureDemoSyncListener();
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+    getDemoSyncChannel()?.postMessage({ key, value } satisfies DemoSyncMessage);
+  } catch {
+    // ignore demo persistence failures
+  }
+}
+
+function buildDefaultFounderSnapshotInputs(): CalculatorInputs {
+  return {
+    annualNetIncome: 240000,
+    ownersCount: 1,
+    employeesCount: 3,
+    legalEntityType: "llc",
+    fundingPlan: "bootstrapped",
+    ownerRole: "operator",
+    marketSalary: 180000,
+    plannedSalary: 120000,
+    payrollAdminCosts: 2400,
+    statePayrollTaxRate: 0.034,
+    ssWageBase: 168600,
+    stateCode: "CA",
+    filingStatus: "single",
+    priorYearTax: 52000,
+    projectedCurrentTax: 56000,
+    federalWithholding: 18000,
+    estimatedPayments: 8000,
+    currentQuarter: 2,
+    entityStartDate: "2024-01-15",
+    taxYearStartDate: "2026-01-01",
+    taxElection: "s_corp",
+    payrollCadence: "monthly",
+    businessAccounts: 2,
+    personalAccounts: 2,
+    mixedTransactionsPerMonth: 6,
+    reimbursementPolicy: "accountable",
+    hasEquityGrants: true,
+    equityGrantType: "options",
+    daysSinceGrant: 45,
+    vestingYears: 4,
+    cliffMonths: 12,
+    strikePrice: 1.25,
+    fairMarketValue: 4.5,
+    sharesGranted: 80000,
+    exerciseWindowMonths: 90,
+    isQualifiedBusiness: true,
+    assetsAtIssuance: 850000,
+    expectedHoldingYears: 6,
+  };
+}
+
+function buildDefaultDemoMemory(): FinancialMemory {
+  const now = new Date().toISOString();
+  const snapshotId = "demo-founder-snapshot-001";
+  return {
+    id: "demo-memory",
+    user_id: "demo-user",
+    age: 32,
+    state: "CA",
+    filing_status: "single",
+    num_dependents: 0,
+    annual_income: 185000,
+    monthly_income: 15400,
+    income_growth_rate: 0.05,
+    federal_tax_rate: 0.24,
+    state_tax_rate: 0.09,
+    capital_gains_rate: 0.15,
+    retirement_age: 55,
+    current_retirement_savings: 142000,
+    monthly_retirement_contribution: 2500,
+    employer_match_pct: 0.04,
+    expected_social_security: 2800,
+    desired_retirement_income: 120000,
+    home_value: 1250000,
+    mortgage_balance: 840000,
+    mortgage_rate: 0.0325,
+    monthly_rent: null,
+    risk_tolerance: "moderate",
+    investment_horizon_years: 25,
+    monthly_savings_target: 4000,
+    average_monthly_expenses: 6800,
+    emergency_fund_target_months: 6,
+    spending_categories_monthly: {
+      housing: 3200,
+      food: 800,
+      transport: 400,
+      lifestyle: 1200,
+      other: 1200,
+    },
+    debt_profile: null,
+    portfolio_summary: null,
+    equity_compensation: null,
+    notes: {
+      founderCoveragePlanner: {
+        version: 2,
+        latestSnapshotId: snapshotId,
+        snapshots: [
+          {
+            id: snapshotId,
+            savedAt: now,
+            inputs: buildDefaultFounderSnapshotInputs(),
+            checklist: {
+              entity: true,
+              payroll: true,
+              estimatedTaxes: true,
+              reimbursement: true,
+              equity: true,
+            },
+            insights: {
+              commingling90d: {
+                startDate: "2025-11-01",
+                endDate: "2026-01-30",
+                rate: 0.22,
+                comminglingCount: 6,
+                eligibleCount: 27,
+                topMerchants: ["Uber", "Lyft", "Target"],
+              },
+            },
+          },
+        ],
+      },
+    },
+    employer_name: "Demo Employer INC",
+    employer_industry: "Technology",
+    life_insurance_benefit: 1000000,
+    disability_insurance_benefit: 7000,
+    umbrella_policy_limit: null,
+    has_will: true,
+    has_trust: false,
+    has_poa: true,
+    entity_type: "s_corp",
+    created_at: now,
+    updated_at: now,
+  };
+}
+
+function readDemoMemory(): FinancialMemory {
+  return readStorageJson<FinancialMemory>(DEMO_MEMORY_STORAGE_KEY, buildDefaultDemoMemory());
+}
+
+function writeDemoMemory(memory: FinancialMemory): void {
+  writeStorageJson(DEMO_MEMORY_STORAGE_KEY, memory);
+}
+
+function readDemoShareReports(): DemoShareReportRecord[] {
+  return readStorageJson<DemoShareReportRecord[]>(DEMO_SHARE_REPORTS_STORAGE_KEY, []);
+}
+
+function writeDemoShareReports(reports: DemoShareReportRecord[]): void {
+  writeStorageJson(DEMO_SHARE_REPORTS_STORAGE_KEY, reports);
+}
+
+function readDemoTaxDocuments(): TaxDocumentResponse[] {
+  return readStorageJson<TaxDocumentResponse[]>(DEMO_TAX_DOCS_STORAGE_KEY, []);
+}
+
+function writeDemoTaxDocuments(documents: TaxDocumentResponse[]): void {
+  writeStorageJson(DEMO_TAX_DOCS_STORAGE_KEY, documents);
+}
+
+function readDemoTaxPlans(): TaxPlan[] {
+  return readStorageJson<TaxPlan[]>(DEMO_TAX_PLANS_STORAGE_KEY, []);
+}
+
+function writeDemoTaxPlans(plans: TaxPlan[]): void {
+  writeStorageJson(DEMO_TAX_PLANS_STORAGE_KEY, plans);
+}
+
+function inferDemoTaxDocumentType(filename: string, hint?: string | null): string | null {
+  if (hint) return hint;
+  const normalized = filename.toLowerCase();
+  if (normalized.includes("w2")) return "w2";
+  if (normalized.includes("1099")) return "1099";
+  if (normalized.includes("k1") || normalized.includes("k-1")) return "k1";
+  return null;
+}
+
+function buildDemoExtractedData(documentType: string | null): Record<string, unknown> {
+  if (documentType === "1099") {
+    return {
+      payer_name: "Stripe Atlas Bank",
+      nonemployee_compensation: 18500,
+      federal_income_tax_withheld: 2500,
+    };
+  }
+  if (documentType === "k1") {
+    return {
+      entity_name: "Demo Ventures LLC",
+      ordinary_business_income: 42000,
+      guaranteed_payments: 6000,
+    };
+  }
+  return {
+    employer_name: "Acme Corp",
+    wages_tips_compensation: 125000,
+    federal_income_tax_withheld: 22000,
+  };
+}
+
+function buildDemoBankAccounts(): BankAccount[] {
+  const now = new Date().toISOString();
+  return [
+    {
+      id: "demo-bank-personal-001",
+      user_id: "demo-user-001",
+      connection_id: "conn-demo-1",
+      name: "Chase Personal Checking",
+      account_type: "checking",
+      balance: 22000,
+      available_balance: 22000,
+      institution_name: "Chase",
+      mask: "1234",
+      is_manual: false,
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id: "demo-bank-business-001",
+      user_id: "demo-user-001",
+      connection_id: "conn-demo-2",
+      name: "Mercury Business Checking",
+      account_type: "checking",
+      balance: 94500,
+      available_balance: 94500,
+      institution_name: "Mercury",
+      mask: "5678",
+      is_manual: false,
+      created_at: now,
+      updated_at: now,
+    },
+  ];
+}
+
+function buildDemoBankTransactions(now: Date = new Date()): BankTransaction[] {
+  const daysAgo = (days: number) => {
+    const d = new Date(now);
+    d.setDate(d.getDate() - days);
+    return d.toISOString().slice(0, 10);
+  };
+  const businessId = "demo-bank-business-001";
+  const base = [
+    ["tx-1", -1200, "STRIPE ATLAS ANNUAL", "TRANSFER_OUT", "Stripe Atlas", 83],
+    ["tx-2", -64, "UBER", "TRANSPORTATION", "Uber", 78],
+    ["tx-3", -42, "UBER EATS", "FOOD_AND_DRINK", "Uber Eats", 74],
+    ["tx-4", -260, "AWS", "TRANSFER_OUT", "Amazon Web Services", 71],
+    ["tx-5", -58, "LYFT", "TRANSPORTATION", "Lyft", 66],
+    ["tx-6", -89, "TARGET", "SHOPPING", "Target", 61],
+    ["tx-7", -31, "CVS", "PERSONAL_CARE", "CVS", 57],
+    ["tx-8", -180, "GOOGLE WORKSPACE", "TRANSFER_OUT", "Google Workspace", 51],
+    ["tx-9", -24, "STARBUCKS", "FOOD_AND_DRINK", "Starbucks", 46],
+    ["tx-10", -73, "AMAZON", "SHOPPING", "Amazon", 40],
+    ["tx-11", -315, "GUSTO PAYROLL", "TRANSFER_OUT", "Gusto", 33],
+    ["tx-12", -48, "WALGREENS", "PERSONAL_CARE", "Walgreens", 28],
+  ] as const;
+
+  return base.map(([id, amount, name, primaryCategory, merchant, days]) => ({
+    id,
+    cash_account_id: businessId,
+    provider_transaction_id: `provider-${id}`,
+    amount,
+    transaction_date: daysAgo(days),
+    posted_date: null,
+    name,
+    primary_category: primaryCategory,
+    detailed_category: null,
+    merchant_name: merchant,
+    payment_channel: null,
+    pending: false,
+    iso_currency_code: "USD",
+    reimbursed_at: null,
+    reimbursement_memo: null,
+    created_at: now.toISOString(),
+    updated_at: now.toISOString(),
+  }));
+}
+
+function readDemoBankReimbursements(): Record<string, { reimbursed_at: string; reimbursement_memo: string | null }> {
+  return readStorageJson<Record<string, { reimbursed_at: string; reimbursement_memo: string | null }>>(
+    DEMO_BANK_TX_REIMBURSEMENTS_STORAGE_KEY,
+    {}
+  );
+}
+
+function writeDemoBankReimbursements(
+  reimbursements: Record<string, { reimbursed_at: string; reimbursement_memo: string | null }>
+): void {
+  writeStorageJson(DEMO_BANK_TX_REIMBURSEMENTS_STORAGE_KEY, reimbursements);
 }
 
 export class DemoStrataClient implements StrataClientInterface {
@@ -518,63 +878,19 @@ export class DemoStrataClient implements StrataClientInterface {
 
   async getFinancialMemory(): Promise<FinancialMemory> {
     await delay(300);
-    return {
-      id: "demo-memory",
-      user_id: "demo-user",
-      age: 32,
-      state: "CA",
-      filing_status: "single",
-      num_dependents: 0,
-      annual_income: 185000,
-      monthly_income: 15400,
-      income_growth_rate: 0.05,
-      federal_tax_rate: 0.24,
-      state_tax_rate: 0.09,
-      capital_gains_rate: 0.15,
-      retirement_age: 55,
-      current_retirement_savings: 142000,
-      monthly_retirement_contribution: 2500,
-      employer_match_pct: 0.04,
-      expected_social_security: 2800,
-      desired_retirement_income: 120000,
-      home_value: 1250000,
-      mortgage_balance: 840000,
-      mortgage_rate: 0.0325,
-      monthly_rent: null,
-      risk_tolerance: "moderate",
-      investment_horizon_years: 25,
-      monthly_savings_target: 4000,
-      average_monthly_expenses: 6800,
-      emergency_fund_target_months: 6,
-      spending_categories_monthly: {
-        housing: 3200,
-        food: 800,
-        transport: 400,
-        lifestyle: 1200,
-        other: 1200,
-      },
-      debt_profile: null,
-      portfolio_summary: null,
-      equity_compensation: null,
-      notes: {},
-      employer_name: "Demo Employer INC",
-      employer_industry: "Technology",
-      life_insurance_benefit: 1000000,
-      disability_insurance_benefit: 7000,
-      umbrella_policy_limit: null,
-      has_will: true,
-      has_trust: false,
-      has_poa: true,
-      entity_type: "s_corp",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    return readDemoMemory();
   }
 
   async updateFinancialMemory(data: FinancialMemoryUpdate): Promise<FinancialMemory> {
     await delay(500);
     const current = await this.getFinancialMemory();
-    return { ...current, ...data } as FinancialMemory;
+    const next = {
+      ...current,
+      ...data,
+      updated_at: new Date().toISOString(),
+    } as FinancialMemory;
+    writeDemoMemory(next);
+    return next;
   }
 
   async deriveMemory(): Promise<FinancialMemory> {
@@ -1116,12 +1432,46 @@ export class DemoStrataClient implements StrataClientInterface {
 
   async getBankAccounts(): Promise<BankAccount[]> {
     await delay(300);
-    return [];
+    return buildDemoBankAccounts();
   }
 
   async getBankTransactions(_query: BankTransactionQuery): Promise<PaginatedBankTransactions> {
     await delay(300);
-    return { transactions: [], total: 0, page: 1, page_size: 20, total_pages: 0 };
+    const reimbursements = readDemoBankReimbursements();
+    const filtered = buildDemoBankTransactions()
+      .map((transaction) => {
+        const reimbursement = reimbursements[transaction.id];
+        if (!reimbursement) return transaction;
+        return {
+          ...transaction,
+          reimbursed_at: reimbursement.reimbursed_at,
+          reimbursement_memo: reimbursement.reimbursement_memo,
+          updated_at: reimbursement.reimbursed_at,
+        };
+      })
+      .filter((transaction) => {
+        const afterStart = _query.start_date
+          ? transaction.transaction_date >= _query.start_date
+          : true;
+        const beforeEnd = _query.end_date
+          ? transaction.transaction_date <= _query.end_date
+          : true;
+        return afterStart && beforeEnd;
+      })
+      .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime());
+
+    const page = _query.page ?? 1;
+    const pageSize = _query.page_size ?? 20;
+    const start = (page - 1) * pageSize;
+    const transactions = filtered.slice(start, start + pageSize);
+
+    return {
+      transactions,
+      total: filtered.length,
+      page,
+      page_size: pageSize,
+      total_pages: Math.max(1, Math.ceil(filtered.length / pageSize)),
+    };
   }
 
   async getSpendingSummary(_months?: number): Promise<SpendingSummary> {
@@ -1143,44 +1493,154 @@ export class DemoStrataClient implements StrataClientInterface {
 
   async updateBankTransactionReimbursement(_id: string, _data: BankTransactionReimbursementUpdate): Promise<BankTransaction> {
     await delay(300);
-    return {} as BankTransaction;
+    const reimbursements = readDemoBankReimbursements();
+    if (_data.reimbursed) {
+      reimbursements[_id] = {
+        reimbursed_at: new Date().toISOString(),
+        reimbursement_memo: _data.memo ?? null,
+      };
+    } else {
+      delete reimbursements[_id];
+    }
+    writeDemoBankReimbursements(reimbursements);
+
+    const updated = buildDemoBankTransactions().find((transaction) => transaction.id === _id);
+    if (!updated) {
+      throw new Error("bank-transaction-not-found");
+    }
+    const reimbursement = reimbursements[_id];
+    return {
+      ...updated,
+      reimbursed_at: reimbursement?.reimbursed_at ?? null,
+      reimbursement_memo: reimbursement?.reimbursement_memo ?? null,
+      updated_at: reimbursement?.reimbursed_at ?? updated.updated_at,
+    };
   }
 
   // === Share Reports ===
 
   async createShareReport(_request: ShareReportCreateRequest): Promise<ShareReportCreateResponse> {
     await delay(500);
-    return {
-      id: "report-123",
-      token: "demo-token",
+    const now = new Date();
+    const expiresAt =
+      typeof _request.expires_in_days === "number"
+        ? new Date(now.getTime() + _request.expires_in_days * 24 * 60 * 60 * 1000).toISOString()
+        : null;
+    const report: DemoShareReportRecord = {
+      id: crypto.randomUUID(),
+      token: crypto.randomUUID(),
       tool_id: _request.tool_id,
       mode: _request.mode,
-      created_at: new Date().toISOString(),
-      expires_at: null,
-      max_views: null
+      created_at: now.toISOString(),
+      expires_at: expiresAt,
+      last_viewed_at: null,
+      max_views: _request.max_views ?? null,
+      view_count: 0,
+      revoked_at: null,
+      payload: _request.payload,
+    };
+    writeDemoShareReports([report, ...readDemoShareReports()].slice(0, 25));
+    return {
+      id: report.id,
+      token: report.token,
+      tool_id: report.tool_id,
+      mode: report.mode,
+      created_at: report.created_at,
+      expires_at: report.expires_at,
+      max_views: report.max_views,
     };
   }
 
   async getShareReport(reportId: string, _token: string): Promise<ShareReportPublicResponse> {
-    void reportId;
     await delay(500);
-    return {} as ShareReportPublicResponse;
+    const reports = readDemoShareReports();
+    const idx = reports.findIndex((report) => report.id === reportId && report.token === _token);
+    if (idx === -1) {
+      throw new Error("share-report-not-found");
+    }
+
+    const report = reports[idx];
+    const now = Date.now();
+    const isExpired = report.expires_at ? new Date(report.expires_at).getTime() <= now : false;
+    const maxViewsReached =
+      typeof report.max_views === "number" && report.view_count >= report.max_views;
+
+    if (report.revoked_at || isExpired || maxViewsReached) {
+      throw new Error("share-report-not-found");
+    }
+
+    const viewedAt = new Date().toISOString();
+    const updated = {
+      ...report,
+      view_count: report.view_count + 1,
+      last_viewed_at: viewedAt,
+    };
+    reports[idx] = updated;
+    writeDemoShareReports(reports);
+
+    return {
+      id: updated.id,
+      tool_id: updated.tool_id,
+      mode: updated.mode,
+      payload: updated.payload,
+      created_at: updated.created_at,
+      expires_at: updated.expires_at,
+      last_viewed_at: updated.last_viewed_at,
+      max_views: updated.max_views,
+      view_count: updated.view_count,
+    } as ShareReportPublicResponse;
   }
 
   async listShareReports(params?: { toolId?: string; limit?: number; includePayload?: boolean }): Promise<ShareReportListItem[]> {
-    void params;
     await delay(300);
-    return [];
+    const reports = readDemoShareReports()
+      .filter((report) => (params?.toolId ? report.tool_id === params.toolId : true))
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const limited = typeof params?.limit === "number" ? reports.slice(0, params.limit) : reports;
+    return limited.map(({ token, payload, ...report }) =>
+      params?.includePayload ? ({ ...report, payload } as ShareReportListItem) : report
+    );
   }
 
   async rotateShareReport(reportId: string, params?: { expiresInDays?: number | null }): Promise<ShareReportCreateResponse> {
-    void reportId; void params;
     await delay(300);
-    return { id: reportId, token: "new-token", tool_id: "tool", mode: "full", created_at: "", expires_at: null, max_views: null };
+    const reports = readDemoShareReports();
+    const idx = reports.findIndex((report) => report.id === reportId);
+    if (idx === -1) throw new Error("share-report-not-found");
+
+    const current = reports[idx];
+    const expiresAt =
+      typeof params?.expiresInDays === "number"
+        ? new Date(Date.now() + params.expiresInDays * 24 * 60 * 60 * 1000).toISOString()
+        : current.expires_at;
+    const updated = {
+      ...current,
+      token: crypto.randomUUID(),
+      expires_at: expiresAt,
+      view_count: 0,
+    };
+    reports[idx] = updated;
+    writeDemoShareReports(reports);
+
+    return {
+      id: updated.id,
+      token: updated.token,
+      tool_id: updated.tool_id,
+      mode: updated.mode,
+      created_at: updated.created_at,
+      expires_at: updated.expires_at,
+      max_views: updated.max_views,
+    };
   }
 
   async revokeShareReport(_id: string): Promise<{ status: string }> {
     await delay(300);
+    const reports = readDemoShareReports();
+    const idx = reports.findIndex((report) => report.id === _id);
+    if (idx !== -1) {
+      reports[idx] = { ...reports[idx], revoked_at: new Date().toISOString() };
+      writeDemoShareReports(reports);
+    }
     return { status: "success" };
   }
 
@@ -1188,23 +1648,49 @@ export class DemoStrataClient implements StrataClientInterface {
 
   async createTaxPlan(_data: TaxPlanCreateRequest): Promise<TaxPlan> {
     await delay(300);
-    return { id: "p1", user_id: "u1", name: _data.name, household_name: _data.household_name ?? null, status: "draft", approved_version_id: null, created_at: "", updated_at: "" };
+    const now = new Date().toISOString();
+    const plan: TaxPlan = {
+      id: crypto.randomUUID(),
+      user_id: "u1",
+      name: _data.name,
+      household_name: _data.household_name ?? null,
+      status: "draft",
+      approved_version_id: null,
+      created_at: now,
+      updated_at: now,
+    };
+    writeDemoTaxPlans([plan, ...readDemoTaxPlans()]);
+    return plan;
   }
 
   async listTaxPlans(params?: { limit?: number }): Promise<TaxPlan[]> {
-    void params;
     await delay(300);
-    return [];
+    const plans = readDemoTaxPlans().sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    );
+    return typeof params?.limit === "number" ? plans.slice(0, params.limit) : plans;
   }
 
   async getTaxPlan(_id: string): Promise<TaxPlan> {
     await delay(300);
-    return { id: _id, user_id: "u1", name: "Plan", household_name: null, status: "draft", approved_version_id: null, created_at: "", updated_at: "" };
+    const plan = readDemoTaxPlans().find((item) => item.id === _id);
+    if (!plan) throw new Error("tax-plan-not-found");
+    return plan;
   }
 
   async updateTaxPlan(_id: string, _data: TaxPlanUpdateRequest): Promise<TaxPlan> {
     await delay(300);
-    return { id: _id, user_id: "u1", name: _data.name ?? "Plan", household_name: _data.household_name ?? null, status: _data.status ?? "draft", approved_version_id: null, created_at: "", updated_at: "" };
+    const plans = readDemoTaxPlans();
+    const idx = plans.findIndex((plan) => plan.id === _id);
+    if (idx === -1) throw new Error("tax-plan-not-found");
+    const updated = {
+      ...plans[idx],
+      ..._data,
+      updated_at: new Date().toISOString(),
+    };
+    plans[idx] = updated;
+    writeDemoTaxPlans(plans);
+    return updated;
   }
 
   async createTaxPlanVersion(planId: string, data: TaxPlanVersionCreateRequest): Promise<TaxPlanVersion> {
@@ -1283,22 +1769,53 @@ export class DemoStrataClient implements StrataClientInterface {
 
   async uploadTaxDocument(_file: File | Blob, _filename: string, _typeHint?: string): Promise<TaxDocumentResponse> {
     await delay(1500);
-    return { id: "d1", user_id: "u1", original_filename: _filename, mime_type: "", file_size_bytes: 0, document_type: _typeHint ?? null, tax_year: null, status: "processing", provider_used: null, extracted_data: null, confidence_score: null, validation_errors: null, error_message: null, created_at: "", updated_at: "" };
+    const now = new Date().toISOString();
+    const documentType = inferDemoTaxDocumentType(_filename, _typeHint);
+    const mimeType =
+      _file instanceof File && typeof _file.type === "string" && _file.type.length > 0
+        ? _file.type
+        : "application/octet-stream";
+    const fileSize =
+      typeof (_file as Blob).size === "number" ? (_file as Blob).size : 0;
+    const document: TaxDocumentResponse = {
+      id: crypto.randomUUID(),
+      user_id: "u1",
+      original_filename: _filename,
+      mime_type: mimeType,
+      file_size_bytes: fileSize,
+      document_type: documentType,
+      tax_year: 2025,
+      status: "completed",
+      provider_used: "demo",
+      extracted_data: buildDemoExtractedData(documentType),
+      confidence_score: 0.92,
+      validation_errors: null,
+      error_message: null,
+      created_at: now,
+      updated_at: now,
+    };
+    writeDemoTaxDocuments([document, ...readDemoTaxDocuments()]);
+    return document;
   }
 
   async listTaxDocuments(limit?: number): Promise<TaxDocumentListResponse[]> {
-    void limit;
     await delay(300);
-    return [];
+    const documents = readDemoTaxDocuments().sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    return typeof limit === "number" ? documents.slice(0, limit) : documents;
   }
 
   async getTaxDocument(_id: string): Promise<TaxDocumentResponse> {
     await delay(300);
-    return { id: _id, user_id: "u1", original_filename: "", mime_type: "", file_size_bytes: 0, document_type: null, tax_year: null, status: "completed", provider_used: null, extracted_data: null, confidence_score: null, validation_errors: null, error_message: null, created_at: "", updated_at: "" };
+    const document = readDemoTaxDocuments().find((item) => item.id === _id);
+    if (!document) throw new Error("tax-document-not-found");
+    return document;
   }
 
   async deleteTaxDocument(_id: string): Promise<void> {
     await delay(300);
+    writeDemoTaxDocuments(readDemoTaxDocuments().filter((document) => document.id !== _id));
   }
 
   async prefillTaxPlan(_data: PrefillTaxPlanRequest): Promise<PrefillTaxPlanResponse> {
