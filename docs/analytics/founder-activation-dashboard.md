@@ -6,6 +6,8 @@ This is the implementation companion to [`FOUNDER_FUNNEL_ANALYTICS.md`](../visio
 
 The vision doc defines what the funnel means. This doc defines exactly what to build in PostHog and what the team reviews every week.
 
+For the step-by-step operational checklist, use [`founder-activation-operations.md`](./founder-activation-operations.md).
+
 ## Build These Saved Insights
 
 ### 1. Founder Top-Line Funnel
@@ -180,5 +182,6 @@ The codebase now emits extra connect diagnostics in addition to the canonical fu
 - `founder_connect_failed`
 - `founder_connect_exited`
 - `founder_invite_code_started`
+- `founder_dashboard_upgrade_clicked`
 
 These are not top-line funnel steps. They exist to explain where activation quality is leaking.

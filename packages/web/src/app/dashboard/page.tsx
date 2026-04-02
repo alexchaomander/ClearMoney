@@ -87,6 +87,7 @@ import { AnimatedAmount } from "@/components/shared/AnimatedAmount";
 import { ConsentGate } from "@/components/shared/ConsentGate";
 import { useToast } from "@/components/shared/toast";
 import { captureAnalyticsEvent, readFounderFunnelSource } from "@/lib/analytics";
+import { getFounderPriorityState } from "@/lib/founder-activation";
 
 import {
   getPreviewPortfolioSummary,
@@ -176,99 +177,40 @@ function FounderPriorityCard({
   hasFounderBaseline,
   hasDecisionTraces,
   connectionStatusState,
+  onOpenManual,
 }: {
   usingDemoData: boolean;
   hasAccounts: boolean;
   hasFounderBaseline: boolean;
   hasDecisionTraces: boolean;
   connectionStatusState: { tone: "live" | "partial" | "warning" | "missing" | "error"; value: string; detail: string };
+  onOpenManual: () => void;
 }) {
-  const state = (() => {
-    if (!hasFounderBaseline) {
-      return {
-        eyebrow: "Baseline gap",
-        title: "Finish your founder baseline before the dashboard starts inferring too much.",
-        summary: "Entity type, income, and monthly burn are the minimum inputs behind trustworthy runway and tax pressure guidance.",
-        primaryHref: "/settings?tab=profile",
-        primaryLabel: "Complete profile",
-        secondaryHref: "/tools/founder-runway",
-        secondaryLabel: "Open founder runway",
-      };
-    }
+  const state = getFounderPriorityState({
+    usingDemoData,
+    hasAccounts,
+    hasFounderBaseline,
+    hasDecisionTraces,
+    connectionTone: connectionStatusState.tone,
+  });
+  const source = readFounderFunnelSource() ?? "unknown";
 
-    if (!hasAccounts) {
-      return {
-        eyebrow: "Next best move",
-        title: "Connect one source so your founder plan stops guessing.",
-        summary: "Right now the dashboard can preview the shape of your plan, but linked accounts are what tighten runway, liquidity, and tax pressure.",
-        primaryHref: "/connect",
-        primaryLabel: "Connect accounts",
-        secondaryHref: "/data-health",
-        secondaryLabel: "See what is missing",
-      };
-    }
-
-    if (usingDemoData) {
-      return {
-        eyebrow: "Preview mode",
-        title: "You still need one real source before this becomes a founder control room.",
-        summary: "Manual context helps, but live balances are what make runway, tax timing, and concentration guidance decision-grade.",
-        primaryHref: "/connect",
-        primaryLabel: "Connect real sources",
-        secondaryHref: "/data-health",
-        secondaryLabel: "See what is missing",
-      };
-    }
-
-    if (connectionStatusState.tone === "error") {
-      return {
-        eyebrow: "Action required",
-        title: "A revoked connection is weakening your founder view.",
-        summary: "Re-authenticate the broken source before trusting new recommendations or historical drift signals.",
-        primaryHref: "/connect",
-        primaryLabel: "Repair connection",
-        secondaryHref: "/data-health",
-        secondaryLabel: "Open data health",
-      };
-    }
-
-    if (connectionStatusState.tone === "partial" || connectionStatusState.tone === "warning") {
-      return {
-        eyebrow: "Trust signal",
-        title: "Your dashboard is useful, but part of the picture is aging.",
-        summary: "ClearMoney can still help, but stale or degraded sources should be fixed before you act on fine-grained tax or allocation guidance.",
-        primaryHref: "/data-health",
-        primaryLabel: "Review freshness",
-        secondaryHref: "/connect",
-        secondaryLabel: "Manage links",
-      };
-    }
-
-    if (!hasDecisionTraces) {
-      return {
-        eyebrow: "Generate first value",
-        title: "You have enough context. Now generate the first recommendation you can inspect.",
-        summary: "Open the advisor or founder operating room to create an auditable recommendation, then review the trace before you act.",
-        primaryHref: "/advisor",
-        primaryLabel: "Generate guidance",
-        secondaryHref: "/dashboard/founder-operating-room",
-        secondaryLabel: "Open operating room",
-      };
-    }
-
-    return {
-      eyebrow: "Founder baseline",
-      title: "Your founder data surface is live and ready for decisions.",
-      summary: "Use the cards below to inspect your current pressure points, then open the trace behind any recommendation that matters.",
-      primaryHref: "/dashboard/recommendation-reviews",
-      primaryLabel: "Review active guidance",
-      secondaryHref: "/data-health",
-      secondaryLabel: "Open data health",
-    };
-  })();
+  const trackUpgradeClick = (cta: string) => {
+    captureAnalyticsEvent("founder_dashboard_upgrade_clicked", {
+      source,
+      stage: state.stage,
+      cta,
+      using_demo_data: usingDemoData,
+      has_accounts: hasAccounts,
+      connection_tone: connectionStatusState.tone,
+    });
+  };
 
   return (
-    <div className="rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/8 via-white to-white p-6 shadow-sm dark:from-emerald-500/10 dark:via-slate-900 dark:to-slate-900 dark:border-emerald-900/50">
+    <div
+      className="rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/8 via-white to-white p-6 shadow-sm dark:from-emerald-500/10 dark:via-slate-900 dark:to-slate-900 dark:border-emerald-900/50"
+      data-testid="founder-priority-card"
+    >
       <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">
         {state.eyebrow}
       </p>
@@ -281,17 +223,60 @@ function FounderPriorityCard({
       <div className="mt-5 flex flex-wrap gap-3">
         <Link
           href={state.primaryHref}
+          onClick={() => trackUpgradeClick("primary")}
           className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-emerald-600 dark:bg-white dark:text-slate-950 dark:hover:bg-emerald-400"
         >
           {state.primaryLabel}
         </Link>
         <Link
           href={state.secondaryHref}
+          onClick={() => trackUpgradeClick("secondary")}
           className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:text-slate-200 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
         >
           {state.secondaryLabel}
         </Link>
+        {state.allowManualFallback ? (
+          <button
+            type="button"
+            onClick={() => {
+              trackUpgradeClick("manual_fallback");
+              onOpenManual();
+            }}
+            className="inline-flex items-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
+          >
+            Add manual context now
+          </button>
+        ) : null}
       </div>
+
+      {state.penaltyTitle || state.unlockTitle ? (
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          {state.penalties?.length ? (
+            <div className="rounded-2xl border border-rose-200/70 bg-rose-50/60 p-4 dark:border-rose-950/50 dark:bg-rose-950/20">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-rose-700 dark:text-rose-300">
+                {state.penaltyTitle}
+              </p>
+              <div className="mt-3 space-y-2 text-sm text-rose-900 dark:text-rose-100">
+                {state.penalties.map((penalty) => (
+                  <p key={penalty}>{penalty}</p>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {state.unlocks?.length ? (
+            <div className="rounded-2xl border border-emerald-200/70 bg-emerald-50/60 p-4 dark:border-emerald-950/50 dark:bg-emerald-950/20">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+                {state.unlockTitle}
+              </p>
+              <div className="mt-3 space-y-2 text-sm text-emerald-950 dark:text-emerald-100">
+                {state.unlocks.map((unlock) => (
+                  <p key={unlock}>{unlock}</p>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -716,6 +701,7 @@ export default function DashboardPage() {
             hasFounderBaseline={hasFounderBaseline}
             hasDecisionTraces={hasDecisionTraces}
             connectionStatusState={connectionStatusState}
+            onOpenManual={() => setShowAddModal(true)}
           />
           <AdvisorBriefing />
           <ProfileProgressCard memory={memory} />
