@@ -1,24 +1,24 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("landing page", () => {
-  test("renders hero and key sections", async ({ page }) => {
+  test("renders founder-first hero and key sections", async ({ page }) => {
     await page.goto("/");
 
     // Hero heading
     await expect(
-      page.getByRole("heading", { name: /feel confident/i })
+      page.getByRole("heading", { name: /know your runway/i })
     ).toBeVisible();
 
     // CTA buttons
     await expect(
-      page.getByRole("link", { name: /get started/i }).first()
+      page.getByRole("link", { name: /try founder runway/i }).first()
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /see how it works/i })
+      page.getByRole("link", { name: /enter founder beta/i }).first()
     ).toBeVisible();
 
-    // Persona carousel is visible
-    await expect(page.getByText(/featured tool/i)).toBeVisible();
+    // Founder-first tool path is visible
+    await expect(page.getByText(/start here/i)).toBeVisible();
   });
 
   test("persona carousel navigates with arrows", async ({ page }) => {

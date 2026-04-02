@@ -23,6 +23,7 @@ import {
 } from "@/lib/strata/hooks";
 import { useToast } from "@/components/shared/toast";
 import { ConsentGate } from "@/components/shared/ConsentGate";
+import { isOnboardingComplete } from "@/lib/onboarding";
 
 export default function ConnectPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,16 +43,13 @@ export default function ConnectPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const isOnboardingComplete = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem("clearmoney_onboarding_complete") === "true";
-  }, []);
+  const onboardingComplete = useMemo(() => isOnboardingComplete(), []);
 
   useEffect(() => {
-    if (!isOnboardingComplete) {
+    if (!onboardingComplete) {
       router.replace("/onboarding");
     }
-  }, [isOnboardingComplete, router]);
+  }, [onboardingComplete, router]);
 
   const isSearching = debouncedQuery.length > 0;
 
@@ -97,7 +95,7 @@ export default function ConnectPage() {
     }
   };
 
-  if (!isOnboardingComplete) {
+  if (!onboardingComplete) {
     return (
       <div className="min-h-screen bg-neutral-950 flex items-center justify-center text-neutral-400">
         Redirecting to onboarding...
@@ -127,11 +125,11 @@ export default function ConnectPage() {
           className="text-center mb-12"
         >
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-white mb-4">
-            Connect Your{" "}
-            <span className="italic text-emerald-400">Investment Accounts</span>
+            Connect the accounts behind your{" "}
+            <span className="italic text-emerald-400">founder plan</span>
           </h1>
           <p className="text-lg max-w-xl mx-auto mb-8 text-neutral-300">
-            Get a complete view of your portfolio across all your accounts.
+            Link what you have now so ClearMoney can tighten runway, tax pressure, and data confidence. If you are not ready, skip and start with manual context from the dashboard.
           </p>
 
           <SecurityBadges />
@@ -153,6 +151,9 @@ export default function ConnectPage() {
               <h2 className="font-serif text-xl text-emerald-100 mb-3">
                 Bank Accounts
               </h2>
+              <p className="mb-4 max-w-2xl text-sm text-neutral-400">
+                Bank links sharpen burn, liquidity, and tax timing. Brokerage links sharpen exposure, concentration, and recommendation quality.
+              </p>
               <PlaidLinkButton 
                 onError={(err) => pushToast({ title: "Connection Error", message: err, variant: "error" })} 
               />
@@ -234,11 +235,16 @@ export default function ConnectPage() {
                   </div>
 
                   {institutions.length === 0 && !isLoadingInstitutions ? (
-                    <p className="text-neutral-500 py-8 text-center">
-                      {isSearching
-                        ? "No institutions found. Try a different search."
-                        : "No institutions available."}
-                    </p>
+                    <div className="rounded-2xl border border-dashed border-neutral-800 bg-neutral-900/60 px-6 py-8 text-center">
+                      <p className="text-neutral-300">
+                        {isSearching
+                          ? "No institutions found. Try a different search or skip for now."
+                          : "No institutions available right now."}
+                      </p>
+                      <p className="mt-2 text-sm text-neutral-500">
+                        You can continue without linking and add manual accounts from the dashboard.
+                      </p>
+                    </div>
                   ) : (
                     <div className="grid sm:grid-cols-2 gap-3">
                       {institutions.map((institution, index) => (
@@ -345,9 +351,20 @@ export default function ConnectPage() {
                   href="/dashboard"
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium transition-all duration-200 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
                 >
-                  View Dashboard
+                  Continue to Dashboard
                   <ArrowRight className="w-4 h-4" />
                 </Link>
+
+                <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-950/70 p-4 text-left">
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Fallback path</p>
+                  <p className="mt-2 text-sm text-neutral-300">
+                    Skip linking for now and add manual cash, debt, or planning context from the dashboard.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-3 text-xs text-neutral-500">
+                    <span>Runway still works with manual expenses.</span>
+                    <span>Tax planning improves as you add real sources.</span>
+                  </div>
+                </div>
               </div>
             </motion.div>
           </div>

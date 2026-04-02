@@ -51,8 +51,24 @@ export function DecisionTracePanel() {
             Loading traces...
           </div>
         ) : recentTraces.length === 0 ? (
-          <div className="rounded-xl border border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900/50 p-4 text-sm text-slate-400 dark:text-neutral-400">
-            No decision traces yet. Create recommendations in the advisor to see them here.
+          <div className="rounded-xl border border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900/50 p-4">
+            <p className="text-sm text-slate-700 dark:text-neutral-200">
+              No decision traces yet. Link your sources, then open the advisor or a founder workflow to generate the first recommendation you can inspect.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3 text-sm">
+              <Link
+                href="/connect"
+                className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 font-semibold text-white transition-colors hover:bg-emerald-600 dark:bg-white dark:text-slate-950 dark:hover:bg-emerald-400"
+              >
+                Connect sources
+              </Link>
+              <Link
+                href="/advisor"
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 font-semibold text-slate-700 transition-colors hover:border-emerald-300 hover:text-emerald-700 dark:border-neutral-700 dark:text-neutral-200 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
+              >
+                Open advisor
+              </Link>
+            </div>
           </div>
         ) : (
           recentTraces.map((trace) => (

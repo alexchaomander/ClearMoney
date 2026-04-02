@@ -2,11 +2,10 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, Sparkles, UserCircle, Target, ShieldCheck } from "lucide-react";
+import { ArrowRight, Sparkles, BriefcaseBusiness, ShieldCheck, ScrollText, Activity } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { MemoryWizard } from "@/components/dashboard/MemoryWizard";
-
-const ONBOARDING_KEY = "clearmoney_onboarding_complete";
+import { markOnboardingComplete } from "@/lib/onboarding";
 
 function OnboardingContent() {
   const router = useRouter();
@@ -16,13 +15,14 @@ function OnboardingContent() {
   const role = searchParams.get("role") || "Member";
   const source = searchParams.get("source") || "Direct";
 
-  const handleWizardClose = () => {
+  const continueToConnect = () => {
+    markOnboardingComplete();
+    router.push("/connect?source=founder-onboarding");
+  };
+
+  const handleWizardComplete = () => {
     setShowWizard(false);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(ONBOARDING_KEY, "true");
-    }
-    // Redirect to dashboard with a tour flag
-    router.push("/dashboard?tour=true");
+    continueToConnect();
   };
 
   return (
@@ -33,31 +33,30 @@ function OnboardingContent() {
           Welcome, {role}
         </div>
         <h1 className="mt-6 font-serif text-4xl sm:text-6xl text-white leading-tight">
-          Setting up your <br />
-          <span className="text-emerald-500 italic">Financial Command Center</span>
+          Build your <br />
+          <span className="text-emerald-500 italic">founder financial baseline</span>
         </h1>
         <p className="mt-6 text-lg text-neutral-400 max-w-2xl mx-auto leading-relaxed">
-          We&apos;ve saved your progress from the <span className="text-white font-bold">{source}</span>. 
-          Now, let&apos;s personalize your OS to match your specific goals.
+          You&apos;re entering from <span className="text-white font-bold">{source}</span>. Give us the minimum context we need to show runway, tax pressure, and where your data is still thin.
         </p>
       </div>
 
       <div className="mt-16 grid gap-8 md:grid-cols-3">
         {[
           {
-            icon: UserCircle,
-            title: "Personalize Intelligence",
-            description: "We adapt our math models to your age, income, and risk profile.",
+            icon: BriefcaseBusiness,
+            title: "Founder-first profile",
+            description: "Capture the core context behind runway, entity structure, and how aggressive your plan should be.",
           },
           {
             icon: ShieldCheck,
-            title: "Secure Data Surface",
-            description: "Connect your accounts via Plaid and SnapTrade with bank-grade encryption.",
+            title: "Secure source linking",
+            description: "Connect accounts next, or skip for now and add manual context from the dashboard.",
           },
           {
-            icon: Target,
-            title: "Identify Maneuvers",
-            description: "Our agent scans for tax-loss harvesting and rebalancing opportunities.",
+            icon: ScrollText,
+            title: "Explainability first",
+            description: "Your first session should show what the numbers mean, how fresh they are, and what to do next.",
           },
         ].map((item) => (
           <div
@@ -79,8 +78,16 @@ function OnboardingContent() {
           onClick={() => setShowWizard(true)}
           className="group relative inline-flex items-center gap-3 px-10 py-5 rounded-2xl font-bold text-xl transition-all duration-300 bg-white text-slate-950 hover:bg-emerald-400 hover:scale-105 shadow-2xl shadow-emerald-500/10"
         >
-          Start Personalization
+          Start Founder Setup
           <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+        </button>
+        <button
+          type="button"
+          onClick={continueToConnect}
+          className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-400 transition-colors hover:text-white"
+        >
+          Skip for now, connect accounts first
+          <Activity className="h-4 w-4" />
         </button>
         <div className="flex items-center gap-2 text-xs text-neutral-600 uppercase font-black tracking-widest">
           <ShieldCheck className="w-3 h-3" />
@@ -90,7 +97,8 @@ function OnboardingContent() {
 
       <MemoryWizard 
         isOpen={showWizard} 
-        onClose={handleWizardClose}
+        onClose={() => setShowWizard(false)}
+        onComplete={handleWizardComplete}
       />
     </main>
   );

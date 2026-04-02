@@ -117,7 +117,7 @@ export function DataSourceStatusStrip({ items, usingDemoData }: DataSourceStatus
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                Financial Data Surface
+                Financial Data Confidence
                 {usingDemoData && (
                   <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase tracking-tighter">
                     Synthetic Preview
@@ -127,7 +127,7 @@ export function DataSourceStatusStrip({ items, usingDemoData }: DataSourceStatus
               <p className="text-xs text-slate-500">
                 {connectedCount} of {items.length} pillars active · 
                 <span className="ml-1 text-emerald-600 dark:text-emerald-500 font-medium">
-                  {allLive ? "Encrypted & Live" : "Building context graph..."}
+                  {allLive ? "Safe to trust" : "Some inputs need attention"}
                 </span>
               </p>
             </div>
@@ -210,7 +210,7 @@ export function DataSourceStatusStrip({ items, usingDemoData }: DataSourceStatus
                     </div>
                     <div>
                       <p className="text-sm font-bold text-amber-900 dark:text-amber-200">Running in Synthetic Mode</p>
-                      <p className="text-xs text-amber-700 dark:text-amber-500/80">Connect your real-world institutions to move from preview data to autonomous management.</p>
+                      <p className="text-xs text-amber-700 dark:text-amber-500/80">Preview data is useful for orientation. Connect real sources before trusting runway, tax timing, or concentration signals.</p>
                     </div>
                     <Link 
                       href="/connect"
