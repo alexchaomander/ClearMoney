@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useRef, useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { motion, useScroll, useTransform, useSpring, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   ShieldCheck,
@@ -163,12 +163,6 @@ const PERSONAS = [
 // --- Main Page ---
 
 export default function LandingPage() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"]
-  });
-
   const [personaIndex, setPersonaIndex] = useState(0);
   const goNext = useCallback(() => setPersonaIndex((i) => (i + 1) % PERSONAS.length), []);
   const goPrev = useCallback(() => setPersonaIndex((i) => (i - 1 + PERSONAS.length) % PERSONAS.length), []);
@@ -191,7 +185,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#fafafa] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 selection:bg-emerald-500/30 overflow-x-hidden">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 selection:bg-emerald-500/30 overflow-x-hidden">
       {/* Background Pillars */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-grid opacity-20 dark:opacity-10" />
