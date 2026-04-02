@@ -150,6 +150,96 @@ function ProfileProgressCard({ memory }: { memory?: FinancialMemory }) {
   );
 }
 
+function FounderPriorityCard({
+  usingDemoData,
+  hasAccounts,
+  connectionStatusState,
+}: {
+  usingDemoData: boolean;
+  hasAccounts: boolean;
+  connectionStatusState: { tone: "live" | "partial" | "warning" | "missing" | "error"; value: string; detail: string };
+}) {
+  const state = (() => {
+    if (!hasAccounts) {
+      return {
+        eyebrow: "Next best move",
+        title: "Connect one source so your founder plan stops guessing.",
+        summary: "Right now the dashboard can preview the shape of your plan, but linked accounts are what tighten runway, liquidity, and tax pressure.",
+        primaryHref: "/connect",
+        primaryLabel: "Connect accounts",
+        secondaryHref: "/data-health",
+        secondaryLabel: "See what is missing",
+      };
+    }
+
+    if (connectionStatusState.tone === "error") {
+      return {
+        eyebrow: "Action required",
+        title: "A revoked connection is weakening your founder view.",
+        summary: "Re-authenticate the broken source before trusting new recommendations or historical drift signals.",
+        primaryHref: "/connect",
+        primaryLabel: "Repair connection",
+        secondaryHref: "/data-health",
+        secondaryLabel: "Open data health",
+      };
+    }
+
+    if (connectionStatusState.tone === "partial" || connectionStatusState.tone === "warning") {
+      return {
+        eyebrow: "Trust signal",
+        title: "Your dashboard is useful, but part of the picture is aging.",
+        summary: "ClearMoney can still help, but stale or degraded sources should be fixed before you act on fine-grained tax or allocation guidance.",
+        primaryHref: "/data-health",
+        primaryLabel: "Review freshness",
+        secondaryHref: "/connect",
+        secondaryLabel: "Manage links",
+      };
+    }
+
+    return {
+      eyebrow: "Founder baseline",
+      title: usingDemoData
+        ? "You are still looking at preview data."
+        : "Your founder data surface is live and ready for decisions.",
+      summary: usingDemoData
+        ? "Preview mode is fine for orientation, but connect real sources before you trust runway, tax timing, or concentration alerts."
+        : "Use the cards below to inspect your current pressure points, then open the trace behind any recommendation that matters.",
+      primaryHref: usingDemoData ? "/connect" : "/dashboard/recommendation-reviews",
+      primaryLabel: usingDemoData ? "Connect real sources" : "Review active guidance",
+      secondaryHref: "/data-health",
+      secondaryLabel: "Open data health",
+    };
+  })();
+
+  return (
+    <div className="rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/8 via-white to-white p-6 shadow-sm dark:from-emerald-500/10 dark:via-slate-900 dark:to-slate-900 dark:border-emerald-900/50">
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">
+        {state.eyebrow}
+      </p>
+      <h2 className="mt-3 font-serif text-2xl text-slate-900 dark:text-white">
+        {state.title}
+      </h2>
+      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+        {state.summary}
+      </p>
+      <div className="mt-5 flex flex-wrap gap-3">
+        <Link
+          href={state.primaryHref}
+          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-emerald-600 dark:bg-white dark:text-slate-950 dark:hover:bg-emerald-400"
+        >
+          {state.primaryLabel}
+        </Link>
+        <Link
+          href={state.secondaryHref}
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:text-slate-200 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
+        >
+          {state.secondaryLabel}
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -384,16 +474,16 @@ export default function DashboardPage() {
     if (!connections?.length) return { tone: "warning" as const, value: "No active links", detail: "No live connector metadata yet." };
     
     if (connections.some(c => c.continuity_status === "revoked")) {
-      return { tone: "error" as const, value: "Action Required", detail: "A connection was revoked. Re-authenticate to restore service." };
+      return { tone: "error" as const, value: "Action Required", detail: "A source was revoked. Runway and tax guidance may now miss recent activity." };
     }
     if (connections.some(c => c.continuity_status === "degraded")) {
-      return { tone: "partial" as const, value: "Degraded", detail: "Some data sources are experiencing issues." };
+      return { tone: "partial" as const, value: "Degraded", detail: "A source is partially failing. Use caution before trusting precise recommendations." };
     }
     if (connections.some(c => c.continuity_status === "stale")) {
-      return { tone: "warning" as const, value: "Stale Data", detail: "Some data sources haven't synced recently." };
+      return { tone: "warning" as const, value: "Stale Data", detail: "Some balances are aging. Freshness may be too weak for founder-critical decisions." };
     }
     
-    return { tone: "live" as const, value: `${connections.length} active`, detail: "Connector metadata is healthy and synced." };
+    return { tone: "live" as const, value: `${connections.length} active`, detail: "Your live sources are fresh enough to drive founder-level guidance." };
   }, [connections]);
 
   const sourceItems = useMemo<DataSourceStatusItem[]>(() => [
@@ -402,8 +492,8 @@ export default function DashboardPage() {
       title: "Portfolio summary",
       value: hasLivePortfolio ? "Live" : "Demo",
       detail: hasLivePortfolio
-        ? "Portfolio summary is connected from Strata."
-        : "Synthetic summary is active until connected.",
+        ? "Net worth and allocation cards are using live connected data."
+        : "Preview data is active. Connect real sources before trusting this summary.",
       tone: hasLivePortfolio ? "live" : "warning",
       href: "/dashboard/coverage",
       actionLabel: "Review coverage",
@@ -414,8 +504,8 @@ export default function DashboardPage() {
       title: "Accounts",
       value: `${accountCount} source${accountCount === 1 ? "" : "s"}`,
       detail: hasLiveAccounts
-        ? `${effectiveAllAccounts.investment_accounts.length} investment, ${effectiveAllAccounts.cash_accounts.length} cash, ${effectiveAllAccounts.debt_accounts.length} debt`
-        : "Demo account set is active while you connect live links.",
+        ? `${effectiveAllAccounts.investment_accounts.length} investment, ${effectiveAllAccounts.cash_accounts.length} cash, ${effectiveAllAccounts.debt_accounts.length} debt feeding your plan`
+        : "No live sources yet. Add one account to tighten runway and tax context.",
       tone: hasLiveAccounts ? "live" : "warning",
       href: "/connect",
       actionLabel: "Link accounts",
@@ -425,8 +515,8 @@ export default function DashboardPage() {
       title: "Holdings",
       value: `${holdingsCount} position${holdingsCount === 1 ? "" : "s"}`,
       detail: hasLiveHoldings
-        ? "Holdings stream is connected."
-        : "Holdings list uses realistic preview fixtures.",
+        ? "Exposure and concentration checks can use connected positions."
+        : "Holdings are still synthetic preview fixtures.",
       tone: hasLiveHoldings ? "live" : "warning",
     },
     {
@@ -435,8 +525,8 @@ export default function DashboardPage() {
       value: connectionStatusState.value,
       detail: connectionStatusState.detail,
       tone: connectionStatusState.tone,
-      href: "/connect",
-      actionLabel: "Manage links",
+      href: "/data-health",
+      actionLabel: "Open health",
     },
   ], [
     accountCount,
@@ -523,6 +613,16 @@ export default function DashboardPage() {
 
         <DataSourceStatusStrip items={sourceItems} usingDemoData={usingDemoData} />
         
+        <div className="mb-8 grid gap-6 lg:grid-cols-[1.4fr_1fr_1fr]">
+          <FounderPriorityCard
+            usingDemoData={usingDemoData}
+            hasAccounts={hasAccounts}
+            connectionStatusState={connectionStatusState}
+          />
+          <AdvisorBriefing />
+          <ProfileProgressCard memory={memory} />
+        </div>
+
         <div className="mb-10">
           <AssumptionControl />
         </div>
@@ -558,9 +658,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            <PortfolioHistoryChart
-              previewHistory={usingDemoData ? (previewHistory as Partial<Record<PortfolioHistoryRange, PortfolioHistoryPoint[]>>) : undefined}
-            />
+            <TaxShieldCard />
 
             <ConsentGate
               scopes={["decision_traces:read"]}
@@ -568,6 +666,10 @@ export default function DashboardPage() {
             >
               <DecisionTracePanel />
             </ConsentGate>
+
+            <PortfolioHistoryChart
+              previewHistory={usingDemoData ? (previewHistory as Partial<Record<PortfolioHistoryRange, PortfolioHistoryPoint[]>>) : undefined}
+            />
 
             <ConcentrationAlert alerts={effectivePortfolio.concentration_alerts} />
 
@@ -579,9 +681,6 @@ export default function DashboardPage() {
 
           {/* Right column */}
           <div className="space-y-6">
-            <AdvisorBriefing />
-            <ProfileProgressCard memory={memory} />
-
             <AllocationChart
               allocations={effectivePortfolio.allocation_by_asset_type}
               title="Asset Allocation"
@@ -730,7 +829,6 @@ export default function DashboardPage() {
               onDeleteDebtAccount={(id) => debtMutations.remove.mutate(id)}
             />
 
-            <TaxShieldCard />
             <TaxDocumentsCard />
 
             <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">

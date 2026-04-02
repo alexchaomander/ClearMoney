@@ -44,17 +44,39 @@ const STEPS: Step[] = [
     max: 100
   },
   {
+    id: "entity",
+    question: "How is your company set up today?",
+    field: "entity_type",
+    type: "select",
+    icon: Home,
+    options: [
+      { value: "llc", label: "LLC" },
+      { value: "s_corp", label: "S-Corp" },
+      { value: "c_corp", label: "C-Corp" },
+      { value: "sole_prop", label: "Sole proprietorship" }
+    ]
+  },
+  {
     id: "income",
-    question: "What's your target annual household income?",
-    field: "annual_income",
+    question: "What's your current monthly household income?",
+    field: "monthly_income",
     type: "number",
     icon: DollarSign,
     prefix: "$",
-    step: 5000
+    step: 500
+  },
+  {
+    id: "expenses",
+    question: "What are your average monthly expenses?",
+    field: "average_monthly_expenses",
+    type: "number",
+    icon: Home,
+    prefix: "$",
+    step: 500
   },
   {
     id: "risk",
-    question: "What's your comfort level with investment risk?",
+    question: "How aggressively do you want ClearMoney to frame recommendations?",
     field: "risk_tolerance",
     type: "select",
     icon: Activity,
@@ -78,14 +100,16 @@ const STEPS: Step[] = [
 interface MemoryWizardProps {
   isOpen: boolean;
   onClose: () => void;
+  onComplete?: () => void;
   initialValues?: Partial<FinancialMemory>;
 }
 
-export function MemoryWizard({ isOpen, onClose, initialValues }: MemoryWizardProps) {
+export function MemoryWizard({ isOpen, onClose, onComplete, initialValues }: MemoryWizardProps) {
   const { data: memory } = useFinancialMemory();
   const updateMemory = useUpdateMemory();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [values, setValues] = useState<Partial<FinancialMemory>>(initialValues || {});
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Update values if initialValues change
   React.useEffect(() => {
@@ -97,11 +121,15 @@ export function MemoryWizard({ isOpen, onClose, initialValues }: MemoryWizardPro
   const currentStep = STEPS[currentStepIndex];
   const isLastStep = currentStepIndex === STEPS.length - 1;
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    setSubmitError(null);
     if (isLastStep) {
-      // Final save
-      updateMemory.mutate(values as FinancialMemoryUpdate);
-      onClose();
+      try {
+        await updateMemory.mutateAsync(values as FinancialMemoryUpdate);
+        onComplete?.();
+      } catch {
+        setSubmitError("We couldn’t save your founder profile yet. Please retry.");
+      }
     } else {
       setCurrentStepIndex(prev => prev + 1);
     }
@@ -219,6 +247,10 @@ export function MemoryWizard({ isOpen, onClose, initialValues }: MemoryWizardPro
               </motion.div>
             </AnimatePresence>
 
+            {submitError && (
+              <p className="mt-4 text-sm text-rose-400">{submitError}</p>
+            )}
+
             <div className="mt-12 flex items-center justify-between">
               <button
                 onClick={handleBack}
@@ -231,9 +263,10 @@ export function MemoryWizard({ isOpen, onClose, initialValues }: MemoryWizardPro
 
               <button
                 onClick={handleNext}
-                className="flex items-center gap-2 px-8 py-3 rounded-xl bg-white text-slate-950 text-sm font-bold hover:bg-emerald-400 transition-all shadow-xl shadow-white/5"
+                disabled={updateMemory.isPending}
+                className="flex items-center gap-2 px-8 py-3 rounded-xl bg-white text-slate-950 text-sm font-bold hover:bg-emerald-400 transition-all shadow-xl shadow-white/5 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {isLastStep ? "Complete Profile" : "Continue"}
+                {updateMemory.isPending ? "Saving..." : isLastStep ? "Save And Continue" : "Continue"}
                 {!isLastStep && <ChevronRight className="w-4 h-4" />}
               </button>
             </div>
