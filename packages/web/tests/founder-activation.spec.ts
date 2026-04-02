@@ -36,4 +36,17 @@ test.describe("founder activation surfaces", () => {
     await expect(page.getByRole("link", { name: /try again/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /go to dashboard/i })).toBeVisible();
   });
+
+  test("dashboard makes preview penalties and upgrade path explicit", async ({ page }) => {
+    await page.addInitScript(() => {
+      window.sessionStorage.setItem("cm_founder_funnel_source", "hero_founder_beta");
+    });
+
+    await page.goto("/dashboard?demo=true");
+
+    await expect(page.getByTestId("founder-priority-card")).toContainText(/preview mode/i);
+    await expect(page.getByText(/still estimated from synthetic or manual context/i)).toBeVisible();
+    await expect(page.getByRole("link", { name: /connect real sources/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /add manual context now/i })).toBeVisible();
+  });
 });
