@@ -6,7 +6,12 @@ import { ArrowRight, Sparkles, BriefcaseBusiness, ShieldCheck, ScrollText, Activ
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { MemoryWizard } from "@/components/dashboard/MemoryWizard";
 import { markOnboardingComplete } from "@/lib/onboarding";
-import { captureAnalyticsEvent, rememberFounderFunnelSource } from "@/lib/analytics";
+import {
+  captureAnalyticsEvent,
+  normalizeFounderFunnelSource,
+  readFounderFunnelSource,
+  rememberFounderFunnelSource,
+} from "@/lib/analytics";
 
 function OnboardingContent() {
   const router = useRouter();
@@ -15,29 +20,29 @@ function OnboardingContent() {
   
   const role = searchParams.get("role") || "Member";
   const source = searchParams.get("source") || "Direct";
+  const analyticsSource = readFounderFunnelSource() ?? normalizeFounderFunnelSource(source);
 
   useEffect(() => {
-    rememberFounderFunnelSource(source);
+    rememberFounderFunnelSource(analyticsSource);
     captureAnalyticsEvent("founder_onboarding_viewed", {
       role,
-      source,
+      source: analyticsSource,
     });
-  }, [role, source]);
+  }, [analyticsSource, role]);
 
   const continueToConnect = () => {
     markOnboardingComplete();
-    rememberFounderFunnelSource("founder_onboarding");
     captureAnalyticsEvent("founder_onboarding_skipped_to_connect", {
-      source,
+      source: analyticsSource,
     });
-    router.push("/connect?source=founder-onboarding");
+    router.push(`/connect?source=${encodeURIComponent(analyticsSource)}`);
   };
 
   const handleWizardComplete = () => {
     setShowWizard(false);
     captureAnalyticsEvent("founder_onboarding_completed", {
       role,
-      source,
+      source: analyticsSource,
     });
     continueToConnect();
   };
@@ -94,7 +99,8 @@ function OnboardingContent() {
           type="button"
           onClick={() => {
             captureAnalyticsEvent("founder_onboarding_wizard_started", {
-              source,
+              role,
+              source: analyticsSource,
             });
             setShowWizard(true);
           }}

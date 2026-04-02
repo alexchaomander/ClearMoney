@@ -21,12 +21,22 @@ export function captureAnalyticsEvent(
   posthog.capture(event, properties);
 }
 
+export function normalizeFounderFunnelSource(source: string | null | undefined): string {
+  const normalized = (source ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  return normalized || "unknown";
+}
+
 export function rememberFounderFunnelSource(source: string) {
   if (typeof window === "undefined") {
     return;
   }
 
-  window.sessionStorage.setItem(FOUNDER_FUNNEL_SOURCE_KEY, source);
+  window.sessionStorage.setItem(FOUNDER_FUNNEL_SOURCE_KEY, normalizeFounderFunnelSource(source));
 }
 
 export function readFounderFunnelSource(): string | null {

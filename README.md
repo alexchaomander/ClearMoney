@@ -173,6 +173,8 @@ GitHub Actions runs on every push and PR:
 *   [Implementation Plan](./IMPLEMENTATION_PLAN.md) — Engineering execution plan with task breakdowns
 *   [Brand Guide](./BRANDING.md) — Voice, visual identity, messaging framework
 *   [Design System](./DESIGN_IMPLEMENTATION.md) — Strata UI/UX patterns and components
+*   [Founder Coverage](./docs/vision/founder-coverage.md) — Founder-specific product and policy baseline
+*   [Founder Funnel Analytics](./docs/vision/FOUNDER_FUNNEL_ANALYTICS.md) — Founder acquisition and activation operating guide
 *   [API Reference](./packages/strata-api/README.md) — Endpoints, models, environment variables
 *   [Action Layer Vision](./docs/vision/the-action-layer.md)
 *   [Action Layer Technical Spec](./docs/platform/strata-action-layer-spec.md)

@@ -24,7 +24,12 @@ import {
 import { useToast } from "@/components/shared/toast";
 import { ConsentGate } from "@/components/shared/ConsentGate";
 import { isOnboardingComplete } from "@/lib/onboarding";
-import { captureAnalyticsEvent, rememberFounderFunnelSource } from "@/lib/analytics";
+import {
+  captureAnalyticsEvent,
+  normalizeFounderFunnelSource,
+  readFounderFunnelSource,
+  rememberFounderFunnelSource,
+} from "@/lib/analytics";
 
 export default function ConnectPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,7 +51,9 @@ export default function ConnectPage() {
   }, [searchQuery]);
 
   const onboardingComplete = useMemo(() => isOnboardingComplete(), []);
-  const source = searchParams.get("source") || "direct";
+  const source = normalizeFounderFunnelSource(
+    searchParams.get("source") ?? readFounderFunnelSource() ?? "direct"
+  );
 
   useEffect(() => {
     if (!onboardingComplete) {
@@ -365,7 +372,6 @@ export default function ConnectPage() {
                 <Link
                   href="/dashboard"
                   onClick={() => {
-                    rememberFounderFunnelSource("connect_continue_dashboard");
                     captureAnalyticsEvent("founder_connect_continue_clicked", {
                       source,
                       connected_accounts: totalConnected,
