@@ -15,10 +15,14 @@ function OnboardingContent() {
   const role = searchParams.get("role") || "Member";
   const source = searchParams.get("source") || "Direct";
 
-  const handleWizardComplete = () => {
-    setShowWizard(false);
+  const continueToConnect = () => {
     markOnboardingComplete();
     router.push("/connect?source=founder-onboarding");
+  };
+
+  const handleWizardComplete = () => {
+    setShowWizard(false);
+    continueToConnect();
   };
 
   return (
@@ -79,7 +83,7 @@ function OnboardingContent() {
         </button>
         <button
           type="button"
-          onClick={() => router.push("/connect?source=founder-onboarding")}
+          onClick={continueToConnect}
           className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-400 transition-colors hover:text-white"
         >
           Skip for now, connect accounts first

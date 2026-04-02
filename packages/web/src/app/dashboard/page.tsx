@@ -100,18 +100,27 @@ function ProfileProgressCard({ memory }: { memory?: FinancialMemory }) {
   const completeness = useMemo(() => {
     if (!memory) return 0;
     const fields = [
-      'age', 'annual_income', 'risk_tolerance', 'retirement_age',
+      'age', 'risk_tolerance', 'retirement_age',
       'employer_name', 'employer_industry', 'life_insurance_benefit',
       'disability_insurance_benefit', 'umbrella_policy_limit',
       'has_will', 'has_trust', 'has_poa', 'entity_type'
     ];
-    const completed = fields.filter((f) => (memory as any)[f] != null).length;
-    return Math.round((completed / fields.length) * 100);
+    const completedBaseFields = fields.filter((f) => (memory as any)[f] != null).length;
+    const completedIncomeField = memory.annual_income != null || memory.monthly_income != null ? 1 : 0;
+    const completedExpenseField = memory.average_monthly_expenses != null ? 1 : 0;
+    const totalFields = fields.length + 2;
+    return Math.round(((completedBaseFields + completedIncomeField + completedExpenseField) / totalFields) * 100);
   }, [memory]);
 
   if (completeness === 100) return null;
 
   const incompleteFields = [
+    {
+      id: 'profile-founder-baseline',
+      label: 'Founder baseline',
+      done: memory?.entity_type != null && (memory?.annual_income != null || memory?.monthly_income != null) && memory?.average_monthly_expenses != null,
+      icon: Briefcase,
+    },
     { id: 'profile-employment', label: 'Employment', done: memory?.employer_name != null, icon: Briefcase },
     { id: 'profile-insurance', label: 'Insurance', done: memory?.life_insurance_benefit != null, icon: Shield },
     { id: 'profile-estate', label: 'Estate & Legal', done: memory?.has_will != null, icon: Gavel },

@@ -54,15 +54,15 @@ We are not trying to finish the whole product. We are making the existing produc
 
 | Area | Existing code / flow | Reuse strategy |
 |------|----------------------|----------------|
-| Homepage | [`packages/web/src/app/page.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/app/page.tsx) | Narrow messaging and CTA order, do not replace page architecture |
-| Invite gate | [`packages/web/middleware.ts`](/Users/alexchao/projects/clearmoney/packages/web/middleware.ts), [`packages/web/src/app/invite/page.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/app/invite/page.tsx) | Tighten production safety and copy, keep route structure |
-| Onboarding shell | [`packages/web/src/app/onboarding/page.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/app/onboarding/page.tsx), [`packages/web/src/components/dashboard/MemoryWizard.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/components/dashboard/MemoryWizard.tsx) | Refocus steps on founder activation, avoid new onboarding subsystem |
-| Connect flow | [`packages/web/src/app/connect/page.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/app/connect/page.tsx) | Keep page and data hooks, improve sequencing and fallback messaging |
-| Dashboard | [`packages/web/src/app/dashboard/page.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/app/dashboard/page.tsx) | Reorder existing blocks around first-value loop |
-| Data freshness | [`packages/web/src/components/dashboard/DataSourceStatusStrip.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/components/dashboard/DataSourceStatusStrip.tsx), [`packages/web/src/app/data-health/page.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/app/data-health/page.tsx) | Reuse continuity model, improve founder-facing wording |
-| Explainability | [`packages/web/src/components/dashboard/DecisionTracePanel.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/components/dashboard/DecisionTracePanel.tsx), `/api/v1/agent/*` in [`packages/strata-api/app/main.py`](/Users/alexchao/projects/clearmoney/packages/strata-api/app/main.py) | Keep trace infrastructure, surface it in activation path |
-| Public tools | [`packages/web/src/app/tools/founder-runway/page.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/app/tools/founder-runway/page.tsx), [`packages/web/src/app/tools/tax-shield-audit/page.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/app/tools/tax-shield-audit/page.tsx) | Use as top-of-funnel, no parallel marketing microsite |
-| API app | [`packages/strata-api/app/main.py`](/Users/alexchao/projects/clearmoney/packages/strata-api/app/main.py) | Keep monolith + brokerage split as-is |
+| Homepage | [`packages/web/src/app/page.tsx`](../../packages/web/src/app/page.tsx) | Narrow messaging and CTA order, do not replace page architecture |
+| Invite gate | [`packages/web/middleware.ts`](../../packages/web/middleware.ts), [`packages/web/src/app/invite/page.tsx`](../../packages/web/src/app/invite/page.tsx) | Tighten production safety and copy, keep route structure |
+| Onboarding shell | [`packages/web/src/app/onboarding/page.tsx`](../../packages/web/src/app/onboarding/page.tsx), [`packages/web/src/components/dashboard/MemoryWizard.tsx`](../../packages/web/src/components/dashboard/MemoryWizard.tsx) | Refocus steps on founder activation, avoid new onboarding subsystem |
+| Connect flow | [`packages/web/src/app/connect/page.tsx`](../../packages/web/src/app/connect/page.tsx) | Keep page and data hooks, improve sequencing and fallback messaging |
+| Dashboard | [`packages/web/src/app/dashboard/page.tsx`](../../packages/web/src/app/dashboard/page.tsx) | Reorder existing blocks around first-value loop |
+| Data freshness | [`packages/web/src/components/dashboard/DataSourceStatusStrip.tsx`](../../packages/web/src/components/dashboard/DataSourceStatusStrip.tsx), [`packages/web/src/app/data-health/page.tsx`](../../packages/web/src/app/data-health/page.tsx) | Reuse continuity model, improve founder-facing wording |
+| Explainability | [`packages/web/src/components/dashboard/DecisionTracePanel.tsx`](../../packages/web/src/components/dashboard/DecisionTracePanel.tsx), `/api/v1/agent/*` in [`packages/strata-api/app/main.py`](../../packages/strata-api/app/main.py) | Keep trace infrastructure, surface it in activation path |
+| Public tools | [`packages/web/src/app/tools/founder-runway/page.tsx`](../../packages/web/src/app/tools/founder-runway/page.tsx), [`packages/web/src/app/tools/tax-shield-audit/page.tsx`](../../packages/web/src/app/tools/tax-shield-audit/page.tsx) | Use as top-of-funnel, no parallel marketing microsite |
+| API app | [`packages/strata-api/app/main.py`](../../packages/strata-api/app/main.py) | Keep monolith + brokerage split as-is |
 
 ### Avoid rebuilding
 
@@ -170,12 +170,12 @@ The plan adds no new publish pipeline. Good. Boring by default.
 
 Inline ASCII diagrams should be added or refreshed in:
 
-- [`packages/web/src/app/onboarding/page.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/app/onboarding/page.tsx)
-- [`packages/web/src/app/connect/page.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/app/connect/page.tsx)
-- [`packages/web/src/app/dashboard/page.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/app/dashboard/page.tsx)
-- [`packages/web/src/components/dashboard/MemoryWizard.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/components/dashboard/MemoryWizard.tsx)
-- [`packages/web/src/components/dashboard/DataSourceStatusStrip.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/components/dashboard/DataSourceStatusStrip.tsx)
-- [`packages/web/src/components/dashboard/DecisionTracePanel.tsx`](/Users/alexchao/projects/clearmoney/packages/web/src/components/dashboard/DecisionTracePanel.tsx)
+- [`packages/web/src/app/onboarding/page.tsx`](../../packages/web/src/app/onboarding/page.tsx)
+- [`packages/web/src/app/connect/page.tsx`](../../packages/web/src/app/connect/page.tsx)
+- [`packages/web/src/app/dashboard/page.tsx`](../../packages/web/src/app/dashboard/page.tsx)
+- [`packages/web/src/components/dashboard/MemoryWizard.tsx`](../../packages/web/src/components/dashboard/MemoryWizard.tsx)
+- [`packages/web/src/components/dashboard/DataSourceStatusStrip.tsx`](../../packages/web/src/components/dashboard/DataSourceStatusStrip.tsx)
+- [`packages/web/src/components/dashboard/DecisionTracePanel.tsx`](../../packages/web/src/components/dashboard/DecisionTracePanel.tsx)
 
 Recommended inline comments:
 
