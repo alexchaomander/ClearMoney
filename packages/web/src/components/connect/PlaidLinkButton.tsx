@@ -6,13 +6,15 @@ import { Building2 } from "lucide-react";
 import { usePlaidLink, PlaidLinkOnSuccess } from "react-plaid-link";
 import { useCreatePlaidLinkToken, useHandlePlaidCallback } from "@/lib/strata/hooks";
 import { useRouter } from "next/navigation";
+import { captureAnalyticsEvent } from "@/lib/analytics";
 
 interface PlaidLinkButtonProps {
+  source: string;
   onSuccess?: () => void;
   onError?: (error: string) => void;
 }
 
-export function PlaidLinkButton({ onSuccess, onError }: PlaidLinkButtonProps) {
+export function PlaidLinkButton({ source, onSuccess, onError }: PlaidLinkButtonProps) {
   const router = useRouter();
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -31,8 +33,15 @@ export function PlaidLinkButton({ onSuccess, onError }: PlaidLinkButtonProps) {
         redirect_uri: typeof window !== "undefined" ? window.location.origin : undefined,
       })
       .then((response) => setLinkToken(response.link_token))
-      .catch(() => onError?.("Failed to initialize Plaid Link"));
-  }, [createLinkToken, onError]);
+      .catch(() => {
+        captureAnalyticsEvent("founder_connect_setup_failed", {
+          source,
+          connection_method: "bank_plaid",
+          reason: "plaid_link_token_init_failed",
+        });
+        onError?.("Failed to initialize Plaid Link");
+      });
+  }, [createLinkToken, onError, source]);
 
   const handlePlaidSuccess: PlaidLinkOnSuccess = useCallback(
     async (publicToken, metadata) => {
@@ -43,26 +52,52 @@ export function PlaidLinkButton({ onSuccess, onError }: PlaidLinkButtonProps) {
           institution_id: metadata.institution?.institution_id ?? undefined,
           institution_name: metadata.institution?.name ?? undefined,
         });
+        captureAnalyticsEvent("founder_connect_succeeded", {
+          source,
+          connection_method: "bank_plaid",
+          institution_id: metadata.institution?.institution_id ?? "unknown",
+          institution_name: metadata.institution?.name ?? "Unknown institution",
+        });
         onSuccess?.();
         router.push("/dashboard");
       } catch (err) {
+        captureAnalyticsEvent("founder_connect_failed", {
+          source,
+          connection_method: "bank_plaid",
+          institution_id: metadata.institution?.institution_id ?? "unknown",
+          institution_name: metadata.institution?.name ?? "Unknown institution",
+          reason: err instanceof Error ? err.message : "plaid_callback_failed",
+        });
         onError?.(err instanceof Error ? err.message : "Failed to connect account");
         setIsConnecting(false);
       }
     },
-    [handleCallback, onSuccess, onError, router]
+    [handleCallback, onSuccess, onError, router, source]
   );
 
   const { open, ready } = usePlaidLink({
     token: linkToken,
     onSuccess: handlePlaidSuccess,
-    onExit: () => {
+    onExit: (err, metadata) => {
+      captureAnalyticsEvent("founder_connect_exited", {
+        source,
+        connection_method: "bank_plaid",
+        institution_id: metadata.institution?.institution_id ?? "unknown",
+        institution_name: metadata.institution?.name ?? "Unknown institution",
+        exit_status: metadata.status ?? "unknown",
+        had_error: Boolean(err),
+      });
       setIsConnecting(false);
     },
   });
 
   const handleClick = () => {
     if (ready && linkToken) {
+      captureAnalyticsEvent("founder_connect_started", {
+        source,
+        connection_method: "bank_plaid",
+        institution_id: "plaid_link",
+      });
       open();
     }
   };

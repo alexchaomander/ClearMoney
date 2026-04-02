@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { useHandleConnectionCallback } from "@/lib/strata/hooks";
+import { captureAnalyticsEvent, readFounderFunnelSource } from "@/lib/analytics";
 
 type CallbackStatus = "loading" | "success" | "error";
 
@@ -14,6 +15,7 @@ export default function ConnectCallbackPage() {
   const router = useRouter();
   const [status, setStatus] = useState<CallbackStatus>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const redirectTimeoutRef = useRef<number | null>(null);
 
   const callbackMutation = useHandleConnectionCallback();
 
@@ -25,23 +27,43 @@ export default function ConnectCallbackPage() {
       const errorDescription = searchParams.get("error_description");
 
       if (error) {
+        captureAnalyticsEvent("founder_connect_failed", {
+          source: readFounderFunnelSource() ?? "unknown",
+          connection_method: "brokerage_oauth",
+          reason: errorDescription ?? error,
+        });
         setStatus("error");
         setErrorMessage(errorDescription ?? error);
         return;
       }
 
+      if (!code || !state) {
+        setStatus("error");
+        setErrorMessage("Missing connection callback details. Please try again.");
+        return;
+      }
+
       try {
         await callbackMutation.mutateAsync({
-          code: code ?? undefined,
-          state: state ?? undefined,
+          code,
+          state,
         });
 
+        captureAnalyticsEvent("founder_connect_succeeded", {
+          source: readFounderFunnelSource() ?? "unknown",
+          connection_method: "brokerage_oauth",
+        });
         setStatus("success");
 
-        setTimeout(() => {
+        redirectTimeoutRef.current = window.setTimeout(() => {
           router.push("/dashboard");
         }, 2000);
       } catch (err) {
+        captureAnalyticsEvent("founder_connect_failed", {
+          source: readFounderFunnelSource() ?? "unknown",
+          connection_method: "brokerage_oauth",
+          reason: err instanceof Error ? err.message : "callback_failed",
+        });
         setStatus("error");
         setErrorMessage(
           err instanceof Error ? err.message : "Failed to complete connection"
@@ -50,6 +72,12 @@ export default function ConnectCallbackPage() {
     };
 
     handleCallback();
+
+    return () => {
+      if (redirectTimeoutRef.current !== null) {
+        window.clearTimeout(redirectTimeoutRef.current);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, router]);
 
@@ -148,6 +176,16 @@ export default function ConnectCallbackPage() {
               </Link>
               <Link
                 href="/dashboard"
+                onClick={() => {
+                  if (redirectTimeoutRef.current !== null) {
+                    window.clearTimeout(redirectTimeoutRef.current);
+                  }
+                  captureAnalyticsEvent("founder_connect_continue_clicked", {
+                    source: readFounderFunnelSource() ?? "unknown",
+                    connected_accounts: 0,
+                    path: "callback_error_manual_fallback",
+                  });
+                }}
                 className="w-full py-3 rounded-lg font-medium transition-all duration-200 border border-neutral-700 text-neutral-300 hover:bg-neutral-800"
               >
                 Go to Dashboard
