@@ -34,7 +34,7 @@ export function PlaidLinkButton({ source, onSuccess, onError }: PlaidLinkButtonP
       })
       .then((response) => setLinkToken(response.link_token))
       .catch(() => {
-        captureAnalyticsEvent("founder_connect_failed", {
+        captureAnalyticsEvent("founder_connect_setup_failed", {
           source,
           connection_method: "bank_plaid",
           reason: "plaid_link_token_init_failed",

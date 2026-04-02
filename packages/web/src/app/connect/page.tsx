@@ -30,6 +30,7 @@ import {
   readFounderFunnelSource,
   rememberFounderFunnelSource,
 } from "@/lib/analytics";
+import { classifyFounderConnectContinuePath } from "@/lib/founder-activation";
 
 export default function ConnectPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -95,6 +96,10 @@ export default function ConnectPage() {
   const taxAdvantagedValue = connectedAccounts
     .filter((acc) => acc.is_tax_advantaged)
     .reduce((sum, acc) => sum + acc.balance, 0);
+  const continuePath = classifyFounderConnectContinuePath(
+    accountsLoading,
+    totalConnected
+  );
 
   const institutions = isSearching ? (searchResults ?? []) : (popularInstitutions ?? []);
   const isLoadingInstitutions = isSearching ? searchLoading : popularLoading;
@@ -405,16 +410,30 @@ export default function ConnectPage() {
 
                 <Link
                   href="/dashboard"
-                  onClick={() => {
+                  onClick={(event) => {
+                    if (!continuePath) {
+                      event.preventDefault();
+                      return;
+                    }
+
                     captureAnalyticsEvent("founder_connect_continue_clicked", {
                       source,
                       connected_accounts: totalConnected,
-                      path: totalConnected > 0 ? "linked_accounts" : "manual_fallback",
+                      path: continuePath,
                     });
                   }}
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium transition-all duration-200 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+                  aria-disabled={!continuePath}
+                  className={`flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium transition-all duration-200 ${
+                    continuePath
+                      ? "bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+                      : "cursor-wait bg-neutral-800 text-neutral-400"
+                  }`}
                 >
-                  {totalConnected > 0 ? "Continue with linked accounts" : "Continue without links"}
+                  {!continuePath
+                    ? "Loading account state..."
+                    : totalConnected > 0
+                      ? "Continue with linked accounts"
+                      : "Continue without links"}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
 

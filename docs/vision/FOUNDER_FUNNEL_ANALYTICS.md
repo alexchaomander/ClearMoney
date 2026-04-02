@@ -29,6 +29,7 @@ These events are the current founder-funnel backbone in the web app:
 | Skip to connect | `founder_onboarding_skipped_to_connect` | Founder bypasses the wizard | `source` |
 | Connect view | `founder_connect_viewed` | Connect page load | `source`, `onboarding_complete` |
 | Connect start | `founder_connect_started` | Founder starts a link session | `institution_id`, `source`, `connection_method` |
+| Connect setup failure | `founder_connect_setup_failed` | Link flow cannot initialize before a session starts | `source`, `connection_method`, `reason` |
 | Connect success | `founder_connect_succeeded` | Link or callback completes successfully | `source`, `connection_method` |
 | Connect failure | `founder_connect_failed` | Link or callback fails | `source`, `connection_method`, `reason` |
 | Connect exit | `founder_connect_exited` | Founder exits Plaid before completion | `source`, `connection_method`, `exit_status` |
@@ -152,6 +153,7 @@ ORDER BY dashboard_arrivals DESC, cta_clicks DESC
 - Founder source is persisted client-side via `rememberFounderFunnelSource(...)` in [`analytics.ts`](../../packages/web/src/lib/analytics.ts).
 - Source values are canonical acquisition-path labels like `nav_founder_beta` or `hero_founder_beta`; later pages reuse that source instead of overwriting it with step names.
 - Connect diagnostics distinguish `bank_plaid` from `brokerage_oauth`, so trust friction and provider friction can be reviewed separately.
+- `founder_connect_setup_failed` is intentionally outside the canonical connect success/failure rate because it measures bootstrap reliability before a founder has actually started linking.
 - Dashboard arrival is intentionally fired once per session after founder memory and decision-trace queries have resolved, so the quality flags are not default-false noise.
 - Analytics stay consent-gated through the existing PostHog consent provider.
 

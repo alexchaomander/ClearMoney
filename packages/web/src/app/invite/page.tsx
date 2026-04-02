@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, ArrowRight, AlertTriangle, BriefcaseBusiness, FlaskConical, Clock3, Lock, Sparkles } from "lucide-react";
 import {
@@ -8,6 +8,7 @@ import {
   readFounderFunnelSource,
   rememberFounderFunnelSource,
 } from "@/lib/analytics";
+import { shouldTrackInviteCodeStarted } from "@/lib/founder-activation";
 
 const isProduction = process.env.NODE_ENV === "production";
 const configuredCodes = (process.env.NEXT_PUBLIC_BETA_CODES ?? "")
@@ -24,6 +25,7 @@ export default function InvitePage() {
   const router = useRouter();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const hasTrackedInviteCodeStartedRef = useRef(false);
   const inviteConfigured = VALID_CODES.length > 0;
   const source = readFounderFunnelSource() ?? "invite_direct";
   const devCode = useMemo(
@@ -131,7 +133,14 @@ export default function InvitePage() {
             onChange={(e) => {
               setCode(e.target.value);
               setError("");
-              if (e.target.value.length === 1) {
+
+              if (
+                shouldTrackInviteCodeStarted(
+                  e.target.value,
+                  hasTrackedInviteCodeStartedRef.current
+                )
+              ) {
+                hasTrackedInviteCodeStartedRef.current = true;
                 captureAnalyticsEvent("founder_invite_code_started", {
                   source,
                 });

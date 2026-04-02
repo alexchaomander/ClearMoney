@@ -88,6 +88,19 @@ Settings:
 
 Use this to see whether friction is a trust problem, a provider problem, or a callback problem.
 
+### 5b. Connect Setup Reliability
+
+Type: Trends
+
+Series:
+- Event: `founder_connect_setup_failed`
+
+Settings:
+- Breakdown property: `connection_method`
+- Interval: day
+
+Use this separately from connect success/failure. It captures bootstrap issues, like Plaid token initialization, before a founder actually starts linking.
+
 ### 6. Dashboard Arrival Quality
 
 Type: Trends
@@ -162,6 +175,7 @@ Meeting output:
 
 The codebase now emits extra connect diagnostics in addition to the canonical funnel:
 
+- `founder_connect_setup_failed`
 - `founder_connect_succeeded`
 - `founder_connect_failed`
 - `founder_connect_exited`

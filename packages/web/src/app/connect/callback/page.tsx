@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -15,6 +15,7 @@ export default function ConnectCallbackPage() {
   const router = useRouter();
   const [status, setStatus] = useState<CallbackStatus>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const redirectTimeoutRef = useRef<number | null>(null);
 
   const callbackMutation = useHandleConnectionCallback();
 
@@ -36,10 +37,16 @@ export default function ConnectCallbackPage() {
         return;
       }
 
+      if (!code || !state) {
+        setStatus("error");
+        setErrorMessage("Missing connection callback details. Please try again.");
+        return;
+      }
+
       try {
         await callbackMutation.mutateAsync({
-          code: code ?? undefined,
-          state: state ?? undefined,
+          code,
+          state,
         });
 
         captureAnalyticsEvent("founder_connect_succeeded", {
@@ -48,7 +55,7 @@ export default function ConnectCallbackPage() {
         });
         setStatus("success");
 
-        setTimeout(() => {
+        redirectTimeoutRef.current = window.setTimeout(() => {
           router.push("/dashboard");
         }, 2000);
       } catch (err) {
@@ -65,6 +72,12 @@ export default function ConnectCallbackPage() {
     };
 
     handleCallback();
+
+    return () => {
+      if (redirectTimeoutRef.current !== null) {
+        window.clearTimeout(redirectTimeoutRef.current);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, router]);
 
@@ -164,6 +177,9 @@ export default function ConnectCallbackPage() {
               <Link
                 href="/dashboard"
                 onClick={() => {
+                  if (redirectTimeoutRef.current !== null) {
+                    window.clearTimeout(redirectTimeoutRef.current);
+                  }
                   captureAnalyticsEvent("founder_connect_continue_clicked", {
                     source: readFounderFunnelSource() ?? "unknown",
                     connected_accounts: 0,
