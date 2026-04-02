@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("onboarding highlights next steps", async ({ page }) => {
-  await page.goto("/onboarding");
+  await page.goto("/onboarding?demo=true");
 
   await expect(
     page.getByRole("heading", { name: /founder financial baseline/i })

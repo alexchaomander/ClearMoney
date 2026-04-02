@@ -8,6 +8,11 @@ import { cn } from "@/lib/utils";
 import { categories, getLiveTools, getCategoryById } from "@/lib/site-config";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const hasClerkKey = Boolean(
+  clerkPublishableKey && clerkPublishableKey !== "pk_test_placeholder"
+);
+
 // Group tools by category for the dropdown
 function getToolsByCategory() {
   const liveTools = getLiveTools();
@@ -227,16 +232,20 @@ export function Header() {
               >
                 Explore Tools
               </Link>
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <button className="px-4 py-2 text-sm font-medium rounded-lg text-neutral-200 border border-neutral-700 hover:border-neutral-500 hover:text-white transition-colors">
-                    Sign in
-                  </button>
-                </SignInButton>
-              </SignedOut>
-              <SignedIn>
-                <UserButton />
-              </SignedIn>
+              {hasClerkKey ? (
+                <>
+                  <SignedOut>
+                    <SignInButton mode="modal">
+                      <button className="px-4 py-2 text-sm font-medium rounded-lg text-neutral-200 border border-neutral-700 hover:border-neutral-500 hover:text-white transition-colors">
+                        Sign in
+                      </button>
+                    </SignInButton>
+                  </SignedOut>
+                  <SignedIn>
+                    <UserButton />
+                  </SignedIn>
+                </>
+              ) : null}
               <Link
                 href="/dashboard"
                 className={cn(

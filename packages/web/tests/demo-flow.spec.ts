@@ -20,7 +20,7 @@ test.describe("demo mode flows", () => {
   test("connect page renders in demo mode", async ({ page }) => {
     await page.goto("/connect?demo=true");
     await expect(
-      page.getByRole("heading", { name: /connect your investment accounts/i })
+      page.getByRole("heading", { name: /connect the accounts behind your founder plan/i })
     ).toBeVisible();
     await expect(page.getByPlaceholder(/search for your brokerage/i)).toBeVisible();
   });

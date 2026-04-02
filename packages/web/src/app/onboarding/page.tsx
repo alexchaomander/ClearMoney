@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Sparkles, BriefcaseBusiness, ShieldCheck, ScrollText, Activity } from "lucide-react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { MemoryWizard } from "@/components/dashboard/MemoryWizard";
 import { markOnboardingComplete } from "@/lib/onboarding";
+import { captureAnalyticsEvent, rememberFounderFunnelSource } from "@/lib/analytics";
 
 function OnboardingContent() {
   const router = useRouter();
@@ -15,13 +16,29 @@ function OnboardingContent() {
   const role = searchParams.get("role") || "Member";
   const source = searchParams.get("source") || "Direct";
 
+  useEffect(() => {
+    rememberFounderFunnelSource(source);
+    captureAnalyticsEvent("founder_onboarding_viewed", {
+      role,
+      source,
+    });
+  }, [role, source]);
+
   const continueToConnect = () => {
     markOnboardingComplete();
+    rememberFounderFunnelSource("founder_onboarding");
+    captureAnalyticsEvent("founder_onboarding_skipped_to_connect", {
+      source,
+    });
     router.push("/connect?source=founder-onboarding");
   };
 
   const handleWizardComplete = () => {
     setShowWizard(false);
+    captureAnalyticsEvent("founder_onboarding_completed", {
+      role,
+      source,
+    });
     continueToConnect();
   };
 
@@ -75,7 +92,12 @@ function OnboardingContent() {
       <div className="mt-16 flex flex-col items-center gap-6">
         <button
           type="button"
-          onClick={() => setShowWizard(true)}
+          onClick={() => {
+            captureAnalyticsEvent("founder_onboarding_wizard_started", {
+              source,
+            });
+            setShowWizard(true);
+          }}
           className="group relative inline-flex items-center gap-3 px-10 py-5 rounded-2xl font-bold text-xl transition-all duration-300 bg-white text-slate-950 hover:bg-emerald-400 hover:scale-105 shadow-2xl shadow-emerald-500/10"
         >
           Start Founder Setup

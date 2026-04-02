@@ -21,7 +21,10 @@ import { CommandPalette } from "./CommandPalette";
 import { AnalyticsConsentProvider } from "@/components/shared/AnalyticsConsentBanner";
 import { PostHogProvider } from "@/components/shared/PostHogProvider";
 
-const hasClerkKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const hasClerkKey = Boolean(
+  clerkPublishableKey && clerkPublishableKey !== "pk_test_placeholder"
+);
 
 function ProvidersContent({ children }: { children: ReactNode }) {
   return (

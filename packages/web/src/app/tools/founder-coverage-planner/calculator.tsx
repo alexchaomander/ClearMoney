@@ -36,7 +36,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InputSection } from "./components/InputSection";
 import { useActionPlan } from "./useActionPlan";
 import { useDemoMode } from "@/lib/strata/demo-context";
-import { ShareModal, type RedactionSettings } from "@/components/shared/ShareModal";
 import { useToast } from "@/components/shared/toast";
 import {
   markFounderDemoStep,
@@ -239,26 +238,6 @@ const METHODOLOGY_ITEMS = [
   "All outputs are educational estimates and not tax or legal advice.",
 ];
 
-function redactFounderPayload(payload: Record<string, any>, settings: RedactionSettings): Record<string, any> {
-  const result = { ...payload };
-  if (settings.redactExactBalances) {
-    if (result.inputs) {
-      // Approximate annualNetIncome
-      if (result.inputs.annualNetIncome) {
-        const val = result.inputs.annualNetIncome;
-        result.inputs.annualNetIncome = `${Math.floor(val / 50000) * 50}k - ${Math.ceil(val / 50000) * 50}k`;
-      }
-    }
-    // Redact action item details that contain currency
-    if (result.actionItems) {
-      result.actionItems = result.actionItems.map((item: any) => ({
-        ...item,
-        detail: stripCurrencyLikeText(item.detail),
-      }));
-    }
-  }
-  return result;
-}
 
 export function Calculator(): ReactElement {
   const client = useStrataClient();
@@ -284,13 +263,17 @@ export function Calculator(): ReactElement {
   const { hasConsent: hasMemoryWrite } = useConsentStatus(["memory:read", "memory:write"]);
   const { hasConsent: hasAccountsRead } = useConsentStatus(["accounts:read"]);
   const { hasConsent: hasAccountsWrite } = useConsentStatus(["accounts:write"]);
+  const canReadMemory = isDemo || hasMemoryRead;
+  const canWriteMemory = isDemo || hasMemoryWrite;
+  const canReadAccounts = isDemo || hasAccountsRead;
+  const canWriteAccounts = isDemo || hasAccountsWrite;
 
-  const { data: memory, isSuccess: memoryLoaded } = useFinancialMemory({ enabled: hasMemoryRead });
+  const { data: memory, isSuccess: memoryLoaded } = useFinancialMemory({ enabled: canReadMemory });
   const updateMemory = useUpdateMemory();
   const { preset } = useToolPreset<CalculatorInputs>("founder-coverage-planner");
 
-  const { data: bankAccounts, isSuccess: bankLoaded } = useBankAccounts({ enabled: hasAccountsRead });
-  const { data: spendingSummary, isSuccess: spendingLoaded } = useSpendingSummary(3, { enabled: hasAccountsRead });
+  const { data: bankAccounts, isSuccess: bankLoaded } = useBankAccounts({ enabled: canReadAccounts });
+  const { data: spendingSummary, isSuccess: spendingLoaded } = useSpendingSummary(3, { enabled: canReadAccounts });
 
   const now = useMemo(() => new Date(), []);
   const last30 = useMemo(() => buildLastNDaysRange(now, 30), [now]);
@@ -298,12 +281,12 @@ export function Calculator(): ReactElement {
 
   const { data: bankTxPage } = useBankTransactions(
     { start_date: last30.start, end_date: last30.end, page: 1, page_size: 100 },
-    { enabled: hasAccountsRead }
+    { enabled: canReadAccounts }
   );
 
   const { data: bankTx90Page } = useBankTransactions(
     { start_date: last90.start, end_date: last90.end, page: 1, page_size: 250 },
-    { enabled: hasAccountsRead }
+    { enabled: canReadAccounts }
   );
 
   const prefill = useMemo(
@@ -488,7 +471,7 @@ export function Calculator(): ReactElement {
 
   const hasPrefillData = prefill.hasRealData && prefill.filledFields.length > 0;
   const prefillLoaded =
-    (!hasMemoryRead || memoryLoaded) && (!hasAccountsRead || bankLoaded);
+    (!canReadMemory || memoryLoaded) && (!canReadAccounts || bankLoaded);
 
   const prefillDescription = useMemo(() => {
     if (!hasPrefillData) {
@@ -612,7 +595,7 @@ export function Calculator(): ReactElement {
   }
 
   function toggleReimbursed(txId: string): void {
-    if (!hasAccountsWrite) return;
+    if (!canWriteAccounts) return;
     if (reimbursementSaving[txId]) return;
     const reimbursed = !!reimbursedTxById[txId];
     const memo = reimbursementMemos[txId] ?? reimbursedTxById[txId]?.memo ?? "";
@@ -624,7 +607,7 @@ export function Calculator(): ReactElement {
   }
 
   function commitReimbursementMemo(txId: string): void {
-    if (!hasAccountsWrite) return;
+    if (!canWriteAccounts) return;
     if (!reimbursedTxById[txId]) return;
     if (reimbursementSaving[txId]) return;
     const memo = reimbursementMemos[txId] ?? reimbursedTxById[txId]?.memo ?? "";
@@ -735,7 +718,7 @@ export function Calculator(): ReactElement {
   }
 
   function saveSnapshotToProfile(): void {
-    if (!hasMemoryWrite) return;
+    if (!canWriteMemory) return;
     const prevNotes = (memory?.notes && typeof memory.notes === "object") ? memory.notes : {};
     const snapshotId = crypto.randomUUID();
     const savedAt = new Date().toISOString();
@@ -966,37 +949,6 @@ export function Calculator(): ReactElement {
     };
   }
 
-  async function copyRedactedLink(): Promise<void> {
-    if (shareBusy) return;
-    setShareBusy(true);
-    try {
-      const payload = buildRedactedSharePayload(new Date().toISOString());
-
-      const created = await client.createShareReport({
-        tool_id: "founder-coverage-planner",
-        mode: "redacted",
-        payload: payload as unknown as Record<string, unknown>,
-        expires_in_days: 30,
-      });
-
-      const url = buildServerShareUrl(created.id, created.token);
-      if (url) {
-        await navigator.clipboard?.writeText(url);
-        pushToast({ title: "Redacted link copied", variant: "success" });
-      }
-    } catch (err) {
-      if (embeddedRedactedShareLink) {
-        await navigator.clipboard?.writeText(embeddedRedactedShareLink);
-        pushToast({ title: "Redacted link copied", variant: "success" });
-      } else {
-        void err;
-        pushToast({ title: "Could not copy redacted link", variant: "error" });
-      }
-    } finally {
-      setShareBusy(false);
-    }
-  }
-
   async function openRedactedReport(): Promise<void> {
     if (shareBusy) return;
     setShareBusy(true);
@@ -1161,7 +1113,7 @@ export function Calculator(): ReactElement {
                     <button
                       type="button"
                       onClick={saveSnapshotToProfile}
-                      disabled={!hasMemoryWrite}
+                      disabled={!canWriteMemory}
                       className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
                       data-testid="demo-save-snapshot"
                     >
@@ -1192,26 +1144,15 @@ export function Calculator(): ReactElement {
                     >
                       Open report
                     </Link>
-                    <ShareModal 
-                      toolId="founder-coverage-planner"
-                      payload={{
-                        version: 2,
-                        mode: "full",
-                        savedAt: new Date().toISOString(),
-                        inputs,
-                        checklist: completed,
-                      }}
-                      onRedact={redactFounderPayload}
-                      trigger={
-                        <button
-                          type="button"
-                          className="rounded-xl bg-emerald-300 px-3 py-2 text-xs font-semibold text-neutral-950 hover:bg-emerald-200 transition-all"
-                          data-testid="demo-open-redacted-report"
-                        >
-                          Redacted Share
-                        </button>
-                      }
-                    />
+                    <button
+                      type="button"
+                      onClick={() => void openRedactedReport()}
+                      className="rounded-xl bg-emerald-300 px-3 py-2 text-xs font-semibold text-neutral-950 hover:bg-emerald-200 transition-all"
+                      data-testid="demo-open-redacted-report"
+                      aria-label="Open redacted report"
+                    >
+                      Open redacted report
+                    </button>
                   </div>
 
                   {!isDemo && (
@@ -1717,7 +1658,7 @@ export function Calculator(): ReactElement {
                                   <button
                                     type="button"
                                     onClick={() => toggleReimbursed(t.id)}
-                                    disabled={!hasAccountsWrite || saving}
+                                    disabled={!canWriteAccounts || saving}
                                     className="mt-0.5 h-5 w-5 rounded border border-neutral-700 flex items-center justify-center disabled:opacity-50"
                                     aria-label="Toggle reimbursed"
                                   >
@@ -1748,12 +1689,12 @@ export function Calculator(): ReactElement {
                                           commitReimbursementMemo(t.id);
                                         }
                                       }}
-                                      disabled={!reimbursed || !hasAccountsWrite || saving}
+                                      disabled={!reimbursed || !canWriteAccounts || saving}
                                     />
                                     <button
                                       type="button"
                                       onClick={() => commitReimbursementMemo(t.id)}
-                                      disabled={!memoDirty || !hasAccountsWrite || saving}
+                                      disabled={!memoDirty || !canWriteAccounts || saving}
                                       className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-40 disabled:hover:border-neutral-800"
                                     >
                                       {saving ? "Saving…" : "Save"}
@@ -1764,7 +1705,7 @@ export function Calculator(): ReactElement {
                                       Reimbursed at: {new Date(t.reimbursedAt ?? "").toLocaleString()}
                                     </p>
                                   )}
-                                  {!hasAccountsWrite && (
+                                  {!canWriteAccounts && (
                                     <p className="mt-1 text-xs text-neutral-500">
                                       Grant `accounts:write` to update reimbursements.
                                     </p>

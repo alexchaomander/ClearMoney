@@ -174,6 +174,16 @@ function writeStoredShareTokens(tokens: StoredShareTokens): void {
   }
 }
 
+async function tryWriteClipboard(text: string): Promise<boolean> {
+  if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) return false;
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default function FounderCoveragePlannerReportPage(): ReactElement {
   const searchParams = useSearchParams();
   const demoQuery = useMemo(() => toDemoQuery(searchParams), [searchParams]);
@@ -194,7 +204,11 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
   );
 
   const { hasConsent: hasMemoryRead } = useConsentStatus(["memory:read"]);
-  const { data: memory, isSuccess: memoryLoaded } = useFinancialMemory({ enabled: hasMemoryRead });
+  const canReadMemory = isDemo || hasMemoryRead;
+  const needsProfileMemory = !encodedSnapshot && !isServerShare;
+  const { data: memory, isSuccess: memoryLoaded } = useFinancialMemory({
+    enabled: needsProfileMemory && canReadMemory,
+  });
   const [revoked, setRevoked] = useState(false);
   const [revokeBusy, setRevokeBusy] = useState(false);
   const [shareBusy, setShareBusy] = useState(false);
@@ -519,8 +533,8 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
     try {
       if (reportId && reportToken) {
         const url = buildReportUrl({ demoQuery, rid: reportId, rt: reportToken });
-        await navigator.clipboard?.writeText(url);
-        pushToast({ title: "Link copied", variant: "success" });
+        const copied = await tryWriteClipboard(url);
+        pushToast({ title: copied ? "Link copied" : "Link ready", variant: "success" });
         return;
       }
 
@@ -538,7 +552,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
       rememberShareToken(created.id, created.token);
       await queryClient.invalidateQueries({ queryKey: ["shareReports", shareToolId] });
       const url = buildReportUrl({ demoQuery, rid: created.id, rt: created.token });
-      await navigator.clipboard?.writeText(url);
+      const copied = await tryWriteClipboard(url);
 
       const isOneTime = args.maxViews === 1;
       if (isOneTime) {
@@ -547,14 +561,20 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
       }
 
       pushToast({
-        title: "Link copied",
-        message: isOneTime ? "One-time link created and copied." : "Share link created and copied.",
+        title: copied ? "Link copied" : "Link ready",
+        message: isOneTime
+          ? copied
+            ? "One-time link created and copied."
+            : "One-time link created."
+          : copied
+            ? "Share link created and copied."
+            : "Share link created.",
         variant: "success",
       });
     } catch (err) {
       if (shareLink) {
-        await navigator.clipboard?.writeText(shareLink);
-        pushToast({ title: "Link copied", variant: "success" });
+        const copied = await tryWriteClipboard(shareLink);
+        pushToast({ title: copied ? "Link copied" : "Link ready", variant: "success" });
       } else {
         void err;
         pushToast({ title: "Could not create share link", variant: "error" });
@@ -702,7 +722,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                 >
                   Share links
                 </button>
-                {reportId && hasMemoryRead && (
+                {reportId && canReadMemory && (
                   <button
                     type="button"
                     onClick={() => void revokeLink()}
@@ -771,7 +791,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
               </div>
             )}
 
-            {reportId && reportToken && (
+            {reportId && reportToken && serverShare.isSuccess && (
               <div className="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
                 <p className="text-sm font-semibold text-amber-100">Shared report link</p>
                 <p className="mt-2 text-xs text-amber-200/80">
@@ -886,7 +906,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
                               <button
                                 type="button"
                                 disabled={!url}
-                                onClick={() => url && void navigator.clipboard?.writeText(url)}
+                                onClick={() => url && void tryWriteClipboard(url)}
                                 className="inline-flex items-center justify-center rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs font-semibold text-neutral-200 hover:border-neutral-600 transition-colors disabled:opacity-50"
                               >
                                 Copy
@@ -937,7 +957,7 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
               </div>
             )}
 
-            {!hasMemoryRead && (
+            {needsProfileMemory && !canReadMemory && (
               <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
                 <p className="text-sm font-semibold text-white">Connect your profile</p>
                 <p className="mt-2 text-sm text-neutral-400">
@@ -950,13 +970,13 @@ export default function FounderCoveragePlannerReportPage(): ReactElement {
               </div>
             )}
 
-            {hasMemoryRead && !memoryLoaded && (
+            {needsProfileMemory && canReadMemory && !memoryLoaded && (
               <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
                 <p className="text-sm text-neutral-200">Loading your saved snapshot…</p>
               </div>
             )}
 
-            {hasMemoryRead && memoryLoaded && !snapshot && !isShareMode && !serverShare.isLoading && !serverShare.isError && (
+            {needsProfileMemory && canReadMemory && memoryLoaded && !snapshot && !isShareMode && !serverShare.isLoading && !serverShare.isError && (
               <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6">
                 <p className="text-sm font-semibold text-white">No snapshot saved yet</p>
                 <p className="mt-2 text-sm text-neutral-400">

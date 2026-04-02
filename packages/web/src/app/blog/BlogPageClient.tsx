@@ -77,8 +77,8 @@ export function BlogPageClient({ posts }: { posts: PostMeta[] }) {
 
               <div className="space-y-12 mt-16">
                 {posts.map((post) => (
-                  <Link key={post.slug} href={`/blog/${post.slug}`} className="group block">
-                    <article className="grid md:grid-cols-4 gap-8">
+                  <article key={post.slug} className="grid md:grid-cols-4 gap-8">
+                    <Link href={`/blog/${post.slug}`} className="group contents">
                       <div className="md:col-span-1">
                         <time className="text-xs font-mono text-slate-400">
                           {new Date(post.date).toLocaleDateString("en-US", {
@@ -99,8 +99,8 @@ export function BlogPageClient({ posts }: { posts: PostMeta[] }) {
                           READ ANALYSIS <ArrowRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                         </div>
                       </div>
-                    </article>
-                  </Link>
+                    </Link>
+                  </article>
                 ))}
               </div>
             </section>

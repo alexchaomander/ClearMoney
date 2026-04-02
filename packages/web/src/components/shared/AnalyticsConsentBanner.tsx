@@ -28,6 +28,11 @@ export function AnalyticsConsentProvider({ children }: { children: ReactNode }) 
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    if (process.env.NODE_ENV === "test") {
+      setConsent("denied");
+      setMounted(true);
+      return;
+    }
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "granted" || stored === "denied") {
       setConsent(stored);

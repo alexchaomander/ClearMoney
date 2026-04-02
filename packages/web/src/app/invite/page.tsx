@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, ArrowRight, AlertTriangle, BriefcaseBusiness, FlaskConical } from "lucide-react";
+import { captureAnalyticsEvent, rememberFounderFunnelSource } from "@/lib/analytics";
 
 const isProduction = process.env.NODE_ENV === "production";
 const configuredCodes = (process.env.NEXT_PUBLIC_BETA_CODES ?? "")
@@ -21,17 +22,34 @@ export default function InvitePage() {
   const [error, setError] = useState("");
   const inviteConfigured = VALID_CODES.length > 0;
 
+  useEffect(() => {
+    rememberFounderFunnelSource("invite");
+    captureAnalyticsEvent("founder_invite_viewed", {
+      invite_configured: inviteConfigured,
+    });
+  }, [inviteConfigured]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteConfigured) {
+      captureAnalyticsEvent("founder_invite_submit_blocked", {
+        reason: "invite_not_configured",
+      });
       setError("Beta access is not configured yet. Please contact beta@clearmoney.com.");
       return;
     }
     if (VALID_CODES.includes(code.trim().toUpperCase())) {
       // 90-day expiry — aligned with expected beta program duration
       document.cookie = `cm_beta_access=1; path=/; max-age=7776000; SameSite=Lax${isProduction ? "; Secure" : ""}`;
+      rememberFounderFunnelSource("private_beta");
+      captureAnalyticsEvent("founder_invite_accepted", {
+        destination: "/onboarding",
+      });
       router.push("/onboarding?role=Founder&source=Private%20Beta");
     } else {
+      captureAnalyticsEvent("founder_invite_rejected", {
+        reason: "invalid_code",
+      });
       setError("Invalid invite code. Please check your email for the correct code.");
     }
   };

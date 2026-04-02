@@ -120,6 +120,7 @@ function DocumentRow({
       <button
         type="button"
         onClick={() => setExpanded((prev) => !prev)}
+        aria-label={expanded ? "Collapse document details" : "Expand document details"}
         className="flex w-full items-center gap-3 p-4 text-left"
       >
         {expanded ? (
@@ -365,11 +366,17 @@ export function DocumentManager() {
             prev.map((e) => (e.id === entryId ? { ...e, status: "done" } : e))
           );
           queryClient.invalidateQueries({ queryKey: ["tax-documents"] });
+          window.setTimeout(() => {
+            setUploads((prev) => prev.filter((e) => e.id !== entryId));
+          }, 1500);
         })
         .catch(() => {
           setUploads((prev) =>
             prev.map((e) => (e.id === entryId ? { ...e, status: "error" } : e))
           );
+          window.setTimeout(() => {
+            setUploads((prev) => prev.filter((e) => e.id !== entryId));
+          }, 4000);
         });
     },
     [client, docTypeHint, queryClient]

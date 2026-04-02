@@ -45,7 +45,7 @@ test.describe("landing page", () => {
   test("footer renders with legal links", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page.getByRole("link", { name: /privacy/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /terms/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^privacy$/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^terms$/i })).toBeVisible();
   });
 });

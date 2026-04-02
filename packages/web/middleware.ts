@@ -12,6 +12,14 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, req: NextRequest) => {
+  const isDemoRequest =
+    process.env.NEXT_PUBLIC_DEMO_MODE === "true" &&
+    req.nextUrl.searchParams.get("demo") === "true";
+
+  if (isDemoRequest) {
+    return NextResponse.next();
+  }
+
   if (isProtectedRoute(req)) {
     await auth.protect();
 

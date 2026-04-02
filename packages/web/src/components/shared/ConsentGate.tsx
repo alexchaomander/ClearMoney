@@ -3,6 +3,7 @@
 import { ReactNode, useMemo } from "react";
 import { ShieldCheck, Lock, ArrowRight } from "lucide-react";
 import { useConsents, useCreateConsent } from "@/lib/strata/hooks";
+import { useDemoMode } from "@/lib/strata/demo-context";
 import { cn } from "@/lib/utils";
 
 interface ConsentGateProps {
@@ -22,6 +23,7 @@ export function ConsentGate({
   children,
   className,
 }: ConsentGateProps) {
+  const isDemo = useDemoMode();
   const { data: consents, isLoading } = useConsents();
   const createConsent = useCreateConsent();
 
@@ -34,7 +36,7 @@ export function ConsentGate({
     );
   }, [consents, scopes]);
 
-  if (hasConsent) {
+  if (isDemo || hasConsent) {
     return <>{children}</>;
   }
 
