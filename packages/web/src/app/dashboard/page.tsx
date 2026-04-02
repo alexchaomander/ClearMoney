@@ -87,7 +87,11 @@ import { AnimatedAmount } from "@/components/shared/AnimatedAmount";
 import { ConsentGate } from "@/components/shared/ConsentGate";
 import { useToast } from "@/components/shared/toast";
 import { captureAnalyticsEvent, readFounderFunnelSource } from "@/lib/analytics";
-import { getFounderPriorityState } from "@/lib/founder-activation";
+import {
+  getFounderPriorityState,
+  shouldTrackFounderDashboardUpgrade,
+  type FounderPriorityCta,
+} from "@/lib/founder-activation";
 
 import {
   getPreviewPortfolioSummary,
@@ -195,7 +199,11 @@ function FounderPriorityCard({
   });
   const source = readFounderFunnelSource() ?? "unknown";
 
-  const trackUpgradeClick = (cta: string) => {
+  const trackUpgradeClick = (cta: FounderPriorityCta) => {
+    if (!shouldTrackFounderDashboardUpgrade(state.stage, cta)) {
+      return;
+    }
+
     captureAnalyticsEvent("founder_dashboard_upgrade_clicked", {
       source,
       stage: state.stage,

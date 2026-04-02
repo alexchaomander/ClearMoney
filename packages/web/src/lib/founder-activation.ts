@@ -15,6 +15,8 @@ export type FounderPriorityStage =
   | "missing_traces"
   | "ready";
 
+export type FounderPriorityCta = "primary" | "secondary" | "manual_fallback";
+
 export interface FounderPriorityState {
   stage: FounderPriorityStage;
   eyebrow: string;
@@ -210,4 +212,11 @@ export function getFounderPriorityState({
     secondaryHref: "/data-health",
     secondaryLabel: "Open data health",
   };
+}
+
+export function shouldTrackFounderDashboardUpgrade(
+  stage: FounderPriorityStage,
+  cta: FounderPriorityCta
+): boolean {
+  return cta === "primary" && stage !== "ready";
 }

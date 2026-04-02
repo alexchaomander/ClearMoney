@@ -35,7 +35,7 @@ These events are the current founder-funnel backbone in the web app:
 | Connect exit | `founder_connect_exited` | Founder exits Plaid before completion | `source`, `connection_method`, `exit_status` |
 | Connect continue | `founder_connect_continue_clicked` | Founder continues from connect to dashboard | `source`, `connected_accounts`, `path` |
 | Dashboard arrival | `founder_dashboard_arrived` | First dashboard arrival per session | `source`, `using_demo_data`, `has_accounts`, `has_founder_baseline`, `has_decision_traces`, `connection_tone` |
-| Dashboard upgrade CTA | `founder_dashboard_upgrade_clicked` | Founder clicks the top priority upgrade CTA from dashboard arrival state | `source`, `stage`, `cta`, `using_demo_data`, `has_accounts`, `connection_tone` |
+| Dashboard upgrade CTA | `founder_dashboard_upgrade_clicked` | Founder clicks the primary next-step CTA while the founder priority card is in a non-ready state | `source`, `stage`, `cta`, `using_demo_data`, `has_accounts`, `connection_tone` |
 
 ## Canonical Funnel
 
