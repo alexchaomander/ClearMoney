@@ -182,6 +182,6 @@ The codebase now emits extra connect diagnostics in addition to the canonical fu
 - `founder_connect_failed`
 - `founder_connect_exited`
 - `founder_invite_code_started`
-- `founder_dashboard_upgrade_clicked`
+- `founder_dashboard_upgrade_clicked` for the founder-priority card's primary next-step CTA on non-ready states
 
 These are not top-line funnel steps. They exist to explain where activation quality is leaking.

@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   classifyFounderConnectContinuePath,
   getFounderPriorityState,
+  shouldTrackFounderDashboardUpgrade,
   shouldTrackInviteCodeStarted,
 } from "./founder-activation";
 
@@ -48,5 +49,18 @@ describe("founder activation helpers", () => {
 
     expect(state.stage).toBe("missing_traces");
     expect(state.primaryHref).toBe("/advisor");
+  });
+
+  test("tracks dashboard upgrade clicks only for the primary CTA on non-ready states", () => {
+    expect(shouldTrackFounderDashboardUpgrade("preview_mode", "primary")).toBe(
+      true
+    );
+    expect(
+      shouldTrackFounderDashboardUpgrade("preview_mode", "secondary")
+    ).toBe(false);
+    expect(
+      shouldTrackFounderDashboardUpgrade("preview_mode", "manual_fallback")
+    ).toBe(false);
+    expect(shouldTrackFounderDashboardUpgrade("ready", "primary")).toBe(false);
   });
 });

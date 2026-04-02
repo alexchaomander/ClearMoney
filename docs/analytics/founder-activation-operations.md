@@ -14,8 +14,8 @@ Use it together with:
 Complete this once per PostHog project or environment.
 
 1. Create a PostHog dashboard called `Founder Activation`.
-2. Build the seven saved insights from [`founder-activation-dashboard.md`](./founder-activation-dashboard.md).
-3. Add the extra setup-reliability trend for `founder_connect_setup_failed`.
+2. Build the seven core saved insights from [`founder-activation-dashboard.md`](./founder-activation-dashboard.md).
+3. Add the extra setup-reliability trend for `founder_connect_setup_failed` so the dashboard has eight panels total.
 4. Pin the 14-day HogQL source snapshot from the vision doc under the saved insights.
 5. Confirm these event properties are visible in PostHog event samples:
    - `source`
