@@ -31,7 +31,11 @@ import {
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { VALUATIONS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { captureAnalyticsEvent, rememberFounderFunnelSource } from "@/lib/analytics";
+import {
+  captureAnalyticsEvent,
+  normalizeFounderFunnelSource,
+  rememberFounderFunnelSource,
+} from "@/lib/analytics";
 
 // --- Sub-components for Polish ---
 
@@ -176,10 +180,12 @@ export default function LandingPage() {
   }, []);
 
   const trackLandingCta = (cta: string, destination: string) => {
-    rememberFounderFunnelSource(cta);
+    const source = normalizeFounderFunnelSource(cta);
+    rememberFounderFunnelSource(source);
     captureAnalyticsEvent("founder_funnel_cta_clicked", {
       cta,
       destination,
+      source,
       active_persona: persona.persona,
     });
   };

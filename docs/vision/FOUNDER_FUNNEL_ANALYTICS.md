@@ -17,9 +17,9 @@ These events are the current founder-funnel backbone in the web app:
 | Step | Event | Where it fires | Key properties |
 | --- | --- | --- | --- |
 | Landing impression | `founder_funnel_landing_viewed` | Founder-first landing page load | `primary_persona`, `founder_tool_href` |
-| Landing CTA | `founder_funnel_cta_clicked` | Founder CTA click on landing page | `cta`, `destination`, `active_persona` |
-| Invite view | `founder_invite_viewed` | Invite page load | `invite_configured` |
-| Invite accepted | `founder_invite_accepted` | Valid invite code submit | `destination` |
+| Landing CTA | `founder_funnel_cta_clicked` | Founder CTA click on landing page | `cta`, `destination`, `source`, `active_persona` |
+| Invite view | `founder_invite_viewed` | Invite page load | `source`, `invite_configured` |
+| Invite accepted | `founder_invite_accepted` | Valid invite code submit | `destination`, `source` |
 | Invite rejected | `founder_invite_rejected` | Invalid invite code submit | `reason` |
 | Invite blocked | `founder_invite_submit_blocked` | Invite system not configured | `reason` |
 | Onboarding view | `founder_onboarding_viewed` | Onboarding page load | `role`, `source` |
@@ -33,7 +33,7 @@ These events are the current founder-funnel backbone in the web app:
 
 ## Canonical Funnel
 
-Use this exact funnel in PostHog:
+Use this exact funnel in PostHog for the top-line founder path:
 
 1. `founder_funnel_landing_viewed`
 2. `founder_funnel_cta_clicked`
@@ -50,18 +50,20 @@ Why this sequence:
 - It separates “interest” from “commitment.”
 - It makes the biggest product bottleneck visible: founders who reach connect but never arrive on the dashboard with real data.
 
+For source-level analysis, start the funnel at `founder_funnel_cta_clicked`. Landing impressions intentionally do not carry a `source` property because source becomes meaningful only once a founder chooses a path.
+
 ## Required Breakdown Views
 
 Create these saved insights in PostHog.
 
-### 1. Founder Funnel by Source
+### 1. Founder Activation Funnel by Source
 
-Break down the canonical funnel by `source`.
+Create a second funnel that starts at `founder_funnel_cta_clicked` and breaks down by `source`.
 
 Use this to answer:
 
-- Which acquisition source gets founders to dashboard arrival?
-- Which source gets landing clicks but dies at invite or onboarding?
+- Which CTA path gets founders to dashboard arrival?
+- Which source dies at invite, onboarding, or connect?
 
 ### 2. Founder Funnel by CTA
 
@@ -106,7 +108,7 @@ Every week, answer these in writing:
 
 1. What percent of founder landing viewers reached dashboard arrival?
 2. What percent of dashboard arrivals had `has_accounts=true`?
-3. Which `source` has the best landing-to-dashboard conversion?
+3. Which `source` has the best CTA-to-dashboard conversion?
 4. Which CTA has the highest click-through but lowest downstream conversion?
 5. What percent of dashboard arrivals still show `using_demo_data=true`?
 6. Are founders dropping more in invite, onboarding, or connect?
@@ -120,18 +122,16 @@ This query gives a compact founder-funnel quality snapshot by `source` over the 
 ```sql
 SELECT
   COALESCE(properties.source, 'unknown') AS source,
-  countIf(event = 'founder_funnel_landing_viewed') AS landing_views,
   countIf(event = 'founder_funnel_cta_clicked') AS cta_clicks,
   countIf(event = 'founder_invite_accepted') AS invite_accepts,
   countIf(event = 'founder_onboarding_completed') AS onboarding_completed,
   countIf(event = 'founder_connect_started') AS connect_started,
   countIf(event = 'founder_dashboard_arrived') AS dashboard_arrivals,
-  countIf(event = 'founder_dashboard_arrived' AND JSONExtractBool(properties, 'has_accounts')) AS dashboard_with_accounts,
-  countIf(event = 'founder_dashboard_arrived' AND JSONExtractBool(properties, 'using_demo_data')) AS dashboard_using_demo
+  countIf(event = 'founder_dashboard_arrived' AND properties.has_accounts) AS dashboard_with_accounts,
+  countIf(event = 'founder_dashboard_arrived' AND properties.using_demo_data) AS dashboard_using_demo
 FROM events
 WHERE
   event IN (
-    'founder_funnel_landing_viewed',
     'founder_funnel_cta_clicked',
     'founder_invite_accepted',
     'founder_onboarding_completed',
@@ -140,12 +140,13 @@ WHERE
   )
   AND timestamp >= now() - INTERVAL 14 DAY
 GROUP BY source
-ORDER BY dashboard_arrivals DESC, landing_views DESC
+ORDER BY dashboard_arrivals DESC, cta_clicks DESC
 ```
 
 ## Implementation Notes
 
-- Founder source is persisted client-side via `rememberFounderFunnelSource(...)` in [`analytics.ts`](/Users/alexchao/projects/clearmoney/packages/web/src/lib/analytics.ts).
+- Founder source is persisted client-side via `rememberFounderFunnelSource(...)` in [`analytics.ts`](../../packages/web/src/lib/analytics.ts).
+- Source values are canonical acquisition-path labels like `nav_founder_beta` or `hero_founder_beta`; later pages reuse that source instead of overwriting it with step names.
 - Dashboard arrival is intentionally fired once per session after founder memory and decision-trace queries have resolved, so the quality flags are not default-false noise.
 - Analytics stay consent-gated through the existing PostHog consent provider.
 

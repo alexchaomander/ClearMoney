@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, ArrowRight, AlertTriangle, BriefcaseBusiness, FlaskConical } from "lucide-react";
-import { captureAnalyticsEvent, rememberFounderFunnelSource } from "@/lib/analytics";
+import {
+  captureAnalyticsEvent,
+  readFounderFunnelSource,
+  rememberFounderFunnelSource,
+} from "@/lib/analytics";
 
 const isProduction = process.env.NODE_ENV === "production";
 const configuredCodes = (process.env.NEXT_PUBLIC_BETA_CODES ?? "")
@@ -21,13 +25,15 @@ export default function InvitePage() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const inviteConfigured = VALID_CODES.length > 0;
+  const source = readFounderFunnelSource() ?? "invite_direct";
 
   useEffect(() => {
-    rememberFounderFunnelSource("invite");
+    rememberFounderFunnelSource(source);
     captureAnalyticsEvent("founder_invite_viewed", {
+      source,
       invite_configured: inviteConfigured,
     });
-  }, [inviteConfigured]);
+  }, [inviteConfigured, source]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,9 +47,9 @@ export default function InvitePage() {
     if (VALID_CODES.includes(code.trim().toUpperCase())) {
       // 90-day expiry — aligned with expected beta program duration
       document.cookie = `cm_beta_access=1; path=/; max-age=7776000; SameSite=Lax${isProduction ? "; Secure" : ""}`;
-      rememberFounderFunnelSource("private_beta");
       captureAnalyticsEvent("founder_invite_accepted", {
         destination: "/onboarding",
+        source,
       });
       router.push("/onboarding?role=Founder&source=Private%20Beta");
     } else {
