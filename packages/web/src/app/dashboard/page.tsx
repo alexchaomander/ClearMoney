@@ -98,6 +98,14 @@ import {
 import { getPreviewPhysicalAssets } from "./_shared/preview-data";
 import type { FinancialMemory } from "@clearmoney/strata-sdk";
 
+function isFounderBaselineComplete(memory?: FinancialMemory): boolean {
+  return Boolean(
+    memory?.entity_type != null &&
+      (memory?.annual_income != null || memory?.monthly_income != null) &&
+      memory?.average_monthly_expenses != null
+  );
+}
+
 function ProfileProgressCard({ memory }: { memory?: FinancialMemory }) {
   const completeness = useMemo(() => {
     if (!memory) return 0;
@@ -116,11 +124,12 @@ function ProfileProgressCard({ memory }: { memory?: FinancialMemory }) {
 
   if (completeness === 100) return null;
 
+  const founderBaselineComplete = isFounderBaselineComplete(memory);
   const incompleteFields = [
     {
       id: 'founder-baseline',
       label: 'Founder baseline',
-      done: memory?.entity_type != null && (memory?.annual_income != null || memory?.monthly_income != null) && memory?.average_monthly_expenses != null,
+      done: founderBaselineComplete,
       icon: Briefcase,
     },
     { id: 'profile-employment', label: 'Employment', done: memory?.employer_name != null, icon: Briefcase },
@@ -145,7 +154,7 @@ function ProfileProgressCard({ memory }: { memory?: FinancialMemory }) {
 
       <div className="space-y-1 relative z-10">
         {incompleteFields.map(f => (
-          <Link key={f.id} href="/settings?tab=profile" className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 group/item transition-colors">
+          <Link key={f.id} href={`/settings?tab=profile#${f.id}`} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 group/item transition-colors">
             <div className="flex items-center gap-2">
               <f.icon className="w-3.5 h-3.5 text-slate-400 group-hover/item:text-emerald-500 transition-colors" />
               <span className="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover/item:text-slate-900 dark:group-hover/item:text-white transition-colors">{f.label}</span>
@@ -460,9 +469,9 @@ export default function DashboardPage() {
     return allAccountsData?.investment_accounts ?? [];
   }, [accounts, allAccountsData]);
   
-  const { data: memory } = useFinancialMemory();
+  const { data: memory, isFetched: memoryFetched } = useFinancialMemory();
   const { hasConsent: hasDecisionTraceConsent } = useConsentStatus(["decision_traces:read"]);
-  const { data: traces } = useDecisionTraces(undefined, { enabled: hasDecisionTraceConsent });
+  const { data: traces, isFetched: tracesFetched } = useDecisionTraces(undefined, { enabled: hasDecisionTraceConsent });
 
   const effectiveAllAccounts = allAccountsData ?? getPreviewAccounts();
   const effectiveHoldingsRows = useMemo(() => mapHoldings(holdingsData ?? getPreviewHoldings()), [holdingsData]);
@@ -475,10 +484,7 @@ export default function DashboardPage() {
     effectiveAllAccounts.debt_accounts.length;
   const holdingsCount = effectiveHoldingsRows.length;
   const hasAccounts = accountCount > 0;
-  const hasFounderBaseline =
-    memory?.entity_type != null &&
-    (memory?.annual_income != null || memory?.monthly_income != null) &&
-    memory?.average_monthly_expenses != null;
+  const hasFounderBaseline = isFounderBaselineComplete(memory);
   const hasDecisionTraces = (traces?.length ?? 0) > 0;
 
   const intelligenceCards = [
@@ -596,7 +602,12 @@ export default function DashboardPage() {
   ]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || isLoading) {
+    if (
+      typeof window === "undefined" ||
+      isLoading ||
+      !memoryFetched ||
+      (hasDecisionTraceConsent && !tracesFetched)
+    ) {
       return;
     }
 
@@ -617,9 +628,12 @@ export default function DashboardPage() {
   }, [
     connectionStatusState.tone,
     hasAccounts,
+    hasDecisionTraceConsent,
     hasDecisionTraces,
     hasFounderBaseline,
     isLoading,
+    memoryFetched,
+    tracesFetched,
     usingDemoData,
   ]);
 

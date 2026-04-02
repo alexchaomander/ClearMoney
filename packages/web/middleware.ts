@@ -2,6 +2,8 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import type { ClerkMiddlewareAuth } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
 
+const DEMO_COOKIE = "cm_demo_mode";
+
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
   "/connect(.*)",
@@ -12,12 +14,28 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, req: NextRequest) => {
+  const demoModeEnabled = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+  const demoParam = req.nextUrl.searchParams.get("demo");
+  const hasDemoCookie = req.cookies.get(DEMO_COOKIE)?.value === "true";
   const isDemoRequest =
-    process.env.NEXT_PUBLIC_DEMO_MODE === "true" &&
-    req.nextUrl.searchParams.get("demo") === "true";
+    demoModeEnabled && (demoParam === "true" || (demoParam !== "false" && hasDemoCookie));
+  const response = NextResponse.next();
+
+  if (demoModeEnabled) {
+    if (demoParam === "true") {
+      response.cookies.set(DEMO_COOKIE, "true", {
+        httpOnly: false,
+        path: "/",
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+    } else if (demoParam === "false") {
+      response.cookies.delete(DEMO_COOKIE);
+    }
+  }
 
   if (isDemoRequest) {
-    return NextResponse.next();
+    return response;
   }
 
   if (isProtectedRoute(req)) {
@@ -28,6 +46,8 @@ export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, req: NextReques
       return NextResponse.redirect(new URL("/invite", req.url));
     }
   }
+
+  return response;
 });
 
 export const config = {

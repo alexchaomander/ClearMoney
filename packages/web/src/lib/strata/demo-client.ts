@@ -171,6 +171,7 @@ const DEMO_SHARE_REPORTS_STORAGE_KEY = "clearmoney-demo-share-reports.v1";
 const DEMO_TAX_DOCS_STORAGE_KEY = "clearmoney-demo-tax-docs.v1";
 const DEMO_TAX_PLANS_STORAGE_KEY = "clearmoney-demo-tax-plans.v1";
 const DEMO_BANK_TX_REIMBURSEMENTS_STORAGE_KEY = "clearmoney-demo-bank-tx-reimbursements.v1";
+const DEMO_SYNC_CHANNEL_NAME = "clearmoney-demo-sync.v1";
 
 type DemoShareReportRecord = ShareReportListItem & {
   token: string;
@@ -183,8 +184,46 @@ type DemoShareReportRecord = ShareReportListItem & {
   revoked_at: string | null;
 };
 
+type DemoSyncMessage = {
+  key: string;
+  value: unknown;
+};
+
+let demoSyncChannel: BroadcastChannel | null = null;
+let demoSyncListenerAttached = false;
+
+function getDemoSyncChannel(): BroadcastChannel | null {
+  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") {
+    return null;
+  }
+  if (!demoSyncChannel) {
+    demoSyncChannel = new BroadcastChannel(DEMO_SYNC_CHANNEL_NAME);
+  }
+  return demoSyncChannel;
+}
+
+function ensureDemoSyncListener(): void {
+  const channel = getDemoSyncChannel();
+  if (!channel || demoSyncListenerAttached) {
+    return;
+  }
+  channel.addEventListener("message", (event: MessageEvent<DemoSyncMessage>) => {
+    const { key, value } = event.data ?? {};
+    if (typeof window === "undefined" || typeof key !== "string") {
+      return;
+    }
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // ignore demo sync failures
+    }
+  });
+  demoSyncListenerAttached = true;
+}
+
 function readStorageJson<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
+  ensureDemoSyncListener();
   try {
     const raw = window.localStorage.getItem(key);
     if (!raw) return fallback;
@@ -196,8 +235,10 @@ function readStorageJson<T>(key: string, fallback: T): T {
 
 function writeStorageJson<T>(key: string, value: T): void {
   if (typeof window === "undefined") return;
+  ensureDemoSyncListener();
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
+    getDemoSyncChannel()?.postMessage({ key, value } satisfies DemoSyncMessage);
   } catch {
     // ignore demo persistence failures
   }

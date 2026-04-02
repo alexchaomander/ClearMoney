@@ -66,7 +66,7 @@ ClearMoney is a well-architected financial advisory platform with a strong found
 ### Current state
 - **Backend**: 23 test files, 155+ tests (pytest, async), in-memory SQLite fixtures
 - **Frontend unit**: 19 test files (Vitest + jsdom + Testing Library)
-- **Frontend E2E**: 8 Playwright specs (landing page, onboarding, demo flow, SEO, blog, tax docs, founder coverage)
+- **Frontend E2E**: 9 Playwright specs (landing page, onboarding, demo flow, founder funnel, founder showcase, SEO, blog, tax docs, founder coverage)
 - **CI pipeline**: 3 jobs (web lint/type-check/test/build, E2E w/ Playwright, API pytest)
 
 ### Gaps

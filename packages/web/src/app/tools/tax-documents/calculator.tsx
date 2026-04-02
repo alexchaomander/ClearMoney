@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import {
   ArrowRight,
@@ -338,11 +338,19 @@ export function DocumentManager() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const uploadZoneRef = useRef<HTMLDivElement | null>(null);
+  const removalTimeoutsRef = useRef<number[]>([]);
   const [docTypeHint, setDocTypeHint] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploads, setUploads] = useState<UploadEntry[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortKey, setSortKey] = useState<SortKey>("date");
+
+  useEffect(() => {
+    return () => {
+      removalTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      removalTimeoutsRef.current = [];
+    };
+  }, []);
 
   const documentsQuery = useQuery({
     queryKey: ["tax-documents"],
@@ -353,6 +361,16 @@ export function DocumentManager() {
     (file: File) => {
       const entryId = `upload-${++uploadCounter}`;
       const hint = docTypeHint || undefined;
+
+      const scheduleUploadRemoval = (delayMs: number) => {
+        const timeoutId = window.setTimeout(() => {
+          setUploads((prev) => prev.filter((e) => e.id !== entryId));
+          removalTimeoutsRef.current = removalTimeoutsRef.current.filter(
+            (value) => value !== timeoutId
+          );
+        }, delayMs);
+        removalTimeoutsRef.current.push(timeoutId);
+      };
 
       setUploads((prev) => [
         ...prev,
@@ -366,17 +384,13 @@ export function DocumentManager() {
             prev.map((e) => (e.id === entryId ? { ...e, status: "done" } : e))
           );
           queryClient.invalidateQueries({ queryKey: ["tax-documents"] });
-          window.setTimeout(() => {
-            setUploads((prev) => prev.filter((e) => e.id !== entryId));
-          }, 1500);
+          scheduleUploadRemoval(1500);
         })
         .catch(() => {
           setUploads((prev) =>
             prev.map((e) => (e.id === entryId ? { ...e, status: "error" } : e))
           );
-          window.setTimeout(() => {
-            setUploads((prev) => prev.filter((e) => e.id !== entryId));
-          }, 4000);
+          scheduleUploadRemoval(4000);
         });
     },
     [client, docTypeHint, queryClient]
