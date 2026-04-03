@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Shield, Search, Home, Car, Loader2, MapPin, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,9 +34,19 @@ import {
 } from "@/lib/strata/hooks";
 import { cn } from "@/lib/utils";
 
-type TabKey = "cash" | "debt" | "investment" | "equity" | "crypto" | "real_estate" | "vehicle" | "collectible" | "metal" | "alternative";
+export type AddAccountTab =
+  | "cash"
+  | "debt"
+  | "investment"
+  | "equity"
+  | "crypto"
+  | "real_estate"
+  | "vehicle"
+  | "collectible"
+  | "metal"
+  | "alternative";
 
-const TABS: { key: TabKey; label: string }[] = [
+const TABS: { key: AddAccountTab; label: string }[] = [
   { key: "cash", label: "Cash" },
   { key: "debt", label: "Debt" },
   { key: "investment", label: "Investment" },
@@ -146,10 +156,23 @@ const labelClass = "block text-xs font-black uppercase tracking-widest text-slat
 interface AddAccountModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultTab?: AddAccountTab;
+  title?: string;
+  description?: string;
+  onTabChange?: (tab: AddAccountTab) => void;
+  onSubmitSuccess?: (tab: AddAccountTab) => void;
 }
 
-export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
-  const [tab, setTab] = useState<TabKey>("cash");
+export function AddAccountModal({
+  open,
+  onOpenChange,
+  defaultTab = "cash",
+  title = "Add Asset",
+  description,
+  onTabChange,
+  onSubmitSuccess,
+}: AddAccountModalProps) {
+  const [tab, setTab] = useState<AddAccountTab>(defaultTab);
   const cashMutations = useCashAccountMutations();
   const debtMutations = useDebtAccountMutations();
   const createInvestment = useCreateInvestmentAccount();
@@ -167,6 +190,15 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
   // Mode states
   const [propertyMode, setPropertyMode] = useState<"search" | "manual">("search");
   const [vehicleMode, setVehicleMode] = useState<"search" | "manual">("search");
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    setTab(defaultTab);
+    onTabChange?.(defaultTab);
+  }, [defaultTab, onTabChange, open]);
 
   // Search states
   const [reSearchQuery, setReSearchQuery] = useState("");
@@ -348,6 +380,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
   }
 
   function resetForms() {
+    setTab(defaultTab);
     setIsBusiness(false);
     setCashName("");
     setCashType("checking");
@@ -420,6 +453,17 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
     setAltType("private_equity");
     setAltValue("");
     setAltCostBasis("");
+
+    setPropertyMode("search");
+    setVehicleMode("search");
+    setReSearchQuery("");
+    setReSearchResults([]);
+    setSelectedProperty(null);
+    setVSearchVin("");
+    setVSearchResults([]);
+    setSelectedVehicle(null);
+    setPropertySearchError(null);
+    setVehicleSearchError(null);
   }
 
   function handleClose() {
@@ -429,6 +473,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const submittedTab = tab;
     if (tab === "cash") {
       await cashMutations.create.mutateAsync({
         name: cashName,
@@ -524,6 +569,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
         cost_basis: altCostBasis ? parseFloat(altCostBasis) : null,
       });
     }
+    onSubmitSuccess?.(submittedTab);
     handleClose();
   }
 
@@ -540,7 +586,17 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
     alternativeMutations.add.isPending;
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          handleClose();
+          return;
+        }
+
+        onOpenChange(true);
+      }}
+    >
       <AnimatePresence>
         {open && (
           <Dialog.Portal forceMount>
@@ -563,9 +619,16 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                 <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl pointer-events-auto overflow-hidden">
                   {/* Header */}
                   <div className="flex items-center justify-between px-8 pt-8 pb-6 border-b border-slate-50 dark:border-slate-800">
-                    <Dialog.Title className="font-serif text-2xl text-slate-900 dark:text-white">
-                      Add Asset
-                    </Dialog.Title>
+                    <div>
+                      <Dialog.Title className="font-serif text-2xl text-slate-900 dark:text-white">
+                        {title}
+                      </Dialog.Title>
+                      {description ? (
+                        <Dialog.Description className="mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">
+                          {description}
+                        </Dialog.Description>
+                      ) : null}
+                    </div>
                     <Dialog.Close asChild>
                       <button className="p-2 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
                         <X className="w-5 h-5" />
@@ -578,7 +641,10 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
                     {TABS.map((t) => (
                       <button
                         key={t.key}
-                        onClick={() => setTab(t.key)}
+                        onClick={() => {
+                          setTab(t.key);
+                          onTabChange?.(t.key);
+                        }}
                         className={`flex-1 min-w-[80px] px-3 py-2 text-xs font-bold uppercase tracking-widest rounded-xl transition-all ${
                           tab === t.key
                             ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm ring-1 ring-black/5"

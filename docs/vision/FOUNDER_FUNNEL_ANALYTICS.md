@@ -35,6 +35,11 @@ These events are the current founder-funnel backbone in the web app:
 | Connect exit | `founder_connect_exited` | Founder exits Plaid before completion | `source`, `connection_method`, `exit_status` |
 | Connect continue | `founder_connect_continue_clicked` | Founder continues from connect to dashboard | `source`, `connected_accounts`, `path` |
 | Dashboard arrival | `founder_dashboard_arrived` | First dashboard arrival per session | `source`, `using_demo_data`, `has_accounts`, `has_founder_baseline`, `has_decision_traces`, `connection_tone` |
+| Dashboard upgrade CTA | `founder_dashboard_upgrade_clicked` | Founder clicks the primary next-step CTA while the founder priority card is in a non-ready state | `source`, `stage`, `cta`, `using_demo_data`, `has_accounts`, `connection_tone` |
+| Manual context open | `founder_manual_context_opened` | Founder opens the guided manual fallback from a dashboard founder entrypoint | `source`, `stage`, `entry_point` |
+| Manual context category | `founder_manual_context_category_selected` | Founder chooses the first manual context category to enter | `source`, `stage`, `entry_point`, `category` |
+| Manual context submit | `founder_manual_context_submitted` | Founder submits manual founder context from the guided modal | `source`, `stage`, `entry_point`, `selected_tab` |
+| Manual context close | `founder_manual_context_closed` | Founder abandons the guided manual path without submitting | `source`, `stage`, `entry_point`, `selected_tab` |
 
 ## Canonical Funnel
 
@@ -107,6 +112,23 @@ Use this to answer:
 - Is the wizard helping or slowing founders down?
 - Which sources prefer skipping straight to connect?
 
+### 5. Guided Manual Fallback Quality
+
+Trend:
+
+- `founder_manual_context_opened`
+- `founder_manual_context_category_selected`
+- `founder_manual_context_submitted`
+- `founder_manual_context_closed`
+
+Break down by `stage`, `entry_point`, and `category` or `selected_tab`.
+
+Use this to answer:
+
+- Are founders using manual fallback as a productive bridge or just abandoning it?
+- Which founder states most often need cash, debt, investment, or equity context first?
+- Is the founder-priority card creating real manual progress or just more clicks?
+
 ## Weekly Review Questions
 
 Every week, answer these in writing:
@@ -155,6 +177,8 @@ ORDER BY dashboard_arrivals DESC, cta_clicks DESC
 - Connect diagnostics distinguish `bank_plaid` from `brokerage_oauth`, so trust friction and provider friction can be reviewed separately.
 - `founder_connect_setup_failed` is intentionally outside the canonical connect success/failure rate because it measures bootstrap reliability before a founder has actually started linking.
 - Dashboard arrival is intentionally fired once per session after founder memory and decision-trace queries have resolved, so the quality flags are not default-false noise.
+- `founder_dashboard_upgrade_clicked` is intentionally restricted to the primary founder-priority CTA on non-ready states so the signal reflects true upgrade intent, not generic browsing.
+- Manual-context events are intentionally restricted to the guided founder fallback so product can measure whether manual entry is improving the first-value loop.
 - Analytics stay consent-gated through the existing PostHog consent provider.
 
 ## What To Change Next If Data Looks Bad

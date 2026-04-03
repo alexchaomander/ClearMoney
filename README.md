@@ -176,6 +176,7 @@ GitHub Actions runs on every push and PR:
 *   [Founder Coverage](./docs/vision/founder-coverage.md) — Founder-specific product and policy baseline
 *   [Founder Funnel Analytics](./docs/vision/FOUNDER_FUNNEL_ANALYTICS.md) — Founder acquisition and activation operating guide
 *   [Founder Activation Dashboard](./docs/analytics/founder-activation-dashboard.md) — PostHog saved insights and weekly operating cadence
+*   [Founder Activation Operations](./docs/analytics/founder-activation-operations.md) — Dashboard launch checklist, thresholds, and weekly review workflow
 *   [API Reference](./packages/strata-api/README.md) — Endpoints, models, environment variables
 *   [Action Layer Vision](./docs/vision/the-action-layer.md)
 *   [Action Layer Technical Spec](./docs/platform/strata-action-layer-spec.md)

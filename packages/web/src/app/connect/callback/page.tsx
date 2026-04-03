@@ -167,6 +167,14 @@ export default function ConnectCallbackPage() {
             <p className="text-neutral-400 mb-6">
               {errorMessage ?? "Something went wrong while connecting your account."}
             </p>
+            <div className="mb-6 rounded-xl border border-neutral-800 bg-neutral-950/70 p-4 text-left">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500">
+                Founder fallback state
+              </p>
+              <p className="mt-2 text-sm text-neutral-300">
+                If you continue without a successful link, the dashboard will stay useful for orientation and manual planning, but runway freshness and tax timing will remain provisional until one real source is connected.
+              </p>
+            </div>
             <div className="flex flex-col gap-3">
               <Link
                 href="/connect"

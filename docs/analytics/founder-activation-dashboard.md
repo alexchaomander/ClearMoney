@@ -6,6 +6,8 @@ This is the implementation companion to [`FOUNDER_FUNNEL_ANALYTICS.md`](../visio
 
 The vision doc defines what the funnel means. This doc defines exactly what to build in PostHog and what the team reviews every week.
 
+For the step-by-step operating checklist, use [`founder-activation-operations.md`](./founder-activation-operations.md).
+
 ## Build These Saved Insights
 
 ### 1. Founder Top-Line Funnel
@@ -123,12 +125,15 @@ Type: Trends
 
 Series:
 - Event: `founder_connect_continue_clicked`
+- Event: `founder_manual_context_opened`
+- Event: `founder_manual_context_submitted`
+- Event: `founder_manual_context_closed`
 
 Settings:
-- Breakdown property: `path`
+- Breakdown property: `path` for connect continue and `stage` or `entry_point` for manual context events
 - Interval: day
 
-Watch for `manual_fallback` and `callback_error_manual_fallback`. If those climb, the connect surface is not earning enough trust or reliability.
+Watch for `manual_fallback` and `callback_error_manual_fallback`. Pair them with manual-context open/submit/close rates so the team can tell whether the fallback path is productive or just a leak.
 
 ## Suggested Dashboard Layout
 
@@ -180,5 +185,10 @@ The codebase now emits extra connect diagnostics in addition to the canonical fu
 - `founder_connect_failed`
 - `founder_connect_exited`
 - `founder_invite_code_started`
+- `founder_dashboard_upgrade_clicked` for the founder-priority card's primary next-step CTA on non-ready states
+- `founder_manual_context_opened`
+- `founder_manual_context_category_selected`
+- `founder_manual_context_submitted`
+- `founder_manual_context_closed`
 
 These are not top-line funnel steps. They exist to explain where activation quality is leaking.
