@@ -209,8 +209,8 @@ export function DataSourceStatusStrip({ items, usingDemoData }: DataSourceStatus
                       <RefreshCw className="w-5 h-5 animate-spin-slow" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-amber-900 dark:text-amber-200">Running in Synthetic Mode</p>
-                      <p className="text-xs text-amber-700 dark:text-amber-500/80">Preview data is useful for orientation. Connect real sources before trusting runway, tax timing, or concentration signals.</p>
+                      <p className="text-sm font-bold text-amber-900 dark:text-amber-200">Running in preview mode</p>
+                      <p className="text-xs text-amber-700 dark:text-amber-500/80">Manual context and synthetic fixtures can orient you, but you still need one real source before runway, tax timing, and balance freshness become decision-grade.</p>
                     </div>
                     <Link 
                       href="/connect"

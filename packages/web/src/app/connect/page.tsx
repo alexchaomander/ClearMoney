@@ -30,7 +30,10 @@ import {
   readFounderFunnelSource,
   rememberFounderFunnelSource,
 } from "@/lib/analytics";
-import { classifyFounderConnectContinuePath } from "@/lib/founder-activation";
+import {
+  classifyFounderConnectContinuePath,
+  countFounderConnectedSources,
+} from "@/lib/founder-activation";
 
 export default function ConnectPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,10 +93,22 @@ export default function ConnectPage() {
     isLoading: accountsLoading,
   } = useAccounts({ enabled: hasConnectionConsent });
 
-  const connectedAccounts = allAccounts?.investment_accounts ?? [];
-  const totalConnected = connectedAccounts.length;
-  const totalValue = connectedAccounts.reduce((sum, acc) => sum + acc.balance, 0);
-  const taxAdvantagedValue = connectedAccounts
+  const connectedAccounts = [
+    ...(allAccounts?.cash_accounts ?? []),
+    ...(allAccounts?.debt_accounts ?? []),
+    ...(allAccounts?.investment_accounts ?? []),
+  ];
+  const investmentAccounts = allAccounts?.investment_accounts ?? [];
+  const cashAccounts = allAccounts?.cash_accounts ?? [];
+  const debtAccounts = allAccounts?.debt_accounts ?? [];
+  const totalConnected = countFounderConnectedSources(allAccounts);
+  const totalInvestmentValue = investmentAccounts.reduce(
+    (sum, acc) => sum + acc.balance,
+    0
+  );
+  const totalCashValue = cashAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+  const totalDebtValue = debtAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+  const taxAdvantagedValue = investmentAccounts
     .filter((acc) => acc.is_tax_advantaged)
     .reduce((sum, acc) => sum + acc.balance, 0);
   const continuePath = classifyFounderConnectContinuePath(
@@ -163,7 +178,8 @@ export default function ConnectPage() {
             <span className="italic text-emerald-400">founder plan</span>
           </h1>
           <p className="text-lg max-w-xl mx-auto mb-8 text-neutral-300">
-            Link what you have now so ClearMoney can tighten runway, tax pressure, and data confidence. If you are not ready, skip and start with manual context from the dashboard.
+            Link what you have now so ClearMoney can tighten runway, tax pressure, and data confidence.
+            If you are not ready, you can still land in a founder fallback state and add manual context from the dashboard first.
           </p>
 
           <SecurityBadges />
@@ -347,12 +363,23 @@ export default function ConnectPage() {
 
               <div className="rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500">
-                  What improves immediately
+                  What live linking unlocks now
                 </p>
                 <div className="mt-3 space-y-3 text-sm text-neutral-300">
                   <p>Runway gets tighter because live balances replace guesswork.</p>
                   <p>Tax pressure improves as cash timing and account mix become visible.</p>
                   <p>Decision traces get more credible because they cite fresher sources.</p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500">
+                  What manual context can cover first
+                </p>
+                <div className="mt-3 space-y-3 text-sm text-neutral-300">
+                  <p>You can still add cash, debt, and founder equity context from the dashboard.</p>
+                  <p>The dashboard will stay useful for orientation and planning even if you are not ready to link yet.</p>
+                  <p>Balance freshness and precise tax timing remain provisional until at least one real source is live.</p>
                 </div>
               </div>
 
@@ -379,8 +406,14 @@ export default function ConnectPage() {
                         id: account.id,
                         name: account.name,
                         balance: account.balance,
-                        account_type: account.account_type,
-                        is_tax_advantaged: account.is_tax_advantaged,
+                        account_type:
+                          "debt_type" in account
+                            ? account.debt_type
+                            : account.account_type,
+                        is_tax_advantaged:
+                          "is_tax_advantaged" in account
+                            ? account.is_tax_advantaged
+                            : false,
                       }}
                     />
                   ))}
@@ -395,7 +428,15 @@ export default function ConnectPage() {
                       Total Investment Value
                     </span>
                     <span className="font-serif text-xl font-medium text-emerald-300">
-                      {formatCurrency(totalValue)}
+                      {formatCurrency(totalInvestmentValue)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-neutral-400">
+                      Linked Cash Balance
+                    </span>
+                    <span className="font-medium text-emerald-400">
+                      {formatCurrency(totalCashValue)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -404,6 +445,14 @@ export default function ConnectPage() {
                     </span>
                     <span className="font-medium text-emerald-400">
                       {formatCurrency(taxAdvantagedValue)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-neutral-400">
+                      Linked Debt Balance
+                    </span>
+                    <span className="font-medium text-neutral-300">
+                      {formatCurrency(totalDebtValue)}
                     </span>
                   </div>
                 </div>
@@ -439,18 +488,18 @@ export default function ConnectPage() {
 
                 {totalConnected > 0 ? null : (
                   <p className="mt-3 text-center text-xs text-neutral-500">
-                    You can still add manual cash, debt, and founder context once you land.
+                    You will land in a founder fallback state where manual cash, debt, and equity context still improve the surface.
                   </p>
                 )}
 
                 <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-950/70 p-4 text-left">
-                  <p className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Fallback path</p>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Founder fallback path</p>
                   <p className="mt-2 text-sm text-neutral-300">
-                    Skip linking for now and add manual cash, debt, or planning context from the dashboard.
+                    Skip linking for now and add manual cash, debt, equity, or planning context from the dashboard.
                   </p>
                   <div className="mt-3 flex flex-wrap gap-3 text-xs text-neutral-500">
-                    <span>Runway still works with manual expenses.</span>
-                    <span>Tax planning improves as you add real sources.</span>
+                    <span>Runway still works with manual balances and expenses.</span>
+                    <span>Tax timing stays provisional until one real source is live.</span>
                   </div>
                 </div>
               </div>

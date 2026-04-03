@@ -19,21 +19,43 @@ test.describe("founder activation surfaces", () => {
     await expect(page.getByText(/manual fallback/i)).toBeVisible();
   });
 
-  test("connect page explains trust and manual fallback", async ({ page }) => {
+  test("connect page explains live linking and founder fallback", async ({ page }) => {
     await page.goto("/connect?demo=true");
 
     await expect(page.getByText(/usually under two minutes/i)).toBeVisible();
-    await expect(page.getByText(/what improves immediately/i)).toBeVisible();
+    await expect(page.getByText(/what live linking unlocks now/i)).toBeVisible();
+    await expect(page.getByText(/what manual context can cover first/i)).toBeVisible();
+    await expect(page.getByText(/tax timing stays provisional until one real source is live/i)).toBeVisible();
     await expect(
       page.getByRole("link", { name: /continue (with linked accounts|without links)/i })
     ).toBeVisible();
   });
 
-  test("connect callback error preserves a recovery path", async ({ page }) => {
+  test("connect callback error preserves a founder fallback path", async ({ page }) => {
     await page.goto("/connect/callback?error=access_denied&error_description=User%20cancelled");
 
     await expect(page.getByRole("heading", { name: /connection failed/i })).toBeVisible();
+    await expect(page.getByText(/founder fallback state/i)).toBeVisible();
+    await expect(page.getByText(/runway freshness and tax timing will remain provisional/i)).toBeVisible();
     await expect(page.getByRole("link", { name: /try again/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /go to dashboard/i })).toBeVisible();
+  });
+
+  test("dashboard manual fallback opens founder-guided context choices", async ({ page }) => {
+    await page.addInitScript(() => {
+      window.sessionStorage.setItem("cm_founder_funnel_source", "hero_founder_beta");
+    });
+
+    await page.goto("/dashboard?demo=true");
+
+    await expect(page.getByTestId("founder-priority-card")).toContainText(/preview mode/i);
+    await expect(page.getByText(/what preview mode means/i)).toBeVisible();
+    await page.getByRole("button", { name: /add founder context now/i }).click();
+    await expect(page.getByTestId("founder-manual-context-dialog")).toBeVisible();
+    await expect(page.getByText(/add founder context without linking yet/i)).toBeVisible();
+    await page.getByTestId("founder-manual-option-cash").click();
+    await expect(page.getByRole("heading", { name: /add founder context/i })).toBeVisible();
+    await expect(page.getByText(/start with the highest-signal manual input/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /cash/i })).toBeVisible();
   });
 });
