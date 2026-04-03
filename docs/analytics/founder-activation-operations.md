@@ -44,6 +44,7 @@ Complete this once per PostHog project or environment.
 - Keep the dashboard title singular: `Founder Activation`.
 - Do not mix anonymous landing views into source-level conversion dashboards.
 - Treat `founder_connect_setup_failed` as a pre-start reliability signal, not a true link-session failure.
+- Treat `linked_accounts` in `founder_connect_continue_clicked` as any live source, not just brokerage connectivity.
 - Treat `founder_dashboard_upgrade_clicked` as primary upgrade intent only, not generic navigation.
 
 ## Weekly Monday Review

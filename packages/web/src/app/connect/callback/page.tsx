@@ -38,6 +38,11 @@ export default function ConnectCallbackPage() {
       }
 
       if (!code || !state) {
+        captureAnalyticsEvent("founder_connect_failed", {
+          source: readFounderFunnelSource() ?? "unknown",
+          connection_method: "brokerage_oauth",
+          reason: "callback_missing_params",
+        });
         setStatus("error");
         setErrorMessage("Missing connection callback details. Please try again.");
         return;

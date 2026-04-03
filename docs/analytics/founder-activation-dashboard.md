@@ -134,6 +134,7 @@ Settings:
 - Interval: day
 
 Watch for `manual_fallback` and `callback_error_manual_fallback`. Pair them with manual-context open/submit/close rates so the team can tell whether the fallback path is productive or just a leak.
+Treat `linked_accounts` as any founder who has at least one live connected source, including Plaid bank links and brokerage OAuth links.
 
 ## Suggested Dashboard Layout
 

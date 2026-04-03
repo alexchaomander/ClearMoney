@@ -79,6 +79,7 @@ import { AdvisorBriefing } from "@/components/dashboard/AdvisorBriefing";
 import { DataSourceStatusStrip, type DataSourceStatusItem } from "@/components/dashboard/DataSourceStatusStrip";
 import { PhysicalAssetsDemoBanner } from "@/components/dashboard/PhysicalAssetsDemoBanner";
 import { AssumptionControl } from "@/components/dashboard/AssumptionControl";
+import { AddAccountModal } from "@/components/dashboard/AddAccountModal";
 import { FounderManualContextDialog } from "@/components/dashboard/FounderManualContextDialog";
 import { ProductTour } from "@/components/shared/ProductTour";
 import { DashboardLoadingSkeleton } from "@/components/shared/LoadingSkeleton";
@@ -305,6 +306,7 @@ function FounderPriorityCard({
 
 export default function DashboardPage() {
   const [showAddDropdown, setShowAddDropdown] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showFounderManualDialog, setShowFounderManualDialog] = useState(false);
   const [manualEntryPoint, setManualEntryPoint] =
     useState<FounderManualEntryPoint>("dashboard_menu");
@@ -1003,7 +1005,7 @@ export default function DashboardPage() {
         }}
       />
 
-      <DashboardHeader
+      <DashboardPageHeader
         onRefresh={handleRefresh}
         isRefreshing={isLoading || syncAllConnections.isPending}
         showRefresh={!!hasAccounts}
@@ -1073,12 +1075,13 @@ export default function DashboardPage() {
         stage={founderPriorityState.stage}
         entryPoint={manualEntryPoint}
       />
+      <AddAccountModal open={showAddModal} onOpenChange={setShowAddModal} />
       <ProductTour />
     </div>
   );
 }
 
-function DashboardHeader({ onRefresh, isRefreshing, showRefresh }: { onRefresh: () => void, isRefreshing: boolean, showRefresh: boolean }) {
+function DashboardPageHeader({ onRefresh, isRefreshing, showRefresh }: { onRefresh: () => void, isRefreshing: boolean, showRefresh: boolean }) {
   return (
     <header className="sticky top-0 z-30 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">

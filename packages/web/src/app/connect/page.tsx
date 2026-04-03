@@ -30,7 +30,10 @@ import {
   readFounderFunnelSource,
   rememberFounderFunnelSource,
 } from "@/lib/analytics";
-import { classifyFounderConnectContinuePath } from "@/lib/founder-activation";
+import {
+  classifyFounderConnectContinuePath,
+  countFounderConnectedSources,
+} from "@/lib/founder-activation";
 
 export default function ConnectPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,10 +93,22 @@ export default function ConnectPage() {
     isLoading: accountsLoading,
   } = useAccounts({ enabled: hasConnectionConsent });
 
-  const connectedAccounts = allAccounts?.investment_accounts ?? [];
-  const totalConnected = connectedAccounts.length;
-  const totalValue = connectedAccounts.reduce((sum, acc) => sum + acc.balance, 0);
-  const taxAdvantagedValue = connectedAccounts
+  const connectedAccounts = [
+    ...(allAccounts?.cash_accounts ?? []),
+    ...(allAccounts?.debt_accounts ?? []),
+    ...(allAccounts?.investment_accounts ?? []),
+  ];
+  const investmentAccounts = allAccounts?.investment_accounts ?? [];
+  const cashAccounts = allAccounts?.cash_accounts ?? [];
+  const debtAccounts = allAccounts?.debt_accounts ?? [];
+  const totalConnected = countFounderConnectedSources(allAccounts);
+  const totalInvestmentValue = investmentAccounts.reduce(
+    (sum, acc) => sum + acc.balance,
+    0
+  );
+  const totalCashValue = cashAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+  const totalDebtValue = debtAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+  const taxAdvantagedValue = investmentAccounts
     .filter((acc) => acc.is_tax_advantaged)
     .reduce((sum, acc) => sum + acc.balance, 0);
   const continuePath = classifyFounderConnectContinuePath(
@@ -391,8 +406,14 @@ export default function ConnectPage() {
                         id: account.id,
                         name: account.name,
                         balance: account.balance,
-                        account_type: account.account_type,
-                        is_tax_advantaged: account.is_tax_advantaged,
+                        account_type:
+                          "debt_type" in account
+                            ? account.debt_type
+                            : account.account_type,
+                        is_tax_advantaged:
+                          "is_tax_advantaged" in account
+                            ? account.is_tax_advantaged
+                            : false,
                       }}
                     />
                   ))}
@@ -407,7 +428,15 @@ export default function ConnectPage() {
                       Total Investment Value
                     </span>
                     <span className="font-serif text-xl font-medium text-emerald-300">
-                      {formatCurrency(totalValue)}
+                      {formatCurrency(totalInvestmentValue)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-neutral-400">
+                      Linked Cash Balance
+                    </span>
+                    <span className="font-medium text-emerald-400">
+                      {formatCurrency(totalCashValue)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -416,6 +445,14 @@ export default function ConnectPage() {
                     </span>
                     <span className="font-medium text-emerald-400">
                       {formatCurrency(taxAdvantagedValue)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-neutral-400">
+                      Linked Debt Balance
+                    </span>
+                    <span className="font-medium text-neutral-300">
+                      {formatCurrency(totalDebtValue)}
                     </span>
                   </div>
                 </div>

@@ -82,6 +82,22 @@ export function classifyFounderConnectContinuePath(
   return totalConnected > 0 ? "linked_accounts" : "manual_fallback";
 }
 
+export function countFounderConnectedSources(accountGroups?: {
+  cash_accounts?: unknown[];
+  debt_accounts?: unknown[];
+  investment_accounts?: unknown[];
+} | null): number {
+  if (!accountGroups) {
+    return 0;
+  }
+
+  return (
+    (accountGroups.cash_accounts?.length ?? 0) +
+    (accountGroups.debt_accounts?.length ?? 0) +
+    (accountGroups.investment_accounts?.length ?? 0)
+  );
+}
+
 export function getFounderPriorityState({
   usingDemoData,
   hasAccounts,

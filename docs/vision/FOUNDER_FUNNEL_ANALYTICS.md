@@ -175,6 +175,7 @@ ORDER BY dashboard_arrivals DESC, cta_clicks DESC
 - Founder source is persisted client-side via `rememberFounderFunnelSource(...)` in [`analytics.ts`](../../packages/web/src/lib/analytics.ts).
 - Source values are canonical acquisition-path labels like `nav_founder_beta` or `hero_founder_beta`; later pages reuse that source instead of overwriting it with step names.
 - Connect diagnostics distinguish `bank_plaid` from `brokerage_oauth`, so trust friction and provider friction can be reviewed separately.
+- `founder_connect_continue_clicked` treats any linked source as a true upgrade path. A founder who linked bank, cash, debt, or brokerage data should land on the `linked_accounts` path rather than being misclassified as manual fallback.
 - `founder_connect_setup_failed` is intentionally outside the canonical connect success/failure rate because it measures bootstrap reliability before a founder has actually started linking.
 - Dashboard arrival is intentionally fired once per session after founder memory and decision-trace queries have resolved, so the quality flags are not default-false noise.
 - `founder_dashboard_upgrade_clicked` is intentionally restricted to the primary founder-priority CTA on non-ready states so the signal reflects true upgrade intent, not generic browsing.

@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   classifyFounderConnectContinuePath,
+  countFounderConnectedSources,
   getFounderManualOptions,
   getFounderPriorityState,
   shouldTrackFounderDashboardUpgrade,
@@ -21,6 +22,17 @@ describe("founder activation helpers", () => {
     expect(classifyFounderConnectContinuePath(true, 2)).toBeNull();
     expect(classifyFounderConnectContinuePath(false, 2)).toBe("linked_accounts");
     expect(classifyFounderConnectContinuePath(false, 0)).toBe("manual_fallback");
+  });
+
+  test("counts any linked founder source toward activation", () => {
+    expect(
+      countFounderConnectedSources({
+        cash_accounts: [{ id: "cash-1" }],
+        debt_accounts: [{ id: "debt-1" }],
+        investment_accounts: [],
+      })
+    ).toBe(2);
+    expect(countFounderConnectedSources(null)).toBe(0);
   });
 
   test("prioritizes live-source upgrade when dashboard is still in preview mode", () => {
