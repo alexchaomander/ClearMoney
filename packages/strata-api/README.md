@@ -1,6 +1,6 @@
 # Strata API
 
-FastAPI-based core backend for the ClearMoney platform. Provides banking via Plaid, read-only crypto wallet aggregation, AI-powered financial advice, action intent lifecycle, public tools, and portfolio management. Brokerage connectivity is delegated to the separate `packages/brokerage-service` microservice.
+FastAPI-based core backend for the ClearMoney platform. Provides banking via Plaid, everyday-money workflows, read-only crypto wallet aggregation, AI-powered financial advice, action intent lifecycle, public tools, and portfolio management. Brokerage connectivity is delegated to the separate `packages/brokerage-service` microservice.
 
 ## Quick Start
 
@@ -161,7 +161,34 @@ All endpoints are prefixed with `/api/v1`. Full OpenAPI docs are available at `/
 | `POST` | `/banking/callback` | Handle Plaid Link completion |
 | `GET` | `/banking/accounts` | List bank accounts |
 | `GET` | `/banking/transactions` | List bank transactions (paginated, filterable) |
+| `PATCH` | `/banking/transactions/{id}` | Update transaction overrides and consumer metadata |
 | `GET` | `/banking/spending-summary` | Spending breakdown by category |
+
+### Everyday Money
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/budgets` | List monthly budgets |
+| `POST` | `/budgets` | Create a monthly budget |
+| `PATCH` | `/budgets/{id}` | Update a monthly budget |
+| `DELETE` | `/budgets/{id}` | Delete a monthly budget |
+| `GET` | `/budgets/{id}/summary` | Get budget-vs-actual summary for a month |
+| `GET` | `/goals` | List goals with progress projection |
+| `POST` | `/goals` | Create a goal |
+| `PATCH` | `/goals/{id}` | Update a goal |
+| `DELETE` | `/goals/{id}` | Delete a goal |
+| `GET` | `/recurring-items` | List recurring items derived from transactions |
+| `PATCH` | `/recurring-items/{id}` | Update recurring item state/details |
+| `GET` | `/transaction-rules` | List deterministic transaction rules |
+| `POST` | `/transaction-rules` | Create a transaction rule |
+| `PATCH` | `/transaction-rules/{id}` | Update a transaction rule |
+| `DELETE` | `/transaction-rules/{id}` | Delete a transaction rule |
+| `GET` | `/inbox` | List consumer inbox items |
+| `PATCH` | `/inbox/{id}` | Resolve or update an inbox item |
+| `GET` | `/review-items` | List low-confidence or needs-attention items |
+| `PATCH` | `/review-items/{id}` | Resolve or dismiss a review item |
+| `GET` | `/weekly-briefing` | Get the weekly consumer summary |
+| `GET` | `/consumer-home` | Get the consumer dashboard payload |
 
 ### Portfolio
 

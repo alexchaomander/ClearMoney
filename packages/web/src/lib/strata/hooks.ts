@@ -64,6 +64,15 @@ export const queryKeys = {
   financialMemory: ["memory"] as const,
   memoryEvents: ["memory", "events"] as const,
   notifications: ["notifications"] as const,
+  budgets: ["everyday", "budgets"] as const,
+  budgetSummary: (id: string) => ["everyday", "budgets", id, "summary"] as const,
+  goals: ["everyday", "goals"] as const,
+  recurringItems: ["everyday", "recurring"] as const,
+  transactionRules: ["everyday", "transactionRules"] as const,
+  inboxItems: ["everyday", "inbox"] as const,
+  reviewItems: ["everyday", "review"] as const,
+  weeklyBriefing: ["everyday", "weeklyBriefing"] as const,
+  consumerHome: (monthStart?: string) => ["everyday", "consumerHome", monthStart ?? "current"] as const,
   financialContext: (format: 'json' | 'markdown') =>
     ["memory", "context", format] as const,
   skills: ["skills"] as const,
@@ -1101,6 +1110,169 @@ export function useNotifications(options?: { enabled?: boolean }) {
     queryFn: () => client.listNotifications(),
     enabled: options?.enabled ?? true,
     refetchInterval: 30000, // Refresh every 30s
+  });
+}
+
+export function useBudgets(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.budgets,
+    queryFn: () => client.listBudgets(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useBudgetSummary(budgetId: string, options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.budgetSummary(budgetId),
+    queryFn: () => client.getBudgetSummary(budgetId),
+    enabled: (options?.enabled ?? true) && !!budgetId,
+  });
+}
+
+export function useCreateBudget() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof client.createBudget>[0]) => client.createBudget(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.consumerHome() });
+    },
+  });
+}
+
+export function useGoals(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.goals,
+    queryFn: () => client.listGoals(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useCreateGoal() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof client.createGoal>[0]) => client.createGoal(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.goals });
+      queryClient.invalidateQueries({ queryKey: queryKeys.consumerHome() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.weeklyBriefing });
+    },
+  });
+}
+
+export function useRecurringItems(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.recurringItems,
+    queryFn: () => client.listRecurringItems(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useUpdateRecurringItem() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, data }: { itemId: string; data: Parameters<typeof client.updateRecurringItem>[1] }) =>
+      client.updateRecurringItem(itemId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.recurringItems });
+      queryClient.invalidateQueries({ queryKey: queryKeys.consumerHome() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.reviewItems });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inboxItems });
+    },
+  });
+}
+
+export function useTransactionRules(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.transactionRules,
+    queryFn: () => client.listTransactionRules(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useCreateTransactionRule() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof client.createTransactionRule>[0]) =>
+      client.createTransactionRule(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactionRules });
+      queryClient.invalidateQueries({ queryKey: queryKeys.bankTransactions() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.spendingSummary() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.consumerHome() });
+    },
+  });
+}
+
+export function useInboxItems(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.inboxItems,
+    queryFn: () => client.listInboxItems(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useUpdateInboxItem() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, isResolved }: { itemId: string; isResolved: boolean }) =>
+      client.updateInboxItem(itemId, { is_resolved: isResolved }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.inboxItems });
+      queryClient.invalidateQueries({ queryKey: queryKeys.consumerHome() });
+    },
+  });
+}
+
+export function useReviewItems(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.reviewItems,
+    queryFn: () => client.listReviewItems(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useUpdateReviewItem() {
+  const client = useClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, status }: { itemId: string; status: Parameters<typeof client.updateReviewItem>[1] }) =>
+      client.updateReviewItem(itemId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.reviewItems });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inboxItems });
+      queryClient.invalidateQueries({ queryKey: queryKeys.consumerHome() });
+    },
+  });
+}
+
+export function useWeeklyBriefing(options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.weeklyBriefing,
+    queryFn: () => client.getWeeklyBriefing(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useConsumerHome(monthStart?: string, options?: { enabled?: boolean }) {
+  const client = useClient();
+  return useQuery({
+    queryKey: queryKeys.consumerHome(monthStart),
+    queryFn: () => client.getConsumerHome(monthStart),
+    enabled: options?.enabled ?? true,
   });
 }
 

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.models.crypto_wallet import CryptoWallet
     from app.models.debt_account import DebtAccount
     from app.models.entity import LegalEntity
+    from app.models.everyday import Budget, Goal, InboxItem, RecurringItem, ReviewItem, TransactionRule
     from app.models.equity_grant import EquityGrant
     from app.models.income_source import IncomeSource
     from app.models.investment_account import InvestmentAccount
@@ -64,5 +65,23 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     crypto_wallets: Mapped[list["CryptoWallet"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    budgets: Mapped[list["Budget"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    goals: Mapped[list["Goal"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    recurring_items: Mapped[list["RecurringItem"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    transaction_rules: Mapped[list["TransactionRule"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    inbox_items: Mapped[list["InboxItem"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    review_items: Mapped[list["ReviewItem"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )

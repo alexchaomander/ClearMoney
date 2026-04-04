@@ -50,12 +50,23 @@ class BankTransaction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     primary_category: Mapped[str | None] = mapped_column(String(100), index=True)
     detailed_category: Mapped[str | None] = mapped_column(String(100))
     plaid_category: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    user_primary_category: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Metadata
     merchant_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    user_merchant_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     payment_channel: Mapped[str | None] = mapped_column(String(50), nullable=True)
     pending: Mapped[bool] = mapped_column(Boolean, default=False)
     iso_currency_code: Mapped[str] = mapped_column(String(3), default="USD")
+    excluded_from_budget: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
+    excluded_from_goals: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
+    transaction_kind: Mapped[str] = mapped_column(
+        String(50), default="standard", server_default="standard"
+    )
 
     # User annotations for bookkeeping workflows.
     reimbursed_at: Mapped[datetime | None] = mapped_column(

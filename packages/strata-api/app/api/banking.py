@@ -13,6 +13,7 @@ from app.db.session import get_async_session
 from app.models.bank_transaction import BankTransaction
 from app.models.cash_account import CashAccount
 from app.models.connection import Connection, ConnectionStatus
+from app.models.everyday import TransactionKind
 from app.models.user import User
 from app.schemas.banking import (
     BankAccountResponse,
@@ -27,6 +28,13 @@ from app.schemas.banking import (
     SpendingSummaryResponse,
 )
 from app.services.banking_sync import sync_banking_connection
+from app.services.everyday import (
+    choose_rule,
+    effective_category,
+    effective_merchant,
+    excluded_from_budget,
+    get_transaction_rules,
+)
 from app.services.providers.plaid import PlaidProvider
 from app.services.subscriptions import SubscriptionService
 from app.services.user_refresh import refresh_user_financials
@@ -34,6 +42,40 @@ from app.services.user_refresh import refresh_user_financials
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/banking", tags=["banking"])
+
+
+def _serialize_transaction(
+    tx: BankTransaction,
+    rule=None,
+) -> BankTransactionResponse:
+    return BankTransactionResponse(
+        id=tx.id,
+        cash_account_id=tx.cash_account_id,
+        provider_transaction_id=tx.provider_transaction_id,
+        amount=tx.amount,
+        transaction_date=tx.transaction_date,
+        posted_date=tx.posted_date,
+        name=tx.name,
+        primary_category=effective_category(tx, rule),
+        detailed_category=tx.detailed_category,
+        user_primary_category=tx.user_primary_category,
+        merchant_name=effective_merchant(tx, rule),
+        user_merchant_name=tx.user_merchant_name,
+        payment_channel=tx.payment_channel,
+        pending=tx.pending,
+        iso_currency_code=tx.iso_currency_code,
+        excluded_from_budget=excluded_from_budget(tx, rule),
+        excluded_from_goals=tx.excluded_from_goals or bool(rule and rule.exclude_from_goals),
+        transaction_kind=(
+            tx.transaction_kind
+            or (rule.transaction_kind_override.value if rule and rule.transaction_kind_override else TransactionKind.standard.value)
+        ),
+        reimbursed_at=tx.reimbursed_at,
+        reimbursement_memo=tx.reimbursement_memo,
+        is_commingled=tx.is_commingled,
+        created_at=tx.created_at,
+        updated_at=tx.updated_at,
+    )
 
 
 def get_plaid_provider() -> PlaidProvider:
@@ -224,9 +266,12 @@ async def list_bank_transactions(
         .limit(page_size)
     )
     transactions = result.scalars().all()
+    rules = await get_transaction_rules(session, user.id)
 
     return PaginatedBankTransactions(
-        transactions=[BankTransactionResponse.model_validate(t) for t in transactions],
+        transactions=[
+            _serialize_transaction(t, choose_rule(rules, t)) for t in transactions
+        ],
         total=total,
         page=page,
         page_size=page_size,
@@ -251,16 +296,28 @@ async def update_bank_transaction_reimbursement(
     if not tx:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    if data.reimbursed:
+    if data.reimbursed is True:
         tx.reimbursed_at = datetime.now(timezone.utc)
         tx.reimbursement_memo = (data.memo or "").strip() or None
-    else:
+    elif data.reimbursed is False:
         tx.reimbursed_at = None
         tx.reimbursement_memo = None
 
+    if data.primary_category is not None:
+        tx.user_primary_category = data.primary_category.strip() or None
+    if data.merchant_name is not None:
+        tx.user_merchant_name = data.merchant_name.strip() or None
+    if data.exclude_from_budget is not None:
+        tx.excluded_from_budget = data.exclude_from_budget
+    if data.exclude_from_goals is not None:
+        tx.excluded_from_goals = data.exclude_from_goals
+    if data.transaction_kind is not None:
+        tx.transaction_kind = data.transaction_kind
+
     await session.commit()
     await session.refresh(tx)
-    return BankTransactionResponse.model_validate(tx)
+    rules = await get_transaction_rules(session, user.id)
+    return _serialize_transaction(tx, choose_rule(rules, tx))
 
 
 @router.get("/spending-summary", response_model=SpendingSummaryResponse)
@@ -303,28 +360,38 @@ async def get_spending_summary(
 
     result = await session.execute(category_query)
     rows = result.all()
+    rules = await get_transaction_rules(session, user.id)
 
-    # Calculate totals
-    total_spending = Decimal("0")
-    categories: list[SpendingCategoryBreakdown] = []
-
-    for row in rows:
-        amount = abs(row.total) if row.total else Decimal("0")
-        total_spending += amount
-
-    # Build category breakdown with percentages
-    for row in rows:
-        amount = abs(row.total) if row.total else Decimal("0")
-        percentage = float(amount / total_spending * 100) if total_spending > 0 else 0
-
-        categories.append(
-            SpendingCategoryBreakdown(
-                category=row.primary_category or "Uncategorized",
-                total=amount,
-                percentage=round(percentage, 2),
-                transaction_count=row.count,
-            )
+    tx_result = await session.execute(
+        select(BankTransaction)
+        .join(CashAccount)
+        .where(
+            CashAccount.user_id == user.id,
+            BankTransaction.transaction_date >= start_date,
+            BankTransaction.transaction_date <= end_date,
+            BankTransaction.amount < 0,
         )
+    )
+    category_totals: dict[str, Decimal] = {}
+    category_counts: dict[str, int] = {}
+    for tx in tx_result.scalars().all():
+        rule = choose_rule(rules, tx)
+        if excluded_from_budget(tx, rule):
+            continue
+        category = effective_category(tx, rule)
+        category_totals[category] = category_totals.get(category, Decimal("0")) + abs(tx.amount)
+        category_counts[category] = category_counts.get(category, 0) + 1
+
+    total_spending = sum(category_totals.values(), Decimal("0"))
+    categories = [
+        SpendingCategoryBreakdown(
+            category=category,
+            total=amount,
+            percentage=round(float(amount / total_spending * 100), 2) if total_spending > 0 else 0,
+            transaction_count=category_counts.get(category, 0),
+        )
+        for category, amount in sorted(category_totals.items(), key=lambda item: item[1], reverse=True)
+    ]
 
     monthly_average = (
         total_spending / Decimal(str(months)) if months > 0 else Decimal("0")
