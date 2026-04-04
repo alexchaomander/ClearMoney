@@ -12,40 +12,48 @@ Radically transparent, standalone calculators designed for immediate utility wit
 *   **Shot #3: AI Tax Shield Audit**: Instant document-upload preview that surfaces common tax signals and exposes the reasoning behind the result.
 *   **Public Decision Traces**: Every tool includes a sanitized "Show the Math" lineage, proving the deterministic logic behind every result.
 
-### 2. The Financial Advisor (AI Agent)
+### 2. Everyday Money OS
+The consumer layer for turning ClearMoney into a recurring personal-finance destination:
+*   **Budgets**: Monthly planning with category targets, actuals, and safe-to-spend framing.
+*   **Goals**: Savings and payoff goals with progress and contribution guidance.
+*   **Recurring Bills**: Durable recurring-item tracking built on transaction history.
+*   **Inbox + Review Queue**: Actionable consumer workflows for alerts, low-confidence items, and next moves.
+*   **Consumer Home**: A dedicated `/dashboard/everyday` surface for the month, the week, and the next move.
+
+### 3. The Financial Advisor (AI Agent)
 A context-aware AI powered by Claude that uses your live balances, holdings, and transactions to provide personalized, educational guidance across specialized skills:
 *   **Retirement & Tax**: Probabilistic modeling and tax-loss harvesting alerts.
 *   **Debt & Savings**: Automated snowball/avalanche planning and emergency fund monitoring.
 *   **Security Gated**: All AI-suggested actions are filtered through a configurable policy engine.
 
-### 2. Founder Operating Room
+### 4. Founder Operating Room
 A specialized intelligence layer for startup founders:
 *   **Commingling Detection**: Automatically flags personal spend on business accounts to protect the corporate veil.
 *   **Runway & Burn**: Real-time visuals for both Personal and Entity (Business) runway.
 *   **Subscription Audit**: Identifies recurring SaaS and service burn.
 *   **Tax Shield**: Monitors 1099/K-1 income and estimates quarterly tax obligations.
 
-### 3. Radical Transparency ("Show the Math")
+### 5. Radical Transparency ("Show the Math")
 *   **Metric Traces**: Every calculated number on the dashboard includes a "Trace" icon showing the raw data, formula, and confidence score.
 *   **Independence Audits**: We prove our recommendations are unbiased by auditing them against affiliate payout data.
 *   **Live Payout Disclosure**: Estimated affiliate network payouts for recommended products are disclosed upfront.
 
-### 4. Advanced Financial Modeling
+### 6. Advanced Financial Modeling
 *   **Monte Carlo Simulations**: Probabilistic retirement success modeling using 1,000 market iterations.
 *   **What-If Analysis**: Real-time override of assumptions (inflation, market return) to see ripples across your entire financial graph.
 
-### 5. Privacy & Trust
+### 7. Privacy & Trust
 *   **Vanish Mode**: Chat with the advisor in private sessions where no data is persisted.
 *   **Redacted Sharing**: Securely share financial reports with PII, institutions, and exact balances redacted.
 
-### 6. Strata Action Layer (Experimental)
+### 8. Strata Action Layer (Experimental)
 The foundation for autonomous personal finance:
 *   **Action Intents**: Standardized primitives for drafting financial actions (ACATS rollovers, ACH transfers).
 *   **War Room**: Queue, review, authorize, and execute financial actions with biometric approval.
 *   **Switch Kit Generation**: Auto-generated ACATS/ACH transfer documents as PDFs.
 *   **Action Lab**: An interactive preview of the autonomous agentic economy.
 
-### 7. Privacy-Preserving Proofs (SVP)
+### 9. Privacy-Preserving Proofs (SVP)
 Securely prove your financial standing without revealing sensitive data:
 *   **Proof of Funds**: Generate a cryptographically signed attestation that your liquid assets exceed a specific threshold.
 *   **Verification Portal**: A public gateway for landlords and lenders to verify Strata-signed claims instantly.
@@ -169,6 +177,7 @@ GitHub Actions runs on every push and PR:
 ---
 
 ## Documentation
+*   [Handoff](./HANDOFF.md) — Current implementation state, verification commands, and next-agent build order
 *   [Roadmap](./ROADMAP.md) — Strategic vision, competitive positioning, phased plan
 *   [Implementation Plan](./IMPLEMENTATION_PLAN.md) — Engineering execution plan with task breakdowns
 *   [Brand Guide](./BRANDING.md) — Voice, visual identity, messaging framework

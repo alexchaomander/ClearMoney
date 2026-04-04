@@ -106,6 +106,224 @@ export interface NotificationResponse {
   updated_at: string;
 }
 
+export type BudgetCategoryType = "fixed" | "flexible";
+export type GoalType = "emergency_fund" | "general_savings" | "debt_payoff" | "major_purchase";
+export type GoalStatus = "active" | "paused" | "completed";
+export type RecurringCadence = "weekly" | "monthly" | "quarterly";
+export type RecurringState = "review" | "active" | "dismissed";
+export type RuleMatchMode = "contains" | "exact";
+export type TransactionKind = "standard" | "transfer" | "personal" | "business";
+export type InboxItemType = "budget_drift" | "recurring_change" | "goal_risk" | "data_freshness" | "review" | "general";
+export type ReviewItemType = "transaction" | "recurring" | "goal";
+export type ReviewItemStatus = "open" | "resolved" | "dismissed";
+
+export interface BudgetCategoryInput {
+  name: string;
+  planned_amount: number;
+  category_type?: BudgetCategoryType;
+  rollover_enabled?: boolean;
+  rollover_amount?: number;
+}
+
+export interface Budget {
+  id: string;
+  user_id: string;
+  name: string;
+  month_start: string;
+  notes: string | null;
+  categories: Array<BudgetCategoryInput & {
+    id: string;
+    budget_id: string;
+    created_at: string;
+    updated_at: string;
+  }>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BudgetCreate {
+  name?: string;
+  month_start: string;
+  notes?: string | null;
+  categories?: BudgetCategoryInput[];
+}
+
+export interface BudgetUpdate {
+  name?: string;
+  notes?: string | null;
+  categories?: BudgetCategoryInput[];
+}
+
+export interface BudgetSummaryCategory {
+  id: string;
+  name: string;
+  planned_amount: number;
+  actual_amount: number;
+  remaining_amount: number;
+  category_type: BudgetCategoryType;
+  rollover_enabled: boolean;
+  rollover_amount: number;
+}
+
+export interface BudgetSummary {
+  budget_id: string;
+  month_start: string;
+  month_end: string;
+  total_planned: number;
+  total_actual: number;
+  total_remaining: number;
+  safe_to_spend: number;
+  categories: BudgetSummaryCategory[];
+}
+
+export interface Goal {
+  id: string;
+  user_id: string;
+  name: string;
+  goal_type: GoalType;
+  target_amount: number;
+  current_amount: number;
+  monthly_contribution: number | null;
+  target_date: string | null;
+  linked_account_ids: string[] | null;
+  status: GoalStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GoalCreate {
+  name: string;
+  goal_type?: GoalType;
+  target_amount: number;
+  current_amount?: number;
+  monthly_contribution?: number | null;
+  target_date?: string | null;
+  linked_account_ids?: string[] | null;
+  status?: GoalStatus;
+}
+
+export interface GoalUpdate extends Partial<GoalCreate> {}
+
+export interface GoalProgress {
+  id: string;
+  name: string;
+  goal_type: GoalType;
+  target_amount: number;
+  current_amount: number;
+  progress_percent: number;
+  monthly_contribution: number | null;
+  target_date: string | null;
+  required_monthly_contribution: number | null;
+  status: GoalStatus;
+}
+
+export interface RecurringItem {
+  id: string;
+  user_id: string;
+  name: string;
+  merchant_name: string;
+  category: string | null;
+  cadence: RecurringCadence;
+  expected_amount: number;
+  amount_tolerance: number;
+  next_due_date: string | null;
+  last_seen_at: string | null;
+  confidence: number;
+  state: RecurringState;
+  metadata_json: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecurringItemUpdate {
+  name?: string;
+  category?: string | null;
+  cadence?: RecurringCadence;
+  expected_amount?: number;
+  amount_tolerance?: number;
+  next_due_date?: string | null;
+  state?: RecurringState;
+}
+
+export interface TransactionRule {
+  id: string;
+  user_id: string;
+  name: string;
+  match_text: string;
+  match_mode: RuleMatchMode;
+  merchant_name_override: string | null;
+  primary_category_override: string | null;
+  transaction_kind_override: TransactionKind | null;
+  exclude_from_budget: boolean;
+  exclude_from_goals: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TransactionRuleCreate {
+  name: string;
+  match_text: string;
+  match_mode?: RuleMatchMode;
+  merchant_name_override?: string | null;
+  primary_category_override?: string | null;
+  transaction_kind_override?: TransactionKind | null;
+  exclude_from_budget?: boolean;
+  exclude_from_goals?: boolean;
+  is_active?: boolean;
+}
+
+export interface TransactionRuleUpdate extends Partial<TransactionRuleCreate> {}
+
+export interface InboxItem {
+  id: string;
+  user_id: string;
+  item_type: InboxItemType;
+  severity: "info" | "warning" | "critical";
+  title: string;
+  message: string;
+  due_at: string | null;
+  is_resolved: boolean;
+  action_url: string | null;
+  metadata_json: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReviewItem {
+  id: string;
+  user_id: string;
+  review_type: ReviewItemType;
+  title: string;
+  message: string;
+  status: ReviewItemStatus;
+  confidence: number | null;
+  source_type: string | null;
+  source_id: string | null;
+  due_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WeeklyBriefing {
+  period_start: string;
+  period_end: string;
+  spending_total: number;
+  net_worth_change: number;
+  goal_risk_count: number;
+  recurring_review_count: number;
+  headline: string;
+}
+
+export interface ConsumerHome {
+  budget_summary: BudgetSummary | null;
+  goals: GoalProgress[];
+  recurring_items: RecurringItem[];
+  inbox_items: InboxItem[];
+  review_items: ReviewItem[];
+  weekly_briefing: WeeklyBriefing;
+}
+
 export interface ActionPolicyRequest {
   allowed_actions: string[];
   max_amount: number | null;
@@ -1693,10 +1911,15 @@ export interface BankTransaction {
   name: string;
   primary_category: string | null;
   detailed_category: string | null;
+  user_primary_category: string | null;
   merchant_name: string | null;
+  user_merchant_name: string | null;
   payment_channel: string | null;
   pending: boolean;
   iso_currency_code: string;
+  excluded_from_budget: boolean;
+  excluded_from_goals: boolean;
+  transaction_kind: TransactionKind;
   reimbursed_at: string | null;
   reimbursement_memo: string | null;
   is_commingled?: boolean;
@@ -1714,8 +1937,13 @@ export interface BankTransactionQuery {
 }
 
 export interface BankTransactionReimbursementUpdate {
-  reimbursed: boolean;
+  reimbursed?: boolean;
   memo?: string | null;
+  primary_category?: string | null;
+  merchant_name?: string | null;
+  exclude_from_budget?: boolean;
+  exclude_from_goals?: boolean;
+  transaction_kind?: TransactionKind;
 }
 
 export interface PaginatedBankTransactions {

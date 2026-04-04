@@ -2,6 +2,10 @@ import type {
   AdvisorRecommendation,
   AdvisorSession,
   AdvisorSessionSummary,
+  Budget,
+  BudgetCreate,
+  BudgetSummary,
+  BudgetUpdate,
   AllAccountsResponse,
   BankAccount,
   BankTransaction,
@@ -34,6 +38,10 @@ import type {
   EquityGrantUpdate,
   EquityPortfolioSummary,
   EquityProjection,
+  Goal,
+  GoalCreate,
+  GoalUpdate,
+  InboxItem,
   MemoryEvent,
   PaginatedBankTransactions,
   PlaidCallbackRequest,
@@ -64,6 +72,10 @@ import type {
   SkillSummary,
   PortfolioHistoryRange,
   PortfolioSummary,
+  RecurringItem,
+  RecurringItemUpdate,
+  ReviewItem,
+  ReviewItemStatus,
   SpendingSummary,
   SubscriptionSummary,
   TaxShieldMetrics,
@@ -109,6 +121,7 @@ import type {
   TaxPlanVersion,
   TaxPlanVersionCreateRequest,
   NotificationResponse,
+  ConsumerHome,
   UserResponse,
   ActionPolicyRequest,
   ActionPolicyResponse,
@@ -129,7 +142,11 @@ import type {
   VehicleSearchRequest,
   VehicleSearchResult,
   Invoice,
+  TransactionRule,
+  TransactionRuleCreate,
+  TransactionRuleUpdate,
   UpgradeResponse,
+  WeeklyBriefing,
 } from './types';
 
 export interface StrataClientInterface {
@@ -168,6 +185,27 @@ export interface StrataClientInterface {
   updateDebtAccount(id: string, data: DebtAccountUpdate): Promise<DebtAccount>;
   deleteDebtAccount(id: string): Promise<void>;
   getPortfolioHistory(range: PortfolioHistoryRange): Promise<PortfolioHistoryPoint[]>;
+  listBudgets(): Promise<Budget[]>;
+  createBudget(data: BudgetCreate): Promise<Budget>;
+  updateBudget(budgetId: string, data: BudgetUpdate): Promise<Budget>;
+  deleteBudget(budgetId: string): Promise<{ status: string }>;
+  getBudgetSummary(budgetId: string): Promise<BudgetSummary>;
+  listGoals(): Promise<Goal[]>;
+  createGoal(data: GoalCreate): Promise<Goal>;
+  updateGoal(goalId: string, data: GoalUpdate): Promise<Goal>;
+  deleteGoal(goalId: string): Promise<{ status: string }>;
+  listRecurringItems(): Promise<RecurringItem[]>;
+  updateRecurringItem(itemId: string, data: RecurringItemUpdate): Promise<RecurringItem>;
+  listTransactionRules(): Promise<TransactionRule[]>;
+  createTransactionRule(data: TransactionRuleCreate): Promise<TransactionRule>;
+  updateTransactionRule(ruleId: string, data: TransactionRuleUpdate): Promise<TransactionRule>;
+  deleteTransactionRule(ruleId: string): Promise<{ status: string }>;
+  listInboxItems(): Promise<InboxItem[]>;
+  updateInboxItem(itemId: string, data: { is_resolved: boolean }): Promise<InboxItem>;
+  listReviewItems(): Promise<ReviewItem[]>;
+  updateReviewItem(itemId: string, status: ReviewItemStatus): Promise<ReviewItem>;
+  getWeeklyBriefing(): Promise<WeeklyBriefing>;
+  getConsumerHome(monthStart?: string): Promise<ConsumerHome>;
   // Financial Memory
   getFinancialMemory(): Promise<FinancialMemory>;
   updateFinancialMemory(data: FinancialMemoryUpdate): Promise<FinancialMemory>;
@@ -708,6 +746,123 @@ export class StrataClient implements StrataClientInterface {
     return this.request<PortfolioHistoryPoint[]>(
       this.buildUrl('/api/v1/portfolio/history', { range })
     );
+  }
+
+  async listBudgets(): Promise<Budget[]> {
+    return this.request<Budget[]>("/api/v1/budgets");
+  }
+
+  async createBudget(data: BudgetCreate): Promise<Budget> {
+    return this.request<Budget>("/api/v1/budgets", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateBudget(budgetId: string, data: BudgetUpdate): Promise<Budget> {
+    return this.request<Budget>(`/api/v1/budgets/${budgetId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteBudget(budgetId: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>(`/api/v1/budgets/${budgetId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async getBudgetSummary(budgetId: string): Promise<BudgetSummary> {
+    return this.request<BudgetSummary>(`/api/v1/budgets/${budgetId}/summary`);
+  }
+
+  async listGoals(): Promise<Goal[]> {
+    return this.request<Goal[]>("/api/v1/goals");
+  }
+
+  async createGoal(data: GoalCreate): Promise<Goal> {
+    return this.request<Goal>("/api/v1/goals", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateGoal(goalId: string, data: GoalUpdate): Promise<Goal> {
+    return this.request<Goal>(`/api/v1/goals/${goalId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteGoal(goalId: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>(`/api/v1/goals/${goalId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async listRecurringItems(): Promise<RecurringItem[]> {
+    return this.request<RecurringItem[]>("/api/v1/recurring-items");
+  }
+
+  async updateRecurringItem(itemId: string, data: RecurringItemUpdate): Promise<RecurringItem> {
+    return this.request<RecurringItem>(`/api/v1/recurring-items/${itemId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async listTransactionRules(): Promise<TransactionRule[]> {
+    return this.request<TransactionRule[]>("/api/v1/transaction-rules");
+  }
+
+  async createTransactionRule(data: TransactionRuleCreate): Promise<TransactionRule> {
+    return this.request<TransactionRule>("/api/v1/transaction-rules", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateTransactionRule(ruleId: string, data: TransactionRuleUpdate): Promise<TransactionRule> {
+    return this.request<TransactionRule>(`/api/v1/transaction-rules/${ruleId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteTransactionRule(ruleId: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>(`/api/v1/transaction-rules/${ruleId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async listInboxItems(): Promise<InboxItem[]> {
+    return this.request<InboxItem[]>("/api/v1/inbox");
+  }
+
+  async updateInboxItem(itemId: string, data: { is_resolved: boolean }): Promise<InboxItem> {
+    return this.request<InboxItem>(`/api/v1/inbox/${itemId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async listReviewItems(): Promise<ReviewItem[]> {
+    return this.request<ReviewItem[]>("/api/v1/review-items");
+  }
+
+  async updateReviewItem(itemId: string, status: ReviewItemStatus): Promise<ReviewItem> {
+    return this.request<ReviewItem>(`/api/v1/review-items/${itemId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async getWeeklyBriefing(): Promise<WeeklyBriefing> {
+    return this.request<WeeklyBriefing>("/api/v1/weekly-briefing");
+  }
+
+  async getConsumerHome(monthStart?: string): Promise<ConsumerHome> {
+    return this.request<ConsumerHome>(this.buildUrl("/api/v1/consumer-home", { month_start: monthStart }));
   }
 
   // === Financial Memory ===

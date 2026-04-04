@@ -7,6 +7,10 @@ import type {
   ActionPolicyRequest,
   ActionPolicyResponse,
   AllAccountsResponse,
+  Budget,
+  BudgetCreate,
+  BudgetSummary,
+  BudgetUpdate,
   BankAccount,
   BankTransaction,
   BankTransactionQuery,
@@ -30,6 +34,7 @@ import type {
   AdvisorSessionSummary,
   ConsentCreateRequest,
   ConsentResponse,
+  ConsumerHome,
   DecisionTrace,
   FinancialCorrection,
   FinancialCorrectionCreate,
@@ -91,6 +96,7 @@ import type {
   LinkSessionRequest,
   LinkSessionResponse,
   MemoryEvent,
+  InboxItem,
   NotificationResponse,
   UserResponse,
   MetricTrace,
@@ -102,8 +108,14 @@ import type {
   StrataClientInterface,
   Subscription,
   SubscriptionSummary,
+  Goal,
+  GoalCreate,
+  GoalUpdate,
   TaxShieldMetrics,
   Transaction,
+  TransactionRule,
+  TransactionRuleCreate,
+  TransactionRuleUpdate,
   VulnerabilityReport,
   CreditCard,
   CryptoWallet,
@@ -135,6 +147,11 @@ import type {
   UpgradeResponse,
   BriefingSummary,
   NarrativeResponse,
+  RecurringItem,
+  RecurringItemUpdate,
+  ReviewItem,
+  ReviewItemStatus,
+  WeeklyBriefing,
 } from "@clearmoney/strata-sdk";
 
 import {
@@ -171,6 +188,12 @@ const DEMO_SHARE_REPORTS_STORAGE_KEY = "clearmoney-demo-share-reports.v1";
 const DEMO_TAX_DOCS_STORAGE_KEY = "clearmoney-demo-tax-docs.v1";
 const DEMO_TAX_PLANS_STORAGE_KEY = "clearmoney-demo-tax-plans.v1";
 const DEMO_BANK_TX_REIMBURSEMENTS_STORAGE_KEY = "clearmoney-demo-bank-tx-reimbursements.v1";
+const DEMO_BUDGETS_STORAGE_KEY = "clearmoney-demo-budgets.v1";
+const DEMO_GOALS_STORAGE_KEY = "clearmoney-demo-goals.v1";
+const DEMO_RECURRING_STORAGE_KEY = "clearmoney-demo-recurring.v1";
+const DEMO_TRANSACTION_RULES_STORAGE_KEY = "clearmoney-demo-transaction-rules.v1";
+const DEMO_INBOX_STORAGE_KEY = "clearmoney-demo-inbox.v1";
+const DEMO_REVIEW_STORAGE_KEY = "clearmoney-demo-review.v1";
 const DEMO_SYNC_CHANNEL_NAME = "clearmoney-demo-sync.v1";
 
 type DemoShareReportRecord = ShareReportListItem & {
@@ -501,10 +524,15 @@ function buildDemoBankTransactions(now: Date = new Date()): BankTransaction[] {
     name,
     primary_category: primaryCategory,
     detailed_category: null,
+    user_primary_category: null,
     merchant_name: merchant,
+    user_merchant_name: null,
     payment_channel: null,
     pending: false,
     iso_currency_code: "USD",
+    excluded_from_budget: false,
+    excluded_from_goals: false,
+    transaction_kind: "standard",
     reimbursed_at: null,
     reimbursement_memo: null,
     created_at: now.toISOString(),
@@ -523,6 +551,199 @@ function writeDemoBankReimbursements(
   reimbursements: Record<string, { reimbursed_at: string; reimbursement_memo: string | null }>
 ): void {
   writeStorageJson(DEMO_BANK_TX_REIMBURSEMENTS_STORAGE_KEY, reimbursements);
+}
+
+function currentMonthStartIso(now: Date = new Date()): string {
+  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+}
+
+function readDemoBudgets(now: Date = new Date()): Budget[] {
+  return readStorageJson<Budget[]>(DEMO_BUDGETS_STORAGE_KEY, [
+    {
+      id: "demo-budget-001",
+      user_id: "demo-user-001",
+      name: "April plan",
+      month_start: currentMonthStartIso(now),
+      notes: "Keep fixed costs tight and protect runway.",
+      categories: [
+        {
+          id: "demo-budget-cat-1",
+          budget_id: "demo-budget-001",
+          name: "FOOD_AND_DRINK",
+          planned_amount: 500,
+          category_type: "flexible",
+          rollover_enabled: false,
+          rollover_amount: 0,
+          created_at: now.toISOString(),
+          updated_at: now.toISOString(),
+        },
+        {
+          id: "demo-budget-cat-2",
+          budget_id: "demo-budget-001",
+          name: "SHOPPING",
+          planned_amount: 350,
+          category_type: "flexible",
+          rollover_enabled: false,
+          rollover_amount: 0,
+          created_at: now.toISOString(),
+          updated_at: now.toISOString(),
+        },
+        {
+          id: "demo-budget-cat-3",
+          budget_id: "demo-budget-001",
+          name: "TRANSFER_OUT",
+          planned_amount: 1200,
+          category_type: "fixed",
+          rollover_enabled: false,
+          rollover_amount: 0,
+          created_at: now.toISOString(),
+          updated_at: now.toISOString(),
+        },
+      ],
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+    },
+  ]);
+}
+
+function writeDemoBudgets(budgets: Budget[]): void {
+  writeStorageJson(DEMO_BUDGETS_STORAGE_KEY, budgets);
+}
+
+function readDemoGoals(now: Date = new Date()): Goal[] {
+  return readStorageJson<Goal[]>(DEMO_GOALS_STORAGE_KEY, [
+    {
+      id: "demo-goal-001",
+      user_id: "demo-user-001",
+      name: "Emergency fund",
+      goal_type: "emergency_fund",
+      target_amount: 30000,
+      current_amount: 18000,
+      monthly_contribution: 1500,
+      target_date: new Date(now.getFullYear(), now.getMonth() + 8, 1).toISOString().slice(0, 10),
+      linked_account_ids: ["demo-bank-business-001"],
+      status: "active",
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+    },
+  ]);
+}
+
+function writeDemoGoals(goals: Goal[]): void {
+  writeStorageJson(DEMO_GOALS_STORAGE_KEY, goals);
+}
+
+function readDemoRecurring(now: Date = new Date()): RecurringItem[] {
+  return readStorageJson<RecurringItem[]>(DEMO_RECURRING_STORAGE_KEY, [
+    {
+      id: "demo-recurring-001",
+      user_id: "demo-user-001",
+      name: "Google Workspace",
+      merchant_name: "Google Workspace",
+      category: "TRANSFER_OUT",
+      cadence: "monthly",
+      expected_amount: 180,
+      amount_tolerance: 27,
+      next_due_date: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 9).toISOString().slice(0, 10),
+      last_seen_at: now.toISOString(),
+      confidence: 0.94,
+      state: "active",
+      metadata_json: { source: "demo" },
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+    },
+    {
+      id: "demo-recurring-002",
+      user_id: "demo-user-001",
+      name: "Stripe Atlas",
+      merchant_name: "Stripe Atlas",
+      category: "TRANSFER_OUT",
+      cadence: "quarterly",
+      expected_amount: 1200,
+      amount_tolerance: 180,
+      next_due_date: new Date(now.getFullYear(), now.getMonth() + 1, 15).toISOString().slice(0, 10),
+      last_seen_at: now.toISOString(),
+      confidence: 0.82,
+      state: "review",
+      metadata_json: { source: "demo" },
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+    },
+  ]);
+}
+
+function writeDemoRecurring(items: RecurringItem[]): void {
+  writeStorageJson(DEMO_RECURRING_STORAGE_KEY, items);
+}
+
+function readDemoTransactionRules(now: Date = new Date()): TransactionRule[] {
+  return readStorageJson<TransactionRule[]>(DEMO_TRANSACTION_RULES_STORAGE_KEY, [
+    {
+      id: "demo-rule-001",
+      user_id: "demo-user-001",
+      name: "Stripe always business transfer",
+      match_text: "stripe",
+      match_mode: "contains",
+      merchant_name_override: "Stripe",
+      primary_category_override: "TRANSFER_OUT",
+      transaction_kind_override: "business",
+      exclude_from_budget: false,
+      exclude_from_goals: false,
+      is_active: true,
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+    },
+  ]);
+}
+
+function writeDemoTransactionRules(rules: TransactionRule[]): void {
+  writeStorageJson(DEMO_TRANSACTION_RULES_STORAGE_KEY, rules);
+}
+
+function readDemoInbox(now: Date = new Date()): InboxItem[] {
+  return readStorageJson<InboxItem[]>(DEMO_INBOX_STORAGE_KEY, [
+    {
+      id: "demo-inbox-001",
+      user_id: "demo-user-001",
+      item_type: "review",
+      severity: "info",
+      title: "2 items need review",
+      message: "Confirm recurring charges and categorize stale transactions.",
+      due_at: null,
+      is_resolved: false,
+      action_url: "/dashboard/everyday",
+      metadata_json: null,
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+    },
+  ]);
+}
+
+function writeDemoInbox(items: InboxItem[]): void {
+  writeStorageJson(DEMO_INBOX_STORAGE_KEY, items);
+}
+
+function readDemoReview(now: Date = new Date()): ReviewItem[] {
+  return readStorageJson<ReviewItem[]>(DEMO_REVIEW_STORAGE_KEY, [
+    {
+      id: "demo-review-001",
+      user_id: "demo-user-001",
+      review_type: "recurring",
+      title: "Confirm recurring charge: Stripe Atlas",
+      message: "We detected a quarterly recurring pattern. Confirm the amount and cadence.",
+      status: "open",
+      confidence: 0.82,
+      source_type: "recurring_item",
+      source_id: "demo-recurring-002",
+      due_at: null,
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+    },
+  ]);
+}
+
+function writeDemoReview(items: ReviewItem[]): void {
+  writeStorageJson(DEMO_REVIEW_STORAGE_KEY, items);
 }
 
 export class DemoStrataClient implements StrataClientInterface {
@@ -872,6 +1093,280 @@ export class DemoStrataClient implements StrataClientInterface {
   async getPortfolioHistory(range: PortfolioHistoryRange): Promise<PortfolioHistoryPoint[]> {
     await delay(300);
     return getDemoPortfolioHistory(range);
+  }
+
+  async listBudgets(): Promise<Budget[]> {
+    await delay(200);
+    return readDemoBudgets();
+  }
+
+  async createBudget(data: BudgetCreate): Promise<Budget> {
+    await delay(250);
+    const now = new Date().toISOString();
+    const budgets = readDemoBudgets();
+    const budget: Budget = {
+      id: crypto.randomUUID(),
+      user_id: "demo-user-001",
+      name: data.name ?? "Monthly plan",
+      month_start: data.month_start,
+      notes: data.notes ?? null,
+      categories: (data.categories ?? []).map((category) => ({
+        id: crypto.randomUUID(),
+        budget_id: "",
+        name: category.name,
+        planned_amount: category.planned_amount,
+        category_type: category.category_type ?? "flexible",
+        rollover_enabled: category.rollover_enabled ?? false,
+        rollover_amount: category.rollover_amount ?? 0,
+        created_at: now,
+        updated_at: now,
+      })),
+      created_at: now,
+      updated_at: now,
+    };
+    budget.categories = budget.categories.map((category) => ({ ...category, budget_id: budget.id }));
+    writeDemoBudgets([budget, ...budgets]);
+    return budget;
+  }
+
+  async updateBudget(budgetId: string, data: BudgetUpdate): Promise<Budget> {
+    await delay(250);
+    const budgets = readDemoBudgets();
+    const current = budgets.find((budget) => budget.id === budgetId);
+    if (!current) throw new Error("budget-not-found");
+    const updated: Budget = {
+      ...current,
+      ...data,
+      categories: data.categories
+        ? data.categories.map((category) => ({
+            id: crypto.randomUUID(),
+            budget_id: budgetId,
+            name: category.name,
+            planned_amount: category.planned_amount,
+            category_type: category.category_type ?? "flexible",
+            rollover_enabled: category.rollover_enabled ?? false,
+            rollover_amount: category.rollover_amount ?? 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }))
+        : current.categories,
+      updated_at: new Date().toISOString(),
+    };
+    writeDemoBudgets(budgets.map((budget) => (budget.id === budgetId ? updated : budget)));
+    return updated;
+  }
+
+  async deleteBudget(budgetId: string): Promise<{ status: string }> {
+    await delay(200);
+    writeDemoBudgets(readDemoBudgets().filter((budget) => budget.id !== budgetId));
+    return { status: "deleted" };
+  }
+
+  async getBudgetSummary(budgetId: string): Promise<BudgetSummary> {
+    await delay(200);
+    const budget = readDemoBudgets().find((item) => item.id === budgetId);
+    if (!budget) throw new Error("budget-not-found");
+    const txs = buildDemoBankTransactions();
+    const totals = new Map<string, number>();
+    for (const tx of txs) {
+      totals.set(tx.primary_category ?? "Uncategorized", (totals.get(tx.primary_category ?? "Uncategorized") ?? 0) + Math.abs(tx.amount));
+    }
+	    const categories = budget.categories.map((category) => {
+	      const actual = totals.get(category.name) ?? 0;
+	      const plannedAmount = category.planned_amount ?? 0;
+	      const rolloverEnabled = category.rollover_enabled ?? false;
+	      const rolloverAmount = category.rollover_amount ?? 0;
+	      return {
+	        id: category.id,
+	        name: category.name,
+	        planned_amount: plannedAmount + (rolloverEnabled ? rolloverAmount : 0),
+	        actual_amount: actual,
+	        remaining_amount: plannedAmount + (rolloverEnabled ? rolloverAmount : 0) - actual,
+	        category_type: category.category_type ?? "flexible",
+	        rollover_enabled: rolloverEnabled,
+	        rollover_amount: rolloverAmount,
+	      };
+	    });
+    const totalPlanned = categories.reduce((sum, category) => sum + category.planned_amount, 0);
+    const totalActual = categories.reduce((sum, category) => sum + category.actual_amount, 0);
+    return {
+      budget_id: budget.id,
+      month_start: budget.month_start,
+      month_end: budget.month_start,
+      total_planned: totalPlanned,
+      total_actual: totalActual,
+      total_remaining: totalPlanned - totalActual,
+      safe_to_spend: Math.max(totalPlanned - totalActual, 0),
+      categories,
+    };
+  }
+
+  async listGoals(): Promise<Goal[]> {
+    await delay(200);
+    return readDemoGoals();
+  }
+
+  async createGoal(data: GoalCreate): Promise<Goal> {
+    await delay(250);
+    const now = new Date().toISOString();
+    const goal: Goal = {
+      id: crypto.randomUUID(),
+      user_id: "demo-user-001",
+      name: data.name,
+      goal_type: data.goal_type ?? "general_savings",
+      target_amount: data.target_amount,
+      current_amount: data.current_amount ?? 0,
+      monthly_contribution: data.monthly_contribution ?? null,
+      target_date: data.target_date ?? null,
+      linked_account_ids: data.linked_account_ids ?? null,
+      status: data.status ?? "active",
+      created_at: now,
+      updated_at: now,
+    };
+    writeDemoGoals([goal, ...readDemoGoals()]);
+    return goal;
+  }
+
+  async updateGoal(goalId: string, data: GoalUpdate): Promise<Goal> {
+    await delay(250);
+    const goals = readDemoGoals();
+    const current = goals.find((goal) => goal.id === goalId);
+    if (!current) throw new Error("goal-not-found");
+    const updated = { ...current, ...data, updated_at: new Date().toISOString() };
+    writeDemoGoals(goals.map((goal) => (goal.id === goalId ? updated : goal)));
+    return updated;
+  }
+
+  async deleteGoal(goalId: string): Promise<{ status: string }> {
+    await delay(200);
+    writeDemoGoals(readDemoGoals().filter((goal) => goal.id !== goalId));
+    return { status: "deleted" };
+  }
+
+  async listRecurringItems(): Promise<RecurringItem[]> {
+    await delay(200);
+    return readDemoRecurring();
+  }
+
+  async updateRecurringItem(itemId: string, data: RecurringItemUpdate): Promise<RecurringItem> {
+    await delay(250);
+    const items = readDemoRecurring();
+    const current = items.find((item) => item.id === itemId);
+    if (!current) throw new Error("recurring-not-found");
+    const updated = { ...current, ...data, updated_at: new Date().toISOString() };
+    writeDemoRecurring(items.map((item) => (item.id === itemId ? updated : item)));
+    return updated;
+  }
+
+  async listTransactionRules(): Promise<TransactionRule[]> {
+    await delay(200);
+    return readDemoTransactionRules();
+  }
+
+  async createTransactionRule(data: TransactionRuleCreate): Promise<TransactionRule> {
+    await delay(250);
+    const rule: TransactionRule = {
+      id: crypto.randomUUID(),
+      user_id: "demo-user-001",
+      name: data.name,
+      match_text: data.match_text,
+      match_mode: data.match_mode ?? "contains",
+      merchant_name_override: data.merchant_name_override ?? null,
+      primary_category_override: data.primary_category_override ?? null,
+      transaction_kind_override: data.transaction_kind_override ?? null,
+      exclude_from_budget: data.exclude_from_budget ?? false,
+      exclude_from_goals: data.exclude_from_goals ?? false,
+      is_active: data.is_active ?? true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    writeDemoTransactionRules([rule, ...readDemoTransactionRules()]);
+    return rule;
+  }
+
+  async updateTransactionRule(ruleId: string, data: TransactionRuleUpdate): Promise<TransactionRule> {
+    await delay(250);
+    const rules = readDemoTransactionRules();
+    const current = rules.find((rule) => rule.id === ruleId);
+    if (!current) throw new Error("rule-not-found");
+    const updated = { ...current, ...data, updated_at: new Date().toISOString() };
+    writeDemoTransactionRules(rules.map((rule) => (rule.id === ruleId ? updated : rule)));
+    return updated;
+  }
+
+  async deleteTransactionRule(ruleId: string): Promise<{ status: string }> {
+    await delay(200);
+    writeDemoTransactionRules(readDemoTransactionRules().filter((rule) => rule.id !== ruleId));
+    return { status: "deleted" };
+  }
+
+  async listInboxItems(): Promise<InboxItem[]> {
+    await delay(200);
+    return readDemoInbox();
+  }
+
+  async updateInboxItem(itemId: string, data: { is_resolved: boolean }): Promise<InboxItem> {
+    await delay(200);
+    const items = readDemoInbox();
+    const current = items.find((item) => item.id === itemId);
+    if (!current) throw new Error("inbox-item-not-found");
+    const updated = { ...current, is_resolved: data.is_resolved, updated_at: new Date().toISOString() };
+    writeDemoInbox(items.map((item) => (item.id === itemId ? updated : item)));
+    return updated;
+  }
+
+  async listReviewItems(): Promise<ReviewItem[]> {
+    await delay(200);
+    return readDemoReview();
+  }
+
+  async updateReviewItem(itemId: string, status: ReviewItemStatus): Promise<ReviewItem> {
+    await delay(200);
+    const items = readDemoReview();
+    const current = items.find((item) => item.id === itemId);
+    if (!current) throw new Error("review-item-not-found");
+    const updated = { ...current, status, updated_at: new Date().toISOString() };
+    writeDemoReview(items.map((item) => (item.id === itemId ? updated : item)));
+    return updated;
+  }
+
+  async getWeeklyBriefing(): Promise<WeeklyBriefing> {
+    await delay(200);
+    return {
+      period_start: new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10),
+      period_end: new Date().toISOString().slice(0, 10),
+      spending_total: 2847,
+      net_worth_change: 4200,
+      goal_risk_count: 1,
+      recurring_review_count: 1,
+      headline: "You spent $2,847 in the last 7 days and gained $4,200 in net worth.",
+    };
+  }
+
+  async getConsumerHome(_monthStart?: string): Promise<ConsumerHome> {
+    await delay(250);
+    const budgets = readDemoBudgets();
+    const budgetSummary = budgets[0] ? await this.getBudgetSummary(budgets[0].id) : null;
+    const goals = readDemoGoals().map((goal) => ({
+      id: goal.id,
+      name: goal.name,
+      goal_type: goal.goal_type,
+      target_amount: goal.target_amount,
+      current_amount: goal.current_amount,
+      progress_percent: goal.target_amount > 0 ? Math.round((goal.current_amount / goal.target_amount) * 1000) / 10 : 0,
+      monthly_contribution: goal.monthly_contribution,
+      target_date: goal.target_date,
+      required_monthly_contribution: goal.monthly_contribution,
+      status: goal.status,
+    }));
+    return {
+      budget_summary: budgetSummary,
+      goals,
+      recurring_items: readDemoRecurring(),
+      inbox_items: readDemoInbox(),
+      review_items: readDemoReview(),
+      weekly_briefing: await this.getWeeklyBriefing(),
+    };
   }
 
   // === Financial Memory ===
@@ -1499,7 +1994,7 @@ export class DemoStrataClient implements StrataClientInterface {
         reimbursed_at: new Date().toISOString(),
         reimbursement_memo: _data.memo ?? null,
       };
-    } else {
+    } else if (_data.reimbursed === false) {
       delete reimbursements[_id];
     }
     writeDemoBankReimbursements(reimbursements);
@@ -1511,6 +2006,11 @@ export class DemoStrataClient implements StrataClientInterface {
     const reimbursement = reimbursements[_id];
     return {
       ...updated,
+      user_primary_category: _data.primary_category ?? updated.user_primary_category,
+      user_merchant_name: _data.merchant_name ?? updated.user_merchant_name,
+      excluded_from_budget: _data.exclude_from_budget ?? updated.excluded_from_budget,
+      excluded_from_goals: _data.exclude_from_goals ?? updated.excluded_from_goals,
+      transaction_kind: _data.transaction_kind ?? updated.transaction_kind,
       reimbursed_at: reimbursement?.reimbursed_at ?? null,
       reimbursement_memo: reimbursement?.reimbursement_memo ?? null,
       updated_at: reimbursement?.reimbursed_at ?? updated.updated_at,

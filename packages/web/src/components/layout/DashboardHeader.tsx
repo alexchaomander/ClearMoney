@@ -31,6 +31,7 @@ export function DashboardHeader({
   const navItems = [
     { label: "Tools", href: "/tools" },
     { label: "Dashboard", href: "/dashboard" },
+    { label: "Everyday", href: "/dashboard/everyday" },
     { label: "War Room", href: "/dashboard/war-room" },
     { label: "Action Lab", href: "/dashboard/action-lab", isPreview: true },
     { label: "Connect", href: "/connect" },

@@ -60,10 +60,15 @@ class BankTransactionResponse(BaseModel):
     name: str
     primary_category: str | None
     detailed_category: str | None
+    user_primary_category: str | None
     merchant_name: str | None
+    user_merchant_name: str | None
     payment_channel: str | None
     pending: bool
     iso_currency_code: str
+    excluded_from_budget: bool
+    excluded_from_goals: bool
+    transaction_kind: str
     reimbursed_at: datetime | None
     reimbursement_memo: str | None
     is_commingled: bool
@@ -74,8 +79,13 @@ class BankTransactionResponse(BaseModel):
 
 
 class BankTransactionReimbursementUpdate(BaseModel):
-    reimbursed: bool
+    reimbursed: bool | None = None
     memo: str | None = None
+    primary_category: str | None = None
+    merchant_name: str | None = None
+    exclude_from_budget: bool | None = None
+    exclude_from_goals: bool | None = None
+    transaction_kind: str | None = None
 
 
 class PaginatedBankTransactions(BaseModel):
